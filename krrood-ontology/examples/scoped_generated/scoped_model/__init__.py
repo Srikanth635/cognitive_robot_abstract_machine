@@ -1,0 +1,77 @@
+"""Generated dataclass models with KRROOD object-property registration."""
+
+from .axioms import RELATION_AXIOMS, RETRACTION_SUPPORTED, UPDATE_POLICY
+from .classes import (
+    CLASS_BY_IRI,
+    PROPERTY_FIELD_NAMES,
+    Alias,
+    Entity,
+    Carrier,
+    Choice,
+    Either,
+    FlagCarrier,
+    InheritedFlagAlias,
+    Linked,
+    Marked,
+    MarkedAlias,
+    Nested,
+    ReverseMarked,
+    Alpha,
+    Beta,
+    FlagChild,
+)
+from .relations import PROPERTY_DESCRIPTORS, PROPERTY_BINDINGS
+from .schema import SCHEMA_AXIOMS
+from .validation import model_validator
+from .runtime import MODEL, load_individuals
+from .queries import CLASS_EXPRESSIONS, CLASS_ALIASES, model_queries
+from .relation_runtime import model_relations
+from .vocabulary import (
+    ANNOTATION_PROPERTY_IRIS,
+    CLASS_IRIS,
+    DATATYPE_PROPERTY_IRIS,
+    INDIVIDUAL_IRIS,
+    OBJECT_PROPERTY_IRIS,
+    ONTOLOGY_IMPORT_IRIS,
+    SOURCE_SHA256,
+)
+
+__all__ = [
+    "MODEL",
+    "load_individuals",
+    "SCHEMA_AXIOMS",
+    "PROPERTY_BINDINGS",
+    "model_validator",
+    "CLASS_EXPRESSIONS",
+    "CLASS_ALIASES",
+    "model_queries",
+    "model_relations",
+    "RELATION_AXIOMS",
+    "RETRACTION_SUPPORTED",
+    "UPDATE_POLICY",
+    "CLASS_BY_IRI",
+    "PROPERTY_FIELD_NAMES",
+    "PROPERTY_DESCRIPTORS",
+    "ANNOTATION_PROPERTY_IRIS",
+    "CLASS_IRIS",
+    "DATATYPE_PROPERTY_IRIS",
+    "INDIVIDUAL_IRIS",
+    "OBJECT_PROPERTY_IRIS",
+    "ONTOLOGY_IMPORT_IRIS",
+    "SOURCE_SHA256",
+    "Alias",
+    "Entity",
+    "Carrier",
+    "Choice",
+    "Either",
+    "FlagCarrier",
+    "InheritedFlagAlias",
+    "Linked",
+    "Marked",
+    "MarkedAlias",
+    "Nested",
+    "ReverseMarked",
+    "Alpha",
+    "Beta",
+    "FlagChild",
+]

@@ -1,0 +1,478 @@
+{
+  "phase": 6,
+  "artifact": "python_dataclass_model",
+  "krrood_version": "26.7.0",
+  "structural_only": false,
+  "inference_applied": false,
+  "relation_implications": true,
+  "update_policy": "additions_after_construction",
+  "retraction_supported": false,
+  "imports_loaded": false,
+  "import_policy": "explicit_local_files_no_network",
+  "resolved_import_iris": [],
+  "source_documents": [
+    {
+      "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/examples/relations.ttl",
+      "source_base_iri": "file:///workspace/scratch/94e4314b917c/krrood-ontology/examples/relations.ttl",
+      "sha256": "5fffe8424807415e5e3ac08257158ac1b3f4ee71ab638c88ae5e7dc216832b92",
+      "format": "turtle",
+      "snapshot": "source/documents/000.turtle"
+    }
+  ],
+  "runtime_ontology": "source/closure.ttl",
+  "closure_sha256": "211e384b1f04236459550ee2ad19bd5ca9558c1d2d7e27b403e13b425403e92f",
+  "feature_report": "features.json",
+  "verification": {
+    "isolated_import": "passed",
+    "individual_preflight": "passed",
+    "timeout_seconds": 45
+  },
+  "environment": {
+    "python": "3.12.14",
+    "packages": {
+      "krrood-ontology": "0.5.0",
+      "krrood": "26.7.0",
+      "rdflib": "7.6.0",
+      "jinja2": "3.1.6",
+      "black": "26.5.1"
+    }
+  },
+  "individuals_loaded": false,
+  "individual_loader_available": true,
+  "individual_type_policy": "explicit_inheritance_chain",
+  "runtime_type_validation": false,
+  "class_expression_queries": true,
+  "expression_query_policy": "positive_known_objects_explicit_registry",
+  "automatic_reclassification": false,
+  "ontology": {
+    "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/examples/relations.ttl",
+    "source_sha256": "5fffe8424807415e5e3ac08257158ac1b3f4ee71ab638c88ae5e7dc216832b92",
+    "rdf_format": "turtle",
+    "triple_count": 40,
+    "classes": [
+      "https://example.org/relations#Company",
+      "https://example.org/relations#Manager",
+      "https://example.org/relations#Organization",
+      "https://example.org/relations#Person"
+    ],
+    "object_properties": [
+      "https://example.org/relations#colleagueOf",
+      "https://example.org/relations#containsPart",
+      "https://example.org/relations#employeeOf",
+      "https://example.org/relations#hasEmployee",
+      "https://example.org/relations#headsOf",
+      "https://example.org/relations#knows",
+      "https://example.org/relations#partOf",
+      "https://example.org/relations#worksFor"
+    ],
+    "datatype_properties": [
+      "https://example.org/relations#name"
+    ],
+    "annotation_properties": [],
+    "individuals": [],
+    "imports": [],
+    "owl_features": [
+      "http://www.w3.org/2002/07/owl#Class",
+      "http://www.w3.org/2002/07/owl#DatatypeProperty",
+      "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "http://www.w3.org/2002/07/owl#SymmetricProperty",
+      "http://www.w3.org/2002/07/owl#TransitiveProperty",
+      "http://www.w3.org/2002/07/owl#inverseOf"
+    ]
+  },
+  "model": {
+    "classes": [
+      {
+        "iri": "https://example.org/relations#Organization",
+        "name": "Organization",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/relations#containsPart",
+            "name": "contains_part",
+            "domain_iri": "https://example.org/relations#Organization",
+            "domain_name": "Organization",
+            "range_iri": "https://example.org/relations#Organization",
+            "range_type": "Organization",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          },
+          {
+            "iri": "https://example.org/relations#partOf",
+            "name": "part_of",
+            "domain_iri": "https://example.org/relations#Organization",
+            "domain_name": "Organization",
+            "range_iri": "https://example.org/relations#Organization",
+            "range_type": "Organization",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          }
+        ]
+      },
+      {
+        "iri": "https://example.org/relations#Person",
+        "name": "Person",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/relations#colleagueOf",
+            "name": "colleague_of",
+            "domain_iri": "https://example.org/relations#Person",
+            "domain_name": "Person",
+            "range_iri": "https://example.org/relations#Person",
+            "range_type": "Person",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          },
+          {
+            "iri": "https://example.org/relations#employeeOf",
+            "name": "employee_of",
+            "domain_iri": "https://example.org/relations#Person",
+            "domain_name": "Person",
+            "range_iri": "https://example.org/relations#Company",
+            "range_type": "Company",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          },
+          {
+            "iri": "https://example.org/relations#headsOf",
+            "name": "heads_of",
+            "domain_iri": "https://example.org/relations#Person",
+            "domain_name": "Person",
+            "range_iri": "https://example.org/relations#Company",
+            "range_type": "Company",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          },
+          {
+            "iri": "https://example.org/relations#knows",
+            "name": "knows",
+            "domain_iri": "https://example.org/relations#Person",
+            "domain_name": "Person",
+            "range_iri": "https://example.org/relations#Person",
+            "range_type": "Person",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          },
+          {
+            "iri": "https://example.org/relations#name",
+            "name": "name",
+            "domain_iri": "https://example.org/relations#Person",
+            "domain_name": "Person",
+            "range_iri": "http://www.w3.org/2001/XMLSchema#string",
+            "range_type": "str",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          },
+          {
+            "iri": "https://example.org/relations#worksFor",
+            "name": "works_for",
+            "domain_iri": "https://example.org/relations#Person",
+            "domain_name": "Person",
+            "range_iri": "https://example.org/relations#Company",
+            "range_type": "Company",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          }
+        ]
+      },
+      {
+        "iri": "https://example.org/relations#Company",
+        "name": "Company",
+        "parent_name": "Organization",
+        "properties": [
+          {
+            "iri": "https://example.org/relations#hasEmployee",
+            "name": "has_employee",
+            "domain_iri": "https://example.org/relations#Company",
+            "domain_name": "Company",
+            "range_iri": "https://example.org/relations#Person",
+            "range_type": "Person",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          }
+        ]
+      },
+      {
+        "iri": "https://example.org/relations#Manager",
+        "name": "Manager",
+        "parent_name": "Person",
+        "properties": []
+      }
+    ],
+    "properties": [
+      {
+        "iri": "https://example.org/relations#colleagueOf",
+        "name": "colleague_of",
+        "domain_iri": "https://example.org/relations#Person",
+        "domain_name": "Person",
+        "range_iri": "https://example.org/relations#Person",
+        "range_type": "Person",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/relations#containsPart",
+        "name": "contains_part",
+        "domain_iri": "https://example.org/relations#Organization",
+        "domain_name": "Organization",
+        "range_iri": "https://example.org/relations#Organization",
+        "range_type": "Organization",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/relations#employeeOf",
+        "name": "employee_of",
+        "domain_iri": "https://example.org/relations#Person",
+        "domain_name": "Person",
+        "range_iri": "https://example.org/relations#Company",
+        "range_type": "Company",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/relations#hasEmployee",
+        "name": "has_employee",
+        "domain_iri": "https://example.org/relations#Company",
+        "domain_name": "Company",
+        "range_iri": "https://example.org/relations#Person",
+        "range_type": "Person",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/relations#headsOf",
+        "name": "heads_of",
+        "domain_iri": "https://example.org/relations#Person",
+        "domain_name": "Person",
+        "range_iri": "https://example.org/relations#Company",
+        "range_type": "Company",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/relations#knows",
+        "name": "knows",
+        "domain_iri": "https://example.org/relations#Person",
+        "domain_name": "Person",
+        "range_iri": "https://example.org/relations#Person",
+        "range_type": "Person",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/relations#partOf",
+        "name": "part_of",
+        "domain_iri": "https://example.org/relations#Organization",
+        "domain_name": "Organization",
+        "range_iri": "https://example.org/relations#Organization",
+        "range_type": "Organization",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/relations#worksFor",
+        "name": "works_for",
+        "domain_iri": "https://example.org/relations#Person",
+        "domain_name": "Person",
+        "range_iri": "https://example.org/relations#Company",
+        "range_type": "Company",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/relations#name",
+        "name": "name",
+        "domain_iri": "https://example.org/relations#Person",
+        "domain_name": "Person",
+        "range_iri": "http://www.w3.org/2001/XMLSchema#string",
+        "range_type": "str",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      }
+    ],
+    "diagnostics": [],
+    "descriptors": [
+      {
+        "property": {
+          "iri": "https://example.org/relations#knows",
+          "name": "knows",
+          "domain_iri": "https://example.org/relations#Person",
+          "domain_name": "Person",
+          "range_iri": "https://example.org/relations#Person",
+          "range_type": "Person",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property5",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": "_Property5",
+        "inverse_iri": "https://example.org/relations#knows",
+        "transitive": false,
+        "symmetric": true
+      },
+      {
+        "property": {
+          "iri": "https://example.org/relations#containsPart",
+          "name": "contains_part",
+          "domain_iri": "https://example.org/relations#Organization",
+          "domain_name": "Organization",
+          "range_iri": "https://example.org/relations#Organization",
+          "range_type": "Organization",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property1",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": "_Property6",
+        "inverse_iri": "https://example.org/relations#partOf",
+        "transitive": true,
+        "symmetric": false
+      },
+      {
+        "property": {
+          "iri": "https://example.org/relations#worksFor",
+          "name": "works_for",
+          "domain_iri": "https://example.org/relations#Person",
+          "domain_name": "Person",
+          "range_iri": "https://example.org/relations#Company",
+          "range_type": "Company",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property7",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": "_Property3",
+        "inverse_iri": "https://example.org/relations#hasEmployee",
+        "transitive": false,
+        "symmetric": false
+      },
+      {
+        "property": {
+          "iri": "https://example.org/relations#hasEmployee",
+          "name": "has_employee",
+          "domain_iri": "https://example.org/relations#Company",
+          "domain_name": "Company",
+          "range_iri": "https://example.org/relations#Person",
+          "range_type": "Person",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property3",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": "_Property7",
+        "inverse_iri": "https://example.org/relations#worksFor",
+        "transitive": false,
+        "symmetric": false
+      },
+      {
+        "property": {
+          "iri": "https://example.org/relations#partOf",
+          "name": "part_of",
+          "domain_iri": "https://example.org/relations#Organization",
+          "domain_name": "Organization",
+          "range_iri": "https://example.org/relations#Organization",
+          "range_type": "Organization",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property6",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": "_Property1",
+        "inverse_iri": "https://example.org/relations#containsPart",
+        "transitive": false,
+        "symmetric": false
+      },
+      {
+        "property": {
+          "iri": "https://example.org/relations#colleagueOf",
+          "name": "colleague_of",
+          "domain_iri": "https://example.org/relations#Person",
+          "domain_name": "Person",
+          "range_iri": "https://example.org/relations#Person",
+          "range_type": "Person",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property0",
+        "parent_name": "_Property5",
+        "parent_iri": "https://example.org/relations#knows",
+        "inverse_name": null,
+        "inverse_iri": null,
+        "transitive": false,
+        "symmetric": false
+      },
+      {
+        "property": {
+          "iri": "https://example.org/relations#employeeOf",
+          "name": "employee_of",
+          "domain_iri": "https://example.org/relations#Person",
+          "domain_name": "Person",
+          "range_iri": "https://example.org/relations#Company",
+          "range_type": "Company",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property2",
+        "parent_name": "_Property7",
+        "parent_iri": "https://example.org/relations#worksFor",
+        "inverse_name": null,
+        "inverse_iri": null,
+        "transitive": false,
+        "symmetric": false
+      },
+      {
+        "property": {
+          "iri": "https://example.org/relations#headsOf",
+          "name": "heads_of",
+          "domain_iri": "https://example.org/relations#Person",
+          "domain_name": "Person",
+          "range_iri": "https://example.org/relations#Company",
+          "range_type": "Company",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property4",
+        "parent_name": "_Property2",
+        "parent_iri": "https://example.org/relations#employeeOf",
+        "inverse_name": null,
+        "inverse_iri": null,
+        "transitive": false,
+        "symmetric": false
+      }
+    ],
+    "expressions": []
+  }
+}

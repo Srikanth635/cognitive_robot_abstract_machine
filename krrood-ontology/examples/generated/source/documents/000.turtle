@@ -1,0 +1,15 @@
+@prefix : <https://example.org/university#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:UniversityOntology a owl:Ontology .
+:Person a owl:Class .
+:Student a owl:Class ; rdfs:subClassOf :Person .
+:Course a owl:Class .
+:takesCourse a owl:ObjectProperty ; rdfs:domain :Student ; rdfs:range :Course .
+:name a owl:DatatypeProperty ; rdfs:domain :Person ; rdfs:range xsd:string .
+:Alice a owl:NamedIndividual, :Student ; :name "Alice" ; :takesCourse :Course42 .
+:Course42 a :Course .
+

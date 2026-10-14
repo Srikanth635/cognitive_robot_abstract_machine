@@ -1,0 +1,11 @@
+@prefix : <https://example.org/relations#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+:Alice a owl:NamedIndividual, :Person ; :name "Alice" ; :worksFor :Acme ;
+    :knows :Bob ; rdfs:label "Alice"@en .
+:Bob a :Person, :Manager ; :name "Bob" ; :headsOf :Acme .
+:Acme a :Company, :Organization ; :hasEmployee :Alice .
+:Headquarters a :Organization ; :containsPart :Branch .
+:Branch a :Company ; :containsPart :Office .
+:Office a :Organization .

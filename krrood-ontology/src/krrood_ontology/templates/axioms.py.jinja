@@ -1,0 +1,21 @@
+"""Translated relation-axiom metadata; KRROOD descriptors execute the implications."""
+
+RELATION_AXIOMS = (
+{% for descriptor in descriptors %}
+{% if descriptor.inverse_iri and not descriptor.symmetric %}
+    ({{ descriptor.property.iri | python_literal }}, "http://www.w3.org/2002/07/owl#inverseOf", {{ descriptor.inverse_iri | python_literal }}),
+{% endif %}
+{% if descriptor.symmetric %}
+    ({{ descriptor.property.iri | python_literal }}, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://www.w3.org/2002/07/owl#SymmetricProperty"),
+{% endif %}
+{% if descriptor.transitive %}
+    ({{ descriptor.property.iri | python_literal }}, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://www.w3.org/2002/07/owl#TransitiveProperty"),
+{% endif %}
+{% if descriptor.parent_iri %}
+    ({{ descriptor.property.iri | python_literal }}, "http://www.w3.org/2000/01/rdf-schema#subPropertyOf", {{ descriptor.parent_iri | python_literal }}),
+{% endif %}
+{% endfor %}
+)
+
+UPDATE_POLICY = "additions_after_construction"
+RETRACTION_SUPPORTED = False

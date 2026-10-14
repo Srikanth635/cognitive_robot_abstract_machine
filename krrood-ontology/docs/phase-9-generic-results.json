@@ -1,0 +1,8 @@
+{
+  "positive_definitions": 7,
+  "queries": "union, alias, nested restriction and partial enumeration passed",
+  "native_relations": "cross-type symmetric and transitive additions passed",
+  "reflexive_seeds": 4,
+  "asymmetric_conflict_detected": true,
+  "python_types_unchanged": true
+}

@@ -1,0 +1,7 @@
+@prefix : <https://example.org/imported#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+<https://example.org/core> a owl:Ontology .
+:Person a owl:Class .
+:name a owl:DatatypeProperty ; rdfs:domain :Person ; rdfs:range xsd:string .

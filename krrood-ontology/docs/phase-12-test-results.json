@@ -1,0 +1,20 @@
+{
+  "package_version": "0.12.0",
+  "contract_version": "1.0",
+  "full_suite": {
+    "passed": 185,
+    "failed": 0,
+    "seconds": 233.51
+  },
+  "contracts_and_preflight": {
+    "passed": 55,
+    "failed": 0
+  },
+  "generic_preflight": "pass",
+  "aicor_preflight": "pass",
+  "native_objects_created_by_preparation": 0,
+  "wheel_build": "passed",
+  "wheel_import_and_fresh_compilation": "passed",
+  "compiler_feature_phase": 10,
+  "wheel_sha256": "24d7f318f22ddeea721e74b7df70fa5f9fba8b95d341a6d717662baf146285b6"
+}

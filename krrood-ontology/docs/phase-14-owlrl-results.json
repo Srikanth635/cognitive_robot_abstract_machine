@@ -1,0 +1,28 @@
+{
+  "classes": 3,
+  "properties": 2,
+  "preflight": "pass",
+  "construction": "pass",
+  "reasoner": "unknown",
+  "reasoner_profile": "owlrl_diagnostics_v1",
+  "consistency": null,
+  "can_certify_consistency": false,
+  "engine_version": "7.6.2",
+  "engine_sha256": null,
+  "axioms_checked": null,
+  "profile_findings": [],
+  "unparsed_triples": [],
+  "feedback_codes": [
+    "owlrl_no_clashes"
+  ],
+  "candidate_added_triples": 3,
+  "asserted_rdf_roundtrip_equal": true,
+  "old_reasoner_evidence_invalidated": true,
+  "local_validation": "unsupported",
+  "parent_native_graph_unchanged": true,
+  "accepted_rdf_unchanged": true,
+  "inferences_committed": false,
+  "facts_committed": false,
+  "acceptance_blocked": true,
+  "runtime_check_seconds": 5.206
+}

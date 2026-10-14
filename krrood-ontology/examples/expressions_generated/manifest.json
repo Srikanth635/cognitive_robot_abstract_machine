@@ -1,0 +1,592 @@
+{
+  "phase": 6,
+  "artifact": "python_dataclass_model",
+  "krrood_version": "26.7.0",
+  "structural_only": false,
+  "inference_applied": false,
+  "relation_implications": true,
+  "update_policy": "additions_after_construction",
+  "retraction_supported": false,
+  "imports_loaded": false,
+  "import_policy": "explicit_local_files_no_network",
+  "resolved_import_iris": [],
+  "source_documents": [
+    {
+      "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/examples/expressions.ttl",
+      "source_base_iri": "file:///workspace/scratch/94e4314b917c/krrood-ontology/examples/expressions.ttl",
+      "sha256": "453eabf7d3ac439555012e1ff1a8675b2c8580876f0cdb26270ed26eec2a4f12",
+      "format": "turtle",
+      "snapshot": "source/documents/000.turtle"
+    }
+  ],
+  "runtime_ontology": "source/closure.ttl",
+  "closure_sha256": "275caf56e53b4c64056d0fd8e8a283a8c540c166ef5f5a7025c01762e32cc895",
+  "feature_report": "features.json",
+  "verification": {
+    "isolated_import": "passed",
+    "individual_preflight": "passed",
+    "timeout_seconds": 45
+  },
+  "environment": {
+    "python": "3.12.14",
+    "packages": {
+      "krrood-ontology": "0.6.0",
+      "krrood": "26.7.0",
+      "rdflib": "7.6.0",
+      "jinja2": "3.1.6",
+      "black": "26.5.1"
+    }
+  },
+  "individuals_loaded": false,
+  "individual_loader_available": true,
+  "individual_type_policy": "explicit_inheritance_chain",
+  "runtime_type_validation": false,
+  "class_expression_queries": true,
+  "expression_query_policy": "positive_known_objects_explicit_registry",
+  "automatic_reclassification": false,
+  "ontology": {
+    "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/examples/expressions.ttl",
+    "source_sha256": "453eabf7d3ac439555012e1ff1a8675b2c8580876f0cdb26270ed26eec2a4f12",
+    "rdf_format": "turtle",
+    "triple_count": 121,
+    "classes": [
+      "https://example.org/expressions#AcmeWorker",
+      "https://example.org/expressions#Company",
+      "https://example.org/expressions#EmployerOfAlice",
+      "https://example.org/expressions#EmployerOfManager",
+      "https://example.org/expressions#EmployerOfWorker",
+      "https://example.org/expressions#Manager",
+      "https://example.org/expressions#NamedAlice",
+      "https://example.org/expressions#Person",
+      "https://example.org/expressions#PersonOrCompany",
+      "https://example.org/expressions#SelectedPerson",
+      "https://example.org/expressions#WorkingOrSelected",
+      "https://example.org/expressions#WorkingPerson"
+    ],
+    "object_properties": [
+      "https://example.org/expressions#hasEmployee",
+      "https://example.org/expressions#worksFor"
+    ],
+    "datatype_properties": [
+      "https://example.org/expressions#name"
+    ],
+    "annotation_properties": [],
+    "individuals": [
+      "https://example.org/expressions#Acme",
+      "https://example.org/expressions#Alice",
+      "https://example.org/expressions#Bob",
+      "https://example.org/expressions#Charlie",
+      "https://example.org/expressions#EmptyCompany",
+      "https://example.org/expressions#ExplicitWorker"
+    ],
+    "imports": [],
+    "owl_features": [
+      "http://www.w3.org/2002/07/owl#Class",
+      "http://www.w3.org/2002/07/owl#DatatypeProperty",
+      "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "http://www.w3.org/2002/07/owl#Restriction",
+      "http://www.w3.org/2002/07/owl#equivalentClass",
+      "http://www.w3.org/2002/07/owl#hasValue",
+      "http://www.w3.org/2002/07/owl#intersectionOf",
+      "http://www.w3.org/2002/07/owl#inverseOf",
+      "http://www.w3.org/2002/07/owl#onProperty",
+      "http://www.w3.org/2002/07/owl#oneOf",
+      "http://www.w3.org/2002/07/owl#someValuesFrom",
+      "http://www.w3.org/2002/07/owl#unionOf"
+    ]
+  },
+  "model": {
+    "classes": [
+      {
+        "iri": "https://example.org/expressions#Person",
+        "name": "Person",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/expressions#name",
+            "name": "name",
+            "domain_iri": "https://example.org/expressions#Person",
+            "domain_name": "Person",
+            "range_iri": "http://www.w3.org/2001/XMLSchema#string",
+            "range_type": "str",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          },
+          {
+            "iri": "https://example.org/expressions#worksFor",
+            "name": "works_for",
+            "domain_iri": "https://example.org/expressions#Person",
+            "domain_name": "Person",
+            "range_iri": "https://example.org/expressions#Company",
+            "range_type": "Company",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          }
+        ]
+      },
+      {
+        "iri": "https://example.org/expressions#Company",
+        "name": "Company",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/expressions#hasEmployee",
+            "name": "has_employee",
+            "domain_iri": "https://example.org/expressions#Company",
+            "domain_name": "Company",
+            "range_iri": "https://example.org/expressions#Person",
+            "range_type": "Person",
+            "kind": "object",
+            "container": "set",
+            "constructor": false
+          }
+        ]
+      },
+      {
+        "iri": "https://example.org/expressions#PersonOrCompany",
+        "name": "PersonOrCompany",
+        "parent_name": null,
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/expressions#SelectedPerson",
+        "name": "SelectedPerson",
+        "parent_name": null,
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/expressions#WorkingOrSelected",
+        "name": "WorkingOrSelected",
+        "parent_name": null,
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/expressions#AcmeWorker",
+        "name": "AcmeWorker",
+        "parent_name": "Person",
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/expressions#Manager",
+        "name": "Manager",
+        "parent_name": "Person",
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/expressions#NamedAlice",
+        "name": "NamedAlice",
+        "parent_name": "Person",
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/expressions#WorkingPerson",
+        "name": "WorkingPerson",
+        "parent_name": "Person",
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/expressions#EmployerOfAlice",
+        "name": "EmployerOfAlice",
+        "parent_name": "Company",
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/expressions#EmployerOfManager",
+        "name": "EmployerOfManager",
+        "parent_name": "Company",
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/expressions#EmployerOfWorker",
+        "name": "EmployerOfWorker",
+        "parent_name": "Company",
+        "properties": []
+      }
+    ],
+    "properties": [
+      {
+        "iri": "https://example.org/expressions#hasEmployee",
+        "name": "has_employee",
+        "domain_iri": "https://example.org/expressions#Company",
+        "domain_name": "Company",
+        "range_iri": "https://example.org/expressions#Person",
+        "range_type": "Person",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/expressions#worksFor",
+        "name": "works_for",
+        "domain_iri": "https://example.org/expressions#Person",
+        "domain_name": "Person",
+        "range_iri": "https://example.org/expressions#Company",
+        "range_type": "Company",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/expressions#name",
+        "name": "name",
+        "domain_iri": "https://example.org/expressions#Person",
+        "domain_name": "Person",
+        "range_iri": "http://www.w3.org/2001/XMLSchema#string",
+        "range_type": "str",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      }
+    ],
+    "diagnostics": [
+      {
+        "code": "individuals_deferred",
+        "message": "Individual assertions are inventoried; use the generated load_individuals API to instantiate them",
+        "iri": null
+      }
+    ],
+    "descriptors": [
+      {
+        "property": {
+          "iri": "https://example.org/expressions#hasEmployee",
+          "name": "has_employee",
+          "domain_iri": "https://example.org/expressions#Company",
+          "domain_name": "Company",
+          "range_iri": "https://example.org/expressions#Person",
+          "range_type": "Person",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property0",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": "_Property1",
+        "inverse_iri": "https://example.org/expressions#worksFor",
+        "transitive": false,
+        "symmetric": false
+      },
+      {
+        "property": {
+          "iri": "https://example.org/expressions#worksFor",
+          "name": "works_for",
+          "domain_iri": "https://example.org/expressions#Person",
+          "domain_name": "Person",
+          "range_iri": "https://example.org/expressions#Company",
+          "range_type": "Company",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property1",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": "_Property0",
+        "inverse_iri": "https://example.org/expressions#hasEmployee",
+        "transitive": false,
+        "symmetric": false
+      }
+    ],
+    "expressions": [
+      {
+        "class_iri": "https://example.org/expressions#AcmeWorker",
+        "expression": {
+          "kind": "intersection",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#Person",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            },
+            {
+              "kind": "has_value",
+              "iri": "https://example.org/expressions#Acme",
+              "property_iri": "https://example.org/expressions#worksFor",
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            }
+          ],
+          "individuals": []
+        }
+      },
+      {
+        "class_iri": "https://example.org/expressions#EmployerOfAlice",
+        "expression": {
+          "kind": "intersection",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#Company",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            },
+            {
+              "kind": "some",
+              "iri": null,
+              "property_iri": "https://example.org/expressions#hasEmployee",
+              "literal": null,
+              "operands": [
+                {
+                  "kind": "intersection",
+                  "iri": null,
+                  "property_iri": null,
+                  "literal": null,
+                  "operands": [
+                    {
+                      "kind": "class",
+                      "iri": "https://example.org/expressions#Person",
+                      "property_iri": null,
+                      "literal": null,
+                      "operands": [],
+                      "individuals": []
+                    },
+                    {
+                      "kind": "has_value",
+                      "iri": null,
+                      "property_iri": "https://example.org/expressions#name",
+                      "literal": {
+                        "lexical": "Alice",
+                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                      },
+                      "operands": [],
+                      "individuals": []
+                    }
+                  ],
+                  "individuals": []
+                }
+              ],
+              "individuals": []
+            }
+          ],
+          "individuals": []
+        }
+      },
+      {
+        "class_iri": "https://example.org/expressions#EmployerOfManager",
+        "expression": {
+          "kind": "intersection",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#Company",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            },
+            {
+              "kind": "some",
+              "iri": null,
+              "property_iri": "https://example.org/expressions#hasEmployee",
+              "literal": null,
+              "operands": [
+                {
+                  "kind": "class",
+                  "iri": "https://example.org/expressions#Manager",
+                  "property_iri": null,
+                  "literal": null,
+                  "operands": [],
+                  "individuals": []
+                }
+              ],
+              "individuals": []
+            }
+          ],
+          "individuals": []
+        }
+      },
+      {
+        "class_iri": "https://example.org/expressions#EmployerOfWorker",
+        "expression": {
+          "kind": "intersection",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#Company",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            },
+            {
+              "kind": "some",
+              "iri": null,
+              "property_iri": "https://example.org/expressions#hasEmployee",
+              "literal": null,
+              "operands": [
+                {
+                  "kind": "class",
+                  "iri": "https://example.org/expressions#WorkingPerson",
+                  "property_iri": null,
+                  "literal": null,
+                  "operands": [],
+                  "individuals": []
+                }
+              ],
+              "individuals": []
+            }
+          ],
+          "individuals": []
+        }
+      },
+      {
+        "class_iri": "https://example.org/expressions#NamedAlice",
+        "expression": {
+          "kind": "intersection",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#Person",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            },
+            {
+              "kind": "has_value",
+              "iri": null,
+              "property_iri": "https://example.org/expressions#name",
+              "literal": {
+                "lexical": "Alice",
+                "datatype": "http://www.w3.org/2001/XMLSchema#string"
+              },
+              "operands": [],
+              "individuals": []
+            }
+          ],
+          "individuals": []
+        }
+      },
+      {
+        "class_iri": "https://example.org/expressions#PersonOrCompany",
+        "expression": {
+          "kind": "union",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#Person",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            },
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#Company",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            }
+          ],
+          "individuals": []
+        }
+      },
+      {
+        "class_iri": "https://example.org/expressions#SelectedPerson",
+        "expression": {
+          "kind": "enumeration",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [],
+          "individuals": [
+            "https://example.org/expressions#Alice",
+            "https://example.org/expressions#Charlie"
+          ]
+        }
+      },
+      {
+        "class_iri": "https://example.org/expressions#WorkingOrSelected",
+        "expression": {
+          "kind": "union",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#WorkingPerson",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            },
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#SelectedPerson",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            }
+          ],
+          "individuals": []
+        }
+      },
+      {
+        "class_iri": "https://example.org/expressions#WorkingPerson",
+        "expression": {
+          "kind": "intersection",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [
+            {
+              "kind": "class",
+              "iri": "https://example.org/expressions#Person",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": []
+            },
+            {
+              "kind": "some",
+              "iri": null,
+              "property_iri": "https://example.org/expressions#worksFor",
+              "literal": null,
+              "operands": [
+                {
+                  "kind": "class",
+                  "iri": "https://example.org/expressions#Company",
+                  "property_iri": null,
+                  "literal": null,
+                  "operands": [],
+                  "individuals": []
+                }
+              ],
+              "individuals": []
+            }
+          ],
+          "individuals": []
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "wheel_import": "passed",
+  "fresh_compilation": "passed",
+  "isolated_construction": "pass",
+  "worker_objects": 3,
+  "compiler_phase": 10
+}

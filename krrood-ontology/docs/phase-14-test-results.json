@@ -1,0 +1,22 @@
+{
+  "package_version": "0.14.0",
+  "full_suite": {
+    "passed": 247,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 220.09
+  },
+  "new_reasoning_tests": 36,
+  "hermit_consistent_and_inconsistent_cases": "passed",
+  "open_world_and_no_unique_name_assumption": "passed",
+  "resolved_local_imports": "passed",
+  "profile_and_reported_unparsed_rdf": "passed",
+  "unsupported_datatype_not_ignored": "passed",
+  "real_embedded_jvm_timeout_cleanup": "passed",
+  "university_hermit": "pass",
+  "university_owlrl": "unknown; diagnostic-only",
+  "aicor_hermit": "unsupported; original profile/parser findings",
+  "accepted_rdf_unchanged": true,
+  "facts_committed": false,
+  "ruff_modified_files": "passed"
+}

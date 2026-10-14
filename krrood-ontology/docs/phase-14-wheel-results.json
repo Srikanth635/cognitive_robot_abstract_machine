@@ -1,0 +1,9 @@
+{
+  "wheel_import": "passed",
+  "fresh_compilation": "passed",
+  "native_construction": "passed",
+  "hermit_consistency": "pass",
+  "consistency": true,
+  "compiler_phase": 10,
+  "engine_version": "Owlready2 0.51; JPype1 1.6.0; Java 17.0.20"
+}

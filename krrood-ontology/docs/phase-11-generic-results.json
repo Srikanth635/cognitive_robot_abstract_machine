@@ -1,0 +1,11 @@
+{
+  "contract_version": "1.0",
+  "default_checks": "unsupported, acceptance blocked",
+  "demonstration_checker": "contract_fixture; no ontology reasoning",
+  "revision": 2,
+  "old_review_invalidated": true,
+  "acceptance_intent_prepared": true,
+  "facts_committed": false,
+  "native_symbols_created": 0,
+  "native_relations_created": 0
+}

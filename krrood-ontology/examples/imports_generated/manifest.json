@@ -1,0 +1,187 @@
+{
+  "phase": 6,
+  "artifact": "python_dataclass_model",
+  "krrood_version": "26.7.0",
+  "structural_only": false,
+  "inference_applied": false,
+  "relation_implications": true,
+  "update_policy": "additions_after_construction",
+  "retraction_supported": false,
+  "imports_loaded": true,
+  "import_policy": "explicit_local_files_no_network",
+  "resolved_import_iris": [
+    "https://example.org/core"
+  ],
+  "source_documents": [
+    {
+      "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/examples/imports/university.ttl",
+      "source_base_iri": "file:///workspace/scratch/94e4314b917c/krrood-ontology/examples/imports/university.ttl",
+      "sha256": "4310a9191952638f33a5ff0f3366f53966424e22e0cb76556cc4b3614981b798",
+      "format": "turtle",
+      "snapshot": "source/documents/000.turtle"
+    },
+    {
+      "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/examples/imports/core.ttl",
+      "source_base_iri": "file:///workspace/scratch/94e4314b917c/krrood-ontology/examples/imports/core.ttl",
+      "sha256": "5dd5f325281cf7c5c23b3b45bc64f92a80c15f4efdf11daabad26574088f82b0",
+      "format": "turtle",
+      "snapshot": "source/documents/001.turtle"
+    }
+  ],
+  "runtime_ontology": "source/closure.ttl",
+  "closure_sha256": "3f128ab6bece7a3ac77f09c8b986342147c618016e7559415b34d222dcff249e",
+  "feature_report": "features.json",
+  "verification": {
+    "isolated_import": "passed",
+    "individual_preflight": "passed",
+    "timeout_seconds": 45
+  },
+  "environment": {
+    "python": "3.12.14",
+    "packages": {
+      "krrood-ontology": "0.5.0",
+      "krrood": "26.7.0",
+      "rdflib": "7.6.0",
+      "jinja2": "3.1.6",
+      "black": "26.5.1"
+    }
+  },
+  "individuals_loaded": false,
+  "individual_loader_available": true,
+  "individual_type_policy": "explicit_inheritance_chain",
+  "runtime_type_validation": false,
+  "class_expression_queries": true,
+  "expression_query_policy": "positive_known_objects_explicit_registry",
+  "automatic_reclassification": false,
+  "ontology": {
+    "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/examples/imports/university.ttl",
+    "source_sha256": "4310a9191952638f33a5ff0f3366f53966424e22e0cb76556cc4b3614981b798",
+    "rdf_format": "turtle",
+    "triple_count": 16,
+    "classes": [
+      "https://example.org/imported#Course",
+      "https://example.org/imported#Person",
+      "https://example.org/imported#Student"
+    ],
+    "object_properties": [
+      "https://example.org/imported#takesCourse"
+    ],
+    "datatype_properties": [
+      "https://example.org/imported#name"
+    ],
+    "annotation_properties": [],
+    "individuals": [
+      "https://example.org/imported#Alice",
+      "https://example.org/imported#Course42"
+    ],
+    "imports": [
+      "https://example.org/core"
+    ],
+    "owl_features": [
+      "http://www.w3.org/2002/07/owl#Class",
+      "http://www.w3.org/2002/07/owl#DatatypeProperty",
+      "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "http://www.w3.org/2002/07/owl#Ontology"
+    ]
+  },
+  "model": {
+    "classes": [
+      {
+        "iri": "https://example.org/imported#Course",
+        "name": "Course",
+        "parent_name": null,
+        "properties": []
+      },
+      {
+        "iri": "https://example.org/imported#Person",
+        "name": "Person",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/imported#name",
+            "name": "name",
+            "domain_iri": "https://example.org/imported#Person",
+            "domain_name": "Person",
+            "range_iri": "http://www.w3.org/2001/XMLSchema#string",
+            "range_type": "str",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          }
+        ]
+      },
+      {
+        "iri": "https://example.org/imported#Student",
+        "name": "Student",
+        "parent_name": "Person",
+        "properties": [
+          {
+            "iri": "https://example.org/imported#takesCourse",
+            "name": "takes_course",
+            "domain_iri": "https://example.org/imported#Student",
+            "domain_name": "Student",
+            "range_iri": "https://example.org/imported#Course",
+            "range_type": "Course",
+            "kind": "object",
+            "container": "list",
+            "constructor": true
+          }
+        ]
+      }
+    ],
+    "properties": [
+      {
+        "iri": "https://example.org/imported#takesCourse",
+        "name": "takes_course",
+        "domain_iri": "https://example.org/imported#Student",
+        "domain_name": "Student",
+        "range_iri": "https://example.org/imported#Course",
+        "range_type": "Course",
+        "kind": "object",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/imported#name",
+        "name": "name",
+        "domain_iri": "https://example.org/imported#Person",
+        "domain_name": "Person",
+        "range_iri": "http://www.w3.org/2001/XMLSchema#string",
+        "range_type": "str",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      }
+    ],
+    "diagnostics": [
+      {
+        "code": "individuals_deferred",
+        "message": "Individual assertions are inventoried; use the generated load_individuals API to instantiate them",
+        "iri": null
+      }
+    ],
+    "descriptors": [
+      {
+        "property": {
+          "iri": "https://example.org/imported#takesCourse",
+          "name": "takes_course",
+          "domain_iri": "https://example.org/imported#Student",
+          "domain_name": "Student",
+          "range_iri": "https://example.org/imported#Course",
+          "range_type": "Course",
+          "kind": "object",
+          "container": "list",
+          "constructor": true
+        },
+        "name": "_Property0",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": null,
+        "inverse_iri": null,
+        "transitive": false,
+        "symmetric": false
+      }
+    ],
+    "expressions": []
+  }
+}

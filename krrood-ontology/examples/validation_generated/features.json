@@ -1,0 +1,218 @@
+{
+  "profile": "named_classes_explicit_types_additive_relations_positive_queries",
+  "complete_owl_conformance": false,
+  "scoped_validation": {
+    "available": true,
+    "automatic_enforcement": false,
+    "profile": "mapped_fields_explicit_structural_types",
+    "default_complete": false,
+    "default_identity_policy": "owl",
+    "unsupported_axioms": "reported_by_validator_coverage"
+  },
+  "binding_policy": "local-usage",
+  "property_iris": 4,
+  "field_associations": 8,
+  "unbound_property_iris": [],
+  "preserved_axiom_records": 10,
+  "predicates": [
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+      "triple_count": 4,
+      "treatment": "retained_source_only"
+    },
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+      "triple_count": 4,
+      "treatment": "retained_source_only"
+    },
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+      "triple_count": 28,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#domain",
+      "triple_count": 1,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#range",
+      "triple_count": 1,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "triple_count": 17,
+      "treatment": "named_inheritance_and_retained_anonymous_axioms"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#allValuesFrom",
+      "triple_count": 1,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#disjointWith",
+      "triple_count": 1,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#hasValue",
+      "triple_count": 3,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#maxQualifiedCardinality",
+      "triple_count": 1,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#members",
+      "triple_count": 1,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#minQualifiedCardinality",
+      "triple_count": 1,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#onClass",
+      "triple_count": 3,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#onProperty",
+      "triple_count": 9,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#qualifiedCardinality",
+      "triple_count": 1,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#someValuesFrom",
+      "triple_count": 2,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#unionOf",
+      "triple_count": 1,
+      "treatment": "omitted_semantics"
+    }
+  ],
+  "rdf_type_terms": [
+    {
+      "iri": "http://www.w3.org/2002/07/owl#AllDisjointClasses",
+      "assertion_count": 1,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#Class",
+      "assertion_count": 11,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#DatatypeProperty",
+      "assertion_count": 2,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#FunctionalProperty",
+      "assertion_count": 2,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "assertion_count": 2,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#Restriction",
+      "assertion_count": 9,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "https://example.org/validation#Part",
+      "assertion_count": 1,
+      "treatment": "runtime_type_preflight"
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#AllDisjointClasses",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#FunctionalProperty",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#Restriction",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#allValuesFrom",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#disjointWith",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#hasValue",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#maxQualifiedCardinality",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#members",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#minQualifiedCardinality",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#onClass",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#onProperty",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#qualifiedCardinality",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#someValuesFrom",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#unionOf",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "local_usage_binding",
+      "iri": null,
+      "message": "Field ownership follows declared domains or local axiom usage; it does not infer OWL signatures. Unbound properties remain registered without Python fields."
+    }
+  ]
+}

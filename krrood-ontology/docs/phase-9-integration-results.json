@@ -1,0 +1,11 @@
+{
+  "classes": 1017,
+  "properties": 966,
+  "field_bindings": 1162,
+  "positive_definitions_checked": 14,
+  "shared_native_properties": 5,
+  "reflexive_seeds": 3,
+  "scoped_relation_facts": 11,
+  "asymmetric_conflict_detected": true,
+  "runtime_check_seconds": 10.168
+}

@@ -1,0 +1,18 @@
+{
+  "classes": 1017,
+  "properties": 966,
+  "loaded_individuals": 4,
+  "distinct_groups": 1,
+  "distinct_members": 4,
+  "source_triples": 11596,
+  "roundtrip_all_triples_equal": true,
+  "roundtrip_types_and_identity_equal": true,
+  "source_bytes_retained": true,
+  "owl_validation_summary": {
+    "satisfied": 8,
+    "violation": 0,
+    "unknown": 0,
+    "unsupported": 0
+  },
+  "runtime_check_seconds": 13.34
+}

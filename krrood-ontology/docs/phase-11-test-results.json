@@ -1,0 +1,18 @@
+{
+  "version": "0.11.0",
+  "contract_version": "1.0",
+  "focused_tests": 24,
+  "full_tests": 154,
+  "full_suite_seconds": 177.31,
+  "ruff": "passed",
+  "wheel_contracts_and_metadata": "passed",
+  "wheel_lifecycle_demo": "passed",
+  "compiler_smoke": "passed",
+  "compiler_profile_phase": 10,
+  "compiler_package_metadata": "0.11.0",
+  "default_checker": "unsupported",
+  "demonstration_checker": "contract_fixture_only",
+  "native_symbols_created": 0,
+  "native_relations_created": 0,
+  "facts_committed": false
+}

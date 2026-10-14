@@ -1,0 +1,11 @@
+{
+  "version": "0.10.0",
+  "focused_tests": 12,
+  "full_tests": 130,
+  "full_suite_seconds": 176.96,
+  "ruff": "passed",
+  "wheel_code_templates_and_compilation": "passed",
+  "phase8_aicor_regression": "passed",
+  "phase9_aicor_regression": "passed",
+  "ontology_specific_implementation_branches": false
+}

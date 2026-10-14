@@ -1,0 +1,32 @@
+"""Positive class-expression metadata and scoped native KRROOD EQL queries."""
+
+from krrood_ontology.model import ClassExpression, ExpressionKind, LiteralDefinition
+from krrood_ontology.queries import ModelQueries
+
+from .runtime import MODEL
+
+{% macro expression(node) -%}
+ClassExpression(
+    kind=ExpressionKind.{{ node.kind.name }},
+    iri={{ node.iri | python_literal }},
+    property_iri={{ node.property_iri | python_literal }},
+    literal={% if node.literal %}LiteralDefinition(
+        lexical={{ node.literal.lexical | python_literal }},
+        datatype={{ node.literal.datatype | python_literal }},
+    ){% else %}None{% endif %},
+    operands=({% for operand in node.operands %}{{ expression(operand) }},{% endfor %}),
+    individuals={{ node.individuals | python_literal }},
+)
+{%- endmacro %}
+
+CLASS_EXPRESSIONS = {
+{% for definition in model.expressions %}
+    {{ definition.class_iri | python_literal }}: {{ expression(definition.expression) }},
+{% endfor %}
+}
+
+CLASS_ALIASES = dict({{ model.class_aliases | python_literal }})
+model_queries = ModelQueries(MODEL, CLASS_EXPRESSIONS, CLASS_ALIASES,
+                             partial_individuals={{ model.scoped_semantics | python_literal }})
+
+__all__ = ["CLASS_EXPRESSIONS", "CLASS_ALIASES", "model_queries", "ClassExpression", "ExpressionKind", "LiteralDefinition"]

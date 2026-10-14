@@ -1,0 +1,42 @@
+@prefix : <https://example.org/expressions#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Person a owl:Class .
+:Manager a owl:Class ; rdfs:subClassOf :Person .
+:Company a owl:Class .
+:name a owl:DatatypeProperty ; rdfs:domain :Person ; rdfs:range xsd:string .
+:worksFor a owl:ObjectProperty ; rdfs:domain :Person ; rdfs:range :Company ; owl:inverseOf :hasEmployee .
+:hasEmployee a owl:ObjectProperty ; rdfs:domain :Company ; rdfs:range :Person .
+
+:WorkingPerson a owl:Class ; rdfs:subClassOf :Person ; owl:equivalentClass [
+    owl:intersectionOf (:Person [ a owl:Restriction ; owl:onProperty :worksFor ; owl:someValuesFrom :Company ])
+] .
+:AcmeWorker a owl:Class ; rdfs:subClassOf :Person ; owl:equivalentClass [
+    owl:intersectionOf (:Person [ a owl:Restriction ; owl:onProperty :worksFor ; owl:hasValue :Acme ])
+] .
+:NamedAlice a owl:Class ; rdfs:subClassOf :Person ; owl:equivalentClass [
+    owl:intersectionOf (:Person [ a owl:Restriction ; owl:onProperty :name ; owl:hasValue "Alice" ])
+] .
+:SelectedPerson a owl:Class ; owl:equivalentClass [ owl:oneOf (:Alice :Charlie) ] .
+:PersonOrCompany a owl:Class ; owl:equivalentClass [ owl:unionOf (:Person :Company) ] .
+:WorkingOrSelected a owl:Class ; owl:equivalentClass [ owl:unionOf (:WorkingPerson :SelectedPerson) ] .
+:EmployerOfManager a owl:Class ; rdfs:subClassOf :Company ; owl:equivalentClass [
+    owl:intersectionOf (:Company [ a owl:Restriction ; owl:onProperty :hasEmployee ; owl:someValuesFrom :Manager ])
+] .
+:EmployerOfWorker a owl:Class ; rdfs:subClassOf :Company ; owl:equivalentClass [
+    owl:intersectionOf (:Company [ a owl:Restriction ; owl:onProperty :hasEmployee ; owl:someValuesFrom :WorkingPerson ])
+] .
+:EmployerOfAlice a owl:Class ; rdfs:subClassOf :Company ; owl:equivalentClass [
+    owl:intersectionOf (:Company [ a owl:Restriction ; owl:onProperty :hasEmployee ; owl:someValuesFrom [
+        owl:intersectionOf (:Person [ a owl:Restriction ; owl:onProperty :name ; owl:hasValue "Alice" ])
+    ] ])
+] .
+
+:Alice a :Person ; :name "Alice" ; :worksFor :Acme .
+:Bob a :Manager ; :name "Bob" ; :worksFor :Acme .
+:Charlie a :Person ; :name "Charlie" .
+:Acme a :Company .
+:EmptyCompany a :Company .
+:ExplicitWorker a :WorkingPerson ; :name "Explicit Worker" .

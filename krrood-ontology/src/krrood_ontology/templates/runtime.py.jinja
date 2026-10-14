@@ -1,0 +1,50 @@
+"""Load named ontology individuals through the shared Phase 4 runtime."""
+
+from pathlib import Path
+
+from krrood_ontology.config import OntologyInput
+from krrood_ontology.individuals import IndividualLoader
+from krrood_ontology.export import IndividualExporter
+from krrood_ontology.runtime import FieldMapping, GeneratedModel, LoadedIndividuals
+
+from .classes import CLASS_BY_IRI
+{% if model.root_properties %}
+from .classes import _OntologyEntity
+{% endif %}
+from .vocabulary import ANNOTATION_PROPERTY_IRIS
+
+MODEL = GeneratedModel(
+    classes=CLASS_BY_IRI,
+{% if model.root_properties %}
+    entity_base=_OntologyEntity,
+{% endif %}
+    properties={
+{% for prop in model.properties %}
+        {{ prop.iri | python_literal }}: FieldMapping(
+            iri={{ prop.iri | python_literal }},
+            name={{ prop.name | python_literal }},
+            domain_iri={{ prop.domain_iri | python_literal }},
+            range_iri={{ prop.range_iri | python_literal }},
+            kind={{ prop.kind.value | python_literal }},
+            container={{ prop.container | python_literal }},
+        ),
+{% endfor %}
+    },
+    bindings=(
+{% for prop in bindings %}
+        FieldMapping({{ prop.iri | python_literal }}, {{ prop.name | python_literal }},
+                     {{ prop.domain_iri | python_literal }}, {{ prop.range_iri | python_literal }},
+                     {{ prop.kind.value | python_literal }}, {{ prop.container | python_literal }}),
+{% endfor %}
+    ),
+    binding_policy={{ model.binding_policy | python_literal }},
+    annotation_properties=frozenset(ANNOTATION_PROPERTY_IRIS),
+)
+
+
+def load_individuals(source: OntologyInput | Path | str, *, identity_policy: str = "distinct") -> LoadedIndividuals:
+    """Create a fresh IRI registry and populate its asserted individuals."""
+    return IndividualLoader(MODEL).load(source, identity_policy=identity_policy)
+
+
+model_exporter = IndividualExporter(MODEL)

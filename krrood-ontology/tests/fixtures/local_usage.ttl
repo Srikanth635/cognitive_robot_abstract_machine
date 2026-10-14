@@ -1,0 +1,16 @@
+@prefix : <https://example.org/structural#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+:Entity a owl:Class .
+:Left a owl:Class ; rdfs:subClassOf :Entity, [ a owl:Restriction ; owl:onProperty :connects ; owl:someValuesFrom :Entity ] .
+:Right a owl:Class ; rdfs:subClassOf :Entity, [ a owl:Restriction ; owl:onProperty :connects ; owl:someValuesFrom :Entity ] .
+:Combined a owl:Class ; rdfs:subClassOf :Left, :Right, :Entity, [ a owl:Restriction ; owl:onProperty :tag ; owl:hasValue "ready" ] .
+:None a owl:Class .
+:Type a owl:Class .
+:connects a owl:ObjectProperty .
+:tag a owl:DatatypeProperty .
+:unused a owl:ObjectProperty .
+:a a :Combined .
+:b a :Entity .
+:a :connects :b ; :tag "ready" .

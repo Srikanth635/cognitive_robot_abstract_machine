@@ -1,0 +1,64 @@
+{
+  "profile": "named_classes_explicit_types_additive_relations_positive_queries",
+  "complete_owl_conformance": false,
+  "predicates": [
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+      "triple_count": 15,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#domain",
+      "triple_count": 9,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#range",
+      "triple_count": 9,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "triple_count": 2,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+      "triple_count": 3,
+      "treatment": "native_relation_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#inverseOf",
+      "triple_count": 2,
+      "treatment": "native_relation_mapping"
+    }
+  ],
+  "rdf_type_terms": [
+    {
+      "iri": "http://www.w3.org/2002/07/owl#Class",
+      "assertion_count": 4,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#DatatypeProperty",
+      "assertion_count": 1,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "assertion_count": 8,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#SymmetricProperty",
+      "assertion_count": 1,
+      "treatment": "native_relation_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#TransitiveProperty",
+      "assertion_count": 1,
+      "treatment": "native_relation_mapping"
+    }
+  ],
+  "diagnostics": []
+}

@@ -1,0 +1,15 @@
+@prefix : <https://example.org/test#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+:Ontology a owl:Ontology ; owl:imports <https://example.invalid/external.owl> .
+:Person a owl:Class .
+:Parent a owl:Class ; owl:equivalentClass [
+    a owl:Restriction ;
+    owl:onProperty :hasChild ;
+    owl:someValuesFrom :Person
+] .
+:hasChild a owl:ObjectProperty ; rdfs:domain :Person ; rdfs:range :Person .
+:Alice a :Person ; :hasChild :Bob .
+:Bob a :Person .
+

@@ -1,0 +1,27 @@
+@prefix : <https://example.org/validation#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+:Entity a owl:Class .
+:Part a owl:Class ; rdfs:subClassOf :Entity ; owl:disjointWith :Other .
+:Other a owl:Class ; rdfs:subClassOf :Entity .
+:Conflict a owl:Class ; rdfs:subClassOf :Part, :Other .
+:Assembly a owl:Class ; rdfs:subClassOf :Entity,
+ [ a owl:Restriction ; owl:onProperty :parts ; owl:someValuesFrom :Part ],
+ [ a owl:Restriction ; owl:onProperty :parts ; owl:allValuesFrom :Part ],
+ [ a owl:Restriction ; owl:onProperty :parts ; owl:onClass :Part ; owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ],
+ [ a owl:Restriction ; owl:onProperty :tag ; owl:hasValue "ready" ] .
+:Child a owl:Class ; rdfs:subClassOf :Assembly .
+:Minimum a owl:Class ; rdfs:subClassOf :Entity,
+ [ a owl:Restriction ; owl:onProperty :parts ; owl:onClass :Part ; owl:minQualifiedCardinality "2"^^xsd:nonNegativeInteger ] .
+:Maximum a owl:Class ; rdfs:subClassOf :Entity,
+ [ a owl:Restriction ; owl:onProperty :parts ; owl:onClass :Part ; owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ] .
+:Flag a owl:Class ; rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :flag ; owl:hasValue false ] .
+:Bound a owl:Class ; rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :parts ; owl:hasValue :required ] .
+:UnionOwner a owl:Class ; rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :parts ; owl:someValuesFrom [ owl:unionOf (:Part :Other) ] ] .
+:parts a owl:ObjectProperty .
+:tag a owl:DatatypeProperty, owl:FunctionalProperty .
+:flag a owl:DatatypeProperty .
+:primary a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain :Assembly ; rdfs:range :Entity .
+:required a :Part .
+[] a owl:AllDisjointClasses ; owl:members (:Part :Other) .

@@ -1,0 +1,1071 @@
+{
+  "phase": 9,
+  "artifact": "python_dataclass_model",
+  "krrood_version": "26.7.0",
+  "structural_only": true,
+  "binding_policy": "local-usage",
+  "scoped_semantics": true,
+  "reflexivity_policy": "explicit_scoped_initialization",
+  "relation_provenance": "native_first_insertion_flag",
+  "inference_applied": false,
+  "relation_implications": true,
+  "update_policy": "additions_after_construction",
+  "retraction_supported": false,
+  "imports_loaded": false,
+  "import_policy": "explicit_local_files_no_network",
+  "resolved_import_iris": [],
+  "source_documents": [
+    {
+      "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/examples/scoped_semantics.ttl",
+      "source_base_iri": "file:///workspace/scratch/94e4314b917c/krrood-ontology/examples/scoped_semantics.ttl",
+      "sha256": "3b3adab528d372d7ba8614b2299d0ed41be6057ea64c3676a7f897b87bb35314",
+      "format": "turtle",
+      "snapshot": "source/documents/000.turtle"
+    }
+  ],
+  "runtime_ontology": "source/closure.ttl",
+  "closure_sha256": "9f15d1cb1d094afcf4eb73447356e424c0bc566d75947f0cea716bcc90d45551",
+  "blank_node_policy": "source_graph_local_ids",
+  "feature_report": "features.json",
+  "verification": {
+    "isolated_import": "passed",
+    "individual_preflight": "omitted",
+    "timeout_seconds": 45
+  },
+  "environment": {
+    "python": "3.12.14",
+    "packages": {
+      "krrood-ontology": "0.9.0",
+      "krrood": "26.7.0",
+      "rdflib": "7.6.0",
+      "jinja2": "3.1.6",
+      "black": "26.5.1"
+    }
+  },
+  "individuals_loaded": false,
+  "individual_loader_available": true,
+  "individual_type_policy": "explicit_inheritance_chain",
+  "runtime_type_validation": false,
+  "class_expression_queries": true,
+  "expression_query_policy": "positive_known_objects_explicit_registry",
+  "automatic_reclassification": false,
+  "scoped_validation_available": true,
+  "validation_default": "incomplete_scope_owl_identity",
+  "validation_profile": "mapped_fields_positive_definitions",
+  "ontology": {
+    "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/examples/scoped_semantics.ttl",
+    "source_sha256": "3b3adab528d372d7ba8614b2299d0ed41be6057ea64c3676a7f897b87bb35314",
+    "rdf_format": "turtle",
+    "triple_count": 75,
+    "classes": [
+      "https://example.org/scoped#Alias",
+      "https://example.org/scoped#Alpha",
+      "https://example.org/scoped#Beta",
+      "https://example.org/scoped#Carrier",
+      "https://example.org/scoped#Choice",
+      "https://example.org/scoped#Either",
+      "https://example.org/scoped#Entity",
+      "https://example.org/scoped#FlagCarrier",
+      "https://example.org/scoped#FlagChild",
+      "https://example.org/scoped#InheritedFlagAlias",
+      "https://example.org/scoped#Linked",
+      "https://example.org/scoped#Marked",
+      "https://example.org/scoped#MarkedAlias",
+      "https://example.org/scoped#Nested",
+      "https://example.org/scoped#ReverseMarked"
+    ],
+    "object_properties": [
+      "https://example.org/scoped#before",
+      "https://example.org/scoped#connected",
+      "https://example.org/scoped#link"
+    ],
+    "datatype_properties": [
+      "https://example.org/scoped#flag"
+    ],
+    "annotation_properties": [],
+    "individuals": [
+      "https://example.org/scoped#one",
+      "https://example.org/scoped#two"
+    ],
+    "imports": [],
+    "owl_features": [
+      "http://www.w3.org/2002/07/owl#AsymmetricProperty",
+      "http://www.w3.org/2002/07/owl#Class",
+      "http://www.w3.org/2002/07/owl#DatatypeProperty",
+      "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "http://www.w3.org/2002/07/owl#ReflexiveProperty",
+      "http://www.w3.org/2002/07/owl#Restriction",
+      "http://www.w3.org/2002/07/owl#SymmetricProperty",
+      "http://www.w3.org/2002/07/owl#TransitiveProperty",
+      "http://www.w3.org/2002/07/owl#equivalentClass",
+      "http://www.w3.org/2002/07/owl#hasValue",
+      "http://www.w3.org/2002/07/owl#onProperty",
+      "http://www.w3.org/2002/07/owl#oneOf",
+      "http://www.w3.org/2002/07/owl#someValuesFrom",
+      "http://www.w3.org/2002/07/owl#unionOf"
+    ]
+  },
+  "model": {
+    "classes": [
+      {
+        "iri": "https://example.org/scoped#Alias",
+        "name": "Alias",
+        "parent_name": null,
+        "properties": [],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#Entity",
+        "name": "Entity",
+        "parent_name": null,
+        "properties": [],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#Carrier",
+        "name": "Carrier",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/scoped#link",
+            "name": "link",
+            "domain_iri": "https://example.org/scoped#Carrier",
+            "domain_name": "Carrier",
+            "range_iri": "",
+            "range_type": "_KrroodSymbol",
+            "kind": "object",
+            "container": "list",
+            "constructor": true
+          }
+        ],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#Choice",
+        "name": "Choice",
+        "parent_name": null,
+        "properties": [],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#Either",
+        "name": "Either",
+        "parent_name": null,
+        "properties": [],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#FlagCarrier",
+        "name": "FlagCarrier",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/scoped#flag",
+            "name": "flag",
+            "domain_iri": "https://example.org/scoped#FlagCarrier",
+            "domain_name": "FlagCarrier",
+            "range_iri": "",
+            "range_type": "_Any",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          }
+        ],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#InheritedFlagAlias",
+        "name": "InheritedFlagAlias",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/scoped#flag",
+            "name": "flag",
+            "domain_iri": "https://example.org/scoped#InheritedFlagAlias",
+            "domain_name": "InheritedFlagAlias",
+            "range_iri": "",
+            "range_type": "_Any",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          }
+        ],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#Linked",
+        "name": "Linked",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/scoped#link",
+            "name": "link",
+            "domain_iri": "https://example.org/scoped#Linked",
+            "domain_name": "Linked",
+            "range_iri": "",
+            "range_type": "_KrroodSymbol",
+            "kind": "object",
+            "container": "list",
+            "constructor": true
+          }
+        ],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#Marked",
+        "name": "Marked",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/scoped#flag",
+            "name": "flag",
+            "domain_iri": "https://example.org/scoped#Marked",
+            "domain_name": "Marked",
+            "range_iri": "",
+            "range_type": "_Any",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          }
+        ],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#MarkedAlias",
+        "name": "MarkedAlias",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/scoped#flag",
+            "name": "flag",
+            "domain_iri": "https://example.org/scoped#MarkedAlias",
+            "domain_name": "MarkedAlias",
+            "range_iri": "",
+            "range_type": "_Any",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          }
+        ],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#Nested",
+        "name": "Nested",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/scoped#link",
+            "name": "link",
+            "domain_iri": "https://example.org/scoped#Nested",
+            "domain_name": "Nested",
+            "range_iri": "",
+            "range_type": "_KrroodSymbol",
+            "kind": "object",
+            "container": "list",
+            "constructor": true
+          }
+        ],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#ReverseMarked",
+        "name": "ReverseMarked",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/scoped#flag",
+            "name": "flag",
+            "domain_iri": "https://example.org/scoped#ReverseMarked",
+            "domain_name": "ReverseMarked",
+            "range_iri": "",
+            "range_type": "_Any",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          }
+        ],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/scoped#Alpha",
+        "name": "Alpha",
+        "parent_name": "Entity",
+        "properties": [],
+        "parent_names": [
+          "Entity"
+        ],
+        "asserted_parent_iris": [
+          "https://example.org/scoped#Entity"
+        ]
+      },
+      {
+        "iri": "https://example.org/scoped#Beta",
+        "name": "Beta",
+        "parent_name": "Entity",
+        "properties": [],
+        "parent_names": [
+          "Entity"
+        ],
+        "asserted_parent_iris": [
+          "https://example.org/scoped#Entity"
+        ]
+      },
+      {
+        "iri": "https://example.org/scoped#FlagChild",
+        "name": "FlagChild",
+        "parent_name": "FlagCarrier",
+        "properties": [],
+        "parent_names": [
+          "FlagCarrier"
+        ],
+        "asserted_parent_iris": [
+          "https://example.org/scoped#FlagCarrier"
+        ]
+      }
+    ],
+    "properties": [
+      {
+        "iri": "https://example.org/scoped#before",
+        "name": "before",
+        "domain_iri": "",
+        "domain_name": "",
+        "range_iri": "",
+        "range_type": "_KrroodSymbol",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/scoped#connected",
+        "name": "connected",
+        "domain_iri": "",
+        "domain_name": "",
+        "range_iri": "",
+        "range_type": "_KrroodSymbol",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/scoped#link",
+        "name": "link",
+        "domain_iri": "",
+        "domain_name": "",
+        "range_iri": "",
+        "range_type": "_KrroodSymbol",
+        "kind": "object",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/scoped#flag",
+        "name": "flag",
+        "domain_iri": "",
+        "domain_name": "",
+        "range_iri": "",
+        "range_type": "_Any",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      }
+    ],
+    "diagnostics": [
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#AsymmetricProperty"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#ReflexiveProperty"
+      },
+      {
+        "code": "semantic_feature_deferred",
+        "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions",
+        "iri": "http://www.w3.org/2002/07/owl#Restriction"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#SymmetricProperty"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#TransitiveProperty"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#equivalentClass"
+      },
+      {
+        "code": "semantic_feature_deferred",
+        "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions",
+        "iri": "http://www.w3.org/2002/07/owl#hasValue"
+      },
+      {
+        "code": "semantic_feature_deferred",
+        "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions",
+        "iri": "http://www.w3.org/2002/07/owl#onProperty"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#oneOf"
+      },
+      {
+        "code": "semantic_feature_deferred",
+        "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions",
+        "iri": "http://www.w3.org/2002/07/owl#someValuesFrom"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#unionOf"
+      },
+      {
+        "code": "local_usage_binding",
+        "message": "Field ownership follows declared domains or local axiom usage; it does not infer OWL signatures. Unbound properties remain registered without Python fields.",
+        "iri": null
+      }
+    ],
+    "descriptors": [
+      {
+        "property": {
+          "iri": "https://example.org/scoped#before",
+          "name": "before",
+          "domain_iri": "",
+          "domain_name": "_OntologyEntity",
+          "range_iri": "",
+          "range_type": "_OntologyEntity",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property0",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": null,
+        "inverse_iri": null,
+        "transitive": false,
+        "symmetric": false
+      },
+      {
+        "property": {
+          "iri": "https://example.org/scoped#connected",
+          "name": "connected",
+          "domain_iri": "",
+          "domain_name": "_OntologyEntity",
+          "range_iri": "",
+          "range_type": "_OntologyEntity",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property1",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": "_Property1",
+        "inverse_iri": "https://example.org/scoped#connected",
+        "transitive": true,
+        "symmetric": true
+      },
+      {
+        "property": {
+          "iri": "https://example.org/scoped#link",
+          "name": "link",
+          "domain_iri": "",
+          "domain_name": "",
+          "range_iri": "",
+          "range_type": "_KrroodSymbol",
+          "kind": "object",
+          "container": "list",
+          "constructor": true
+        },
+        "name": "_Property2",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": null,
+        "inverse_iri": null,
+        "transitive": false,
+        "symmetric": false
+      }
+    ],
+    "expressions": [
+      {
+        "class_iri": "https://example.org/scoped#Choice",
+        "expression": {
+          "kind": "enumeration",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [],
+          "individuals": [
+            "https://example.org/scoped#one",
+            "https://example.org/scoped#two"
+          ],
+          "cardinality": null
+        }
+      },
+      {
+        "class_iri": "https://example.org/scoped#Either",
+        "expression": {
+          "kind": "union",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [
+            {
+              "kind": "class",
+              "iri": "https://example.org/scoped#Alpha",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": [],
+              "cardinality": null
+            },
+            {
+              "kind": "class",
+              "iri": "https://example.org/scoped#Beta",
+              "property_iri": null,
+              "literal": null,
+              "operands": [],
+              "individuals": [],
+              "cardinality": null
+            }
+          ],
+          "individuals": [],
+          "cardinality": null
+        }
+      },
+      {
+        "class_iri": "https://example.org/scoped#Linked",
+        "expression": {
+          "kind": "some",
+          "iri": null,
+          "property_iri": "https://example.org/scoped#link",
+          "literal": null,
+          "operands": [
+            {
+              "kind": "union",
+              "iri": null,
+              "property_iri": null,
+              "literal": null,
+              "operands": [
+                {
+                  "kind": "class",
+                  "iri": "https://example.org/scoped#Alpha",
+                  "property_iri": null,
+                  "literal": null,
+                  "operands": [],
+                  "individuals": [],
+                  "cardinality": null
+                },
+                {
+                  "kind": "class",
+                  "iri": "https://example.org/scoped#Beta",
+                  "property_iri": null,
+                  "literal": null,
+                  "operands": [],
+                  "individuals": [],
+                  "cardinality": null
+                }
+              ],
+              "individuals": [],
+              "cardinality": null
+            }
+          ],
+          "individuals": [],
+          "cardinality": null
+        }
+      },
+      {
+        "class_iri": "https://example.org/scoped#Marked",
+        "expression": {
+          "kind": "has_value",
+          "iri": null,
+          "property_iri": "https://example.org/scoped#flag",
+          "literal": {
+            "lexical": "false",
+            "datatype": "http://www.w3.org/2001/XMLSchema#boolean"
+          },
+          "operands": [],
+          "individuals": [],
+          "cardinality": null
+        }
+      },
+      {
+        "class_iri": "https://example.org/scoped#MarkedAlias",
+        "expression": {
+          "kind": "has_value",
+          "iri": null,
+          "property_iri": "https://example.org/scoped#flag",
+          "literal": {
+            "lexical": "false",
+            "datatype": "http://www.w3.org/2001/XMLSchema#boolean"
+          },
+          "operands": [],
+          "individuals": [],
+          "cardinality": null
+        }
+      },
+      {
+        "class_iri": "https://example.org/scoped#Nested",
+        "expression": {
+          "kind": "some",
+          "iri": null,
+          "property_iri": "https://example.org/scoped#link",
+          "literal": null,
+          "operands": [
+            {
+              "kind": "some",
+              "iri": null,
+              "property_iri": "https://example.org/scoped#link",
+              "literal": null,
+              "operands": [
+                {
+                  "kind": "class",
+                  "iri": "https://example.org/scoped#Alpha",
+                  "property_iri": null,
+                  "literal": null,
+                  "operands": [],
+                  "individuals": [],
+                  "cardinality": null
+                }
+              ],
+              "individuals": [],
+              "cardinality": null
+            }
+          ],
+          "individuals": [],
+          "cardinality": null
+        }
+      },
+      {
+        "class_iri": "https://example.org/scoped#ReverseMarked",
+        "expression": {
+          "kind": "has_value",
+          "iri": null,
+          "property_iri": "https://example.org/scoped#flag",
+          "literal": {
+            "lexical": "false",
+            "datatype": "http://www.w3.org/2001/XMLSchema#boolean"
+          },
+          "operands": [],
+          "individuals": [],
+          "cardinality": null
+        }
+      }
+    ],
+    "property_bindings": [
+      {
+        "iri": "https://example.org/scoped#link",
+        "name": "link",
+        "domain_iri": "https://example.org/scoped#Carrier",
+        "domain_name": "Carrier",
+        "range_iri": "",
+        "range_type": "_KrroodSymbol",
+        "kind": "object",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/scoped#flag",
+        "name": "flag",
+        "domain_iri": "https://example.org/scoped#FlagCarrier",
+        "domain_name": "FlagCarrier",
+        "range_iri": "",
+        "range_type": "_Any",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/scoped#link",
+        "name": "link",
+        "domain_iri": "https://example.org/scoped#Linked",
+        "domain_name": "Linked",
+        "range_iri": "",
+        "range_type": "_KrroodSymbol",
+        "kind": "object",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/scoped#flag",
+        "name": "flag",
+        "domain_iri": "https://example.org/scoped#Marked",
+        "domain_name": "Marked",
+        "range_iri": "",
+        "range_type": "_Any",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/scoped#link",
+        "name": "link",
+        "domain_iri": "https://example.org/scoped#Nested",
+        "domain_name": "Nested",
+        "range_iri": "",
+        "range_type": "_KrroodSymbol",
+        "kind": "object",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/scoped#flag",
+        "name": "flag",
+        "domain_iri": "https://example.org/scoped#InheritedFlagAlias",
+        "domain_name": "InheritedFlagAlias",
+        "range_iri": "",
+        "range_type": "_Any",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/scoped#flag",
+        "name": "flag",
+        "domain_iri": "https://example.org/scoped#MarkedAlias",
+        "domain_name": "MarkedAlias",
+        "range_iri": "",
+        "range_type": "_Any",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/scoped#flag",
+        "name": "flag",
+        "domain_iri": "https://example.org/scoped#ReverseMarked",
+        "domain_name": "ReverseMarked",
+        "range_iri": "",
+        "range_type": "_Any",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/scoped#before",
+        "name": "before",
+        "domain_iri": "",
+        "domain_name": "_OntologyEntity",
+        "range_iri": "",
+        "range_type": "_OntologyEntity",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/scoped#connected",
+        "name": "connected",
+        "domain_iri": "",
+        "domain_name": "_OntologyEntity",
+        "range_iri": "",
+        "range_type": "_OntologyEntity",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      }
+    ],
+    "binding_policy": "local-usage",
+    "schema_axioms": [
+      {
+        "class_iri": "https://example.org/scoped#Carrier",
+        "predicate_iri": "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+        "root": "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb12",
+        "triples": [
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb12",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "<http://www.w3.org/2002/07/owl#Restriction>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb12",
+            "<http://www.w3.org/2002/07/owl#onProperty>",
+            "<https://example.org/scoped#link>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb12",
+            "<http://www.w3.org/2002/07/owl#someValuesFrom>",
+            "<http://www.w3.org/2002/07/owl#Thing>"
+          ]
+        ]
+      },
+      {
+        "class_iri": "https://example.org/scoped#Choice",
+        "predicate_iri": "http://www.w3.org/2002/07/owl#equivalentClass",
+        "root": "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb9",
+        "triples": [
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb10",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/scoped#one>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb10",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb11"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb11",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/scoped#two>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb11",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb9",
+            "<http://www.w3.org/2002/07/owl#oneOf>",
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb10"
+          ]
+        ]
+      },
+      {
+        "class_iri": "https://example.org/scoped#Either",
+        "predicate_iri": "http://www.w3.org/2002/07/owl#equivalentClass",
+        "root": "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb1",
+        "triples": [
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb1",
+            "<http://www.w3.org/2002/07/owl#unionOf>",
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb2"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb2",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/scoped#Alpha>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb2",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb3"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb3",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/scoped#Beta>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb3",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>"
+          ]
+        ]
+      },
+      {
+        "class_iri": "https://example.org/scoped#FlagCarrier",
+        "predicate_iri": "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+        "root": "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb13",
+        "triples": [
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb13",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "<http://www.w3.org/2002/07/owl#Restriction>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb13",
+            "<http://www.w3.org/2002/07/owl#hasValue>",
+            "\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb13",
+            "<http://www.w3.org/2002/07/owl#onProperty>",
+            "<https://example.org/scoped#flag>"
+          ]
+        ]
+      },
+      {
+        "class_iri": "https://example.org/scoped#Linked",
+        "predicate_iri": "http://www.w3.org/2002/07/owl#equivalentClass",
+        "root": "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb4",
+        "triples": [
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb4",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "<http://www.w3.org/2002/07/owl#Restriction>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb4",
+            "<http://www.w3.org/2002/07/owl#onProperty>",
+            "<https://example.org/scoped#link>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb4",
+            "<http://www.w3.org/2002/07/owl#someValuesFrom>",
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb5"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb5",
+            "<http://www.w3.org/2002/07/owl#unionOf>",
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb6"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb6",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/scoped#Alpha>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb6",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb7"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb7",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/scoped#Beta>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb7",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>"
+          ]
+        ]
+      },
+      {
+        "class_iri": "https://example.org/scoped#Marked",
+        "predicate_iri": "http://www.w3.org/2002/07/owl#equivalentClass",
+        "root": "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb8",
+        "triples": [
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb8",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "<http://www.w3.org/2002/07/owl#Restriction>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb8",
+            "<http://www.w3.org/2002/07/owl#hasValue>",
+            "\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb8",
+            "<http://www.w3.org/2002/07/owl#onProperty>",
+            "<https://example.org/scoped#flag>"
+          ]
+        ]
+      },
+      {
+        "class_iri": "https://example.org/scoped#Nested",
+        "predicate_iri": "http://www.w3.org/2002/07/owl#equivalentClass",
+        "root": "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb14",
+        "triples": [
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb14",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "<http://www.w3.org/2002/07/owl#Restriction>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb14",
+            "<http://www.w3.org/2002/07/owl#onProperty>",
+            "<https://example.org/scoped#link>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb14",
+            "<http://www.w3.org/2002/07/owl#someValuesFrom>",
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb15"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb15",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "<http://www.w3.org/2002/07/owl#Restriction>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb15",
+            "<http://www.w3.org/2002/07/owl#onProperty>",
+            "<https://example.org/scoped#link>"
+          ],
+          [
+            "_:n09cdb4b97eb24fe6a108d8ad7c2b073eb15",
+            "<http://www.w3.org/2002/07/owl#someValuesFrom>",
+            "<https://example.org/scoped#Alpha>"
+          ]
+        ]
+      }
+    ],
+    "scoped_semantics": true,
+    "class_aliases": [
+      [
+        "https://example.org/scoped#Alias",
+        [
+          "https://example.org/scoped#Alpha"
+        ]
+      ],
+      [
+        "https://example.org/scoped#Alpha",
+        [
+          "https://example.org/scoped#Alias"
+        ]
+      ],
+      [
+        "https://example.org/scoped#FlagChild",
+        [
+          "https://example.org/scoped#InheritedFlagAlias"
+        ]
+      ],
+      [
+        "https://example.org/scoped#InheritedFlagAlias",
+        [
+          "https://example.org/scoped#FlagChild"
+        ]
+      ],
+      [
+        "https://example.org/scoped#Marked",
+        [
+          "https://example.org/scoped#MarkedAlias"
+        ]
+      ],
+      [
+        "https://example.org/scoped#MarkedAlias",
+        [
+          "https://example.org/scoped#Marked"
+        ]
+      ]
+    ],
+    "root_properties": [
+      {
+        "iri": "https://example.org/scoped#before",
+        "name": "before",
+        "domain_iri": "",
+        "domain_name": "_OntologyEntity",
+        "range_iri": "",
+        "range_type": "_OntologyEntity",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/scoped#connected",
+        "name": "connected",
+        "domain_iri": "",
+        "domain_name": "_OntologyEntity",
+        "range_iri": "",
+        "range_type": "_OntologyEntity",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      }
+    ],
+    "reflexive_properties": [
+      "https://example.org/scoped#connected"
+    ]
+  }
+}

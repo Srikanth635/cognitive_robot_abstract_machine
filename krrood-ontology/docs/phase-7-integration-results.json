@@ -1,0 +1,10 @@
+{
+  "classes": 1017,
+  "properties": 966,
+  "field_bindings": 1183,
+  "class_axiom_records": 1356,
+  "global_axiom_records": 13,
+  "restriction_nodes_preserved": 1341,
+  "unbound_properties": 44,
+  "runtime_check_seconds": 7.699
+}

@@ -1,0 +1,52 @@
+"""Object relation tracking delegated to KRROOD property descriptors."""
+
+from __future__ import annotations
+
+{% if object_properties %}
+from typing import ClassVar as _ClassVar
+
+from krrood.ontomatic.property_descriptor.property_descriptor import (
+    PropertyDescriptor as _PropertyDescriptor,
+)
+{% if descriptors | selectattr('inverse_name') | list %}
+from krrood.ontomatic.property_descriptor.mixins import HasInverseProperty as _HasInverseProperty
+{% endif %}
+{% if descriptors | selectattr('transitive') | list %}
+from krrood.ontomatic.property_descriptor.mixins import TransitiveProperty as _TransitiveProperty
+{% endif %}
+
+from . import classes as _classes
+{% endif %}
+
+{% for descriptor in descriptors %}
+class {{ descriptor.name }}({{ descriptor.parent_name or '_PropertyDescriptor' }}{% if descriptor.inverse_name %}, _HasInverseProperty{% endif %}{% if descriptor.transitive %}, _TransitiveProperty{% endif %}):
+    """Object-property descriptor generated from an ontology declaration."""
+
+    __ontology_iri__ = {{ descriptor.property.iri | python_literal }}
+    _cache_instances_: _ClassVar[bool] = False
+{% if descriptor.inverse_name %}
+
+    @classmethod
+    def get_inverse(cls) -> type[_PropertyDescriptor]:
+        return {{ descriptor.inverse_name }}
+{% endif %}
+
+{% endfor %}
+
+PROPERTY_BINDINGS = {}
+{% for prop in bindings if prop.kind.value == 'object' %}
+{% set descriptor = descriptors | selectattr('property.iri', 'equalto', prop.iri) | first %}
+_descriptor{{ loop.index0 }} = {{ descriptor.name }}(
+    _classes.{{ prop.domain_name }}, {{ prop.name | python_literal }}
+)
+_classes.{{ prop.domain_name }}.{{ prop.name }} = _descriptor{{ loop.index0 }}
+PROPERTY_BINDINGS[({{ prop.iri | python_literal }}, {{ prop.domain_iri | python_literal }})] = _descriptor{{ loop.index0 }}
+{% endfor %}
+PROPERTY_DESCRIPTORS = {
+{% for descriptor in descriptors %}
+{% set bound = bindings | selectattr('iri', 'equalto', descriptor.property.iri) | list %}
+{% if bound %}
+    {{ descriptor.property.iri | python_literal }}: PROPERTY_BINDINGS[({{ descriptor.property.iri | python_literal }}, {{ bound[0].domain_iri | python_literal }})],
+{% endif %}
+{% endfor %}
+}

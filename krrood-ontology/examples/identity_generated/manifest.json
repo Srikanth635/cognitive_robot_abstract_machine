@@ -1,0 +1,415 @@
+{
+  "phase": 10,
+  "artifact": "python_dataclass_model",
+  "krrood_version": "26.7.0",
+  "structural_only": true,
+  "binding_policy": "local-usage",
+  "scoped_semantics": true,
+  "reflexivity_policy": "explicit_scoped_initialization",
+  "relation_provenance": "native_first_insertion_flag",
+  "inference_applied": false,
+  "relation_implications": true,
+  "update_policy": "additions_after_construction",
+  "retraction_supported": false,
+  "imports_loaded": false,
+  "import_policy": "explicit_local_files_no_network",
+  "resolved_import_iris": [],
+  "source_documents": [
+    {
+      "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/tests/fixtures/identity_roundtrip.ttl",
+      "source_base_iri": "file:///workspace/scratch/94e4314b917c/krrood-ontology/tests/fixtures/identity_roundtrip.ttl",
+      "sha256": "00c33235ee7655f3e27d78bf95f98656b5206cff24a96041560a588210d480d8",
+      "format": "turtle",
+      "snapshot": "source/documents/000.turtle"
+    }
+  ],
+  "runtime_ontology": "source/closure.ttl",
+  "closure_sha256": "3f52f2515dd55452165b10529e122b17f23e4570f71ad11ba591f070ddb43c14",
+  "blank_node_policy": "source_graph_local_ids",
+  "feature_report": "features.json",
+  "verification": {
+    "isolated_import": "passed",
+    "individual_preflight": "omitted",
+    "timeout_seconds": 45
+  },
+  "environment": {
+    "python": "3.12.14",
+    "packages": {
+      "krrood-ontology": "0.10.0",
+      "krrood": "26.7.0",
+      "rdflib": "7.6.0",
+      "jinja2": "3.1.6",
+      "black": "26.5.1"
+    }
+  },
+  "individuals_loaded": false,
+  "individual_loader_available": true,
+  "individual_type_policy": "explicit_inheritance_chain",
+  "identity_policy": "declared_distinctness_no_merging",
+  "rdf_export_available": true,
+  "export_default": "source_snapshot",
+  "export_current_policy": "mapped_fields_native_first_insertion_flags",
+  "runtime_type_validation": false,
+  "class_expression_queries": true,
+  "expression_query_policy": "positive_known_objects_explicit_registry",
+  "automatic_reclassification": false,
+  "scoped_validation_available": true,
+  "validation_default": "incomplete_scope_owl_identity",
+  "validation_profile": "mapped_fields_positive_definitions",
+  "ontology": {
+    "source_path": "/workspace/scratch/94e4314b917c/krrood-ontology/tests/fixtures/identity_roundtrip.ttl",
+    "source_sha256": "00c33235ee7655f3e27d78bf95f98656b5206cff24a96041560a588210d480d8",
+    "rdf_format": "turtle",
+    "triple_count": 43,
+    "classes": [
+      "https://example.org/roundtrip#Entity",
+      "https://example.org/roundtrip#Pick",
+      "https://example.org/roundtrip#Special"
+    ],
+    "object_properties": [
+      "https://example.org/roundtrip#links"
+    ],
+    "datatype_properties": [
+      "https://example.org/roundtrip#amount",
+      "https://example.org/roundtrip#loose"
+    ],
+    "annotation_properties": [
+      "https://example.org/roundtrip#note"
+    ],
+    "individuals": [
+      "https://example.org/roundtrip#one",
+      "https://example.org/roundtrip#three",
+      "https://example.org/roundtrip#two"
+    ],
+    "imports": [],
+    "owl_features": [
+      "http://www.w3.org/2002/07/owl#AllDifferent",
+      "http://www.w3.org/2002/07/owl#AnnotationProperty",
+      "http://www.w3.org/2002/07/owl#Class",
+      "http://www.w3.org/2002/07/owl#DatatypeProperty",
+      "http://www.w3.org/2002/07/owl#NamedIndividual",
+      "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "http://www.w3.org/2002/07/owl#SymmetricProperty",
+      "http://www.w3.org/2002/07/owl#TransitiveProperty",
+      "http://www.w3.org/2002/07/owl#differentFrom",
+      "http://www.w3.org/2002/07/owl#distinctMembers",
+      "http://www.w3.org/2002/07/owl#equivalentClass",
+      "http://www.w3.org/2002/07/owl#oneOf"
+    ]
+  },
+  "model": {
+    "classes": [
+      {
+        "iri": "https://example.org/roundtrip#Entity",
+        "name": "Entity",
+        "parent_name": null,
+        "properties": [
+          {
+            "iri": "https://example.org/roundtrip#amount",
+            "name": "amount",
+            "domain_iri": "https://example.org/roundtrip#Entity",
+            "domain_name": "Entity",
+            "range_iri": "http://www.w3.org/2001/XMLSchema#decimal",
+            "range_type": "_Decimal",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          },
+          {
+            "iri": "https://example.org/roundtrip#loose",
+            "name": "loose",
+            "domain_iri": "https://example.org/roundtrip#Entity",
+            "domain_name": "Entity",
+            "range_iri": "",
+            "range_type": "_Any",
+            "kind": "datatype",
+            "container": "list",
+            "constructor": true
+          }
+        ],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/roundtrip#Pick",
+        "name": "Pick",
+        "parent_name": null,
+        "properties": [],
+        "parent_names": [],
+        "asserted_parent_iris": []
+      },
+      {
+        "iri": "https://example.org/roundtrip#Special",
+        "name": "Special",
+        "parent_name": "Entity",
+        "properties": [],
+        "parent_names": [
+          "Entity"
+        ],
+        "asserted_parent_iris": [
+          "https://example.org/roundtrip#Entity"
+        ]
+      }
+    ],
+    "properties": [
+      {
+        "iri": "https://example.org/roundtrip#links",
+        "name": "links",
+        "domain_iri": "https://example.org/roundtrip#Entity",
+        "domain_name": "Entity",
+        "range_iri": "https://example.org/roundtrip#Entity",
+        "range_type": "Entity",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      },
+      {
+        "iri": "https://example.org/roundtrip#amount",
+        "name": "amount",
+        "domain_iri": "https://example.org/roundtrip#Entity",
+        "domain_name": "Entity",
+        "range_iri": "http://www.w3.org/2001/XMLSchema#decimal",
+        "range_type": "_Decimal",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/roundtrip#loose",
+        "name": "loose",
+        "domain_iri": "https://example.org/roundtrip#Entity",
+        "domain_name": "Entity",
+        "range_iri": "",
+        "range_type": "_Any",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      }
+    ],
+    "diagnostics": [
+      {
+        "code": "semantic_feature_deferred",
+        "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions",
+        "iri": "http://www.w3.org/2002/07/owl#AllDifferent"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#SymmetricProperty"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#TransitiveProperty"
+      },
+      {
+        "code": "semantic_feature_deferred",
+        "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions",
+        "iri": "http://www.w3.org/2002/07/owl#differentFrom"
+      },
+      {
+        "code": "semantic_feature_deferred",
+        "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions",
+        "iri": "http://www.w3.org/2002/07/owl#distinctMembers"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#equivalentClass"
+      },
+      {
+        "code": "scoped_semantic_profile",
+        "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed",
+        "iri": "http://www.w3.org/2002/07/owl#oneOf"
+      },
+      {
+        "code": "local_usage_binding",
+        "message": "Field ownership follows declared domains or local axiom usage; it does not infer OWL signatures. Unbound properties remain registered without Python fields.",
+        "iri": null
+      }
+    ],
+    "descriptors": [
+      {
+        "property": {
+          "iri": "https://example.org/roundtrip#links",
+          "name": "links",
+          "domain_iri": "",
+          "domain_name": "_OntologyEntity",
+          "range_iri": "https://example.org/roundtrip#Entity",
+          "range_type": "_OntologyEntity",
+          "kind": "object",
+          "container": "set",
+          "constructor": false
+        },
+        "name": "_Property0",
+        "parent_name": null,
+        "parent_iri": null,
+        "inverse_name": "_Property0",
+        "inverse_iri": "https://example.org/roundtrip#links",
+        "transitive": true,
+        "symmetric": true
+      }
+    ],
+    "expressions": [
+      {
+        "class_iri": "https://example.org/roundtrip#Pick",
+        "expression": {
+          "kind": "enumeration",
+          "iri": null,
+          "property_iri": null,
+          "literal": null,
+          "operands": [],
+          "individuals": [
+            "https://example.org/roundtrip#one",
+            "https://example.org/roundtrip#two",
+            "https://example.org/roundtrip#three"
+          ],
+          "cardinality": null
+        }
+      }
+    ],
+    "property_bindings": [
+      {
+        "iri": "https://example.org/roundtrip#amount",
+        "name": "amount",
+        "domain_iri": "https://example.org/roundtrip#Entity",
+        "domain_name": "Entity",
+        "range_iri": "http://www.w3.org/2001/XMLSchema#decimal",
+        "range_type": "_Decimal",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/roundtrip#loose",
+        "name": "loose",
+        "domain_iri": "https://example.org/roundtrip#Entity",
+        "domain_name": "Entity",
+        "range_iri": "",
+        "range_type": "_Any",
+        "kind": "datatype",
+        "container": "list",
+        "constructor": true
+      },
+      {
+        "iri": "https://example.org/roundtrip#links",
+        "name": "links",
+        "domain_iri": "",
+        "domain_name": "_OntologyEntity",
+        "range_iri": "https://example.org/roundtrip#Entity",
+        "range_type": "_OntologyEntity",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      }
+    ],
+    "binding_policy": "local-usage",
+    "schema_axioms": [
+      {
+        "class_iri": "https://example.org/roundtrip#Pick",
+        "predicate_iri": "http://www.w3.org/2002/07/owl#equivalentClass",
+        "root": "_:n26f6b58cb8404c84882e5cfd00138c74b1",
+        "triples": [
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b1",
+            "<http://www.w3.org/2002/07/owl#oneOf>",
+            "_:n26f6b58cb8404c84882e5cfd00138c74b2"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b2",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/roundtrip#one>"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b2",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "_:n26f6b58cb8404c84882e5cfd00138c74b3"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b3",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/roundtrip#two>"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b3",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "_:n26f6b58cb8404c84882e5cfd00138c74b4"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b4",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/roundtrip#three>"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b4",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>"
+          ]
+        ]
+      },
+      {
+        "class_iri": null,
+        "predicate_iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+        "root": "_:n26f6b58cb8404c84882e5cfd00138c74b5",
+        "triples": [
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b5",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "<http://www.w3.org/2002/07/owl#AllDifferent>"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b5",
+            "<http://www.w3.org/2002/07/owl#distinctMembers>",
+            "_:n26f6b58cb8404c84882e5cfd00138c74b6"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b6",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/roundtrip#one>"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b6",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "_:n26f6b58cb8404c84882e5cfd00138c74b7"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b7",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/roundtrip#two>"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b7",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "_:n26f6b58cb8404c84882e5cfd00138c74b8"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b8",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>",
+            "<https://example.org/roundtrip#three>"
+          ],
+          [
+            "_:n26f6b58cb8404c84882e5cfd00138c74b8",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>",
+            "<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>"
+          ]
+        ]
+      }
+    ],
+    "scoped_semantics": true,
+    "class_aliases": [],
+    "root_properties": [
+      {
+        "iri": "https://example.org/roundtrip#links",
+        "name": "links",
+        "domain_iri": "",
+        "domain_name": "_OntologyEntity",
+        "range_iri": "https://example.org/roundtrip#Entity",
+        "range_type": "_OntologyEntity",
+        "kind": "object",
+        "container": "set",
+        "constructor": false
+      }
+    ],
+    "reflexive_properties": []
+  }
+}

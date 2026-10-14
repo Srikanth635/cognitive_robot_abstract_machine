@@ -1,0 +1,20 @@
+{
+  "contract_version": "1.0",
+  "classes": 3,
+  "properties": 2,
+  "preflight": "pass",
+  "preflight_profile": "asserted_named_individuals_v1",
+  "candidate_entities": 2,
+  "candidate_added_triples": 3,
+  "invalid_reference_rejected": true,
+  "revision": 2,
+  "old_review_invalidated": true,
+  "provisional_iris_stable_across_revision": true,
+  "accepted_rdf_unchanged": true,
+  "acceptance_blocked": true,
+  "reasoner": "unsupported; not executed",
+  "facts_committed": false,
+  "native_symbols_created": 0,
+  "native_relations_created": 0,
+  "runtime_check_seconds": 0.011
+}

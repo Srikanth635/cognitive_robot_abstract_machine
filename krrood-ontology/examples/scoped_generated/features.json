@@ -1,0 +1,184 @@
+{
+  "profile": "named_classes_explicit_types_additive_relations_positive_queries",
+  "complete_owl_conformance": false,
+  "scoped_validation": {
+    "available": true,
+    "automatic_enforcement": false,
+    "profile": "mapped_fields_explicit_structural_types",
+    "default_complete": false,
+    "default_identity_policy": "owl",
+    "unsupported_axioms": "reported_by_validator_coverage"
+  },
+  "binding_policy": "local-usage",
+  "scoped_semantics": true,
+  "property_iris": 4,
+  "field_associations": 10,
+  "unbound_property_iris": [],
+  "preserved_axiom_records": 7,
+  "predicates": [
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+      "triple_count": 6,
+      "treatment": "retained_source_only"
+    },
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+      "triple_count": 6,
+      "treatment": "retained_source_only"
+    },
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+      "triple_count": 32,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "triple_count": 5,
+      "treatment": "named_inheritance_and_retained_anonymous_axioms"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#equivalentClass",
+      "triple_count": 9,
+      "treatment": "scoped_positive_definition_mapping_and_retained_axioms"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#hasValue",
+      "triple_count": 3,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#onProperty",
+      "triple_count": 7,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#oneOf",
+      "triple_count": 1,
+      "treatment": "scoped_positive_definition_mapping_and_retained_axioms"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#someValuesFrom",
+      "triple_count": 4,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#unionOf",
+      "triple_count": 2,
+      "treatment": "scoped_positive_definition_mapping_and_retained_axioms"
+    }
+  ],
+  "rdf_type_terms": [
+    {
+      "iri": "http://www.w3.org/2002/07/owl#AsymmetricProperty",
+      "assertion_count": 1,
+      "treatment": "scoped_conflict_validation"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#Class",
+      "assertion_count": 15,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#DatatypeProperty",
+      "assertion_count": 1,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "assertion_count": 3,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#ReflexiveProperty",
+      "assertion_count": 1,
+      "treatment": "explicit_scoped_native_self_edges"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#Restriction",
+      "assertion_count": 7,
+      "treatment": "omitted_semantics"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#SymmetricProperty",
+      "assertion_count": 1,
+      "treatment": "native_relation_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#TransitiveProperty",
+      "assertion_count": 1,
+      "treatment": "native_relation_mapping"
+    },
+    {
+      "iri": "https://example.org/scoped#Alpha",
+      "assertion_count": 1,
+      "treatment": "runtime_type_preflight"
+    },
+    {
+      "iri": "https://example.org/scoped#Beta",
+      "assertion_count": 1,
+      "treatment": "runtime_type_preflight"
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "scoped_semantic_profile",
+      "iri": "http://www.w3.org/2002/07/owl#AsymmetricProperty",
+      "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed"
+    },
+    {
+      "code": "scoped_semantic_profile",
+      "iri": "http://www.w3.org/2002/07/owl#ReflexiveProperty",
+      "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#Restriction",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "scoped_semantic_profile",
+      "iri": "http://www.w3.org/2002/07/owl#SymmetricProperty",
+      "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed"
+    },
+    {
+      "code": "scoped_semantic_profile",
+      "iri": "http://www.w3.org/2002/07/owl#TransitiveProperty",
+      "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed"
+    },
+    {
+      "code": "scoped_semantic_profile",
+      "iri": "http://www.w3.org/2002/07/owl#equivalentClass",
+      "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#hasValue",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#onProperty",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "scoped_semantic_profile",
+      "iri": "http://www.w3.org/2002/07/owl#oneOf",
+      "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed"
+    },
+    {
+      "code": "semantic_feature_deferred",
+      "iri": "http://www.w3.org/2002/07/owl#someValuesFrom",
+      "message": "This feature is omitted from the selected profile; --structural-only records semantic omissions"
+    },
+    {
+      "code": "scoped_semantic_profile",
+      "iri": "http://www.w3.org/2002/07/owl#unionOf",
+      "message": "Handled by the bounded scoped profile; source axioms are retained and full OWL reasoning is not claimed"
+    },
+    {
+      "code": "local_usage_binding",
+      "iri": null,
+      "message": "Field ownership follows declared domains or local axiom usage; it does not infer OWL signatures. Unbound properties remain registered without Python fields."
+    }
+  ]
+}

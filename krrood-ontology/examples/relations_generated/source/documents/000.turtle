@@ -1,0 +1,26 @@
+@prefix : <https://example.org/relations#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Person a owl:Class .
+:Manager a owl:Class ; rdfs:subClassOf :Person .
+:Organization a owl:Class .
+:Company a owl:Class ; rdfs:subClassOf :Organization .
+:name a owl:DatatypeProperty ; rdfs:domain :Person ; rdfs:range xsd:string .
+
+:worksFor a owl:ObjectProperty ;
+    rdfs:domain :Person ; rdfs:range :Company ; owl:inverseOf :hasEmployee .
+:hasEmployee a owl:ObjectProperty ; rdfs:domain :Company ; rdfs:range :Person .
+:employeeOf a owl:ObjectProperty ;
+    rdfs:domain :Person ; rdfs:range :Company ; rdfs:subPropertyOf :worksFor .
+:headsOf a owl:ObjectProperty ;
+    rdfs:domain :Person ; rdfs:range :Company ; rdfs:subPropertyOf :employeeOf .
+
+:containsPart a owl:ObjectProperty, owl:TransitiveProperty ;
+    rdfs:domain :Organization ; rdfs:range :Organization ; owl:inverseOf :partOf .
+:partOf a owl:ObjectProperty ; rdfs:domain :Organization ; rdfs:range :Organization .
+
+:knows a owl:ObjectProperty, owl:SymmetricProperty ; rdfs:domain :Person ; rdfs:range :Person .
+:colleagueOf a owl:ObjectProperty ; rdfs:domain :Person ; rdfs:range :Person ; rdfs:subPropertyOf :knows .
+

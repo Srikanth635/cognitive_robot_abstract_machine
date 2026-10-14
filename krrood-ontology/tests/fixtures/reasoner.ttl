@@ -1,0 +1,20 @@
+@prefix : <urn:reasoning:> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Entity a owl:Class .
+:Normal a owl:Class ; rdfs:subClassOf :Entity .
+:Impossible a owl:Class ; rdfs:subClassOf :Entity ; owl:disjointWith :Entity .
+:Required a owl:Class ; rdfs:subClassOf :Entity,
+ [ a owl:Restriction ; owl:onProperty :link ; owl:someValuesFrom :Entity ] .
+:ForbiddenWitness a owl:Class ; rdfs:subClassOf :Required,
+ [ a owl:Restriction ; owl:onProperty :link ; owl:allValuesFrom owl:Nothing ] .
+:Limited a owl:Class ; rdfs:subClassOf :Entity,
+ [ a owl:Restriction ; owl:onProperty :link ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+:link a owl:ObjectProperty ; rdfs:domain :Entity ; rdfs:range :Entity .
+:functional a owl:ObjectProperty, owl:FunctionalProperty ; rdfs:domain :Entity ; rdfs:range :Entity .
+:before a owl:ObjectProperty, owl:AsymmetricProperty ; rdfs:domain :Entity ; rdfs:range :Entity .
+:age a owl:DatatypeProperty ; rdfs:domain :Entity ; rdfs:range xsd:integer .
+:amount a owl:DatatypeProperty ; rdfs:domain :Entity ; rdfs:range xsd:decimal .
+:baseline a owl:NamedIndividual, :Entity .

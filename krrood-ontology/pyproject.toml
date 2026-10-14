@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "krrood-ontology"
+version = "0.14.0"
+description = "A phased ontology-to-Python front end using KRROOD."
+requires-python = ">=3.11"
+dependencies = [
+    "krrood @ git+https://github.com/cram2/cognitive_robot_abstract_machine.git@236b295a23643477f0a7e9f1c318dd6d3948216d#subdirectory=krrood",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "build"]
+reasoner = ["owlready2==0.51", "JPype1==1.6.0"]
+
+[project.scripts]
+krrood-ontology = "krrood_ontology.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+krrood_ontology = ["templates/*.jinja"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["krrood_ontology"]

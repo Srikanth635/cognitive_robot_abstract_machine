@@ -1,0 +1,135 @@
+{
+  "profile": "named_classes_explicit_types_additive_relations_positive_queries",
+  "complete_owl_conformance": false,
+  "predicates": [
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+      "triple_count": 20,
+      "treatment": "retained_source_only"
+    },
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+      "triple_count": 20,
+      "treatment": "retained_source_only"
+    },
+    {
+      "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+      "triple_count": 28,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#domain",
+      "triple_count": 3,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#range",
+      "triple_count": 3,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "triple_count": 7,
+      "treatment": "structural_mapping_and_runtime_types"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#equivalentClass",
+      "triple_count": 9,
+      "treatment": "positive_expression_query_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#hasValue",
+      "triple_count": 3,
+      "treatment": "positive_expression_query_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#intersectionOf",
+      "triple_count": 7,
+      "treatment": "positive_expression_query_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#inverseOf",
+      "triple_count": 1,
+      "treatment": "native_relation_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#onProperty",
+      "triple_count": 7,
+      "treatment": "positive_expression_query_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#oneOf",
+      "triple_count": 1,
+      "treatment": "positive_expression_query_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#someValuesFrom",
+      "triple_count": 4,
+      "treatment": "positive_expression_query_mapping"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#unionOf",
+      "triple_count": 2,
+      "treatment": "positive_expression_query_mapping"
+    },
+    {
+      "iri": "https://example.org/expressions#name",
+      "triple_count": 4,
+      "treatment": "runtime_assertion_preflight"
+    },
+    {
+      "iri": "https://example.org/expressions#worksFor",
+      "triple_count": 2,
+      "treatment": "runtime_assertion_preflight"
+    }
+  ],
+  "rdf_type_terms": [
+    {
+      "iri": "http://www.w3.org/2002/07/owl#Class",
+      "assertion_count": 12,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#DatatypeProperty",
+      "assertion_count": 1,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#ObjectProperty",
+      "assertion_count": 2,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "http://www.w3.org/2002/07/owl#Restriction",
+      "assertion_count": 7,
+      "treatment": "declaration_or_source_metadata"
+    },
+    {
+      "iri": "https://example.org/expressions#Company",
+      "assertion_count": 2,
+      "treatment": "runtime_type_preflight"
+    },
+    {
+      "iri": "https://example.org/expressions#Manager",
+      "assertion_count": 1,
+      "treatment": "runtime_type_preflight"
+    },
+    {
+      "iri": "https://example.org/expressions#Person",
+      "assertion_count": 2,
+      "treatment": "runtime_type_preflight"
+    },
+    {
+      "iri": "https://example.org/expressions#WorkingPerson",
+      "assertion_count": 1,
+      "treatment": "runtime_type_preflight"
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "individuals_deferred",
+      "iri": null,
+      "message": "Individual assertions are inventoried; use the generated load_individuals API to instantiate them"
+    }
+  ]
+}

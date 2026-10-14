@@ -1,0 +1,9 @@
+{
+  "version": "0.9.0",
+  "focused_tests": 9,
+  "full_tests": 118,
+  "full_suite_seconds": 160.26,
+  "ruff": "passed",
+  "wheel_templates_and_compilation": "passed",
+  "aicor_phase8_validation_regression": "passed"
+}

@@ -1,0 +1,23 @@
+@prefix : <https://example.org/company#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Entity a owl:Class .
+:Employee a owl:Class ; rdfs:subClassOf :Entity .
+:Manager a owl:Class ; rdfs:subClassOf :Employee .
+:Department a owl:Class .
+:reportsTo a owl:ObjectProperty ; rdfs:domain :Employee ; rdfs:range :Employee .
+:department a owl:ObjectProperty ; rdfs:domain :Employee ; rdfs:range :Department .
+:employee a owl:ObjectProperty ; rdfs:domain :Department ; rdfs:range :Employee .
+:name a owl:DatatypeProperty ; rdfs:domain :Entity ; rdfs:range xsd:string .
+:class a owl:DatatypeProperty ; rdfs:domain :Employee ; rdfs:range xsd:string .
+:active a owl:DatatypeProperty ; rdfs:domain :Employee ; rdfs:range xsd:boolean .
+:level a owl:DatatypeProperty ; rdfs:domain :Employee ; rdfs:range xsd:integer .
+:salary a owl:DatatypeProperty ; rdfs:domain :Employee ; rdfs:range xsd:decimal .
+:score a owl:DatatypeProperty ; rdfs:domain :Employee ; rdfs:range xsd:double .
+:ratio a owl:DatatypeProperty ; rdfs:domain :Employee ; rdfs:range xsd:float .
+:birthday a owl:DatatypeProperty ; rdfs:domain :Employee ; rdfs:range xsd:date .
+:started a owl:DatatypeProperty ; rdfs:domain :Employee ; rdfs:range xsd:dateTime .
+:shift a owl:DatatypeProperty ; rdfs:domain :Employee ; rdfs:range xsd:time .
+

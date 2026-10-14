@@ -1,0 +1,17 @@
+{
+  "incomplete_missing_values": {
+    "satisfied": 0,
+    "violation": 0,
+    "unknown": 8,
+    "unsupported": 0
+  },
+  "complete_valid_values": {
+    "satisfied": 8,
+    "violation": 0,
+    "unknown": 0,
+    "unsupported": 0
+  },
+  "wrong_filler_detected": true,
+  "qualified_count_excludes_other_type": true,
+  "functional_conflict_detected": true
+}

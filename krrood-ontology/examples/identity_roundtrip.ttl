@@ -1,0 +1,18 @@
+@prefix : <https://example.org/roundtrip#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+:Entity a owl:Class .
+:Special a owl:Class; rdfs:subClassOf :Entity .
+:Pick a owl:Class; owl:equivalentClass [owl:oneOf (:one :two :three)] .
+:links a owl:ObjectProperty, owl:SymmetricProperty, owl:TransitiveProperty;
+ rdfs:domain :Entity; rdfs:range :Entity .
+:amount a owl:DatatypeProperty; rdfs:domain :Entity; rdfs:range xsd:decimal .
+:loose a owl:DatatypeProperty; rdfs:domain :Entity .
+:note a owl:AnnotationProperty .
+:one a owl:NamedIndividual, :Special, :Entity; :links :two;
+ :amount "1.2300"^^xsd:decimal; :loose false, 0; :note "note"@de;
+ owl:differentFrom :two .
+:two a :Entity; :links :three .
+:three a :Entity .
+[] a owl:AllDifferent; owl:distinctMembers (:one :two :three) .

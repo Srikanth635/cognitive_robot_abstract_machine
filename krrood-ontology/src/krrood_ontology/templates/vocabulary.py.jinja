@@ -1,0 +1,10 @@
+"""Full IRIs of explicitly declared terms; no OWL reasoning is applied."""
+
+SOURCE_SHA256 = {{ report.source_sha256 | python_literal }}
+CLASS_IRIS = {{ report.classes | python_literal }}
+OBJECT_PROPERTY_IRIS = {{ report.object_properties | python_literal }}
+DATATYPE_PROPERTY_IRIS = {{ report.datatype_properties | python_literal }}
+ANNOTATION_PROPERTY_IRIS = {{ report.annotation_properties | python_literal }}
+INDIVIDUAL_IRIS = {{ report.individuals | python_literal }}
+ONTOLOGY_IMPORT_IRIS = {{ report.imports | python_literal }}
+

@@ -1,0 +1,9 @@
+@prefix : <https://example.org/imported#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+<https://example.org/university> a owl:Ontology ; owl:imports <https://example.org/core> .
+:Student a owl:Class ; rdfs:subClassOf :Person .
+:Course a owl:Class .
+:takesCourse a owl:ObjectProperty ; rdfs:domain :Student ; rdfs:range :Course .
+:Alice a :Student ; :name "Alice" ; :takesCourse :Course42 .
+:Course42 a :Course .

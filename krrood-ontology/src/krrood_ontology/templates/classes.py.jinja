@@ -1,0 +1,68 @@
+"""Structural ontology classes; generated fields do not validate OWL constraints."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass as _dataclass
+{% if model.properties %}
+from dataclasses import field as _field
+{% endif %}
+{% if '_date' in value_types %}
+from datetime import date as _date
+{% endif %}
+{% if '_datetime' in value_types %}
+from datetime import datetime as _datetime
+{% endif %}
+{% if '_time' in value_types %}
+from datetime import time as _time
+{% endif %}
+{% if '_Decimal' in value_types %}
+from decimal import Decimal as _Decimal
+{% endif %}
+from typing import ClassVar as _ClassVar
+{% if "_Any" in value_types %}
+from typing import Any as _Any
+{% endif %}
+
+from krrood.entity_query_language.predicate import Symbol as _KrroodSymbol
+
+{% if model.root_properties %}
+@_dataclass(eq=False, kw_only=True)
+class _OntologyEntity(_KrroodSymbol):
+    """Private storage base for shared native relation associations."""
+{% for prop in model.root_properties %}
+    {{ prop.name }}: set[_OntologyEntity] = _field(default_factory=set, init=False,
+        metadata={"ontology_iri": {{ prop.iri | python_literal }},
+                  "ontology_range": {{ prop.range_iri | python_literal }},
+                  "property_kind": "object"})
+{% endfor %}
+{% endif %}
+
+{% for concept in model.classes %}
+@_dataclass(eq=False, kw_only=True)
+class {{ concept.name }}({{ concept.parent_names | join(', ') if concept.parent_names else (concept.parent_name or ('_OntologyEntity' if model.root_properties else '_KrroodSymbol')) }}):
+    """Structural representation of {{ concept.name }}."""
+
+    __ontology_iri__: _ClassVar[str] = {{ concept.iri | python_literal }}
+{% for prop in concept.properties %}
+    {{ prop.name }}: {{ prop.container }}[{{ prop.range_type }}] = _field(
+        default_factory={{ prop.container }},
+        init={{ prop.constructor | python_literal }},
+        metadata={
+            "ontology_iri": {{ prop.iri | python_literal }},
+            "ontology_range": {{ prop.range_iri | python_literal }},
+            "property_kind": {{ prop.kind.value | python_literal }},
+        },
+    )
+{% endfor %}
+
+{% endfor %}
+CLASS_BY_IRI = {
+{% for concept in model.classes %}
+    {{ concept.iri | python_literal }}: {{ concept.name }},
+{% endfor %}
+}
+PROPERTY_FIELD_NAMES = {
+{% for prop in model.properties %}
+    {{ prop.iri | python_literal }}: {{ prop.name | python_literal }},
+{% endfor %}
+}

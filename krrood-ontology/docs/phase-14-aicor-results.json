@@ -1,0 +1,37 @@
+{
+  "classes": 1017,
+  "properties": 966,
+  "preflight": "pass",
+  "construction": "pass",
+  "reasoner": "unsupported",
+  "reasoner_profile": "hermit_owl2_dl_consistency_v1",
+  "consistency": null,
+  "can_certify_consistency": true,
+  "engine_version": "Owlready2 0.51; JPype1 1.6.0; Java 17.0.20",
+  "engine_sha256": "97e53f519720a0a2e328556e03b806aa239347c85e57637a935e6433ed2ad3a8",
+  "axioms_checked": 6774,
+  "profile_findings": [
+    {
+      "code": "InsufficientOperands",
+      "axiom_text": "EquivalentClasses(<http://aicor.knowledge/l2-ontology.owl#PlanTransformation> ObjectUnionOf(<http://aicor.knowledge/l2-ontology.owl#CodeReplace>) )",
+      "axiom_id": "urn:krrood-ontology:owlapi-axiom:cbf361d28c0c943c7c01f46fa27007b0b4ac4aec9a8d2a03359d846c130ab0aa"
+    }
+  ],
+  "unparsed_triples": [
+    "_:_:genid-nodeid-ndf826463b8e342869e775b1f2e4e562bb1545 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#AllDifferent>."
+  ],
+  "feedback_codes": [
+    "owl2_dl_profile",
+    "reasoner_unparsed_rdf"
+  ],
+  "candidate_added_triples": 3,
+  "asserted_rdf_roundtrip_equal": true,
+  "old_reasoner_evidence_invalidated": true,
+  "local_validation": "unsupported",
+  "parent_native_graph_unchanged": true,
+  "accepted_rdf_unchanged": true,
+  "inferences_committed": false,
+  "facts_committed": false,
+  "acceptance_blocked": true,
+  "runtime_check_seconds": 28.863
+}

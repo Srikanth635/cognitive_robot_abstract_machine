@@ -1,0 +1,25 @@
+@prefix : <https://example.org/scoped#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+:Entity a owl:Class .
+:Alpha a owl:Class; rdfs:subClassOf :Entity .
+:Beta a owl:Class; rdfs:subClassOf :Entity .
+:Either a owl:Class; owl:equivalentClass [owl:unionOf (:Alpha :Beta)] .
+:Linked a owl:Class; owl:equivalentClass [a owl:Restriction; owl:onProperty :link; owl:someValuesFrom [owl:unionOf (:Alpha :Beta)]] .
+:Alias a owl:Class; owl:equivalentClass :Alpha .
+:Marked a owl:Class; owl:equivalentClass [a owl:Restriction; owl:onProperty :flag; owl:hasValue false] .
+:MarkedAlias a owl:Class; owl:equivalentClass :Marked .
+:Choice a owl:Class; owl:equivalentClass [owl:oneOf (:one :two)] .
+:link a owl:ObjectProperty .
+:flag a owl:DatatypeProperty .
+:connected a owl:ObjectProperty, owl:SymmetricProperty, owl:TransitiveProperty, owl:ReflexiveProperty .
+:before a owl:ObjectProperty, owl:AsymmetricProperty .
+:one a :Alpha .
+:two a :Beta .
+:Carrier a owl:Class; rdfs:subClassOf [a owl:Restriction; owl:onProperty :link; owl:someValuesFrom owl:Thing] .
+:FlagCarrier a owl:Class; rdfs:subClassOf [a owl:Restriction; owl:onProperty :flag; owl:hasValue false] .
+:Nested a owl:Class; owl:equivalentClass [a owl:Restriction; owl:onProperty :link; owl:someValuesFrom [a owl:Restriction; owl:onProperty :link; owl:someValuesFrom :Alpha]] .
+:ReverseMarked a owl:Class .
+[a owl:Restriction; owl:onProperty :flag; owl:hasValue false] owl:equivalentClass :ReverseMarked .
+:FlagChild a owl:Class; rdfs:subClassOf :FlagCarrier .
+:InheritedFlagAlias a owl:Class; owl:equivalentClass :FlagChild .

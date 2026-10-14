@@ -1,0 +1,25 @@
+{
+  "coverage": {
+    "subclass_constraints": 1342,
+    "parsed_constraints": 1342,
+    "unsupported_constraints": [],
+    "functional_properties": 119,
+    "disjoint_pairs": 306,
+    "schema_errors": [],
+    "unbound_functional_properties": [
+      "http://aicor.knowledge/l2-ontology.owl#carrierCapacity",
+      "http://aicor.knowledge/l2-ontology.owl#disturbanceCause",
+      "http://aicor.knowledge/l2-ontology.owl#hasTrajectorySpace",
+      "http://aicor.knowledge/l2-ontology.owl#marginValue",
+      "http://aicor.knowledge/l2-ontology.owl#obligationStatus",
+      "http://aicor.knowledge/l2-ontology.owl#referenceOutcome",
+      "http://aicor.knowledge/l2-ontology.owl#statedRate",
+      "http://aicor.knowledge/l2-ontology.owl#system2"
+    ],
+    "complete_owl_conformance": false
+  },
+  "critic_required_value": "missing violation, present satisfied",
+  "qualified_parts": "one operating system and one control program satisfy the two separate exact-cardinality constraints",
+  "checks_in_executive_scope": 36,
+  "execution_seconds": 4.06
+}

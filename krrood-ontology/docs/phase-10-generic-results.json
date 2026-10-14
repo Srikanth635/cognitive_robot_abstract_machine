@@ -1,0 +1,10 @@
+{
+  "loaded_individuals": 3,
+  "distinct_groups": 2,
+  "unchanged_current_isomorphic": true,
+  "omitted_inferred_facts": 7,
+  "edited_value_roundtrip": "2.50",
+  "added_triples": 1,
+  "removed_triples": 1,
+  "identity_and_annotations_preserved": true
+}

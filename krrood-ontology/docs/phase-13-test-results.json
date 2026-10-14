@@ -1,0 +1,16 @@
+{
+  "package_version": "0.13.0",
+  "full_suite": {
+    "passed": 211,
+    "failed": 0,
+    "seconds": 179.91
+  },
+  "phase13_tests": {
+    "construction": 21,
+    "graph_loading": 5
+  },
+  "university_demonstration": "passed",
+  "aicor_demonstration": "passed",
+  "real_worker_timeout_cleanup": "passed",
+  "ruff_modified_files": "passed"
+}
