@@ -71,6 +71,7 @@ twins and episodic memories as their own pillars for this reason.
 | D5 | Everything is stated in CRAM-AICOR terms where CRAM-AICOR has them | So the knowledge fits the CRAM architecture |
 | D6 | The action core's frame of a manipulation sits under `aicor:ManipulationFrame` (user, 2026-10-15) | CRAM-AICOR's frame layer is where frame elements (`RoleSlot`s) already hang |
 | D7 | The model proposes the vocabulary of one perspective at a time (user, 2026-10-15) | Each proposal stays small enough to review and understand before the next |
+| D9 | A proposed vocabulary is reviewed by a person before it is used; a designator's roles-to-slots mapping is accepted when it passes automatic checks and is written to the mapping file in the repository, where a change shows as a diff (user, 2026-10-15) | The vocabulary is what everything else is built on and changes rarely; the mappings are small, one per designator, and a wrong one shows in the resolver's grounds |
 | D8 | After pouring: navigating, picking up and placing (user, 2026-10-15) | The actions of the coraplex designators `NavigateAction`, `PickUpAction` and `PlaceAction`, which a pouring plan also performs |
 
 ## 4. What CRAM-AICOR already offers
@@ -213,8 +214,8 @@ situation and can be paid ahead of time for the actions in use.
   (`described_actions.json`), a per-designator mapping from the core's roles and parameter
   dimensions to the designator's slots (`SourceRole` ↔ `source_container`, *where
   relative to the goal* ↔ `pour_side_offset`). The model proposes it once from the
-  designator's docstrings; a person reviews it; it is kept as data like the existing
-  mapping. The knowledge itself stays independent of any designator.
+  designator's docstrings; it is accepted when it passes automatic checks and kept as
+  data like the existing mapping (D9). The knowledge itself stays independent of any designator.
 - **In the prompt.** Each slot's entry in `<slots>` names the role or dimension it maps to,
   so the model reads the relevant knowledge per slot instead of a whole overview.
 - **Grounds.** A ground cites a role, an expectation or a relation, per slot, so `why`
@@ -243,22 +244,18 @@ is not worth its generation cost.
 
 Answered 2026-10-15: the core's frame sits under `aicor:ManipulationFrame` (D6); one
 perspective is proposed at a time (D7); navigating, picking up and placing come after
-pouring (D8).
+pouring (D8); a vocabulary is reviewed by a person, and a roles-to-slots mapping is accepted
+by automatic checks (every slot maps to a role or a parameter dimension that exists; a
+slot's type fits what the role expects, such as `Body` for a container role; units are
+compatible) and kept as a file in the repository (D9).
 
-1. **Who accepts the roles-to-slots mapping of a designator** (§7). The model proposes it
-   from the designator's docstrings; either a person reads and approves it once before it
-   is used, or it is accepted when it passes automatic checks (every slot maps to a role
-   or a parameter dimension that exists; a slot's type fits what the role expects, such as
-   `Body` for a container role; units are compatible) and is written to the mapping file
-   in the repository, where a change shows as a diff. The same choice applies to a
-   proposed vocabulary (§6).
-2. **Navigating is not a manipulation.** CRAM-AICOR has `Grasping`, `Lifting`, `Reaching`
+1. **Navigating is not a manipulation.** CRAM-AICOR has `Grasping`, `Lifting`, `Reaching`
    and `Transporting` (an `ObjectDisplacement`), and `PlacementProblem` and
    `PlacementTarget` for placing, but no navigating concept, and `ManipulationFrame`
    describes manipulation problems. Proposed: a general `ActionFrame` ⊑ `dul:Description`,
    whose frames of manipulations are also `aicor:ManipulationFrame`s (D6 kept), with the
    navigating concept proposed in our own module until CRAM-AICOR has one.
-3. **Picking up and placing as concepts.** CRAM-AICOR has no `PickingUp` or `Placing`
+2. **Picking up and placing as concepts.** CRAM-AICOR has no `PickingUp` or `Placing`
    action concept; they would be proposed in our module, built from the primitives it has
    (`Reaching`, `Grasping`, `Lifting`; `PlacementTarget`).
 
