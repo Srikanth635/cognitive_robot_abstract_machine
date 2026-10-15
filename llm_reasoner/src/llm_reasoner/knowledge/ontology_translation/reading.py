@@ -21,8 +21,9 @@ from typing_extensions import Iterable, Optional
 
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.ontologies import (
+    KNOWLEDGE_ONTOLOGY_MODULES,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
-    PredictiveManipulationOntologyFile,
+    OntologyModuleFile,
 )
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
@@ -210,10 +211,10 @@ class MissingPropertyRange(LLMReasonerError):
 @dataclass
 class OntologyReader:
     """
-    Reads the predictive manipulation modules into one declaration per generated module.
+    Reads the ontology modules into one declaration per generated module.
     """
 
-    module_graphs: dict[PredictiveManipulationOntologyFile, Graph]
+    module_graphs: dict[OntologyModuleFile, Graph]
     """
     Every module file parsed on its own, in dependency order.
     """
@@ -229,34 +230,42 @@ class OntologyReader:
             self.graph += module_graph
 
     @classmethod
-    def for_predictive_manipulation(cls) -> OntologyReader:
+    def for_knowledge_modules(cls) -> OntologyReader:
         """
-        :return: A reader over every predictive manipulation module file.
+        :return: A reader over the module file of every family.
         """
         return cls(
             {
                 module_file: Graph().parse(module_file.path, format="turtle")
-                for module_file in PredictiveManipulationOntologyFile
+                for module_file in KNOWLEDGE_ONTOLOGY_MODULES
             }
         )
+
+    @cached_property
+    def modules(self) -> list[OntologyModuleFile]:
+        """
+        Every module read, in dependency order.
+        """
+        return list(self.module_graphs)
 
     # %% terms
 
     def is_microworld_term(self, node: Node) -> bool:
         """
-        :return: Whether the node is a term the microworld declares.
+        :return: Whether the node is a term one of the modules read declares.
         """
-        return isinstance(node, URIRef) and str(node).startswith(
-            PREDICTIVE_MANIPULATION_NAMESPACE_ROOT
+        return isinstance(node, URIRef) and any(
+            str(node).startswith(module_file.namespace_root)
+            for module_file in self.modules
         )
 
-    def module_of(self, term: URIRef) -> PredictiveManipulationOntologyFile:
+    def module_of(self, term: URIRef) -> OntologyModuleFile:
         """
         :return: The module whose namespace the microworld term is declared in.
         """
         (module_file,) = [
             module_file
-            for module_file in PredictiveManipulationOntologyFile
+            for module_file in self.modules
             if str(term).startswith(module_file.namespace)
         ]
         return module_file
@@ -525,14 +534,14 @@ class OntologyReader:
         """
         return (prop, RDF.type, OWL.FunctionalProperty) in self.graph
 
-    def descriptor_module(self, prop: URIRef) -> PredictiveManipulationOntologyFile:
+    def descriptor_module(self, prop: URIRef) -> OntologyModuleFile:
         """
         :return: The module defining the property's descriptor: its own module, or for
             a linked property the earliest module declaring one of its fields.
         """
         if self.is_microworld_term(prop):
             return self.module_of(prop)
-        modules = list(PredictiveManipulationOntologyFile)
+        modules = self.modules
         return min(
             (self.module_of(host) for host in self.field_hosts[prop]),
             key=modules.index,
@@ -574,10 +583,7 @@ class OntologyReader:
         :return: The given class, or when it is defined in a module after the host's,
             its most specific superclass that the host's module sees.
         """
-        modules = [
-            module_file.vocabulary_module_name
-            for module_file in PredictiveManipulationOntologyFile
-        ]
+        modules = [module_file.vocabulary_module_name for module_file in self.modules]
         host_position = modules.index(self.module_of(host).vocabulary_module_name)
         if value_type.module in ("", *modules[: host_position + 1]):
             return value_type
@@ -611,10 +617,7 @@ class OntologyReader:
         """
         :return: Whether the module declaring the host class can refer to the type.
         """
-        modules = [
-            module_file.vocabulary_module_name
-            for module_file in PredictiveManipulationOntologyFile
-        ]
+        modules = [module_file.vocabulary_module_name for module_file in self.modules]
         host_position = modules.index(self.module_of(host).vocabulary_module_name)
         return value_type.module in ("", *modules[: host_position + 1])
 
@@ -848,9 +851,7 @@ class OntologyReader:
             ),
         )
 
-    def ordered_classes(
-        self, module_file: PredictiveManipulationOntologyFile
-    ) -> list[URIRef]:
+    def ordered_classes(self, module_file: OntologyModuleFile) -> list[URIRef]:
         """
         :return: The module's description classes, every class after its bases.
         """
@@ -873,9 +874,7 @@ class OntologyReader:
             place(cls)
         return ordered
 
-    def ordered_descriptors(
-        self, module_file: PredictiveManipulationOntologyFile
-    ) -> list[URIRef]:
+    def ordered_descriptors(self, module_file: OntologyModuleFile) -> list[URIRef]:
         """
         :return: The properties whose descriptors the module defines, every property
             after its super-properties.
@@ -900,9 +899,7 @@ class OntologyReader:
             place(prop)
         return ordered
 
-    def module_declaration(
-        self, module_file: PredictiveManipulationOntologyFile
-    ) -> ModuleDeclaration:
+    def module_declaration(self, module_file: OntologyModuleFile) -> ModuleDeclaration:
         """
         :return: Everything the module's generated vocabulary module defines.
         """
@@ -929,13 +926,13 @@ class OntologyReader:
         )
 
     def attachments(
-        self, module_file: PredictiveManipulationOntologyFile
+        self, module_file: OntologyModuleFile
     ) -> list[AttachmentDeclaration]:
         """
         :return: The descriptor attachments the module makes: those whose field's
             class and descriptor are both visible first from this module.
         """
-        modules = list(PredictiveManipulationOntologyFile)
+        modules = self.modules
         return [
             AttachmentDeclaration(
                 host=self.python_name(host),

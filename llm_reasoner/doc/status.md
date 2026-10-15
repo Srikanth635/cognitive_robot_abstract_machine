@@ -285,6 +285,26 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   (`aa3f6dc3a`).
 - cram_viz: Hypothesis Graph and Ontology Graph tabs, the open-world check when the
   linked ontologies are configured (`5846a6fa5`, `7e84563bc`).
+- The action core (2026-10-15, step 1 of `knowledge_perspectives.md`): a second family of
+  ontology modules, the action perspectives (`ontologies/action_perspectives/`, namespace
+  `…/llm_reasoner/action-perspectives/`), whose first module, `action-core.ttl`, is the hub
+  every perspective attaches to. It states an action's frame (`ActionFrame`, a DUL
+  description; `ManipulationActionFrame`, also CRAM-AICOR's `ManipulationFrame`, so a frame
+  of navigating need not be one), the slots its participants fill (`AgentSlot`,
+  `SourceSlot`, `SubstanceSlot`, `GoalSlot`, `InstrumentSlot`, `PatientSlot`, each a
+  CRAM-AICOR `RoleSlot` specialising the matching CRAM-AICOR participant role, and
+  `PartSlot` for a part of a participant, such as a lip or an opening), what it is for
+  (`Objective`, a CRAM-AICOR `Telos`), what it brings about (`Consequence`, a CRAM-AICOR
+  `Effect`) and the choices it leaves open (`ParameterDimension`, a DUL parameter in
+  CRAM-AICOR's `ActionParameterSpace`, with a `QuantityKind`). `PouringFrame` frames
+  `aicor:Pouring`: an agent, a source, a substance and a goal, a part of the source and of
+  the goal, an objective aiming at `aicor:AccumulatedState` (as `aicor:PouringTelos` does),
+  a consequence and a parameter dimension. Written by hand, not proposed by the model. The
+  vocabulary generator now reads both families in dependency order (the action core first)
+  and writes each module into its own package; the Flanagan modules regenerate
+  byte-identically. HermiT finds the core consistent with CRAM-AICOR and DUL and every class
+  of it satisfiable (22 s). Nothing uses it yet: hypotheses, the store key, admission and the
+  knowledge tools still read only the predictive manipulation modules (step 3).
 
 ## 3. Live testing
 

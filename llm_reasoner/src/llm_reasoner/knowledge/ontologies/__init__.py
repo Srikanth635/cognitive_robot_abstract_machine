@@ -1,9 +1,12 @@
 """
 Ontology files shipped with the package.
 
-The predictive manipulation microworld ontology is divided into one Turtle file per
-module. Each file imports the module it depends on, and the core module imports the
-CRAM-AICOR and DOLCE+DnS Ultralite ontologies, whose terms the microworld specialises.
+The knowledge is described by two families of ontology modules, one Turtle file per
+module: the action perspectives, which describe an action from several points of view
+around an action core, and the predictive manipulation microworld, which describes it as
+phases of predictive control. Each file imports the modules it depends on, and the first
+module of each family imports the CRAM-AICOR and DOLCE+DnS Ultralite ontologies, whose
+terms the modules specialise.
 """
 
 from __future__ import annotations
@@ -11,8 +14,20 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
+from typing_extensions import Tuple
+
+ONTOLOGIES_DIRECTORY = Path(__file__).parent
+"""
+The directory holding the ontology files of every family.
+"""
+
+ONTOLOGIES_PACKAGE = __name__
+"""
+The Python package the generated vocabulary modules of every family are placed under.
+"""
+
 PREDICTIVE_MANIPULATION_ONTOLOGY_DIRECTORY = (
-    Path(__file__).parent / "predictive_manipulation"
+    ONTOLOGIES_DIRECTORY / "predictive_manipulation"
 )
 """
 The directory holding the Turtle file of every predictive manipulation module.
@@ -23,6 +38,18 @@ PREDICTIVE_MANIPULATION_NAMESPACE_ROOT = (
 )
 """
 The IRI prefix shared by the namespaces of every predictive manipulation module.
+"""
+
+ACTION_PERSPECTIVES_ONTOLOGY_DIRECTORY = ONTOLOGIES_DIRECTORY / "action_perspectives"
+"""
+The directory holding the Turtle file of every action perspective module.
+"""
+
+ACTION_PERSPECTIVES_NAMESPACE_ROOT = (
+    "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/"
+)
+"""
+The IRI prefix shared by the namespaces of every action perspective module.
 """
 
 PREDICTIVE_MANIPULATION_SHAPES_DIRECTORY = (
@@ -85,7 +112,119 @@ class LinkedOntologyVariable(StrEnum):
     """
 
 
-class PredictiveManipulationOntologyFile(StrEnum):
+SHAPES_DIRECTORY_NAME = "shapes"
+"""
+The directory, within a family's directory, holding the SHACL shapes of its modules.
+"""
+
+
+class OntologyModuleFile:
+    """
+    The Turtle file of an ontology module, and what is derived from it: its namespace,
+    its shapes and its generated vocabulary module. A family of modules is a string
+    enumeration of its files' names that says where the family lies.
+    """
+
+    @property
+    def directory(self) -> Path:
+        """
+        The directory holding the family's Turtle files.
+        """
+        raise NotImplementedError
+
+    @property
+    def namespace_root(self) -> str:
+        """
+        The IRI prefix shared by the namespaces of the family's modules.
+        """
+        raise NotImplementedError
+
+    @property
+    def path(self) -> Path:
+        """
+        The location of the module's Turtle file.
+        """
+        return self.directory / self.value
+
+    @property
+    def namespace(self) -> str:
+        """
+        The namespace the module declares its terms in.
+        """
+        return self.namespace_root + Path(self.value).stem + "#"
+
+    @property
+    def shapes_path(self) -> Path:
+        """
+        The location of the SHACL shapes stating the module's structural rules; a module
+        without such rules has no file there.
+        """
+        return self.directory / SHAPES_DIRECTORY_NAME / self.value
+
+    @property
+    def shapes_namespace(self) -> str:
+        """
+        The namespace the module's shapes are named in.
+        """
+        return (
+            self.namespace_root
+            + SHAPES_DIRECTORY_NAME
+            + "/"
+            + Path(self.value).stem
+            + "#"
+        )
+
+    @property
+    def vocabulary_module_name(self) -> str:
+        """
+        The name of the Python module generated from the module, such as
+        ``object_dynamics``; unique across the families.
+        """
+        return Path(self.value).stem.replace("-", "_")
+
+    @property
+    def vocabulary_package(self) -> str:
+        """
+        The Python package the generated module is placed in.
+        """
+        return ONTOLOGIES_PACKAGE + "." + self.directory.name
+
+    @property
+    def vocabulary_path(self) -> Path:
+        """
+        The location of the Python module generated from the module.
+        """
+        return self.directory / (self.vocabulary_module_name + ".py")
+
+
+class ActionPerspectiveFile(OntologyModuleFile, StrEnum):
+    """
+    The Turtle file of each action perspective module, listed with every module after
+    the modules it depends on.
+    """
+
+    ACTION_CORE = "action-core.ttl"
+    """
+    The hub every perspective attaches to: an action's frame, the slots its participants
+    fill, what it is for, what it brings about and the kinds of choice it leaves open.
+    """
+
+    @property
+    def directory(self) -> Path:
+        """
+        The directory holding the action perspective modules.
+        """
+        return ACTION_PERSPECTIVES_ONTOLOGY_DIRECTORY
+
+    @property
+    def namespace_root(self) -> str:
+        """
+        The IRI prefix of the action perspective modules.
+        """
+        return ACTION_PERSPECTIVES_NAMESPACE_ROOT
+
+
+class PredictiveManipulationOntologyFile(OntologyModuleFile, StrEnum):
     """
     The Turtle file of each predictive manipulation module, listed with every module
     after the modules it depends on.
@@ -119,49 +258,24 @@ class PredictiveManipulationOntologyFile(StrEnum):
     """
 
     @property
-    def path(self) -> Path:
+    def directory(self) -> Path:
         """
-        The location of the module's Turtle file.
+        The directory holding the predictive manipulation modules.
         """
-        return PREDICTIVE_MANIPULATION_ONTOLOGY_DIRECTORY / self.value
+        return PREDICTIVE_MANIPULATION_ONTOLOGY_DIRECTORY
 
     @property
-    def namespace(self) -> str:
+    def namespace_root(self) -> str:
         """
-        The namespace the module declares its terms in.
+        The IRI prefix of the predictive manipulation modules.
         """
-        return PREDICTIVE_MANIPULATION_NAMESPACE_ROOT + Path(self.value).stem + "#"
+        return PREDICTIVE_MANIPULATION_NAMESPACE_ROOT
 
-    @property
-    def shapes_path(self) -> Path:
-        """
-        The location of the SHACL shapes stating the module's structural rules; a module
-        without such rules has no file there.
-        """
-        return PREDICTIVE_MANIPULATION_SHAPES_DIRECTORY / self.value
 
-    @property
-    def shapes_namespace(self) -> str:
-        """
-        The namespace the module's shapes are named in.
-        """
-        return (
-            PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT + Path(self.value).stem + "#"
-        )
-
-    @property
-    def vocabulary_module_name(self) -> str:
-        """
-        The name of the Python module generated from the module, such as
-        ``object_dynamics``.
-        """
-        return Path(self.value).stem.replace("-", "_")
-
-    @property
-    def vocabulary_path(self) -> Path:
-        """
-        The location of the Python module generated from the module.
-        """
-        return PREDICTIVE_MANIPULATION_ONTOLOGY_DIRECTORY / (
-            self.vocabulary_module_name + ".py"
-        )
+KNOWLEDGE_ONTOLOGY_MODULES: Tuple[OntologyModuleFile, ...] = (
+    *ActionPerspectiveFile,
+    *PredictiveManipulationOntologyFile,
+)
+"""
+The module of every family, each after the modules it depends on.
+"""
