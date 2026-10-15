@@ -2,7 +2,7 @@
   "name": "knowledge_overview",
   "description": {
     "purpose": "Summarise the knowledge describing the action being resolved.",
-    "returns": "The IRI of the action concept; the class of the structure describing the action and what it means; the situation the knowledge was generated for, each situation feature by the name of its value, unknown features absent; the phases in the order the action goes through them, each with its name, its class and what that class means, its label, the name of the subgoal it aims for, its parameters and its requirements, each of these with its name, class, label and the values it states (a linked fragment holding only values, such as a range, written in place) and the names of the other fragments it links to; and the roles taking part.",
+    "returns": "The IRI of the action concept. When a phase structure is read: its class and what it means; the situation the knowledge was generated for, each situation feature by the name of its value, unknown features absent; the phases in the order the action goes through them, each with its name, its class and what that class means, its label, the name of the subgoal it aims for, its parameters and its requirements, each of these with its name, class, label and the values it states (a linked fragment holding only values, such as a range, written in place) and the names of the other fragments it links to; and the roles taking part. When an action core is read: its frame with the slots its participants fill, what it is for, what it brings about and the choices it leaves open, each with its name, class, label, values and links; and the perspectives read with it, each with its module, the fragment it is rooted in and what that fragment's class means. Fragments of an action core or perspective are named after their module, such as action-core/source.",
     "use_when": "Starting to use the knowledge: it says what the action goes through and what for, and names the fragments find_fragments and describe_fragment take.",
     "avoid": "Calling it more than once; its answer does not change within a request."
   },
@@ -68,14 +68,72 @@
         "items": {
           "$ref": "#/$defs/fragment_reference"
         }
+      },
+      "frame": {
+        "type": "object",
+        "properties": {
+          "frame": {
+            "$ref": "#/$defs/fragment_reference"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/fragment_summary"
+            }
+          },
+          "objectives": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/fragment_summary"
+            }
+          },
+          "consequences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/fragment_summary"
+            }
+          },
+          "parameter_dimensions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/fragment_summary"
+            }
+          }
+        },
+        "required": [
+          "frame",
+          "slots",
+          "objectives",
+          "consequences",
+          "parameter_dimensions"
+        ],
+        "additionalProperties": false
+      },
+      "perspectives": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "module": {
+              "type": "string"
+            },
+            "root": {
+              "$ref": "#/$defs/fragment_reference"
+            },
+            "meaning": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "module",
+            "root",
+            "meaning"
+          ],
+          "additionalProperties": false
+        }
       }
     },
-    "required": [
-      "structure",
-      "situation",
-      "phases",
-      "roles"
-    ],
+    "required": [],
     "additionalProperties": false
   }
 }

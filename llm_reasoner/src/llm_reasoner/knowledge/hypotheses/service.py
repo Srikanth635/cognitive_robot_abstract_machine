@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 
 from krrood.entity_query_language.query.match import Match
-from typing_extensions import Optional
+from typing_extensions import Optional, Sequence
 
 from llm_reasoner.clients.tools import Tool
 from llm_reasoner.knowledge.storage.citation import Citation
@@ -80,13 +80,30 @@ class KnowledgeService(KnowledgeAccess):
         list(query.evaluate(backend=backend))
         return backend.last_record.record_id
 
-    def tools(self, record_id: str) -> list[Tool]:
-        questions = KnowledgeQuestions(hypothesis=self.view(record_id))
+    def tools(self, *record_ids: str) -> list[Tool]:
+        questions = KnowledgeQuestions(hypotheses=self.views_read_with(record_ids))
         return [kind(questions=questions) for kind in KNOWLEDGE_TOOL_KINDS]
 
     def citation(self, record_id: str, name: str) -> Optional[str]:
-        cited = Citation(record_id=record_id, fragment_name=name)
-        return cited.iri if self.view(record_id).cites(cited) else None
+        cited = KnowledgeQuestions(hypotheses=[self.view(record_id)]).citation_named(
+            name
+        )
+        return cited.iri if cited is not None and cited.record_id == record_id else None
+
+    def views_read_with(self, record_ids: Sequence[str]) -> list[HypothesisView]:
+        """
+        :return: The views of the hypotheses with the given records, followed by those
+            of the hypotheses they build on, each once.
+        """
+        pending = list(record_ids)
+        read: dict[str, HypothesisView] = {}
+        while pending:
+            record_id = pending.pop(0)
+            if record_id in read:
+                continue
+            read[record_id] = self.view(record_id)
+            pending.extend(read[record_id].record.builds_on)
+        return list(read.values())
 
     def instances_of(self, kind: type) -> list:
         return self.graph.instances_of(kind)

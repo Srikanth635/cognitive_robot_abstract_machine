@@ -11,11 +11,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 from krrood.entity_query_language.factories import the
 from rdflib import RDF, Graph, Namespace, URIRef
 from typing_extensions import Iterable, List
 
 from llm_reasoner.clients.base import ScriptedClient
+from llm_reasoner.clients.tools import ToolBox
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
 from llm_reasoner.knowledge.admission.hermit import HermitCheck
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
@@ -29,6 +31,7 @@ from llm_reasoner.knowledge.generation.prompts import (
 )
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
+from llm_reasoner.knowledge.hypotheses.knowledge_access import KnowledgeToolName
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
@@ -53,6 +56,9 @@ from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.knowledge.vocabulary_proposal.perspective import Perspective
 
 from .prompt_sections import bodies
+from .test_generation import GenerationCase
+from .test_hypotheses import pouring_query as flanagan_query
+from .test_hypotheses import service_answering as flanagan_service_answering
 
 CASES = Path(__file__).parent / "action_perspective_cases"
 """
@@ -557,3 +563,274 @@ class TestPerspectiveHypothesis:
         core_view = service.view_for(core_query())
         frame_view = service.view_for(frame_query_on(core_view))
         assert frame_view.record.consistency == ConsistencyVerdict.CONSISTENT
+
+
+# %% reading a core and its perspectives as one body of knowledge
+
+
+@dataclass
+class StoredPouring:
+    """
+    A stored core hypothesis about pouring, a frame hypothesis on top of it, and the
+    service holding both.
+    """
+
+    service: KnowledgeService
+    """
+    The knowledge service holding the hypotheses.
+    """
+
+    core_record: str
+    """
+    The record of the core hypothesis.
+    """
+
+    frame_record: str
+    """
+    The record of the frame hypothesis.
+    """
+
+    def toolbox(self, *record_ids: str) -> ToolBox:
+        """
+        :return: The knowledge tools reading the records as one body of knowledge.
+        """
+        return ToolBox(tools=self.service.tools(*record_ids))
+
+    def iri_of_name(self, name: str) -> str:
+        """
+        :return: The IRI a fragment name the tools give cites, in whichever of the two
+            records holds the fragment.
+        """
+        return self.service.citation(self.core_record, name) or self.service.citation(
+            self.frame_record, name
+        )
+
+
+@pytest.fixture
+def stored_pouring(tmp_path) -> StoredPouring:
+    """
+    The scripted core and frame of pouring, generated and stored.
+    """
+    service = service_answering(
+        HypothesisStore(directory=tmp_path),
+        answer_text(AnswerCase.CORE),
+        answer_text(AnswerCase.FRAME),
+    )
+    core_record = service.serve(core_query())
+    frame_record = service.serve(frame_query_on(service.view(core_record)))
+    return StoredPouring(
+        service=service, core_record=core_record, frame_record=frame_record
+    )
+
+
+def asked(toolbox: ToolBox, name: KnowledgeToolName, arguments: dict) -> dict:
+    """
+    :return: The answer of a knowledge tool, read from JSON.
+    """
+    return json.loads(toolbox.call(name, arguments).content)
+
+
+class TestReadingACore:
+    def test_the_overview_names_the_action_of_the_core_frame(self, stored_pouring):
+        overview = asked(
+            stored_pouring.toolbox(stored_pouring.core_record),
+            KnowledgeToolName.KNOWLEDGE_OVERVIEW,
+            {},
+        )
+        assert overview["action"] == POURING.iri
+
+    def test_the_overview_gives_the_frames_slots(self, stored_pouring):
+        overview = asked(
+            stored_pouring.toolbox(stored_pouring.core_record),
+            KnowledgeToolName.KNOWLEDGE_OVERVIEW,
+            {},
+        )
+        core_view = stored_pouring.service.view(stored_pouring.core_record)
+        assert {
+            stored_pouring.iri_of_name(slot["name"])
+            for slot in overview["frame"]["slots"]
+        } == {core_view.citation_of(slot).iri for slot in core_view.root.defines_slot}
+
+    def test_the_overview_gives_the_frames_parameter_dimensions(self, stored_pouring):
+        overview = asked(
+            stored_pouring.toolbox(stored_pouring.core_record),
+            KnowledgeToolName.KNOWLEDGE_OVERVIEW,
+            {},
+        )
+        core_view = stored_pouring.service.view(stored_pouring.core_record)
+        assert {
+            stored_pouring.iri_of_name(dimension["name"])
+            for dimension in overview["frame"]["parameter_dimensions"]
+        } == {
+            core_view.citation_of(dimension).iri
+            for dimension in core_view.root.leaves_open
+        }
+
+    def test_a_core_read_alone_holds_no_perspective(self, stored_pouring):
+        overview = asked(
+            stored_pouring.toolbox(stored_pouring.core_record),
+            KnowledgeToolName.KNOWLEDGE_OVERVIEW,
+            {},
+        )
+        assert overview["perspectives"] == []
+
+    def test_the_overview_names_the_perspectives_read_with_the_core(
+        self, stored_pouring
+    ):
+        overview = asked(
+            stored_pouring.toolbox(
+                stored_pouring.core_record, stored_pouring.frame_record
+            ),
+            KnowledgeToolName.KNOWLEDGE_OVERVIEW,
+            {},
+        )
+        frame_view = stored_pouring.service.view(stored_pouring.frame_record)
+        (perspective,) = overview["perspectives"]
+        assert perspective["module"] == ActionPerspectiveFile.ACTION_FRAME.value
+        assert (
+            stored_pouring.iri_of_name(perspective["root"]["name"])
+            == frame_view.citation_of(frame_view.root).iri
+        )
+
+    def test_a_perspective_is_read_with_the_core_it_builds_on(self, stored_pouring):
+        overview = asked(
+            stored_pouring.toolbox(stored_pouring.frame_record),
+            KnowledgeToolName.KNOWLEDGE_OVERVIEW,
+            {},
+        )
+        core_view = stored_pouring.service.view(stored_pouring.core_record)
+        assert (
+            stored_pouring.iri_of_name(overview["frame"]["frame"]["name"])
+            == core_view.citation_of(core_view.root).iri
+        )
+
+    def test_a_slot_is_described_with_the_expectations_linking_to_it(
+        self, stored_pouring
+    ):
+        core_view = stored_pouring.service.view(stored_pouring.core_record)
+        frame_view = stored_pouring.service.view(stored_pouring.frame_record)
+        toolbox = stored_pouring.toolbox(
+            stored_pouring.core_record, stored_pouring.frame_record
+        )
+        source = next(
+            slot
+            for slot in core_view.root.defines_slot
+            if isinstance(slot, action_core.SourceSlot)
+        )
+        source_name = next(
+            slot["name"]
+            for slot in asked(toolbox, KnowledgeToolName.KNOWLEDGE_OVERVIEW, {})[
+                "frame"
+            ]["slots"]
+            if stored_pouring.iri_of_name(slot["name"])
+            == core_view.citation_of(source).iri
+        )
+        described = asked(
+            toolbox, KnowledgeToolName.DESCRIBE_FRAGMENT, {"name": source_name}
+        )
+        linking_expectations = {
+            stored_pouring.iri_of_name(link["name"])
+            for link in described["linked_from"]
+            if link["kind"] == action_frame.SlotExpectation.__name__
+        }
+        assert linking_expectations == {
+            frame_view.citation_of(expectation).iri
+            for expectation in frame_view.root.has_slot_expectation
+            if expectation.expects_of_slot is source
+        }
+
+    def test_fragments_of_a_class_are_found_in_every_record_read(self, stored_pouring):
+        found = asked(
+            stored_pouring.toolbox(
+                stored_pouring.core_record, stored_pouring.frame_record
+            ),
+            KnowledgeToolName.FIND_FRAGMENTS,
+            {"kind": action_frame.SlotExpectation.__name__},
+        )
+        frame_view = stored_pouring.service.view(stored_pouring.frame_record)
+        assert {
+            stored_pouring.iri_of_name(fragment["name"])
+            for fragment in found["fragments"]
+        } == {
+            frame_view.citation_of(expectation).iri
+            for expectation in frame_view.root.has_slot_expectation
+        }
+
+    def test_every_tool_answers_in_its_declared_shape_for_a_core_and_a_perspective(
+        self, stored_pouring
+    ):
+        tools = {
+            tool.definition.name: tool
+            for tool in stored_pouring.service.tools(
+                stored_pouring.core_record, stored_pouring.frame_record
+            )
+        }
+        overview = json.loads(
+            tools[KnowledgeToolName.KNOWLEDGE_OVERVIEW].run({}).content
+        )
+        calls = {
+            KnowledgeToolName.KNOWLEDGE_OVERVIEW: {},
+            KnowledgeToolName.FIND_FRAGMENTS: {
+                "kind": action_frame.SlotExpectation.__name__
+            },
+            KnowledgeToolName.DESCRIBE_FRAGMENT: {
+                "name": overview["frame"]["slots"][0]["name"]
+            },
+        }
+        for name, arguments in calls.items():
+            Draft202012Validator(tools[name].definition.output_schema).validate(
+                json.loads(tools[name].run(arguments).content)
+            )
+
+
+class TestReadingBesideFlanagan:
+    def test_a_core_fragment_is_named_apart_from_a_flanagan_fragment_of_its_name(
+        self, tmp_path
+    ):
+        store = HypothesisStore(directory=tmp_path)
+        flanagan = flanagan_service_answering(store, GenerationCase.LIFT_AND_POUR)
+        flanagan_record = flanagan.serve(flanagan_query())
+        flanagan_view = flanagan.view(flanagan_record)
+        flanagan_root_name = flanagan_view.citation_of(flanagan_view.root).fragment_name
+        core_answer = json.loads(answer_text(AnswerCase.CORE))
+        core_answer["fragments"][0]["id"] = flanagan_root_name
+        service = service_answering(store, json.dumps(core_answer))
+        core_record = service.serve(core_query())
+        toolbox = ToolBox(tools=service.tools(flanagan_record, core_record))
+        overview = asked(toolbox, KnowledgeToolName.KNOWLEDGE_OVERVIEW, {})
+        core_frame_name = overview["frame"]["frame"]["name"]
+        assert core_frame_name != flanagan_root_name
+        assert (
+            asked(
+                toolbox, KnowledgeToolName.DESCRIBE_FRAGMENT, {"name": core_frame_name}
+            )["kind"]["name"]
+            == action_core.PouringFrame.__name__
+        )
+        assert (
+            asked(
+                toolbox,
+                KnowledgeToolName.DESCRIBE_FRAGMENT,
+                {"name": flanagan_root_name},
+            )["kind"]["name"]
+            == type(flanagan_view.root).__name__
+        )
+
+    def test_the_overview_keeps_the_phases_beside_the_frame(self, tmp_path):
+        store = HypothesisStore(directory=tmp_path)
+        flanagan_record = flanagan_service_answering(
+            store, GenerationCase.LIFT_AND_POUR
+        ).serve(flanagan_query())
+        service = service_answering(store, answer_text(AnswerCase.CORE))
+        core_record = service.serve(core_query())
+        overview = asked(
+            ToolBox(tools=service.tools(flanagan_record, core_record)),
+            KnowledgeToolName.KNOWLEDGE_OVERVIEW,
+            {},
+        )
+        flanagan_alone = asked(
+            ToolBox(tools=service.tools(flanagan_record)),
+            KnowledgeToolName.KNOWLEDGE_OVERVIEW,
+            {},
+        )
+        assert overview["phases"] == flanagan_alone["phases"]
+        assert "frame" in overview

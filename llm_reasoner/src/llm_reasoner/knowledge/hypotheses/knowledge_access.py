@@ -13,7 +13,7 @@ from typing_extensions import Optional
 
 from llm_reasoner.clients.tools import Tool
 
-KNOWLEDGE_ACCESS_VERSION = "1.1"
+KNOWLEDGE_ACCESS_VERSION = "1.2"
 """
 The version of this contract: of the operations below and of the definitions and answer
 shapes of the knowledge tools.
@@ -66,10 +66,11 @@ class KnowledgeAccess(ABC):
         """
 
     @abstractmethod
-    def tools(self, record_id: str) -> list[Tool]:
+    def tools(self, *record_ids: str) -> list[Tool]:
         """
-        :return: The tools a language model reads the hypothesis with the given record
-            identifier with, named by :class:`KnowledgeToolName`.
+        :return: The tools a language model reads the hypotheses with the given record
+            identifiers with, together with the hypotheses they build on, as one body of
+            knowledge, named by :class:`KnowledgeToolName`.
         """
 
     @abstractmethod
@@ -78,7 +79,7 @@ class KnowledgeAccess(ABC):
         :param record_id: The record identifier of a stored hypothesis.
         :param name: The name of a fragment, as the knowledge tools name it.
         :return: The IRI citing the named fragment of the hypothesis, ``None`` when the
-            hypothesis has no fragment of that name.
+            hypothesis itself has no fragment of that name.
         """
 
     @abstractmethod
