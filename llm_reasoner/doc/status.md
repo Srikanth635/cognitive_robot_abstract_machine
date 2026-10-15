@@ -197,6 +197,13 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   (a trial and an execution, in two runs) and the real one: found and fixed a menu that closed
   when a button in it was clicked (the list is redrawn, so the clicked element had left it
   before the outside-click check ran), and the address now keeps the span chosen by a row.
+  Step 4, one NEEM (`neem.mjs` with node tests on fixtures that the Python tests keep equal to
+  what the server sends, `neem_view.mjs`): a row of the list opens `?neem=<id>` in place of the
+  run's panels, with the tree of the steps, what the chosen step was asked to do (reusing the
+  inspector's blocks), a link to the bar of its trial or execution in the run that saved it, and
+  a link back from the inspector of that bar. Checked in a browser on the real database: a
+  33-step plan with a pick-up (its grasp description), a re-attach (the pitcher moved to the
+  gripper) and poses in the frame of the pitcher.
 - The viewer, step V6e: a live check. One real resolution with Sonnet 5.5 (the designator
   giving the objects, in `simple_pouring`) through a cram-viz of its own (its own data directory,
   its store a copy of an earlier run's, so no knowledge was generated) and a viewer of its own,

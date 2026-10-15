@@ -14,6 +14,8 @@ import { mapState } from './map.mjs';
 import { MapView } from './map_view.mjs';
 import { KIND, RunModel, STATUS } from './model.mjs';
 import { plotOfTrials, triedPours } from './pour.mjs';
+import { neemAddress } from './neem.mjs';
+import { NeemScreen } from './neem_view.mjs';
 import { neemsAddress } from './neems.mjs';
 import { NeemsView } from './neems_view.mjs';
 import { Replay } from './replay.mjs';
@@ -34,7 +36,7 @@ const Address = Object.freeze({
   stream: function (run) { return '/api/runs/' + encodeURIComponent(run) + '/stream'; },
 });
 
-const Parameter = Object.freeze({ RUN: 'run', SPAN: 'span' });
+const Parameter = Object.freeze({ RUN: 'run', SPAN: 'span', NEEM: 'neem' });
 
 const Connection = Object.freeze({
   CONNECTING: 'connecting…',
@@ -79,15 +81,19 @@ class Viewer {
     this.replayView = new ReplayView(this.replayBar, () => this.replayChanged());
     this.map = new MapView(find('map'), (lane) => this.chooseLane(lane));
     this.timeline = new TimelineView(find('timeline'), (id) => this.choose(id));
-    this.inspector = new InspectorView(find('inspector'), (id) => this.choose(id));
+    this.inspector = new InspectorView(find('inspector'), (id) => this.choose(id), (neem) => this.openNeem(neem));
     this.events = new EventsView(find('events'));
-    this.neemsView = new NeemsView(find('neems-toggle'), find('neems-menu'), (scope) => this.loadNeems(scope), (neem) => this.showOriginOf(neem));
+    this.neemsView = new NeemsView(find('neems-toggle'), find('neems-menu'), (scope) => this.loadNeems(scope), (neem) => this.openNeem(neem.identifier));
+    this.runScreen = find('run-screen');
+    this.neemScreen = new NeemScreen(find('neem-screen'), () => this.closeNeem(), (neem) => this.openOriginOf(neem));
     this.attempts = new AttemptsView(find('attempts-panel'), (id) => this.choose(id));
     this.filter = new SpanFilter();
     this.filterView = new FilterView(find('filters'), this.filter, () => this.render(), () => this.chooseNextMatch());
     const parameters = new URLSearchParams(window.location.search);
     this.wantedRun = parameters.get(Parameter.RUN);
     this.wantedSpan = parameters.get(Parameter.SPAN);
+    this.wantedNeem = parameters.get(Parameter.NEEM);
+    this.neemId = null;
     this.runs = [];
     this.runOptions = '';
     this.run = null;
@@ -103,7 +109,10 @@ class Viewer {
   }
 
   start() {
-    this.runSelect.addEventListener('change', () => this.followRun(this.runSelect.value));
+    this.runSelect.addEventListener('change', () => {
+      this.closeNeem();
+      this.followRun(this.runSelect.value);
+    });
     this.eventsToggle.addEventListener('click', () => {
       this.drawer.hidden = !this.drawer.hidden;
       this.eventsToggle.setAttribute('aria-expanded', String(!this.drawer.hidden));
@@ -112,6 +121,7 @@ class Viewer {
     this.replayToggle.addEventListener('click', () => this.toggleReplay());
     this.loadConfig();
     this.loadRuns();
+    if (this.wantedNeem !== null) this.openNeem(Number(this.wantedNeem));
     setInterval(() => this.loadRuns(), RUN_POLL_MILLISECONDS);
     setInterval(() => { if (this.changed || this.isLive()) this.render(); }, REFRESH_MILLISECONDS);
   }
@@ -201,6 +211,35 @@ class Viewer {
   async loadNeems(scope) {
     const response = await fetch(neemsAddress(scope, this.run)).catch(() => null);
     return response === null ? { ok: false, error: Connection.UNREACHABLE } : response.json();
+  }
+
+  // Shows one NEEM in place of the run: the tree of its plan and what each step was asked to do.
+  async openNeem(identifier) {
+    this.neemId = identifier;
+    this.setAddress(Parameter.NEEM, identifier);
+    this.runScreen.hidden = true;
+    this.replayBar.hidden = true;
+    this.neemScreen.showMessage('Reading NEEM #' + identifier + '…');
+    const response = await fetch(neemAddress(identifier)).catch(() => null);
+    const payload = response === null ? { ok: false, error: Connection.UNREACHABLE } : await response.json();
+    if (this.neemId !== identifier) return;
+    if (payload.ok) this.neemScreen.show(payload);
+    else this.neemScreen.showMessage(payload.error);
+  }
+
+  // Goes back from a NEEM to the run.
+  closeNeem() {
+    if (this.neemId === null) return;
+    this.neemId = null;
+    this.setAddress(Parameter.NEEM, null);
+    this.neemScreen.hide();
+    this.runScreen.hidden = false;
+    this.changed = true;
+  }
+
+  openOriginOf(neem) {
+    this.closeNeem();
+    this.showOriginOf(neem);
   }
 
   // Goes to the bar of the trial or execution a NEEM is the plan of, in the run that saved it.
@@ -361,7 +400,7 @@ class Viewer {
     this.statusBadge.textContent = status;
     this.statusBadge.className = 'badge status-' + status;
     this.showCramVizLink(model);
-    this.replayBar.hidden = this.replay === null;
+    this.replayBar.hidden = this.replay === null || this.neemId !== null;
     this.replayToggle.classList.toggle('on', this.replay !== null);
     this.replayToggle.disabled = this.replay === null && (this.isLive() || this.model.events.length === 0);
     if (this.replay !== null) this.replayView.show(this.replay);

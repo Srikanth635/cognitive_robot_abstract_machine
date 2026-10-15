@@ -5,6 +5,7 @@ each was asked to do, and the things and places it refers to.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -23,7 +24,14 @@ from llm_reasoner_viz.neem_plan import (
 from llm_reasoner_viz.neem_schema import Table
 from llm_reasoner_viz.neems import NeemDatabase, UnknownNeem
 
-from .neem_files import Change, change_database, write_neem_database
+from .neem_files import (
+    PAGE_FIXTURES,
+    PAGE_FIXTURES_DIRECTORY,
+    Change,
+    change_database,
+    sent_by_the_server,
+    write_neem_database,
+)
 
 POURING_TEMPLATE = "giskardpy.motion_statechart.goals.templates.Sequence"
 RIGHT_ARM = "coraplex.datastructures.enums.Arms.RIGHT"
@@ -369,3 +377,17 @@ class TestADatabaseThatIsBroken:
             database.nodes(1)
         assert missing.value.table == Table.DESIGNATOR
         assert missing.value.identifier == 11
+
+
+# %% what the page is tested on
+
+
+class TestThePagesFixtures:
+    @pytest.mark.parametrize("fixture", PAGE_FIXTURES, ids=lambda fixture: fixture.file)
+    def test_a_fixture_of_the_page_is_what_the_server_sends(self, fixture):
+        """
+        When this fails the server's answer has changed: call ``write_page_fixtures`` to
+        write the fixtures again, and look at what the page's tests say of them.
+        """
+        written = json.loads((PAGE_FIXTURES_DIRECTORY / fixture.file).read_text())
+        assert written == sent_by_the_server(fixture)

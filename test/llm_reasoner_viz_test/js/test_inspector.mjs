@@ -270,6 +270,25 @@ test('the NEEM kept of an execution is shown the same way', function () {
   assert.strictEqual(block(view, 'NEEM').kind, BLOCK.FACTS);
 });
 
+test('a pour whose NEEM was kept leads to it', function () {
+  const model = trialModel(keptOfTrial);
+  assert.strictEqual(describeSpan(spanOf(model, KIND.TRIAL), model).neem, keptOfTrial.database_id);
+});
+
+test('an execution whose NEEM was kept leads to it', function () {
+  const model = modelOf(neemRun);
+  const kept = neemRun.find(function (event) { return event.event === EVENT.NEEM_RECORDED; });
+  assert.strictEqual(describeSpan(spanOf(model, KIND.EXECUTION), model).neem, kept.database_id);
+});
+
+test('a span that kept no NEEM leads to none', function () {
+  const failure = { event: EVENT.NEEM_NOT_RECORDED, at: 3, kind: NEEM_KIND.TRIAL, episode: 't1', error_type: 'DiskIsFull', reason: 'no space' };
+  const model = trialModel(failure);
+  assert.strictEqual(describeSpan(spanOf(model, KIND.TRIAL), model).neem, null);
+  const resolved_model = modelOf(resolved);
+  assert.strictEqual(describeSpan(spanOf(resolved_model, KIND.MODEL), resolved_model).neem, null);
+});
+
 test('a NEEM that could not be kept says why', function () {
   const failure = { event: EVENT.NEEM_NOT_RECORDED, at: 3, kind: NEEM_KIND.TRIAL, episode: 't1', error_type: 'DiskIsFull', reason: 'no space left on device' };
   const model = trialModel(failure);
