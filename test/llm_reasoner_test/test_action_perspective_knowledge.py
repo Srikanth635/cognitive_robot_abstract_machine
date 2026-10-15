@@ -45,13 +45,14 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_frame,
 )
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
+from llm_reasoner.knowledge.ontologies.perspective_roots import PERSPECTIVE_ROOTS
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 from llm_reasoner.knowledge.storage.record import (
     ConsistencyVerdict,
     current_module_versions,
 )
-from llm_reasoner.knowledge.storage.citation import Citation
+from llm_reasoner.knowledge.storage.citation import Citation, StoredRoot
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.knowledge.vocabulary_proposal.perspective import Perspective
 
@@ -834,3 +835,43 @@ class TestReadingBesideFlanagan:
         )
         assert overview["phases"] == flanagan_alone["phases"]
         assert "frame" in overview
+
+
+# %% naming the root of a stored hypothesis, and the roots of the perspectives
+
+
+class TestStoredRoot:
+    def test_a_query_may_name_the_root_of_a_stored_hypothesis_by_its_record(
+        self, stored_pouring
+    ):
+        frame_record = stored_pouring.service.serve(
+            the(action_frame.FrameStereotype)(
+                stereotype_of=StoredRoot(record_id=stored_pouring.core_record)
+            )
+        )
+        assert frame_record == stored_pouring.frame_record
+
+    def test_the_root_of_a_stored_hypothesis_is_cited_as_its_view_cites_it(
+        self, stored_pouring
+    ):
+        core_view = stored_pouring.service.view(stored_pouring.core_record)
+        assert stored_pouring.service.store.root_citation(
+            stored_pouring.core_record
+        ) == core_view.citation_of(core_view.root)
+
+
+class TestPerspectiveRoots:
+    def test_every_perspective_on_the_core_has_a_root(self):
+        assert set(PERSPECTIVE_ROOTS) == set(ActionPerspectiveFile) - {
+            ActionPerspectiveFile.ACTION_CORE
+        }
+
+    def test_the_root_of_a_perspective_belongs_to_its_module(self):
+        for module_file, root in PERSPECTIVE_ROOTS.items():
+            assert Vocabulary().module_file_of(root.root) is module_file
+
+    def test_a_perspective_query_fixes_the_core_frame_it_describes(self):
+        cited = StoredRoot(record_id="core-record")
+        query = PERSPECTIVE_ROOTS[ActionPerspectiveFile.ACTION_FRAME].query(cited)
+        assert query.type is action_frame.FrameStereotype
+        assert query.kwargs == {"stereotype_of": cited}

@@ -18,6 +18,7 @@ from krrood.entity_query_language.factories import the
 from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any, Mapping, Optional
 
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
@@ -48,6 +49,12 @@ class DescribedActionKey(StrEnum):
     The IRI of the ontology class of the knowledge structure describing the action.
     """
 
+    FRAME = "frame"
+    """
+    The IRI of the class of the action core's frame of the action, when the core has
+    one.
+    """
+
 
 @dataclass(frozen=True)
 class DescribedAction:
@@ -70,6 +77,12 @@ class DescribedAction:
     The generated class of the phase structure describing the action.
     """
 
+    frame: Optional[type[action_core.ActionFrame]] = None
+    """
+    The generated class of the action core's frame of the action, ``None`` when the core
+    has none.
+    """
+
     def query(self, values: Mapping[str, Any]) -> Match:
         """
         :param values: Values of fields of the structure, by field name; ``...`` leaves
@@ -78,6 +91,12 @@ class DescribedAction:
             the values given.
         """
         return the(self.structure)(decomposes_task=self.concept, **values)
+
+    def frame_query(self) -> Match:
+        """
+        :return: A query for the action core's one frame framing this action's concept.
+        """
+        return the(self.frame)(frames_action=self.concept)
 
     @classmethod
     def from_json(
@@ -91,6 +110,11 @@ class DescribedAction:
             designator=stored[DescribedActionKey.DESIGNATOR],
             concept=ConceptReference(iri=stored[DescribedActionKey.CONCEPT]),
             structure=vocabulary.definition_named(stored[DescribedActionKey.STRUCTURE]),
+            frame=(
+                vocabulary.definition_named(stored[DescribedActionKey.FRAME])
+                if DescribedActionKey.FRAME in stored
+                else None
+            ),
         )
 
 

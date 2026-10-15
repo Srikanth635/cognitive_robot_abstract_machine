@@ -2,6 +2,7 @@
   {
     "designator": "coraplex.robot_plans.actions.composite.tool_based.PouringAction",
     "concept": "http://aicor.knowledge/l2-ontology.owl#Pouring",
-    "structure": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
+    "structure": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure",
+    "frame": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame"
   }
 ]

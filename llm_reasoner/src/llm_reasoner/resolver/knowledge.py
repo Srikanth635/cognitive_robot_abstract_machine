@@ -17,11 +17,14 @@ from typing_extensions import Optional
 
 from llm_reasoner.clients.tools import Tool
 from llm_reasoner.knowledge.access import (
+    PERSPECTIVE_ROOTS,
+    ActionPerspectiveFile,
     DescribedAction,
     DescribedActions,
     KnowledgeAccess,
     KnowledgeToolName,
     SituationFeatures,
+    StoredRoot,
 )
 from llm_reasoner.resolver.grounds import GroundKey, GroundSource
 from llm_reasoner.resolver.prompt_format import PromptRule, RuleName
@@ -41,6 +44,21 @@ KNOWLEDGE_RULE = PromptRule(
 """
 The rule stating how the knowledge about the requested action is read and used, when
 the model is offered the knowledge tools.
+"""
+
+FRAME_KNOWLEDGE_RULE = PromptRule(
+    name=RuleName.FRAME_KNOWLEDGE,
+    text=f"the knowledge also holds the action's frame ({KnowledgeToolName.KNOWLEDGE_OVERVIEW} "
+    '"frame"): the slots its participants fill, what it is for, what it brings about '
+    "and the choices it leaves open, and perspectives on it, such as what each slot's "
+    "filler is normally expected to be, have or afford and the defaults that hold "
+    f"otherwise; {KnowledgeToolName.DESCRIBE_FRAGMENT} on a slot lists what is expected "
+    "of it. Relate each open slot to the frame's slot or choice it fills, check what is "
+    "expected of it against the world, and ground your choice on it.",
+)
+"""
+The rule stating how the action's frame and the perspectives on it are read and used,
+when they are offered with the knowledge tools.
 """
 
 
@@ -67,6 +85,24 @@ class KnowledgeConsultation:
     knowledge describes the designator.
     """
 
+    perspective_record_ids: list[str] = field(default_factory=list)
+    """
+    The identifiers of the stored hypotheses about the action core's frame of the
+    action and about each perspective on it consulted, the core first; none when no
+    perspective is consulted.
+    """
+
+    @property
+    def record_ids(self) -> list[str]:
+        """
+        Every stored hypothesis the consultation obtained, the phase structure first.
+        """
+        return [
+            record_id
+            for record_id in (self.record_id, *self.perspective_record_ids)
+            if record_id is not None
+        ]
+
 
 @dataclass(frozen=True)
 class KnowledgeGrounds(GroundSource):
@@ -79,9 +115,9 @@ class KnowledgeGrounds(GroundSource):
     The knowledge component holding the hypothesis.
     """
 
-    record_id: str
+    record_ids: tuple[str, ...]
     """
-    The record identifier of the hypothesis.
+    The record identifiers of the hypotheses read together.
     """
 
     @property
@@ -93,7 +129,17 @@ class KnowledgeGrounds(GroundSource):
         return "a fragment name, as the knowledge tools give it"
 
     def identify(self, name: str) -> Optional[str]:
-        return self.service.citation(self.record_id, name)
+        return next(
+            (
+                cited
+                for cited in (
+                    self.service.citation(record_id, name)
+                    for record_id in self.record_ids
+                )
+                if cited is not None
+            ),
+            None,
+        )
 
 
 @dataclass
@@ -119,6 +165,12 @@ class KnowledgeRequester:
     Reads the situation features a knowledge structure accepts from the ontology.
     """
 
+    perspectives: tuple[ActionPerspectiveFile, ...] = ()
+    """
+    The perspectives on the action core consulted beside the phase structure, with the
+    core they describe; none by default, which consults neither.
+    """
+
     def consult(
         self, action: Match, situation_backend: GenerativeBackend
     ) -> KnowledgeConsultation:
@@ -140,27 +192,66 @@ class KnowledgeRequester:
             record_id=self.service.serve(
                 described.query(situation), instruction=designator
             ),
+            perspective_record_ids=self.perspective_records_for(described, designator),
         )
+
+    def perspective_records_for(
+        self, described: DescribedAction, designator: str
+    ) -> list[str]:
+        """
+        :return: The records of the action core's frame of the action and of each
+            perspective consulted on it, served and generated first when none is
+            stored; none when no perspective is consulted or the core has no frame of
+            the action.
+        """
+        if not self.perspectives or described.frame is None:
+            return []
+        core_record = self.service.serve(
+            described.frame_query(), instruction=designator
+        )
+        return [
+            core_record,
+            *(
+                self.service.serve(
+                    PERSPECTIVE_ROOTS[perspective].query(
+                        StoredRoot(record_id=core_record)
+                    ),
+                    instruction=designator,
+                )
+                for perspective in self.perspectives
+            ),
+        ]
 
     def tools_for(self, consultation: KnowledgeConsultation) -> list[Tool]:
         """
         :return: The knowledge tools reading the hypothesis a consultation obtained;
             none when no knowledge describes its designator.
         """
-        if consultation.record_id is None:
+        if not consultation.record_ids:
             return []
-        return self.service.tools(consultation.record_id)
+        return self.service.tools(*consultation.record_ids)
 
     def grounds_in(self, consultation: KnowledgeConsultation) -> list[GroundSource]:
         """
         :return: The fragments of the hypothesis a consultation obtained, as what an
             answer may rest on; none when no knowledge describes its designator.
         """
-        if consultation.record_id is None:
+        if not consultation.record_ids:
             return []
         return [
-            KnowledgeGrounds(service=self.service, record_id=consultation.record_id)
+            KnowledgeGrounds(
+                service=self.service, record_ids=tuple(consultation.record_ids)
+            )
         ]
+
+    def rules_for(self, consultation: KnowledgeConsultation) -> list[PromptRule]:
+        """
+        :return: The rules of reading the knowledge a consultation obtained: how to read
+            it, and how to read the action's frame when perspectives were consulted.
+        """
+        if not consultation.perspective_record_ids:
+            return [KNOWLEDGE_RULE]
+        return [KNOWLEDGE_RULE, FRAME_KNOWLEDGE_RULE]
 
     def situation_of(
         self, described: DescribedAction, situation_backend: GenerativeBackend

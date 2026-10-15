@@ -14,7 +14,7 @@ stores the admitted hypothesis.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
@@ -38,6 +38,7 @@ from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
 from llm_reasoner.observation.events import HypothesisRequested, HypothesisServed
 from llm_reasoner.observation.sinks import EventSink, NullSink
 from llm_reasoner.knowledge.storage.record import HypothesisRecord, qualified_name
+from llm_reasoner.knowledge.storage.citation import StoredRoot
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 T = TypeVar("T")
@@ -137,6 +138,35 @@ class HypothesisBackend(GenerativeBackend):
     The most recent admitted hypothesis, with its warnings and exchanges.
     """
 
+    def with_roots_cited(self, request: HypothesisRequest) -> HypothesisRequest:
+        """
+        :return: The request with every field fixed to the root of a stored hypothesis
+            fixed to that root's citation instead.
+        :raises GivenHypothesesUnavailable: When it names stored roots, but there is no
+            store to read them from.
+        """
+        roots = {
+            name: value
+            for name, value in request.fixed_values.items()
+            if isinstance(value, StoredRoot)
+        }
+        if not roots:
+            return request
+        if self.store is None:
+            raise GivenHypothesesUnavailable(
+                record_ids=[root.record_id for root in roots.values()]
+            )
+        return replace(
+            request,
+            fixed_values={
+                **request.fixed_values,
+                **{
+                    name: self.store.root_citation(root.record_id)
+                    for name, root in roots.items()
+                },
+            },
+        )
+
     def given_for(self, request: HypothesisRequest) -> GivenFragments:
         """
         :return: The stored fragments of the hypotheses the request cites.
@@ -150,7 +180,9 @@ class HypothesisBackend(GenerativeBackend):
         return self.store.given(request.builds_on)
 
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
-        request = HypothesisRequest.from_match(expression, self.instruction)
+        request = self.with_roots_cited(
+            HypothesisRequest.from_match(expression, self.instruction)
+        )
         self.observer.emit(
             HypothesisRequested(
                 root_type=qualified_name(request.root_type),

@@ -374,6 +374,14 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   parameter dimensions) and the perspectives read with it; describing a slot lists the
   expectations linking to it. A call for one record is logged as before, several as
   `records`.
+- Step 4 (2026-10-15): the resolver consults the action core and the perspectives its
+  requester names (`KnowledgeRequester.perspectives`, empty by default, so runs and
+  cram_viz are unchanged) beside the Flanagan hypothesis: the core is served for the
+  described action's frame (`described_actions.json` gains `"frame"`), each perspective
+  on the stored core, named by its record (`StoredRoot`) and rooted where
+  `PERSPECTIVE_ROOTS` says. The knowledge tools and the grounds read all of the
+  consultation's records; the `frame_knowledge` rule is stated when perspectives are
+  offered; `KnowledgeConsulted` reports their records. Tested with scripted answers.
 
 ## 3. Live testing
 
