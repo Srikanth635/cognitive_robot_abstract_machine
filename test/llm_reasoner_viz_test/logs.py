@@ -10,7 +10,7 @@ from pathlib import Path
 
 from typing_extensions import Any, Dict, List
 
-from llm_reasoner_viz.vocabulary import KnownEvent
+from llm_reasoner_viz.vocabulary import KnownEvent, NeemKind
 
 LOG_FILE = "events.jsonl"
 """
@@ -99,3 +99,38 @@ def append(log: Path, events: List[Dict[str, Any]]) -> None:
     """
     with log.open("a") as file:
         file.write(lines_of(events))
+
+
+def neem_recorded(
+    at: float,
+    kind: NeemKind,
+    episode: str,
+    database: Path,
+    database_id: int,
+    seconds: float = 5.0,
+) -> Dict[str, Any]:
+    """
+    :return: A plan the simulation performed kept as a NEEM.
+    """
+    return {
+        "event": KnownEvent.NEEM_RECORDED,
+        "at": at,
+        "kind": kind,
+        "episode": episode,
+        "database": str(database),
+        "database_id": database_id,
+        "seconds": seconds,
+    }
+
+
+def trial_finished(at: float, trial: str, outcome: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    :return: A pour tried in the simulation ending with an outcome.
+    """
+    return {
+        "event": KnownEvent.TRIAL_FINISHED,
+        "at": at,
+        "trial": trial,
+        "outcome": outcome,
+        "seconds": 5.0,
+    }

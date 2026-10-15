@@ -27,6 +27,17 @@ DEFAULT_CRAM_VIZ_URL = "http://localhost:8711"
 The address cram_viz is served at unless told otherwise.
 """
 
+NEEM_DATABASE_ENVIRONMENT = "CRAM_VIZ_NEEM_DATABASE"
+"""
+The environment variable that names the database cram_viz keeps the NEEMs of its
+simulations in.
+"""
+
+NEEM_DATABASE_FILE = "neems.sqlite"
+"""
+The name of the database the NEEMs are kept in, in cram_viz's data directory.
+"""
+
 RUNS_DIRECTORY = "runs"
 """
 The directory of cram_viz's data directory that holds a run in a directory of its own.
@@ -58,3 +69,16 @@ def cram_viz_url() -> str:
         default, without a closing slash.
     """
     return os.environ.get(CRAM_VIZ_ENVIRONMENT, DEFAULT_CRAM_VIZ_URL).rstrip("/")
+
+
+def neem_database_path() -> Path:
+    """
+    :return: The database the NEEMs are kept in: the one the environment names, else
+        where cram_viz keeps it in its data directory.
+    """
+    database = os.environ.get(NEEM_DATABASE_ENVIRONMENT)
+    if database:
+        return Path(database).expanduser()
+    data = os.environ.get(DATA_ENVIRONMENT)
+    base = Path(data).expanduser() if data else Path.home() / USER_DATA_DIRECTORY
+    return base / NEEM_DATABASE_FILE

@@ -14,7 +14,7 @@ none, and is not shown.
 
 ```bash
 llm-reasoner-viz                       # http://127.0.0.1:8721
-llm-reasoner-viz --port 8722 --runs ~/.cram_viz/runs
+llm-reasoner-viz --port 8722 --runs ~/.cram_viz/runs --neems ~/.cram_viz/neems.sqlite
 python -m llm_reasoner_viz.server      # without installing the command
 ```
 
@@ -23,6 +23,11 @@ sets the address it links to), and the viewer links back: *open in cram-viz* in 
 opens cram-viz at the run's scene with `?run=<run>`, which shows what the run resolved, the
 hypothesis it consulted, and can perform it there, the viewer following the steps in the
 run's log. `CRAM_VIZ_URL` sets the address of cram-viz (`http://localhost:8711`).
+
+The NEEMs of the simulations are kept in one SQLite database (`CRAM_VIZ_NEEM_DATABASE`, or
+`neems.sqlite` in cram-viz's data directory). The viewer opens it read-only, never changes
+it, reports it as busy while a simulation is writing, and joins each plan to the run whose
+log says it was kept.
 
 The viewer listens on this machine only (`--host` changes that): the events hold prompts
 in full. It needs the Python standard library only, and its page is plain JavaScript
@@ -83,6 +88,7 @@ at what it points to.
 | `GET /api/config` | Where cram-viz is, for the page to link to |
 | `GET /api/runs` | The runs that have a log, newest first, each summed up: its query, scene, how resolving and performing went, how many events and model calls, tokens and cost |
 | `GET /api/runs/<run>/events` | The events of a run as one batch, with `next`, the offset to go on from; `?after=<offset>`, `?limit=<n>` |
+| `GET /api/neems` | The plans of the NEEM database, newest first, each with how its root ended, how long it lasted, how many nodes and steps it has, and where it came from (a trial or an execution of a run; none when no log names it); `?run=<run>` takes only those the run kept. `503` while the database is being written |
 | `GET /api/runs/<run>/stream` | The events as server-sent events, those written so far and then those written next; each frame's `id` is where its event ends in the log, so `?after=<offset>` or the `Last-Event-ID` header resumes a stream |
 
 ## Layout
@@ -90,8 +96,11 @@ at what it points to.
 ```
 src/llm_reasoner_viz/
     vocabulary.py   the names of the events and their fields the viewer reads
-    paths.py        where the runs are kept
+    paths.py        where the runs and the NEEM database are kept
     runs.py         EventLog, RunSummary, RunLibrary
+    neem_schema.py  the tables and columns of the NEEM database the viewer reads
+    neems.py        NeemDatabase: the plans of the database, read-only
+    neem_library.py NeemLibrary: the plans joined to the runs that kept them
     stream.py       EventStream: following a log as it grows
     server.py       the HTTP server and the console entry point
     web/            the page: index.html, app.css and ES modules

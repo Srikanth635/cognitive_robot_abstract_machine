@@ -69,6 +69,41 @@ class EventField(StrEnum):
     The text of a line of the log that is not an event.
     """
 
+    KIND = "kind"
+    """
+    What a NEEM is the episode of.
+    """
+
+    EPISODE = "episode"
+    """
+    The trial or the run a NEEM is of.
+    """
+
+    DATABASE = "database"
+    """
+    The database a NEEM is kept in.
+    """
+
+    DATABASE_ID = "database_id"
+    """
+    The identifier a NEEM was given in its database.
+    """
+
+    TRIAL = "trial"
+    """
+    The trial a pour tried in the simulation is.
+    """
+
+    OUTCOME = "outcome"
+    """
+    What a pour tried in the simulation brought about.
+    """
+
+    RUN = "run"
+    """
+    The run an event is of.
+    """
+
 
 class KnownEvent(StrEnum):
     """
@@ -81,6 +116,7 @@ class KnownEvent(StrEnum):
     EXECUTION_STARTED = "ExecutionStarted"
     EXECUTION_FINISHED = "ExecutionFinished"
     EXECUTION_FAILED = "ExecutionFailed"
+    TRIAL_FINISHED = "TrialFinished"
     MODEL_ANSWERED = "ModelAnswered"
     NEEM_RECORDED = "NeemRecorded"
     NEEM_NOT_RECORDED = "NeemNotRecorded"
@@ -89,4 +125,20 @@ class KnownEvent(StrEnum):
     """
     Not written by any process: how the viewer shows a line of a log that is not an
     event.
+    """
+
+
+class NeemKind(StrEnum):
+    """
+    What a NEEM, the plan the simulation performed, is the episode of.
+    """
+
+    TRIAL = "trial"
+    """
+    A pour tried in the simulation before it is accepted.
+    """
+
+    EXECUTION = "execution"
+    """
+    A run's resolved action, performed in the simulation.
     """

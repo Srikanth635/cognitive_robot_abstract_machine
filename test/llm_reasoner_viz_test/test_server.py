@@ -1,6 +1,6 @@
 """
 Tests of the viewer's server: the runs it lists, the events of a run as a batch or as a
-stream that follows the log, and the pages it serves.
+stream that follows the log, the NEEMs it lists, and the pages it serves.
 """
 
 from __future__ import annotations
@@ -8,10 +8,13 @@ from __future__ import annotations
 import http.client
 import json
 import re
+import sqlite3
 import threading
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
 from dataclasses import dataclass
+from http import HTTPStatus
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
@@ -24,7 +27,10 @@ from llm_reasoner_viz.paths import (
     DATA_ENVIRONMENT,
     RUNS_ENVIRONMENT,
     default_runs_directory,
+    neem_database_path,
 )
+from llm_reasoner_viz.neem_library import NeemLibrary
+from llm_reasoner_viz.neems import NeemDatabase
 from llm_reasoner_viz.runs import EventLog, RunLibrary
 from llm_reasoner_viz.server import (
     DEFAULT_HOST,
@@ -33,8 +39,18 @@ from llm_reasoner_viz.server import (
     make_server,
     parse_arguments,
 )
+from llm_reasoner_viz.vocabulary import NeemKind
 
-from .logs import answered, append, finished, started, write_run
+from .logs import (
+    answered,
+    append,
+    finished,
+    neem_recorded,
+    started,
+    trial_finished,
+    write_run,
+)
+from .neem_files import write_neem_database
 
 # %% helpers
 
@@ -68,17 +84,63 @@ class RunningViewer:
         return f"http://{self.host}:{self.port}"
 
 
+@dataclass
+class NeemViewer(RunningViewer):
+    """
+    A viewer that also serves the NEEMs of a database of its own.
+    """
+
+    database: Path
+    """
+    The database of NEEMs it serves.
+    """
+
+
+@contextmanager
+def serving(server: ThreadingHTTPServer) -> Iterator[int]:
+    """
+    Serve on a thread for as long as the block lasts.
+
+    :return: The port the server listens on.
+    """
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    yield server.server_address[1]
+    server.shutdown()
+    server.server_close()
+
+
 @pytest.fixture
 def viewer(tmp_path: Path) -> Iterator[RunningViewer]:
     """
     :return: A viewer serving the empty directory of runs of the test.
     """
     server = make_server(RunLibrary(directory=tmp_path), host=DEFAULT_HOST, port=0)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    yield RunningViewer(host=DEFAULT_HOST, port=server.server_address[1], runs=tmp_path)
-    server.shutdown()
-    server.server_close()
+    with serving(server) as port:
+        yield RunningViewer(host=DEFAULT_HOST, port=port, runs=tmp_path)
+
+
+@pytest.fixture
+def neem_viewer(tmp_path: Path) -> Iterator[NeemViewer]:
+    """
+    :return: A viewer serving a database of two plans and the directory of runs of the
+        test, which has no run yet. Reading waits for a writer only a moment, so a busy
+        database is reported at once.
+    """
+    runs = RunLibrary(directory=tmp_path / "runs")
+    database = write_neem_database(tmp_path / "neems.sqlite")
+    server = make_server(
+        runs,
+        host=DEFAULT_HOST,
+        port=0,
+        neems=NeemLibrary(
+            database=NeemDatabase(path=database, timeout_seconds=0.1), runs=runs
+        ),
+    )
+    with serving(server) as port:
+        yield NeemViewer(
+            host=DEFAULT_HOST, port=port, runs=tmp_path / "runs", database=database
+        )
 
 
 def get(url: str) -> urllib.request.addinfourl:
@@ -141,6 +203,78 @@ class TestRuns:
 
     def test_no_runs_is_an_empty_list(self, viewer):
         assert get_json(viewer.url + "/api/runs")["runs"] == []
+
+
+# %% the NEEMs
+
+
+class TestNeems:
+    def test_the_neems_are_listed_as_the_library_sums_them_up(self, neem_viewer):
+        write_run(
+            neem_viewer.runs,
+            "a-run",
+            [
+                started(run="a-run"),
+                neem_recorded(
+                    110.0, NeemKind.TRIAL, "trial-1", neem_viewer.database, 1
+                ),
+                trial_finished(111.0, "trial-1", {"lands_in_opening": True}),
+            ],
+        )
+        payload = get_json(neem_viewer.url + "/api/neems")
+        library = NeemLibrary(
+            database=NeemDatabase(path=neem_viewer.database),
+            runs=RunLibrary(directory=neem_viewer.runs),
+        )
+        assert payload["ok"] is True
+        assert payload["exists"] is True
+        assert payload["database"] == str(neem_viewer.database)
+        assert payload["neems"] == [entry.to_json() for entry in library.entries()]
+
+    def test_only_the_neems_of_the_run_asked_for_are_listed(self, neem_viewer):
+        write_run(
+            neem_viewer.runs,
+            "a-run",
+            [
+                started(run="a-run"),
+                neem_recorded(
+                    110.0, NeemKind.TRIAL, "trial-1", neem_viewer.database, 2
+                ),
+            ],
+        )
+        payload = get_json(neem_viewer.url + "/api/neems?run=a-run")
+        assert [neem["neem"] for neem in payload["neems"]] == [2]
+
+    def test_a_run_that_kept_none_has_an_empty_list(self, neem_viewer):
+        payload = get_json(neem_viewer.url + "/api/neems?run=no-such-run")
+        assert payload["neems"] == []
+
+    def test_without_a_database_there_are_none(self, neem_viewer):
+        neem_viewer.database.unlink()
+        payload = get_json(neem_viewer.url + "/api/neems")
+        assert payload["exists"] is False
+        assert payload["neems"] == []
+
+    def test_a_database_being_written_is_reported_as_unavailable(self, neem_viewer):
+        writer = sqlite3.connect(neem_viewer.database, isolation_level=None)
+        try:
+            writer.execute("begin exclusive")
+            assert (
+                status_of(neem_viewer.url + "/api/neems")
+                == HTTPStatus.SERVICE_UNAVAILABLE
+            )
+        finally:
+            writer.close()
+
+    def test_a_database_of_another_kind_is_refused_with_what_it_lacks(
+        self, neem_viewer
+    ):
+        neem_viewer.database.unlink()
+        sqlite3.connect(neem_viewer.database).close()
+        assert (
+            status_of(neem_viewer.url + "/api/neems")
+            == HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
 
 # %% the events of a run
@@ -280,6 +414,11 @@ class TestStarting:
         assert arguments.port == DEFAULT_PORT
         assert arguments.host == DEFAULT_HOST
         assert arguments.runs == default_runs_directory()
+        assert arguments.neems == neem_database_path()
+
+    def test_the_neem_database_can_be_asked_for(self, tmp_path: Path):
+        arguments = parse_arguments(["--neems", str(tmp_path / "mine.sqlite")])
+        assert arguments.neems == tmp_path / "mine.sqlite"
 
     def test_the_port_and_the_runs_can_be_asked_for(self, tmp_path: Path):
         arguments = parse_arguments(["--port", "9100", "--runs", str(tmp_path)])
