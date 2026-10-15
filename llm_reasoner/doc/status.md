@@ -366,6 +366,14 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   and the knowledge graph read back as the same fragments. A perspective's brief adds the
   rule about the given core. Tested with scripted core and frame answers, both also
   admitted by HermiT.
+- Step 3 (2026-10-15): the knowledge tools read several records as one body of
+  knowledge, the records they build on included (knowledge-access contract 1.2:
+  `tools(*record_ids)`); an action perspective hypothesis's fragments are named after its
+  module, such as `action-core/source`. `knowledge_overview` answers as before for a phase
+  structure and adds, for an action core, its frame (slots, objectives, consequences,
+  parameter dimensions) and the perspectives read with it; describing a slot lists the
+  expectations linking to it. A call for one record is logged as before, several as
+  `records`.
 
 ## 3. Live testing
 

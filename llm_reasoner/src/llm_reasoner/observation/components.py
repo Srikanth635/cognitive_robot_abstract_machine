@@ -64,6 +64,7 @@ class ArgumentKey(StrEnum):
     QUERY = "query"
     INSTRUCTION = "instruction"
     RECORD = "record"
+    RECORDS = "records"
     NAME = "name"
     KIND = "kind"
 
@@ -280,11 +281,15 @@ class ObservedKnowledge(KnowledgeAccess):
             lambda record_id: record_id,
         )
 
-    def tools(self, record_id: str) -> List[Tool]:
+    def tools(self, *record_ids: str) -> List[Tool]:
         return self.reporter.made(
             KnowledgeOperation.TOOLS,
-            {ArgumentKey.RECORD: record_id},
-            lambda: self.knowledge.tools(record_id),
+            (
+                {ArgumentKey.RECORD: record_ids[0]}
+                if len(record_ids) == 1
+                else {ArgumentKey.RECORDS: list(record_ids)}
+            ),
+            lambda: self.knowledge.tools(*record_ids),
             tool_names,
         )
 

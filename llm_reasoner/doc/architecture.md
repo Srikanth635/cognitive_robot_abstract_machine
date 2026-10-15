@@ -664,7 +664,7 @@ property (`matched_with`) holds both ways. A hypothesis is therefore built, admi
 read in any process, whatever krrood's symbol graph knows, including one that loaded a
 world first (I1; the first R7 run failed on exactly that).
 
-### 3.7 Resolver → knowledge component: the knowledge-access contract (version 1.1)
+### 3.7 Resolver → knowledge component: the knowledge-access contract (version 1.2)
 
 The resolver reads the knowledge component's own graph through `KnowledgeAccess`
 (`hypotheses/knowledge_access.py`, exported by `access.py`), as it reads the world
@@ -673,7 +673,7 @@ through `WorldAccess`. `KnowledgeService` fulfils it.
 | Operation | Answers |
 |---|---|
 | `serve(query, instruction="")` | The record identifier of the hypothesis for a request (§3.6) |
-| `tools(record_id)` | The knowledge tools over that hypothesis, named by `KnowledgeToolName` |
+| `tools(*record_ids)` | The knowledge tools over those hypotheses and the ones they build on, read as one body of knowledge, named by `KnowledgeToolName` (several records since version 1.2) |
 | `citation(record_id, name)` | The IRI citing a fragment of the hypothesis by the name the tools gave it, `None` when it has none (version 1.1) |
 | `instances_of(kind)` | The stored fragments of a vocabulary class: an EQL domain |
 | `is_vocabulary_class(kind)` | Whether a class's instances are knowledge rather than parts of the world |
@@ -682,11 +682,13 @@ The knowledge tools follow the world tools' conventions: one JSON definition eac
 (`hypotheses/tool_definitions/`, a description with purpose, returns, use_when and
 avoid, an input schema and a declared answer shape sharing `shared_definitions.json`),
 answers as JSON, and a question naming something the hypothesis lacks answered as an
-error in the shared error shape. Fragments are named as their citations name them.
+error in the shared error shape. Fragments are named as their citations name them, those
+of an action perspective hypothesis after its module (`action-core/source`), so names
+stay apart across the hypotheses read.
 
 | Tool | Input | Answer |
 |---|---|---|
-| `knowledge_overview` | none | The action concept's IRI; the structure's class and meaning; the situation (feature → value name, unknown features absent); the phases in order, each with name, class and meaning, label, the subgoal it aims for, and its parameters and requirements, each summarised with its values (a linked fragment holding only values, such as a range, written in place) and the names of its other links; the roles |
+| `knowledge_overview` | none | The action concept's IRI; for a phase structure, the structure's class and meaning; the situation (feature → value name, unknown features absent); the phases in order, each with name, class and meaning, label, the subgoal it aims for, and its parameters and requirements, each summarised with its values (a linked fragment holding only values, such as a range, written in place) and the names of its other links; the roles; for an action core, its frame with the slots, objectives, consequences and parameter dimensions, and the perspectives read with it (version 1.2) |
 | `find_fragments` | `kind`: a vocabulary class name | The fragments of that class and its subclasses, each with name, class and label |
 | `describe_fragment` | `name`: a fragment name | Its class and meaning, label, a statement per ontology property it gives a value for (field, meaning, and linked fragment names or its value), and the fragments linking to it with their field |
 

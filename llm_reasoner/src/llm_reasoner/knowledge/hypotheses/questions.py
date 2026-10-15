@@ -1,20 +1,29 @@
 """
-The questions a language model asks about one stored hypothesis, answered as data: an
-overview of the action, the fragments of a vocabulary class, and what one fragment is,
-states and is linked from. Fragments are named as their citations name them.
+The questions a language model asks about stored hypotheses read as one body of
+knowledge, answered as data: an overview of the action, the fragments of a vocabulary
+class, and what one fragment is, states and is linked from. Fragments are named as their
+citations name them, those of an action perspective hypothesis after its module, such as
+``action-core/source``, so that names stay apart across the hypotheses read.
 """
 
 from __future__ import annotations
 
 import inspect
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import asdict, dataclass, field, fields, replace
 from enum import Enum
 from operator import attrgetter
+from pathlib import Path
 
 from typing_extensions import Any, Optional
 
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView
+from llm_reasoner.knowledge.ontologies import (
+    ActionPerspectiveFile,
+    ActionPerspectiveModule,
+    OntologyModuleFile,
+)
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.situation import SituationFeatures
 from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
@@ -23,6 +32,13 @@ from llm_reasoner.knowledge.ontologies.terms import (
     is_inferred,
 )
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.storage.citation import Citation
+
+NAME_SEPARATOR = "/"
+"""
+What separates the module of an action perspective hypothesis from a fragment's name in
+the name the tools give the fragment.
+"""
 
 # %% errors
 
@@ -213,36 +229,103 @@ class PhaseSummary(KnowledgeAnswer):
 
 
 @dataclass(frozen=True)
+class FrameOverview(KnowledgeAnswer):
+    """
+    The action's frame in the action core: the slots its participants fill, what it is
+    for, what it brings about and the choices it leaves open.
+    """
+
+    frame: FragmentReference
+    """
+    The frame.
+    """
+
+    slots: list[FragmentSummary]
+    """
+    The slots its participants and their parts fill.
+    """
+
+    objectives: list[FragmentSummary]
+    """
+    What the action is for.
+    """
+
+    consequences: list[FragmentSummary]
+    """
+    What the action brings about.
+    """
+
+    parameter_dimensions: list[FragmentSummary]
+    """
+    The choices the action leaves open.
+    """
+
+
+@dataclass(frozen=True)
+class PerspectiveSummary(KnowledgeAnswer):
+    """
+    A perspective on the action read with its core.
+    """
+
+    module: str
+    """
+    The file of the perspective's ontology module, such as ``action-frame.ttl``.
+    """
+
+    root: FragmentReference
+    """
+    The fragment the perspective's knowledge is rooted in.
+    """
+
+    meaning: str
+    """
+    What the class of that fragment means.
+    """
+
+
+@dataclass(frozen=True)
 class KnowledgeOverview(KnowledgeAnswer):
     """
-    What the action is, the situation the knowledge is for, and what the action goes
-    through.
+    What the action is, and what the knowledge read says of it: the situation and the
+    phases of a phase structure, and the frame and the perspectives of an action core.
     """
 
-    structure: KindSummary
+    structure: Optional[KindSummary] = None
     """
-    The class of the structure describing the action, and what it means.
-    """
-
-    situation: dict[str, str]
-    """
-    The situation features the knowledge was generated for, by field name, each by the
-    name of its value; features left unknown are absent.
+    The class of the phase structure describing the action, and what it means, when one
+    is read.
     """
 
-    phases: list[PhaseSummary]
+    situation: Optional[dict[str, str]] = None
     """
-    The phases in the order the action goes through them.
+    The situation features the phase structure was generated for, by field name, each
+    by the name of its value; features left unknown are absent.
     """
 
-    roles: list[FragmentReference]
+    phases: Optional[list[PhaseSummary]] = None
     """
-    The roles taking part in the action.
+    The phases in the order the action goes through them, when a phase structure is
+    read.
+    """
+
+    roles: Optional[list[FragmentReference]] = None
+    """
+    The roles taking part in the action, when a phase structure is read.
     """
 
     action: Optional[str] = None
     """
-    The IRI of the action concept the structure decomposes.
+    The IRI of the action concept the knowledge describes.
+    """
+
+    frame: Optional[FrameOverview] = None
+    """
+    The action's frame, when an action core is read.
+    """
+
+    perspectives: Optional[list[PerspectiveSummary]] = None
+    """
+    The perspectives read with the action core, when one is read.
     """
 
 
@@ -351,12 +434,12 @@ class FragmentDescription(KnowledgeAnswer):
 @dataclass
 class KnowledgeQuestions:
     """
-    Answers questions about one stored hypothesis.
+    Answers questions about stored hypotheses read as one body of knowledge.
     """
 
-    hypothesis: HypothesisView
+    hypotheses: list[HypothesisView]
     """
-    The hypothesis asked about.
+    The hypotheses read, each with the hypotheses it builds on.
     """
 
     vocabulary: Vocabulary = field(default_factory=Vocabulary)
@@ -366,13 +449,22 @@ class KnowledgeQuestions:
 
     def overview(self) -> KnowledgeOverview:
         """
-        :return: What the action is, the situation the knowledge is for, and what the
-            action goes through.
+        :return: What the action is, the situation and the phases a phase structure
+            says it goes through, and the frame and the perspectives of an action core.
         """
-        root = self.hypothesis.root
+        phase_view = self.phase_structure_view()
+        core_view = self.view_of_module(ActionPerspectiveFile.ACTION_CORE)
+        overview = KnowledgeOverview(
+            action=self.action_concept(phase_view, core_view),
+            frame=None if core_view is None else self.frame_overview(core_view.root),
+            perspectives=None if core_view is None else self.perspectives(),
+        )
+        if phase_view is None:
+            return overview
+        root = phase_view.root
         features = SituationFeatures(vocabulary=self.vocabulary).of(type(root))
-        return KnowledgeOverview(
-            action=None if root.decomposes_task is None else root.decomposes_task.iri,
+        return replace(
+            overview,
             structure=KindSummary.of(type(root)),
             situation={
                 feature.field_name: feature.value_in(root).name
@@ -396,10 +488,110 @@ class KnowledgeQuestions:
                         for requirement in phase.has_condition_requirement
                     ],
                 )
-                for phase in self.hypothesis.phases()
+                for phase in phase_view.phases()
             ],
             roles=[self.reference(role) for role in root.defines_role],
         )
+
+    def frame_overview(self, frame: action_core.ActionFrame) -> FrameOverview:
+        """
+        :return: The frame of an action core with its slots, objectives, consequences
+            and parameter dimensions.
+        """
+        return FrameOverview(
+            frame=self.reference(frame),
+            slots=[self.summary(slot) for slot in frame.defines_slot],
+            objectives=[
+                self.summary(objective) for objective in frame.states_objective
+            ],
+            consequences=[
+                self.summary(consequence) for consequence in frame.brings_about
+            ],
+            parameter_dimensions=[
+                self.summary(dimension) for dimension in frame.leaves_open
+            ],
+        )
+
+    def perspectives(self) -> list[PerspectiveSummary]:
+        """
+        :return: The perspectives read, each by its module and its root.
+        """
+        return [
+            PerspectiveSummary(
+                module=self.module_of(view).value,
+                root=self.reference(view.root),
+                meaning=KindSummary.of(type(view.root)).meaning,
+            )
+            for view in self.views()
+            if isinstance(self.module_of(view), ActionPerspectiveFile)
+            and self.module_of(view) is not ActionPerspectiveFile.ACTION_CORE
+        ]
+
+    def action_concept(
+        self,
+        phase_view: Optional[HypothesisView],
+        core_view: Optional[HypothesisView],
+    ) -> Optional[str]:
+        """
+        :return: The IRI of the action concept the phase structure decomposes, or else
+            the one the core's frame frames.
+        """
+        if phase_view is not None and phase_view.root.decomposes_task is not None:
+            return phase_view.root.decomposes_task.iri
+        if core_view is not None and core_view.root.frames_action is not None:
+            return core_view.root.frames_action.iri
+        return None
+
+    # %% the hypotheses read
+
+    def views(self) -> list[HypothesisView]:
+        """
+        :return: Every hypothesis read, each once, in the order given.
+        """
+        return list({id(view): view for view in self.hypotheses}.values())
+
+    def module_of(self, view: HypothesisView) -> Optional[OntologyModuleFile]:
+        """
+        :return: The ontology module of a hypothesis's root class.
+        """
+        return self.vocabulary.module_file_of(type(view.root))
+
+    def view_of_module(
+        self, module_file: OntologyModuleFile
+    ) -> Optional[HypothesisView]:
+        """
+        :return: The first hypothesis read whose root belongs to the module.
+        """
+        return next(
+            (view for view in self.views() if self.module_of(view) is module_file),
+            None,
+        )
+
+    def phase_structure_view(self) -> Optional[HypothesisView]:
+        """
+        :return: The first hypothesis read that is not about an action perspective, a
+            phase structure.
+        """
+        return next(
+            (
+                view
+                for view in self.views()
+                if not isinstance(self.module_of(view), ActionPerspectiveModule)
+            ),
+            None,
+        )
+
+    def fragments(self) -> list[DescriptionEntity]:
+        """
+        :return: Every fragment of the hypotheses read, each once.
+        """
+        return [fragment for view in self.views() for fragment in view.fragments]
+
+    def view_holding(self, fragment: DescriptionEntity) -> HypothesisView:
+        """
+        :return: The hypothesis read that holds a fragment.
+        """
+        return next(view for view in self.views() if id(fragment) in view.identifiers)
 
     def find(self, kind: str) -> FragmentsFound:
         """
@@ -414,7 +606,8 @@ class KnowledgeQuestions:
             kind=kind,
             fragments=[
                 self.reference(fragment)
-                for fragment in self.hypothesis.instances_of(found)
+                for fragment in self.fragments()
+                if isinstance(fragment, found)
             ],
         )
 
@@ -440,7 +633,7 @@ class KnowledgeQuestions:
                     kind=type(other).__name__,
                     field_name=field_name,
                 )
-                for other in self.hypothesis.fragments
+                for other in self.fragments()
                 for field_name, value in self.stated_values(other).items()
                 if any(held is fragment for held in self.listed(value))
             ],
@@ -450,23 +643,45 @@ class KnowledgeQuestions:
 
     def name_of(self, fragment: DescriptionEntity) -> str:
         """
-        :return: The name a fragment has in the hypothesis.
+        :return: The name the tools give a fragment: its name in its hypothesis, after
+            the module of an action perspective hypothesis.
         """
-        return self.hypothesis.citation_of(fragment).fragment_name
+        view = self.view_holding(fragment)
+        module_file = self.module_of(view)
+        prefix = (
+            Path(module_file.value).stem + NAME_SEPARATOR
+            if isinstance(module_file, ActionPerspectiveModule)
+            else ""
+        )
+        return prefix + view.citation_of(fragment).fragment_name
 
     def fragment_named(self, name: str) -> DescriptionEntity:
         """
-        :return: The hypothesis's fragment of the given name.
-        :raises UnknownFragment: When it has none.
+        :return: The fragment the tools give the name.
+        :raises UnknownFragment: When none has it.
         """
-        named = [
-            fragment
-            for fragment in self.hypothesis.fragments
-            if self.name_of(fragment) == name
-        ]
+        named = self.fragments_named(name)
         if not named:
             raise UnknownFragment(name=name)
         return named[0]
+
+    def citation_named(self, name: str) -> Optional[Citation]:
+        """
+        :return: The citation of the fragment the tools give the name, ``None`` when
+            none has it.
+        """
+        named = self.fragments_named(name)
+        if not named:
+            return None
+        return self.view_holding(named[0]).citation_of(named[0])
+
+    def fragments_named(self, name: str) -> list[DescriptionEntity]:
+        """
+        :return: The fragments the tools give the name; one at most.
+        """
+        return [
+            fragment for fragment in self.fragments() if self.name_of(fragment) == name
+        ]
 
     def reference(self, fragment: DescriptionEntity) -> FragmentReference:
         """

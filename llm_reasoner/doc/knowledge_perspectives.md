@@ -432,7 +432,10 @@ vocabulary is proposed from too.
   perspectives held.
 - `describe_fragment` on a slot already lists the fragments linking to it, so a slot's
   expectations take one call; no new tool until phase 4 shows a need.
-- The tools read every record of a consultation as one body of knowledge.
+- The tools read every record of a consultation as one body of knowledge
+  (`tools(*record_ids)`, with the records they build on); an action perspective
+  hypothesis's fragments are named after its module (`action-core/source`), so they stay
+  apart from each other and from the Flanagan fragments, whose names do not change.
 
 ### 11.6 Resolver
 
@@ -451,7 +454,8 @@ vocabulary is proposed from too.
    unchanged byte for byte.
 2. Stored fragments as fixed values; a frame hypothesis on top of a core hypothesis.
    **Done** 2026-10-15.
-3. The overview of a core hypothesis; tools over a consultation's records.
+3. The overview of a core hypothesis; tools over a consultation's records. **Done**
+   2026-10-15 (knowledge-access contract 1.2).
 4. The resolver consulting the core and the offered perspectives beside Flanagan.
 5. Live with Sonnet 5.5: the core and the frame for pouring, the cost reported, the
    knowledge reviewed.
