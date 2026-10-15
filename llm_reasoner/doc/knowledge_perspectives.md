@@ -290,12 +290,20 @@ another perspective is built (phase 4 decides whether to go on).
   actions and states; CRAM-AICOR concepts named by IRI without a range, as in the core; the
   core's `hasQuantityKind` reused instead of copied.
 
-**Phase 1 — register the action frame.**
+**Phase 1 — register the action frame. Done 2026-10-15.**
 1. The proposal writer writes the same Turtle for the same vocabulary, so a proposal and
    its review read as a plain git diff.
 2. `action-frame.ttl` becomes an action perspective module (`ActionPerspectiveFile`), with
    its generated Python vocabulary and tests like the core's (structure, links to
    CRAM-AICOR and DUL, HermiT). The proposal's record stays under `proposals/`.
+
+   Registering changed two things in the reviewed vocabulary. The frame's statements about
+   an action frame hang off a `FrameStereotype` of it (`stereotypeOf` a core frame) rather
+   than off the core's `ActionFrame`, so the core's Python holds nothing of any
+   perspective and a hypothesis can hold any subset of them. Its polarity is
+   `SlotConditionPolarity`, since Python names are unique across modules and the Flanagan
+   core already has a `ConditionPolarity` meaning the same; phase 7 merges the two into the
+   core.
 
 **Phase 2 — knowledge in the new vocabularies (the hypothesis stage, §6).**
 1. A hypothesis about pouring holding the core and the action frame: generated, accepted
@@ -320,7 +328,8 @@ register, knowledge, compare.
 **Phase 6 — failures and corrections (§5.4)**, the same way.
 
 **Phase 7 — the Flanagan modules on the core's slots (§5.5)**, so every perspective talks
-about the same participants.
+about the same participants; the Flanagan core's `ConditionPolarity` and the frame's
+`SlotConditionPolarity` become one term of the action core.
 
 **Phase 8 — more actions (D8):** navigating, picking up and placing in the core, with the
 concepts CRAM-AICOR lacks proposed in our module (§10), and their perspectives.

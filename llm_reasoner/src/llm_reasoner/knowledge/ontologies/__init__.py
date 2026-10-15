@@ -209,6 +209,13 @@ class ActionPerspectiveFile(OntologyModuleFile, StrEnum):
     fill, what it is for, what it brings about and the kinds of choice it leaves open.
     """
 
+    ACTION_FRAME = "action-frame.ttl"
+    """
+    The action as FrameNet and Minsky's frames describe it: what each slot's filler is
+    expected to be, have or afford, the defaults, what must hold before the action, what
+    it changes and why each parameter dimension matters.
+    """
+
     @property
     def directory(self) -> Path:
         """
