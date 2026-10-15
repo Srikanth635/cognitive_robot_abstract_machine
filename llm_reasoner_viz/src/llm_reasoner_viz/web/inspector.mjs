@@ -25,9 +25,9 @@ export const BLOCK = Object.freeze({
 });
 
 const textBlock = (title, text) => ({ title: title, kind: BLOCK.TEXT, text: text });
-const jsonBlock = (title, value) => ({ title: title, kind: BLOCK.JSON, value: value });
+export const jsonBlock = (title, value) => ({ title: title, kind: BLOCK.JSON, value: value });
 const listBlock = (title, items) => ({ title: title, kind: BLOCK.LIST, items: items });
-const factsBlock = (title, facts) => ({ title: title, kind: BLOCK.FACTS, facts: facts });
+export const factsBlock = (title, facts) => ({ title: title, kind: BLOCK.FACTS, facts: facts });
 const tableBlock = (title, columns, rows) => ({ title: title, kind: BLOCK.TABLE, columns: columns, rows: rows });
 // Where pours ended on a plan of the opening, one of them emphasised (null when none is); no
 // block when none of the pours was measured.
@@ -86,8 +86,13 @@ function failureBlocks(failure) {
   return failure ? [textBlock('Failure', failure.reason)] : [];
 }
 
+// The number of the NEEM a span kept, which the view leads to; null when it kept none.
+function keptNeem(span) {
+  return span.data.neem ? span.data.neem.database_id : null;
+}
+
 function view(span, title, facts, blocks) {
-  return { title: title, kind: span.kind, status: span.status, facts: facts, blocks: blocks.filter(present) };
+  return { title: title, kind: span.kind, status: span.status, neem: keptNeem(span), facts: facts, blocks: blocks.filter(present) };
 }
 
 // %% the NEEM kept of what the simulation performed

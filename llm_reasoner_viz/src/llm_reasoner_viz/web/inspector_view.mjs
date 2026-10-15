@@ -84,9 +84,12 @@ const BLOCKS = new Map([
 ]);
 
 export class InspectorView {
-  constructor(container, onChoose) {
+  // ``onChoose(id)`` is called with the id of a span that is picked, and ``onOpenNeem(number)``
+  // with the number of the NEEM a span kept when its link is followed.
+  constructor(container, onChoose, onOpenNeem) {
     this.container = container;
     this.onChoose = onChoose;
+    this.onOpenNeem = onOpenNeem;
     this.empty('Pick a bar on the timeline to see what happened there.');
   }
 
@@ -97,11 +100,14 @@ export class InspectorView {
   // Shows a view of a span, with the spans it is inside of as a trail to follow upward.
   show(view, trail) {
     const choose = this.onChoose;
+    const openNeem = this.onOpenNeem;
     const header = el('header', {},
       trail.length ? el('nav', { class: 'trail' }, trail.map(function (above) {
         return el('button', { type: 'button', onclick: function () { choose(above.id); } }, above.label);
       })) : null,
-      el('h2', {}, view.title, el('span', { class: 'badge status-' + view.status }, view.status)));
+      el('h2', {}, view.title, el('span', { class: 'badge status-' + view.status }, view.status)),
+      view.neem === null ? null : el('button', { type: 'button', class: 'neem-link', title: 'Open the plan this kept, as a NEEM',
+        onclick: function () { openNeem(view.neem); } }, 'open NEEM #' + view.neem + ' ›'));
     const blocks = view.blocks.map(function (block) {
       return el('section', { class: 'block' }, el('h3', {}, block.title), BLOCKS.get(block.kind)(block, choose));
     });

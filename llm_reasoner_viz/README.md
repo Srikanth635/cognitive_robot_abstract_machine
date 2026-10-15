@@ -55,8 +55,18 @@ modules with no build step and no library loaded from elsewhere.
   some, opens a list of them: the run's own, or with *all runs* every NEEM in the database,
   filtered to trials or executions, each with how it ended (a pour landed or missed, an
   execution finished or failed), the size and length of its plan and when it was saved. A
-  row goes to the bar of the trial or execution it is the plan of, in the run that saved it.
-  A NEEM that no log names is listed as of unknown origin.
+  row opens that NEEM. A NEEM that no log names is listed as of unknown origin.
+- **One NEEM** (`?neem=<number>`; it takes the place of the run's panels, *back to the run*
+  returns): where the plan came from, how it ended (a pour landed or missed, an execution
+  finished or failed) and how big and long it is, with *open the trial in its run* to go to
+  the bar of the trial or execution it is the plan of. *Plan* on the left is the tree of its
+  steps (conditions dimmed), and *Step* on the right what the chosen step was asked to do:
+  its values (those not set say so, an enumeration shows its member), the things and places
+  it refers to by the names the world gives them (`bowl.stl`), poses with their frame,
+  position and orientation, objects that are only values, such as how to grasp, with theirs,
+  and the table rows it is kept in as stored, to copy. A step has no status of its own: the
+  plan stores only its root as ended. The inspector of a trial or an execution that saved a
+  NEEM has an *open NEEM* link back.
 - **Attempts** (bottom): the attempts of the resolution the chosen span belongs to (the one
   asked for until something else is chosen), a card each: what it chose slot by slot, why
   the model chose it, the pour that was tried and how it ended, and what it was rejected
@@ -118,13 +128,14 @@ src/llm_reasoner_viz/
         filters.mjs     picking out the spans that say some words or went wrong
         links.mjs       the address that opens a run in cram-viz
         neems.mjs       where to ask for the NEEMs, which are shown and how each is worded
+        neem.mjs        one NEEM: the tree of its steps and what each was asked to do
         attempts.mjs    the cards of the attempts of a resolution
         pour.mjs        the plan of where pours ended
         layout.mjs      spans packed into rows of the timeline
         inspector.mjs   what the inspector shows of a span
         map.mjs         the components, their connections and what each is doing
         *_view.mjs      the elements: map, timeline, inspector, events, replay, filters,
-                        attempts, plan of the pours, the NEEMs button and list
+                        attempts, plan of the pours, the NEEMs button and list, one NEEM
         app.mjs         follows a run and keeps the views in step
 ```
 
