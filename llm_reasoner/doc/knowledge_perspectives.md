@@ -69,6 +69,9 @@ twins and episodic memories as their own pillars for this reason.
 | D3 | The model proposes the vocabulary of each perspective | The user's preference; each proposal is checked and reviewed before it is used (§6) |
 | D4 | No SOMA. FrameNet and image-schema resources are used as seeds for the model, not imported | Framester (FrameNet as OWL, aligned with DOLCE-Zero) and ImageSchemaNet (image schemas as a Framester layer, each schema a frame with roles) are large hubs; their terms are cited with `rdfs:seeAlso` for provenance |
 | D5 | Everything is stated in CRAM-AICOR terms where CRAM-AICOR has them | So the knowledge fits the CRAM architecture |
+| D6 | The action core's frame of a manipulation sits under `aicor:ManipulationFrame` (user, 2026-10-15) | CRAM-AICOR's frame layer is where frame elements (`RoleSlot`s) already hang |
+| D7 | The model proposes the vocabulary of one perspective at a time (user, 2026-10-15) | Each proposal stays small enough to review and understand before the next |
+| D8 | After pouring: navigating, picking up and placing (user, 2026-10-15) | The actions of the coraplex designators `NavigateAction`, `PickUpAction` and `PlaceAction`, which a pouring plan also performs |
 
 ## 4. What CRAM-AICOR already offers
 
@@ -110,7 +113,7 @@ For each action concept (`aicor:Pouring`) the core states:
 
 | Content | In CRAM-AICOR terms (proposed) |
 |---|---|
-| The action and its frame | An `ActionFrame` ⊑ `aicor:ManipulationFrame`, linked to the action concept |
+| The action and its frame | An `ActionFrame` ⊑ `aicor:ManipulationFrame` (D6), linked to the action concept; for an action that is not a manipulation, such as navigating, see §10 |
 | Its roles | `aicor:RoleSlot`s as frame elements (`hasFrameElement`), each classified by an `aicor:ParticipantRole` (source, substance, goal, agent, instrument), and parts of roles where they matter (the source's lip, the goal's opening) |
 | What it is for | The concept's `aicor:Telos` and `aicor:Goal`s (for pouring: `PouringTelos`, the substance accumulated in the goal) |
 | What it brings about | `aicor:Effect`s on the roles: the goal holds more, the source less |
@@ -238,14 +241,26 @@ is not worth its generation cost.
 
 ## 10. Open questions
 
-1. Where does the action core's `ActionFrame` sit: under `aicor:ManipulationFrame` (as
-   proposed), or alongside `aicor:IntentionalStructure`, which `PouringIntention` already
-   specialises with the participant roles and the telos?
-2. Should the generation stage propose one perspective at a time, or the core and the
-   frame together?
-3. Is the roles-to-slots mapping reviewed by a person each time a designator is added, or
-   accepted when it passes checks?
-4. Which actions after pouring?
+Answered 2026-10-15: the core's frame sits under `aicor:ManipulationFrame` (D6); one
+perspective is proposed at a time (D7); navigating, picking up and placing come after
+pouring (D8).
+
+1. **Who accepts the roles-to-slots mapping of a designator** (§7). The model proposes it
+   from the designator's docstrings; either a person reads and approves it once before it
+   is used, or it is accepted when it passes automatic checks (every slot maps to a role
+   or a parameter dimension that exists; a slot's type fits what the role expects, such as
+   `Body` for a container role; units are compatible) and is written to the mapping file
+   in the repository, where a change shows as a diff. The same choice applies to a
+   proposed vocabulary (§6).
+2. **Navigating is not a manipulation.** CRAM-AICOR has `Grasping`, `Lifting`, `Reaching`
+   and `Transporting` (an `ObjectDisplacement`), and `PlacementProblem` and
+   `PlacementTarget` for placing, but no navigating concept, and `ManipulationFrame`
+   describes manipulation problems. Proposed: a general `ActionFrame` ⊑ `dul:Description`,
+   whose frames of manipulations are also `aicor:ManipulationFrame`s (D6 kept), with the
+   navigating concept proposed in our own module until CRAM-AICOR has one.
+3. **Picking up and placing as concepts.** CRAM-AICOR has no `PickingUp` or `Placing`
+   action concept; they would be proposed in our module, built from the primitives it has
+   (`Reaching`, `Grasping`, `Lifting`; `PlacementTarget`).
 
 ## Sources
 
