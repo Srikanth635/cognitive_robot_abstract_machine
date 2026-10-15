@@ -7,6 +7,7 @@ written as an ontology module, and returned to the model for repair when it brea
 from __future__ import annotations
 
 import copy
+import difflib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -15,7 +16,7 @@ import pytest
 from jsonschema import Draft202012Validator
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 from rdflib.collection import Collection
-from typing_extensions import Any, Dict, List
+from typing_extensions import Any, Dict, List, Tuple
 
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
@@ -158,6 +159,25 @@ def written(answer: Dict[str, Any]) -> Graph:
         proposal=VocabularyProposal.from_json(answer),
         perspective=Perspective.ACTION_FRAME,
     ).graph()
+
+
+def turtle_of(answer: Dict[str, Any]) -> str:
+    return ProposalWriter(
+        proposal=VocabularyProposal.from_json(answer),
+        perspective=Perspective.ACTION_FRAME,
+    ).turtle()
+
+
+def changed_lines(before: str, after: str) -> Tuple[List[str], List[str]]:
+    """
+    :return: The lines a change removed and those it added.
+    """
+    differences = list(
+        difflib.unified_diff(before.splitlines(), after.splitlines(), n=0, lineterm="")
+    )[2:]
+    removed = [line[1:] for line in differences if line.startswith("-")]
+    added = [line[1:] for line in differences if line.startswith("+")]
+    return removed, added
 
 
 # %% the terms a proposal may reuse
@@ -464,6 +484,22 @@ class TestWriting:
         assert len(Graph().parse(data=writer.turtle(), format="turtle")) == len(
             writer.graph()
         )
+
+    def test_a_term_added_to_the_vocabulary_only_adds_lines(
+        self, answer, concept_naming_property
+    ):
+        before = turtle_of(answer)
+        answer["properties"].append(concept_naming_property)
+        removed, added = changed_lines(before, turtle_of(answer))
+        assert removed == []
+        assert added
+
+    def test_a_changed_definition_changes_only_its_line(self, answer):
+        before = turtle_of(answer)
+        answer["classes"][1]["meaning"] = "What must hold before the action can start."
+        removed, added = changed_lines(before, turtle_of(answer))
+        assert (len(removed), len(added)) == (1, 1)
+        assert answer["classes"][1]["meaning"] in added[0]
 
 
 # %% the prompts
