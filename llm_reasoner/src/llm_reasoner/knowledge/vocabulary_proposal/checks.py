@@ -315,9 +315,10 @@ class ProposalChecker:
                 yield Reference(partition.name, parent, TermKind.CLASS, "parent")
         for proposed in proposal.properties:
             yield Reference(proposed.name, proposed.domain, TermKind.CLASS, "domain")
-            yield Reference(
-                proposed.name, proposed.value_class, TermKind.CLASS, "range"
-            )
+            if proposed.value_class is not None:
+                yield Reference(
+                    proposed.name, proposed.value_class, TermKind.CLASS, "range"
+                )
             for parent in proposed.parents:
                 yield Reference(proposed.name, parent, TermKind.PROPERTY, "parent")
 

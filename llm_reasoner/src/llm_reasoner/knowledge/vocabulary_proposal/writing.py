@@ -203,7 +203,8 @@ class ProposalWriter:
 
     def write_property(self, graph: Graph, proposed: ProposedProperty) -> None:
         """
-        Write an object property, its domain, range and the properties it specialises.
+        Write an object property, its domain, its range if it has one, and the properties
+        it specialises.
         """
         term = self.iri(proposed.name)
         graph.add((term, RDF.type, OWL.ObjectProperty))
@@ -211,7 +212,8 @@ class ProposalWriter:
             graph.add((term, RDF.type, OWL.FunctionalProperty))
         self.write_named(graph, term, proposed.name, proposed.meaning)
         graph.add((term, RDFS.domain, self.iri(proposed.domain)))
-        graph.add((term, RDFS.range, self.iri(proposed.value_class)))
+        if proposed.value_class is not None:
+            graph.add((term, RDFS.range, self.iri(proposed.value_class)))
         for parent in proposed.parents:
             graph.add((term, RDFS.subPropertyOf, self.iri(parent)))
         for source in proposed.see_also:

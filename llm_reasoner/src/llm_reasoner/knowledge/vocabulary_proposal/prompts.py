@@ -80,6 +80,7 @@ class ProposalRuleName(StrEnum):
     DEFINE = "define"
     NAMES = "names"
     QUANTITIES = "quantities"
+    CONCEPTS = "concepts"
     WORLD = "world"
     SOURCES = "sources"
     ANSWER_FORMAT = "answer_format"
@@ -160,6 +161,13 @@ RULES: List[PromptRule] = [
         ProposalRuleName.QUANTITIES,
         "Declare no numeric property: a quantity is one of the core's parameter "
         "dimensions, which the vocabulary refers to.",
+    ),
+    PromptRule(
+        ProposalRuleName.CONCEPTS,
+        "A property whose values are CRAM-AICOR concepts, such as an action category "
+        "(aicor:Grasping) or a state type (aicor:ContainedState), names them by their "
+        "IRI as the core's framesAction and aimsAtState do: give it no range, and say in "
+        "its definition which concepts it names.",
     ),
     PromptRule(
         ProposalRuleName.WORLD,

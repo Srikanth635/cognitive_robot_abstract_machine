@@ -1,0 +1,9 @@
+{
+  "name": "expectsState",
+  "meaning": "A state the filler is expected to be in, as the IRI of a CRAM-AICOR state type, such as aicor:ContainedState.",
+  "domain": "FillerExpectation",
+  "range": null,
+  "parents": [],
+  "functional": false,
+  "see_also": []
+}
