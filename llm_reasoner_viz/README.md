@@ -66,7 +66,11 @@ modules with no build step and no library loaded from elsewhere.
   position and orientation, objects that are only values, such as how to grasp, with theirs,
   and the table rows it is kept in as stored, to copy. A step has no status of its own: the
   plan stores only its root as ended. The inspector of a trial or an execution that saved a
-  NEEM has an *open NEEM* link back.
+  NEEM has an *open NEEM* link back. *Compare with…* (`&compare=<number>` in the address)
+  sets the plan against another NEEM: the steps that are the same step (named the same under
+  the same step) are matched, those whose values or references differ are marked *differs*,
+  and the step chosen shows each such value as it is here and in the other plan; steps only
+  one of them has are marked *only here* or listed under *only in*.
 - **Attempts** (bottom): the attempts of the resolution the chosen span belongs to (the one
   asked for until something else is chosen), a card each: what it chose slot by slot, why
   the model chose it, the pour that was tried and how it ended, and what it was rejected
@@ -129,6 +133,7 @@ src/llm_reasoner_viz/
         links.mjs       the address that opens a run in cram-viz
         neems.mjs       where to ask for the NEEMs, which are shown and how each is worded
         neem.mjs        one NEEM: the tree of its steps and what each was asked to do
+        neem_compare.mjs  two NEEMs: which steps are the same and what differs in them
         attempts.mjs    the cards of the attempts of a resolution
         pour.mjs        the plan of where pours ended
         layout.mjs      spans packed into rows of the timeline

@@ -204,6 +204,12 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   a link back from the inspector of that bar. Checked in a browser on the real database: a
   33-step plan with a pick-up (its grasp description), a re-attach (the pitcher moved to the
   gripper) and poses in the frame of the pitcher.
+  Step 5, comparing (`neem_compare.mjs`, node tests): *compare with…* in the header sets the NEEM
+  against another one. Steps are matched by their names from the root down (the first of two
+  same-named siblings with the first), steps whose values or references differ are marked, and
+  the chosen step lists each differing value as `here → there`; steps only one plan has are
+  marked or listed. The other NEEM is in the address (`compare=`), so a comparison can be
+  reloaded. Checked in a browser: a pour against a navigate-and-pour plan, reload, clearing.
 - The viewer, step V6e: a live check. One real resolution with Sonnet 5.5 (the designator
   giving the objects, in `simple_pouring`) through a cram-viz of its own (its own data directory,
   its store a copy of an earlier run's, so no knowledge was generated) and a viewer of its own,

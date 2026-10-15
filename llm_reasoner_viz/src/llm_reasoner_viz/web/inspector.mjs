@@ -24,7 +24,7 @@ export const BLOCK = Object.freeze({
   PLOT: 'plot',
 });
 
-const textBlock = (title, text) => ({ title: title, kind: BLOCK.TEXT, text: text });
+export const textBlock = (title, text) => ({ title: title, kind: BLOCK.TEXT, text: text });
 export const jsonBlock = (title, value) => ({ title: title, kind: BLOCK.JSON, value: value });
 const listBlock = (title, items) => ({ title: title, kind: BLOCK.LIST, items: items });
 export const factsBlock = (title, facts) => ({ title: title, kind: BLOCK.FACTS, facts: facts });
