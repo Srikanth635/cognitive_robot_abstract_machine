@@ -285,7 +285,7 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   (`aa3f6dc3a`).
 - cram_viz: Hypothesis Graph and Ontology Graph tabs, the open-world check when the
   linked ontologies are configured (`5846a6fa5`, `7e84563bc`).
-- The action core (2026-10-15, step 1 of `knowledge_perspectives.md`): a second family of
+- The action core (2026-10-15, phase 0 of `knowledge_perspectives.md`): a second family of
   ontology modules, the action perspectives (`ontologies/action_perspectives/`, namespace
   `…/llm_reasoner/action-perspectives/`), whose first module, `action-core.ttl`, is the hub
   every perspective attaches to. It states an action's frame (`ActionFrame`, a DUL
@@ -304,8 +304,8 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   and writes each module into its own package; the Flanagan modules regenerate
   byte-identically. HermiT finds the core consistent with CRAM-AICOR and DUL and every class
   of it satisfiable (22 s). Nothing uses it yet: hypotheses, the store key, admission and the
-  knowledge tools still read only the predictive manipulation modules (step 3).
-- The vocabulary proposal (2026-10-15, step 2 of `knowledge_perspectives.md`):
+  knowledge tools still read only the predictive manipulation modules (phase 2).
+- The vocabulary proposal (2026-10-15, phase 0 of `knowledge_perspectives.md`):
   `knowledge/vocabulary_proposal/` asks a model for the vocabulary of one perspective
   (`python -m llm_reasoner.knowledge.vocabulary_proposal action-frame --action aicor:Pouring
   --frame core:PouringFrame --output <directory>`). The request shows the perspective's
