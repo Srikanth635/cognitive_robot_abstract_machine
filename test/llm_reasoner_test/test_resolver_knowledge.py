@@ -13,9 +13,10 @@ from jsonschema import Draft202012Validator
 from krrood.entity_query_language.factories import the, variable
 
 from llm_reasoner.clients.base import ScriptedClient
-from llm_reasoner.clients.tools import ScriptedToolRequest
+from llm_reasoner.clients.tools import ScriptedToolRequest, ToolBox
 from llm_reasoner.knowledge.access import (
     AcceptanceSuite,
+    ActionPerspectiveFile,
     ConceptReference,
     CRAM_AICOR_NAMESPACE,
     DescribedAction,
@@ -26,6 +27,8 @@ from llm_reasoner.knowledge.access import (
     KnowledgeToolName,
     SituationFeature,
     SituationFeatures,
+    action_core,
+    action_frame,
     pouring,
 )
 from llm_reasoner.resolver.action_context import ActionContextProvider
@@ -33,7 +36,13 @@ from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.context import StructuralCandidateRenderer
 from llm_reasoner.resolver.exceptions import UnknownGround
 from llm_reasoner.resolver.grounds import Ground, GroundKey
-from llm_reasoner.resolver.knowledge import KNOWLEDGE_RULE, KnowledgeRequester
+from llm_reasoner.observation.events import KnowledgeConsulted
+from llm_reasoner.observation.sinks import MemorySink
+from llm_reasoner.resolver.knowledge import (
+    FRAME_KNOWLEDGE_RULE,
+    KNOWLEDGE_RULE,
+    KnowledgeRequester,
+)
 from llm_reasoner.resolver.prompt_format import PromptSection
 from llm_reasoner.resolver.prompts import (
     ESTABLISHED_VALUES_RULE,
@@ -539,3 +548,176 @@ class TestGrounds:
         list(tilt_of(body_with_geometry()).evaluate(backend=backend))
         (output,) = bodies(backend.log[0].user, PromptSection.OUTPUT)
         assert RequestAnswerKey.GROUNDS not in json.loads(output)["items"]["properties"]
+
+
+# %% consulting the action core and its perspectives beside the phase structure
+
+PERSPECTIVE_CASES = Path(__file__).parent / "action_perspective_cases"
+"""
+The scripted answers describing pouring in the action perspectives.
+"""
+
+TILT_FRAMED_AS_POURING = DescribedAction(
+    designator=identifier_of(ActionWithBodyAndValueSlots),
+    concept=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring"),
+    structure=pouring.PouringPhaseStructure,
+    frame=action_core.PouringFrame,
+)
+"""
+The tilting action, described by the knowledge about pouring and framed by the action
+core's pouring frame.
+"""
+
+
+def requester_offering_the_frame(store: HypothesisStore) -> KnowledgeRequester:
+    """
+    :return: A requester for the tilting action framed as pouring that consults the
+        action frame, whose knowledge component generates the granular phase structure,
+        the core and the frame in turn.
+    """
+    return KnowledgeRequester(
+        service=KnowledgeService(
+            backend=HypothesisBackend(
+                client=ScriptedClient(
+                    responses=[
+                        GenerationCase.GRANULAR_POURING.text,
+                        (PERSPECTIVE_CASES / "pouring_core.json").read_text(),
+                        (PERSPECTIVE_CASES / "pouring_frame.json").read_text(),
+                    ]
+                ),
+                suite=AcceptanceSuite(rules=[]),
+                store=store,
+            )
+        ),
+        described_actions=DescribedActions(entries=[TILT_FRAMED_AS_POURING]),
+        perspectives=(ActionPerspectiveFile.ACTION_FRAME,),
+    )
+
+
+def consulted_with_the_frame(store: HypothesisStore):
+    """
+    :return: The requester offering the frame, and its consultation about tilting.
+    """
+    requester = requester_offering_the_frame(store)
+    consultation = requester.consult(
+        tilt_of(body_with_geometry()), situation_backend("situation_granular.json")
+    )
+    return requester, consultation
+
+
+class TestConsultingPerspectives:
+    def test_by_default_neither_the_core_nor_a_perspective_is_consulted(self, tmp_path):
+        requester = requester_generating(
+            HypothesisStore(directory=tmp_path), GenerationCase.GRANULAR_POURING
+        )
+        requester.described_actions = DescribedActions(entries=[TILT_FRAMED_AS_POURING])
+        consultation = requester.consult(
+            tilt_of(body_with_geometry()), situation_backend("situation_granular.json")
+        )
+        assert consultation.perspective_record_ids == []
+        assert len(requester.service.backend.client.calls) == 1
+
+    def test_the_phase_structure_is_served_as_before(self, tmp_path):
+        requester, consultation = consulted_with_the_frame(
+            HypothesisStore(directory=tmp_path)
+        )
+        assert isinstance(
+            requester.service.view(consultation.record_id).root,
+            pouring.PouringPhaseStructure,
+        )
+
+    def test_offering_the_frame_serves_the_core_and_the_frame_on_it(self, tmp_path):
+        requester, consultation = consulted_with_the_frame(
+            HypothesisStore(directory=tmp_path)
+        )
+        core_record, frame_record = consultation.perspective_record_ids
+        core_view = requester.service.view(core_record)
+        frame_view = requester.service.view(frame_record)
+        assert isinstance(core_view.root, action_core.PouringFrame)
+        assert frame_view.root.stereotype_of is core_view.root
+
+    def test_the_tools_read_the_phases_the_core_and_the_frame_together(self, tmp_path):
+        requester, consultation = consulted_with_the_frame(
+            HypothesisStore(directory=tmp_path)
+        )
+        overview = json.loads(
+            ToolBox(tools=requester.tools_for(consultation))
+            .call(KnowledgeToolName.KNOWLEDGE_OVERVIEW, {})
+            .content
+        )
+        phase_structure = requester.service.view(consultation.record_id).root
+        assert overview["structure"]["name"] == type(phase_structure).__name__
+        assert [perspective["module"] for perspective in overview["perspectives"]] == [
+            ActionPerspectiveFile.ACTION_FRAME.value
+        ]
+
+    def test_a_ground_may_name_a_fragment_of_the_frame(self, tmp_path):
+        requester, consultation = consulted_with_the_frame(
+            HypothesisStore(directory=tmp_path)
+        )
+        found = json.loads(
+            ToolBox(tools=requester.tools_for(consultation))
+            .call(
+                KnowledgeToolName.FIND_FRAGMENTS,
+                {"kind": action_frame.SlotExpectation.__name__},
+            )
+            .content
+        )
+        name = found["fragments"][0]["name"]
+        (grounds,) = requester.grounds_in(consultation)
+        frame_record = consultation.perspective_record_ids[-1]
+        assert grounds.identify(name) == requester.service.citation(frame_record, name)
+        assert grounds.identify(name) is not None
+
+    def test_the_rules_say_how_to_read_the_frame_only_when_it_is_offered(
+        self, tmp_path
+    ):
+        requester, consultation = consulted_with_the_frame(
+            HypothesisStore(directory=tmp_path / "with_frame")
+        )
+        assert FRAME_KNOWLEDGE_RULE in requester.rules_for(consultation)
+        plain = requester_generating(
+            HypothesisStore(directory=tmp_path / "plain"),
+            GenerationCase.GRANULAR_POURING,
+        )
+        plain_consultation = plain.consult(
+            tilt_of(body_with_geometry()), situation_backend("situation_granular.json")
+        )
+        assert plain.rules_for(plain_consultation) == [KNOWLEDGE_RULE]
+
+    def test_a_resolution_offered_the_frame_states_both_knowledge_rules(self, tmp_path):
+        backend = LanguageModelBackend.with_world_tools(
+            client=ScriptedClient(
+                tool_turns=[
+                    answer("situation_granular.json"),
+                    answer("angle_chosen.json"),
+                ]
+            ),
+            world=WorldView(),
+            knowledge=requester_offering_the_frame(HypothesisStore(directory=tmp_path)),
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert {KNOWLEDGE_RULE, FRAME_KNOWLEDGE_RULE} <= set(backend.rules)
+
+    def test_the_consultation_reports_the_core_and_the_perspectives_served(
+        self, tmp_path
+    ):
+        sink = MemorySink()
+        backend = LanguageModelBackend.with_world_tools(
+            client=ScriptedClient(
+                tool_turns=[
+                    answer("situation_granular.json"),
+                    answer("angle_chosen.json"),
+                ]
+            ),
+            world=WorldView(),
+            knowledge=requester_offering_the_frame(HypothesisStore(directory=tmp_path)),
+            observer=sink,
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        (consulted,) = [
+            event for event in sink.events if isinstance(event, KnowledgeConsulted)
+        ]
+        assert list(consulted.perspective_record_ids) == (
+            backend.consultation.perspective_record_ids
+        )

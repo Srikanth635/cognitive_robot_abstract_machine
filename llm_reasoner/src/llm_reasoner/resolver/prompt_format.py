@@ -223,6 +223,12 @@ class RuleName(StrEnum):
     How the knowledge about the requested action is read and used.
     """
 
+    FRAME_KNOWLEDGE = "frame_knowledge"
+    """
+    How the action's frame and the perspectives on it are read and used, when they are
+    offered.
+    """
+
     GROUNDS = "grounds"
     """
     How an element names what its choices rest on.

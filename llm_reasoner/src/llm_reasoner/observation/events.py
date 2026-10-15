@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from uuid import uuid4
 
-from typing_extensions import Any, Dict, List, Mapping, Optional
+from typing_extensions import Any, Dict, List, Mapping, Optional, Sequence
 
 from llm_reasoner.clients.usage import TokenUsage
 
@@ -525,6 +525,12 @@ class KnowledgeConsulted(Event):
     record_id: Optional[str] = None
     """
     The hypothesis served, none when no knowledge describes the action.
+    """
+
+    perspective_record_ids: Sequence[str] = ()
+    """
+    The hypotheses about the action core's frame and the perspectives on it served, the
+    core first; none when no perspective was consulted.
     """
 
 

@@ -32,12 +32,17 @@ from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies import (
+    ActionPerspectiveFile,
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     LinkedOntologyVariable,
     PredictiveManipulationOntologyFile,
+)
+from llm_reasoner.knowledge.ontologies.action_perspectives import (
+    action_core,
+    action_frame,
 )
 from llm_reasoner.knowledge.ontologies.described_actions import (
     DescribedAction,
@@ -51,6 +56,10 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
+from llm_reasoner.knowledge.ontologies.perspective_roots import (
+    PERSPECTIVE_ROOTS,
+    PerspectiveRoot,
+)
 from llm_reasoner.knowledge.ontologies.situation import (
     SituationFeature,
     SituationFeatures,
@@ -63,11 +72,14 @@ from llm_reasoner.knowledge.ontologies.terms import (
 )
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.representation.rdf import GraphReader
-from llm_reasoner.knowledge.storage.citation import Citation
+from llm_reasoner.knowledge.storage.citation import Citation, StoredRoot
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 __all__ = [
     "AcceptanceSuite",
+    "action_core",
+    "action_frame",
+    "ActionPerspectiveFile",
     "Citation",
     "ClosedWorldMembership",
     "ConceptReference",
@@ -104,6 +116,8 @@ __all__ = [
     "LinkedOntologyVariable",
     "object_dynamics",
     "OntologyFiles",
+    "PERSPECTIVE_ROOTS",
+    "PerspectiveRoot",
     "pouring",
     "PredictiveManipulationOntologyFile",
     "PREDICTIVE_MANIPULATION_NAMESPACE_ROOT",
@@ -113,6 +127,7 @@ __all__ = [
     "Severity",
     "SituationFeature",
     "SituationFeatures",
+    "StoredRoot",
     "SyntheticHypothesisRelation",
     "Vocabulary",
 ]

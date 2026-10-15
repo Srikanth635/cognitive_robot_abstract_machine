@@ -73,3 +73,16 @@ class Citation:
         if not iri.startswith(HYPOTHESIS_NAMESPACE_ROOT) or not separator:
             raise NotAHypothesisCitation(iri=iri)
         return cls(record_id=record_id, fragment_name=fragment_name)
+
+
+@dataclass(frozen=True)
+class StoredRoot:
+    """
+    The fragment a stored hypothesis was generated for, named by the hypothesis's
+    record, for a query to fix a field to before its citation is known.
+    """
+
+    record_id: str
+    """
+    The identifier of the record of the hypothesis.
+    """

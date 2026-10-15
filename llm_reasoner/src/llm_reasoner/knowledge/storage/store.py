@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+from krrood.utils import resolve_class_from_full_name
 from rdflib import Graph
 from typing_extensions import Callable, Iterable, Mapping, Optional
 
@@ -107,6 +108,14 @@ class HypothesisStore:
             for iri, fragment in read_given(given).items()
         }
         return GraphReader().read(stored.graph, known)
+
+    def root_citation(self, record_id: str) -> Citation:
+        """
+        :return: The citation of the fragment a stored hypothesis was generated for.
+        """
+        root_type = resolve_class_from_full_name(self.get(record_id).record.root_type)
+        read = self.read(record_id)
+        return Citation.from_iri(read.identifiers[id(read.root_of(root_type))])
 
     def given(self, record_ids: Iterable[str]) -> GivenFragments:
         """

@@ -68,11 +68,7 @@ from llm_reasoner.resolver.grounds import (
     GroundSource,
     Justification,
 )
-from llm_reasoner.resolver.knowledge import (
-    KNOWLEDGE_RULE,
-    KnowledgeConsultation,
-    KnowledgeRequester,
-)
+from llm_reasoner.resolver.knowledge import KnowledgeConsultation, KnowledgeRequester
 from llm_reasoner.resolver.outcomes import OutcomeCheck
 from llm_reasoner.resolver.prompt_format import PromptRule
 from llm_reasoner.resolver.prompts import (
@@ -327,7 +323,7 @@ class LanguageModelBackend(GenerativeBackend):
         """
         rules = list(self.request_completion.answer_rules)
         if self.offers_knowledge:
-            rules.append(KNOWLEDGE_RULE)
+            rules.extend(self.knowledge.rules_for(self.consultation))
         if self.ground_sources:
             rules.append(PromptBuilder.grounds_rule(self.ground_sources))
         return rules
@@ -548,6 +544,7 @@ class LanguageModelBackend(GenerativeBackend):
                     for name, feature in self.consultation.situation.items()
                 },
                 record_id=self.consultation.record_id,
+                perspective_record_ids=list(self.consultation.perspective_record_ids),
             )
         )
 

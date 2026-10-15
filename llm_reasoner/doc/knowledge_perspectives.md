@@ -440,11 +440,16 @@ vocabulary is proposed from too.
 ### 11.6 Resolver
 
 - A described action gains its core frame class (`core:PouringFrame`) beside its
-  Flanagan structure.
-- `consult` serves the Flanagan hypothesis as today, and the core with the perspectives
-  the requester offers (a setting; phase 4 compares none with the action frame).
-- The knowledge rule in the resolver's prompt names slots, expectations and defaults as
-  well as phases.
+  Flanagan structure (`described_actions.json`, `"frame"`).
+- `consult` serves the Flanagan hypothesis as today, and, when the requester's
+  `perspectives` name any (none by default, so runs are unchanged; phase 4 compares none
+  with the action frame), the core and each perspective on it. A perspective's query
+  names the stored core by its record (`StoredRoot`), resolved to the core frame's
+  citation by the knowledge component, which knows where each perspective is rooted
+  (`PERSPECTIVE_ROOTS`: the action frame's `FrameStereotype.stereotype_of`).
+- The tools and the grounds read every record of the consultation; a second rule
+  (`frame_knowledge`) says how to read the frame and its perspectives when they are
+  offered. `KnowledgeConsulted` reports the records served for them.
 
 ### 11.7 Order (each test-first, with a scripted model until the last)
 
@@ -457,6 +462,7 @@ vocabulary is proposed from too.
 3. The overview of a core hypothesis; tools over a consultation's records. **Done**
    2026-10-15 (knowledge-access contract 1.2).
 4. The resolver consulting the core and the offered perspectives beside Flanagan.
+   **Done** 2026-10-15, off by default.
 5. Live with Sonnet 5.5: the core and the frame for pouring, the cost reported, the
    knowledge reviewed.
 
