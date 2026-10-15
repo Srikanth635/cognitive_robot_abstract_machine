@@ -12,6 +12,8 @@ from typing_extensions import Any
 
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.generation.prompts import written_value
+from llm_reasoner.knowledge.generation.schema import GenerationSchema
+from llm_reasoner.knowledge.ontologies import OntologyModuleFile
 
 
 @dataclass
@@ -74,6 +76,13 @@ class HypothesisRequest:
             fixed_values=fixed,
             instruction=instruction or expression.type.__name__,
         )
+
+    @property
+    def module_files(self) -> set[OntologyModuleFile]:
+        """
+        The ontology modules the requested hypothesis's vocabulary uses.
+        """
+        return GenerationSchema.for_root(self.root_type).module_files()
 
     @property
     def written_fixed_values(self) -> dict[str, str]:

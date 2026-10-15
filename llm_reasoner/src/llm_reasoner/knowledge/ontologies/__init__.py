@@ -12,9 +12,11 @@ terms the modules specialise.
 from __future__ import annotations
 
 from enum import StrEnum
+from importlib import import_module
 from pathlib import Path
+from types import ModuleType
 
-from typing_extensions import Tuple
+from typing_extensions import Optional, Tuple
 
 ONTOLOGIES_DIRECTORY = Path(__file__).parent
 """
@@ -112,6 +114,17 @@ class LinkedOntologyVariable(StrEnum):
     """
 
 
+DESCRIPTIONS_DIRECTORY_NAME = "descriptions"
+"""
+The directory, within the action perspectives' directory, holding the description of
+each module.
+"""
+
+DESCRIPTION_SUFFIX = ".md"
+"""
+The suffix of a module's description file.
+"""
+
 SHAPES_DIRECTORY_NAME = "shapes"
 """
 The directory, within a family's directory, holding the SHACL shapes of its modules.
@@ -136,6 +149,13 @@ class OntologyModuleFile:
     def namespace_root(self) -> str:
         """
         The IRI prefix shared by the namespaces of the family's modules.
+        """
+        raise NotImplementedError
+
+    @property
+    def usable_modules(self) -> set[OntologyModuleFile]:
+        """
+        The modules whose classes a hypothesis rooted in a class of this module may use.
         """
         raise NotImplementedError
 
@@ -196,8 +216,54 @@ class OntologyModuleFile:
         """
         return self.directory / (self.vocabulary_module_name + ".py")
 
+    @property
+    def vocabulary_module(self) -> ModuleType:
+        """
+        The Python module generated from the module, imported.
+        """
+        return import_module(
+            self.vocabulary_package + "." + self.vocabulary_module_name
+        )
 
-class ActionPerspectiveFile(OntologyModuleFile, StrEnum):
+
+class ActionPerspectiveModule(OntologyModuleFile):
+    """
+    A module of the action perspectives, registered or proposed: where it lies, and the
+    description of what it describes, which its vocabulary is proposed from and its
+    knowledge generated from.
+    """
+
+    @property
+    def directory(self) -> Path:
+        """
+        The directory holding the action perspective modules.
+        """
+        return ACTION_PERSPECTIVES_ONTOLOGY_DIRECTORY
+
+    @property
+    def namespace_root(self) -> str:
+        """
+        The IRI prefix of the action perspective modules.
+        """
+        return ACTION_PERSPECTIVES_NAMESPACE_ROOT
+
+    @property
+    def description(self) -> str:
+        """
+        What the module describes, as a model is told.
+        """
+        return (
+            (
+                self.directory
+                / DESCRIPTIONS_DIRECTORY_NAME
+                / (Path(self.value).stem + DESCRIPTION_SUFFIX)
+            )
+            .read_text()
+            .strip()
+        )
+
+
+class ActionPerspectiveFile(ActionPerspectiveModule, StrEnum):
     """
     The Turtle file of each action perspective module, listed with every module after
     the modules it depends on.
@@ -217,18 +283,12 @@ class ActionPerspectiveFile(OntologyModuleFile, StrEnum):
     """
 
     @property
-    def directory(self) -> Path:
+    def usable_modules(self) -> set[OntologyModuleFile]:
         """
-        The directory holding the action perspective modules.
+        The module and the action core: a perspective describes an action in the
+        core's terms and never in another perspective's.
         """
-        return ACTION_PERSPECTIVES_ONTOLOGY_DIRECTORY
-
-    @property
-    def namespace_root(self) -> str:
-        """
-        The IRI prefix of the action perspective modules.
-        """
-        return ACTION_PERSPECTIVES_NAMESPACE_ROOT
+        return {ActionPerspectiveFile.ACTION_CORE, self}
 
 
 class PredictiveManipulationOntologyFile(OntologyModuleFile, StrEnum):
@@ -278,6 +338,14 @@ class PredictiveManipulationOntologyFile(OntologyModuleFile, StrEnum):
         """
         return PREDICTIVE_MANIPULATION_NAMESPACE_ROOT
 
+    @property
+    def usable_modules(self) -> set[OntologyModuleFile]:
+        """
+        Every predictive manipulation module: they describe one microworld, whose
+        general classes the later modules specialise.
+        """
+        return set(PredictiveManipulationOntologyFile)
+
 
 KNOWLEDGE_ONTOLOGY_MODULES: Tuple[OntologyModuleFile, ...] = (
     *ActionPerspectiveFile,
@@ -286,3 +354,18 @@ KNOWLEDGE_ONTOLOGY_MODULES: Tuple[OntologyModuleFile, ...] = (
 """
 The module of every family, each after the modules it depends on.
 """
+
+
+def module_file_named(name: str) -> Optional[OntologyModuleFile]:
+    """
+    :param name: The file name of a module, such as ``action-core.ttl``.
+    :return: The registered module of that file name, ``None`` when none is registered.
+    """
+    return next(
+        (
+            module_file
+            for module_file in KNOWLEDGE_ONTOLOGY_MODULES
+            if module_file.value == name
+        ),
+        None,
+    )

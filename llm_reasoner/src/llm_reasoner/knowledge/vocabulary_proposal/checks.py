@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from rdflib import OWL
-from typing_extensions import Any, Dict, Iterator, List, Optional, Sequence, Tuple
+from typing_extensions import Any, Dict, Iterator, List, Optional, Tuple
 
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
 from llm_reasoner.knowledge.ontologies import ActionPerspectiveFile

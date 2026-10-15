@@ -401,17 +401,22 @@ them, and the answer grows with each perspective.
 
 ### 11.3 The prompt's content per root
 
-The role and the content rule come from the root's module: the Flanagan text for a
-phase structure; for the core, a text describing an action's frame (kept as a file); for
-a perspective, its description (`perspectives/action-frame.md`), the text its vocabulary
-was proposed from.
+The role and the content rules come from the root's module (`generation/briefs.py`): the
+Flanagan text for a phase structure; for the core or a perspective, its description,
+kept beside the modules (`action_perspectives/descriptions/`), the text a perspective's
+vocabulary is proposed from too.
 
 ### 11.4 Lookup, admission and the store key
 
 - `Vocabulary` covers every registered module, both families.
-- The modules a hypothesis uses are those declaring the types its schema reaches. HermiT
-  is given those and the linked ontologies, and the record keeps their versions, so a
-  stored Flanagan record stays valid when an action perspective changes, and the reverse.
+- Each family says which modules a hypothesis rooted in it may use
+  (`usable_modules`): every Flanagan module, which specialise one microworld; an action
+  perspective and the core, so a core hypothesis is offered no class a perspective
+  declares, not even a subclass of a core class such as `AdditionalConsequence`.
+- The modules a hypothesis uses are those declaring the types its schema reaches. The
+  configured check covers them (`ConsistencyCheck.covering`: HermiT adds the files it
+  lacks), and the record keeps their versions, so a stored Flanagan record stays valid
+  when an action perspective changes, and the reverse.
 - The acceptance suite stays as it is.
 
 ### 11.5 Reading
@@ -437,7 +442,8 @@ was proposed from.
 
 1. Lookup over every module, the modules a root uses (HermiT background, record
    versions), and the prompt's content per root; a core hypothesis generated, accepted,
-   admitted, stored and read back.
+   admitted, stored and read back. **Done** 2026-10-15; the Flanagan prompts are
+   unchanged byte for byte.
 2. Stored fragments as fixed values; a frame hypothesis on top of a core hypothesis.
 3. The overview of a core hypothesis; tools over a consultation's records.
 4. The resolver consulting the core and the offered perspectives beside Flanagan.

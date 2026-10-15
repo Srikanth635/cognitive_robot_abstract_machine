@@ -16,10 +16,14 @@ from enum import StrEnum
 from uuid import uuid4
 
 from krrood.adapters.json_serializer import SubclassJSONSerializer
-from typing_extensions import Any, Dict, Self
+from typing_extensions import Any, Dict, Iterable, Self
 
 from llm_reasoner.clients.base import Exchange
-from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.ontologies import (
+    KNOWLEDGE_ONTOLOGY_MODULES,
+    OntologyModuleFile,
+    module_file_named,
+)
 
 VERSION_INFO = re.compile(r'owl:versionInfo\s+"([^"]+)"')
 """
@@ -27,13 +31,16 @@ Locates the version a module file states for its ontology.
 """
 
 
-def current_module_versions() -> dict[str, str]:
+def current_module_versions(
+    module_files: Iterable[OntologyModuleFile] = KNOWLEDGE_ONTOLOGY_MODULES,
+) -> dict[str, str]:
     """
-    :return: The version of every ontology module, by module file name.
+    :param module_files: The modules asked about; every registered module by default.
+    :return: The version of each module asked about, by module file name.
     """
     return {
         module_file.value: VERSION_INFO.search(module_file.path.read_text()).group(1)
-        for module_file in PredictiveManipulationOntologyFile
+        for module_file in module_files
     }
 
 
@@ -159,7 +166,8 @@ class HypothesisRecord(SubclassJSONSerializer):
 
     module_versions: dict[str, str]
     """
-    The version of every ontology module the hypothesis was generated under.
+    The version of each ontology module the hypothesis's vocabulary uses, as it was
+    generated.
     """
 
     record_id: str = field(default_factory=lambda: uuid4().hex)
@@ -209,11 +217,22 @@ class HypothesisRecord(SubclassJSONSerializer):
     def answers(self, root_type: str, fixed_values: dict[str, str]) -> bool:
         """
         :return: Whether the record answers a request for the root type with the fixed
-            values under the current versions of the ontology; the instruction it was
-            generated for is provenance and plays no part.
+            values while the modules its hypothesis uses are at the versions it was
+            generated under; the instruction it was generated for is provenance and
+            plays no part.
         """
         return (
             self.root_type == root_type
             and self.fixed_values == fixed_values
-            and self.module_versions == current_module_versions()
+            and self.is_current()
+        )
+
+    def is_current(self) -> bool:
+        """
+        :return: Whether every module the hypothesis uses is still registered at the
+            version it was generated under.
+        """
+        used = [module_file_named(name) for name in self.module_versions]
+        return None not in used and self.module_versions == current_module_versions(
+            used
         )
