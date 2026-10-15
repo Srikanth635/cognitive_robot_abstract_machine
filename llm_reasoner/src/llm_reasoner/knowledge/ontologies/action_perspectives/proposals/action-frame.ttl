@@ -35,12 +35,6 @@ frame:changesInDirection a owl:FunctionalProperty,
     rdfs:domain frame:AdditionalConsequence ;
     rdfs:range frame:ChangeDirection .
 
-frame:changesQuantityKind a owl:ObjectProperty ;
-    rdfs:label "changes quantity kind"@en ;
-    rdfs:comment "The kind of quantity of the affected filler that the consequence changes."@en ;
-    rdfs:domain frame:AdditionalConsequence ;
-    rdfs:range core:QuantityKind .
-
 frame:conditionAffordsAction a owl:ObjectProperty ;
     rdfs:label "condition affords action"@en ;
     rdfs:comment "A kind of action the filler must afford for the condition to hold, as the IRI of a CRAM-AICOR action category, such as aicor:Grasping or aicor:Tilting."@en ;
@@ -136,6 +130,17 @@ frame:requiresBeforeStart a owl:ObjectProperty ;
     rdfs:range frame:SlotCondition ;
     rdfs:subPropertyOf dul:isRelatedToDescription .
 
+frame:AdditionalConsequence a owl:Class ;
+    rdfs:label "additional consequence"@en ;
+    rdfs:comment "A change an action makes beyond the consequences the core lists, stated as the quantity of a slot's filler that rises or falls, such as the source becoming lighter."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty core:hasQuantityKind ;
+            owl:someValuesFrom core:QuantityKind ],
+        [ a owl:Restriction ;
+            owl:onProperty core:affectsSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        core:Consequence .
+
 frame:PostureCondition a owl:Class ;
     rdfs:label "posture condition"@en ;
     rdfs:comment "A condition that the filler of a slot stands in a given posture, such as the source standing upright before pouring."@en ;
@@ -144,14 +149,8 @@ frame:PostureCondition a owl:Class ;
             owl:someValuesFrom frame:Posture ],
         [ a owl:Restriction ;
             owl:hasValue core:Orientation ;
-            owl:onProperty frame:conditionConcernsQuantity ],
+            owl:onProperty core:hasQuantityKind ],
         frame:SlotCondition .
-
-frame:conditionConcernsQuantity a owl:ObjectProperty ;
-    rdfs:label "condition concerns quantity"@en ;
-    rdfs:comment "The kind of quantity of the filler that the condition constrains."@en ;
-    rdfs:domain frame:SlotCondition ;
-    rdfs:range core:QuantityKind .
 
 frame:conditionOnSlot a owl:FunctionalProperty,
         owl:ObjectProperty ;
@@ -203,14 +202,6 @@ frame:rationaleConcernsSlot a owl:ObjectProperty ;
     rdfs:domain frame:DimensionRationale ;
     rdfs:range core:FrameSlot ;
     rdfs:subPropertyOf dul:usesConcept .
-
-frame:AdditionalConsequence a owl:Class ;
-    rdfs:label "additional consequence"@en ;
-    rdfs:comment "A change an action makes beyond the consequences the core lists, stated as the quantity of a slot's filler that rises or falls, such as the source becoming lighter."@en ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty core:affectsSlot ;
-            owl:someValuesFrom core:FrameSlot ],
-        core:Consequence .
 
 frame:AffordanceCondition a owl:Class ;
     rdfs:label "affordance condition"@en ;
@@ -313,11 +304,11 @@ frame:SlotCondition a owl:Class ;
         dul:Description .
 
 [] a owl:AllDifferent ;
+    owl:distinctMembers ( frame:Holds frame:DoesNotHold ) .
+
+[] a owl:AllDifferent ;
     owl:distinctMembers ( frame:Upright frame:Tilted frame:Inverted ) .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( frame:Increases frame:Decreases ) .
-
-[] a owl:AllDifferent ;
-    owl:distinctMembers ( frame:Holds frame:DoesNotHold ) .
 

@@ -330,7 +330,11 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   names them by IRI with no range, as the core's `framesAction` and `aimsAtState` do: a
   proposal may leave a property's range out, a rule tells the model so, and the frame's
   `conditionHasState`, `conditionAffordsState`, `conditionAffordsAction` and
-  `normallyFilledBy` follow it. Still in review; not registered as a module yet.
+  `normallyFilledBy` follow it. The core's `hasQuantityKind` is no longer reserved for
+  parameter dimensions, so the frame reuses it for a posture condition and an additional
+  consequence instead of declaring two copies of it; the core's Python is unchanged but
+  for the field's docstring, and HermiT still finds the core consistent. Now 23
+  properties. Still in review; not registered as a module yet.
 
 ## 3. Live testing
 

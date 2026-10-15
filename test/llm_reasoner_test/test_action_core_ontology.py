@@ -252,6 +252,9 @@ class TestFrames:
             graph, CORE.ParameterDimension
         )
 
+    def test_the_kind_of_quantity_is_not_reserved_for_parameter_dimensions(self, graph):
+        assert graph.value(CORE.hasQuantityKind, RDFS.domain) is None
+
 
 # %% pouring
 
