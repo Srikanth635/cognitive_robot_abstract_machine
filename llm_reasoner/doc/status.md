@@ -382,6 +382,19 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   `PERSPECTIVE_ROOTS` says. The knowledge tools and the grounds read all of the
   consultation's records; the `frame_knowledge` rule is stated when perspectives are
   offered; `KnowledgeConsulted` reports their records. Tested with scripted answers.
+- Step 5, live (2026-10-15, Sonnet 5.5, HermiT against CRAM-AICOR and DUL, linked terms
+  checked): the core of pouring (13 fragments: six slots with the lip and the opening as
+  parts, the objective aiming at `AccumulatedState`, two consequences, three parameter
+  dimensions: amount, the source's orientation, the lip's position relative to the goal)
+  and the action frame on it (19 fragments: what the source, goal and substance are
+  normally filled by and must have or afford, such as a lip, `aicor:Tilting` and
+  `aicor:Grasping`, and `ContainedState` with the substance; the source grasped and
+  upright before pouring; pouring until the goal holds the wanted amount rather than
+  until the source is empty; why each dimension matters; the source becoming lighter).
+  Each admitted on its first answer, no warnings, $0.065 together (14k tokens written to
+  the cache, 2.7k output). Two weak spots: most conditions leave their polarity out,
+  which the vocabulary allows, and "the source is empty" was stated without the state it
+  denies.
 
 ## 3. Live testing
 
