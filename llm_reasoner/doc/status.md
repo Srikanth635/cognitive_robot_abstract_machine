@@ -319,8 +319,14 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   (`SlotExpectation`, `SlotCondition` with feature, affordance, state and posture
   conditions, `ActionDefault`, `AdditionalConsequence`, `DimensionRationale`), 23
   properties and 2 value partitions (`ConditionPolarity`, `ChangeDirection`), in
-  `ontologies/action_perspectives/proposals/action-frame.ttl`. Awaiting review; not
-  registered as a module yet.
+  `ontologies/action_perspectives/proposals/action-frame.ttl`. In review two gaps were
+  fixed by hand on the answer, which then passed the rules and HermiT again: a posture
+  condition can now name the posture (`Posture`: `Upright`, `Tilted`, `Inverted`, a DUL
+  region of the core's `Orientation`), and an affordance condition names the CRAM-AICOR
+  action the filler affords (`conditionAffordsAction`, under `aicor:affordsAction`) or
+  the state it can be brought into (`conditionAffordsState`, such as
+  `aicor:ContainedState`), since CRAM-AICOR's `Affordance` has no kinds to name. Now 25
+  properties and 3 value partitions. Still in review; not registered as a module yet.
 
 ## 3. Live testing
 
