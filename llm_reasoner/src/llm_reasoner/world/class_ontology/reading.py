@@ -306,7 +306,7 @@ class ClassOntologyReader:
             fields=tuple(
                 FieldDescription(
                     name=name,
-                    documentation=documented.field_documentation.get(name, ""),
+                    documentation=documented.meanings.get(name, ""),
                     field_type=field_type,
                     default=self.default_of(declared_fields[name]),
                 )

@@ -99,6 +99,11 @@ TYPE_PARAMETERS = "__parameters__"
 The class attribute holding the type variables a generic class is parametrised with.
 """
 
+ANNOTATIONS = "__annotations__"
+"""
+The class attribute holding the annotations the class's own body writes.
+"""
+
 OPTIONAL_NAME = "Optional"
 """
 The name an optional type is written with when it is read as text.
@@ -129,7 +134,7 @@ class FieldType:
 
     written: str
     """
-    The type as the field's annotation writes it in the source.
+    The type as the field's annotation writes it in the class that declares it.
     """
 
     plain: Optional[PlainType] = None
@@ -252,14 +257,26 @@ class FieldTypeReader:
             bound_to = following
         return bound_to
 
+    def source_annotation(self, declared: Field) -> Any:
+        """
+        :return: A field's annotation as the class declaring it holds it, which code that
+            overwrites the type a dataclass records for a field leaves as written.
+        """
+        for ancestor in self.described.__mro__:
+            annotations = vars(ancestor).get(ANNOTATIONS, {})
+            if declared.name in annotations:
+                return annotations[declared.name]
+        return declared.type
+
     def read(self, declared: Field) -> FieldType:
         """
         :return: What a field holds.
         """
+        source_annotation = self.source_annotation(declared)
         written = (
-            declared.type
-            if isinstance(declared.type, str)
-            else written_type(declared.type)
+            source_annotation
+            if isinstance(source_annotation, str)
+            else written_type(source_annotation)
         )
         annotation = self.hints.get(declared.name, declared.type)
         if isinstance(annotation, str):

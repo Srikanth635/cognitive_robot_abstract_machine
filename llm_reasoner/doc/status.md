@@ -70,6 +70,13 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   out itself and records the type as written in the source).
 
 ### Resolver
+- Whole field docstrings (2026-10-15): a slot's meaning in `<slots>`, and a field's meaning in
+  the world tools, are now the whole docstring below the field, not its first line, which cut
+  meanings mid-sentence (`position_threshold` read "… ``None`` falls back to"). One reader,
+  `llm_reasoner/attribute_docstrings.py`, serves the resolver, the world injector and the
+  knowledge component (whose vocabulary docstrings are single lines, so its prompts do not
+  change). A slot also finds the docstring of a field a mixin declares, which it lacked before
+  (`PouringAction.position_threshold` and `orientation_threshold` had no meaning at all).
 - Candidates described by walking their fields (`4e534d505`); tests, static situation
   provider removed (`5344ec818`); world tools and handles (`3c2bc8a49`); the text-answer
   rule and caching (`df54039fa`).

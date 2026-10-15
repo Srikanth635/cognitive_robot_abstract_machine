@@ -10,12 +10,10 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum
 
 from krrood.class_diagrams.class_diagram import WrappedClass
-from krrood.entity_query_language.verbalization.rendering.source_documentation import (
-    _attribute_docstrings,
-)
 from krrood.utils import recursive_subclasses
 from typing_extensions import Any
 
+from llm_reasoner.attribute_docstrings import attribute_docstrings
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.terms import (
     is_inferred,
@@ -274,7 +272,7 @@ def type_schema_for(python_type: type[DescriptionEntity]) -> TypeSchema:
     docstrings: dict[str, str] = {}
     for owner in reversed(python_type.__mro__):
         if isinstance(owner, type) and issubclass(owner, DescriptionEntity):
-            docstrings.update(_attribute_docstrings(owner))
+            docstrings.update(attribute_docstrings(owner))
     vocabulary = Vocabulary()
     fields = []
     for wrapped in WrappedClass(python_type).fields:

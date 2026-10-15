@@ -12,11 +12,9 @@ from operator import attrgetter
 from types import ModuleType
 
 from krrood.class_diagrams.class_diagram import WrappedClass
-from krrood.entity_query_language.verbalization.rendering.source_documentation import (
-    _attribute_docstrings,
-)
 from typing_extensions import Any, Optional
 
+from llm_reasoner.attribute_docstrings import attribute_docstrings
 from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
@@ -215,7 +213,7 @@ class Vocabulary:
         meanings: dict[str, str] = {}
         for owner in reversed(python_type.__mro__):
             if isinstance(owner, type) and issubclass(owner, DescriptionEntity):
-                meanings.update(_attribute_docstrings(owner))
+                meanings.update(attribute_docstrings(owner))
         return meanings
 
     @cached_property

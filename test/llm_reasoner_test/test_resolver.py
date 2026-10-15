@@ -56,6 +56,7 @@ from llm_reasoner.resolver.referents import (
 )
 from llm_reasoner.world.view import WorldView
 
+from .class_ontology_mimics import designators
 from .prompt_sections import bodies, slot_entry, text_outside_sections
 from .world_mimics import (
     ActionInheritingItsPlan,
@@ -96,6 +97,21 @@ def prompt_for(query, context_provider: PromptContextProvider) -> str:
 
 
 # %% the prompt
+
+
+class TestSlotDocstrings:
+    def test_a_slot_carries_every_paragraph_of_its_fields_docstring(self):
+        (tilt,) = reflect_slots(the(designators.PourAction)(tilt=...))
+        assert tilt.docstring == (
+            "How far the vessel is tilted, in radians.\n\nMeasured from upright."
+        )
+
+    def test_a_slot_for_a_field_a_mixin_declares_carries_the_mixins_docstring(self):
+        (speed_limit,) = reflect_slots(the(designators.PourAction)(speed_limit=...))
+        assert speed_limit.docstring == (
+            "The fastest the effector may move, in metres per second.\n\n"
+            "``None`` leaves it to the controller."
+        )
 
 
 class TestPrompt:
