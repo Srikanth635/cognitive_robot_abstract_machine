@@ -305,6 +305,22 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   byte-identically. HermiT finds the core consistent with CRAM-AICOR and DUL and every class
   of it satisfiable (22 s). Nothing uses it yet: hypotheses, the store key, admission and the
   knowledge tools still read only the predictive manipulation modules (step 3).
+- The vocabulary proposal (2026-10-15, step 2 of `knowledge_perspectives.md`):
+  `knowledge/vocabulary_proposal/` asks a model for the vocabulary of one perspective
+  (`python -m llm_reasoner.knowledge.vocabulary_proposal action-frame --action aicor:Pouring
+  --frame core:PouringFrame --output <directory>`). The request shows the perspective's
+  description, the core's terms and the terms of CRAM-AICOR and DUL; an answer is checked
+  for names, definitions, terms that exist and are of the right kind, classes grounded in
+  the core, CRAM-AICOR or DUL, attachment to the core, the Python generator and, with
+  HermiT, consistency with the core, CRAM-AICOR and DUL, and is returned for repair up to
+  twice. The first live run failed because HermiT tried to fetch the proposal's imports;
+  the checker now drops them, since HermiT is given the files. The second run (Sonnet 5.5,
+  96k input and 12k output tokens, $0.31) passed on the first answer: 9 classes
+  (`SlotExpectation`, `SlotCondition` with feature, affordance, state and posture
+  conditions, `ActionDefault`, `AdditionalConsequence`, `DimensionRationale`), 23
+  properties and 2 value partitions (`ConditionPolarity`, `ChangeDirection`), in
+  `ontologies/action_perspectives/proposals/action-frame.ttl`. Awaiting review; not
+  registered as a module yet.
 
 ## 3. Live testing
 

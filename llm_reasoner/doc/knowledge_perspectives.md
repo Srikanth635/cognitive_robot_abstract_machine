@@ -282,6 +282,10 @@ is not worth its generation cost.
    `ontologies/action_perspectives/action-core.ttl` and its generated `action_core.py`.
 2. The vocabulary-proposal stage (§6) with its rules, run for the action-frame perspective
    of pouring; the proposal is reviewed and checked in.
+   **Proposed** 2026-10-15, awaiting review: `vocabulary_proposal/`, run with Sonnet 5.5
+   for pouring; the first answer passed every rule and HermiT ($0.31). The proposal is
+   `ontologies/action_perspectives/proposals/action-frame.ttl`, beside the record of how
+   it was made; it is registered as a module once reviewed.
 3. Hypotheses holding the core and the action frame; `knowledge_overview` answering with
    the core.
 4. The roles-to-slots mapping for `PouringAction`, and slot entries naming their roles.

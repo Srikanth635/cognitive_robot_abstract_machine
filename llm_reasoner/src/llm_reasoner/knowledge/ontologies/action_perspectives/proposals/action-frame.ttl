@@ -1,0 +1,291 @@
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix core: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix frame: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame> a owl:Ontology ;
+    rdfs:label "Action perspectives: action frame"@en ;
+    rdfs:comment "For any action frame, a knowledge base can say, per slot, what kind of thing normally fills it and which checkable conditions its filler is expected to meet: having a part, affording something, being in a state or posture. It can also state the defaults that hold when nothing says otherwise, and the conditions that must hold before the action starts. It can add changes beyond the core's consequences, each with the quantity changed and its direction. Finally, it can give for each parameter dimension the core names a rationale: which slots it concerns and which outcome condition it decides. Everything is stated in terms of the core's slots, parts, quantity kinds and parameter dimensions, so it holds for kinds of action and names no world."@en ;
+    owl:imports <http://aicor.knowledge/l2-ontology.owl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
+        <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.1.0> ;
+    owl:versionInfo "0.1.0" .
+
+frame:AffordanceCondition a owl:Class ;
+    rdfs:label "affordance condition"@en ;
+    rdfs:comment "A condition that the filler of a slot affords something, such as the ability to hold a substance."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:conditionAffords ;
+            owl:someValuesFrom aicor:Affordance ],
+        frame:SlotCondition .
+
+frame:FeatureCondition a owl:Class ;
+    rdfs:label "feature condition"@en ;
+    rdfs:comment "A condition that the filler of a slot has a part that fills a part slot of the frame, such as the source having a lip or the goal having an opening."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:conditionRequiresPart ;
+            owl:someValuesFrom core:PartSlot ],
+        frame:SlotCondition .
+
+frame:PostureCondition a owl:Class ;
+    rdfs:label "posture condition"@en ;
+    rdfs:comment "A condition on a quantity of the filler of a slot, such as its orientation being upright."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:conditionConcernsQuantity ;
+            owl:someValuesFrom core:QuantityKind ],
+        frame:SlotCondition .
+
+frame:StateCondition a owl:Class ;
+    rdfs:label "state condition"@en ;
+    rdfs:comment "A condition that the filler of a slot, possibly in relation to the filler of another slot, is in a given discrete state, such as the agent grasping the source or the substance being contained in the goal."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:conditionHasState ;
+            owl:someValuesFrom aicor:DiscreteMode ],
+        frame:SlotCondition .
+
+frame:changesInDirection a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "changes in direction"@en ;
+    rdfs:comment "Whether the changed quantity rises or falls."@en ;
+    rdfs:domain frame:AdditionalConsequence ;
+    rdfs:range frame:ChangeDirection .
+
+frame:changesQuantityKind a owl:ObjectProperty ;
+    rdfs:label "changes quantity kind"@en ;
+    rdfs:comment "The kind of quantity of the affected filler that the consequence changes."@en ;
+    rdfs:domain frame:AdditionalConsequence ;
+    rdfs:range core:QuantityKind .
+
+frame:conditionInvolvesSlot a owl:ObjectProperty ;
+    rdfs:label "condition involves slot"@en ;
+    rdfs:comment "Another slot whose filler the condition relates the first filler to, such as the agent in the condition that the source is held."@en ;
+    rdfs:domain frame:SlotCondition ;
+    rdfs:range core:FrameSlot ;
+    rdfs:subPropertyOf dul:usesConcept .
+
+frame:decidesWhether a owl:ObjectProperty ;
+    rdfs:label "decides whether"@en ;
+    rdfs:comment "The outcome condition whose holding the dimension's choice decides."@en ;
+    rdfs:domain frame:DimensionRationale ;
+    rdfs:range frame:SlotCondition .
+
+frame:defaultForSlot a owl:ObjectProperty ;
+    rdfs:label "default for slot"@en ;
+    rdfs:comment "The slot whose filler the default is about."@en ;
+    rdfs:domain frame:ActionDefault ;
+    rdfs:range core:FrameSlot ;
+    rdfs:subPropertyOf dul:usesConcept .
+
+frame:defaultInsteadOf a owl:ObjectProperty ;
+    rdfs:label "default instead of"@en ;
+    rdfs:comment "The condition that does not hold by default although it could, such as the source being empty."@en ;
+    rdfs:domain frame:ActionDefault ;
+    rdfs:range frame:SlotCondition .
+
+frame:defaultSettlesDimension a owl:ObjectProperty ;
+    rdfs:label "default settles dimension"@en ;
+    rdfs:comment "The parameter dimension whose choice the default settles when nothing says otherwise."@en ;
+    rdfs:domain frame:ActionDefault ;
+    rdfs:range core:ParameterDimension ;
+    rdfs:subPropertyOf dul:usesConcept .
+
+frame:expectsFillerToSatisfy a owl:ObjectProperty ;
+    rdfs:label "expects filler to satisfy"@en ;
+    rdfs:comment "A condition the filler of the slot is expected to meet."@en ;
+    rdfs:domain frame:SlotExpectation ;
+    rdfs:range frame:SlotCondition .
+
+frame:givesRationale a owl:ObjectProperty ;
+    rdfs:label "gives rationale"@en ;
+    rdfs:comment "An account of why a parameter dimension of the action matters."@en ;
+    rdfs:domain core:ActionFrame ;
+    rdfs:range frame:DimensionRationale ;
+    rdfs:subPropertyOf dul:isRelatedToDescription .
+
+frame:hasDefault a owl:ObjectProperty ;
+    rdfs:label "has default"@en ;
+    rdfs:comment "A default that holds in the frame when nothing says otherwise."@en ;
+    rdfs:domain core:ActionFrame ;
+    rdfs:range frame:ActionDefault ;
+    rdfs:subPropertyOf dul:isRelatedToDescription .
+
+frame:hasPolarity a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "has polarity"@en ;
+    rdfs:comment "Whether the condition is required to hold or required not to hold."@en ;
+    rdfs:domain frame:SlotCondition ;
+    rdfs:range frame:ConditionPolarity .
+
+frame:hasSlotExpectation a owl:ObjectProperty ;
+    rdfs:label "has slot expectation"@en ;
+    rdfs:comment "An expectation the frame holds of one of its slots."@en ;
+    rdfs:domain core:ActionFrame ;
+    rdfs:range frame:SlotExpectation ;
+    rdfs:subPropertyOf dul:isRelatedToDescription .
+
+frame:normallyFilledBy a owl:ObjectProperty ;
+    rdfs:label "normally filled by"@en ;
+    rdfs:comment "A kind of thing that normally fills the slot, such as a kind of container for the source of a pour; the kind is used as a value."@en ;
+    rdfs:domain frame:SlotExpectation ;
+    rdfs:range dul:Entity .
+
+frame:requiresBeforeStart a owl:ObjectProperty ;
+    rdfs:label "requires before start"@en ;
+    rdfs:comment "A condition that must hold before the action starts."@en ;
+    rdfs:domain core:ActionFrame ;
+    rdfs:range frame:SlotCondition ;
+    rdfs:subPropertyOf dul:isRelatedToDescription .
+
+frame:conditionAffords a owl:ObjectProperty ;
+    rdfs:label "condition affords"@en ;
+    rdfs:comment "What the filler must afford for the condition to hold."@en ;
+    rdfs:domain frame:SlotCondition ;
+    rdfs:range aicor:Affordance .
+
+frame:conditionConcernsQuantity a owl:ObjectProperty ;
+    rdfs:label "condition concerns quantity"@en ;
+    rdfs:comment "The kind of quantity of the filler that the condition constrains."@en ;
+    rdfs:domain frame:SlotCondition ;
+    rdfs:range core:QuantityKind .
+
+frame:conditionHasState a owl:ObjectProperty ;
+    rdfs:label "condition has state"@en ;
+    rdfs:comment "The discrete state the filler must be in for the condition to hold."@en ;
+    rdfs:domain frame:SlotCondition ;
+    rdfs:range aicor:DiscreteMode .
+
+frame:conditionOnSlot a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "condition on slot"@en ;
+    rdfs:comment "The slot whose filler the condition is about."@en ;
+    rdfs:domain frame:SlotCondition ;
+    rdfs:range core:FrameSlot ;
+    rdfs:subPropertyOf dul:usesConcept .
+
+frame:conditionRequiresPart a owl:ObjectProperty ;
+    rdfs:label "condition requires part"@en ;
+    rdfs:comment "The part slot that a part of the filler must fill for the condition to hold."@en ;
+    rdfs:domain frame:SlotCondition ;
+    rdfs:range core:PartSlot ;
+    rdfs:subPropertyOf dul:usesConcept .
+
+frame:defaultCondition a owl:ObjectProperty ;
+    rdfs:label "default condition"@en ;
+    rdfs:comment "The condition that holds by default, such as the goal holding the wanted amount."@en ;
+    rdfs:domain frame:ActionDefault ;
+    rdfs:range frame:SlotCondition .
+
+frame:expectsOfSlot a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "expects of slot"@en ;
+    rdfs:comment "The slot of the frame that the expectation is about."@en ;
+    rdfs:domain frame:SlotExpectation ;
+    rdfs:range core:FrameSlot ;
+    rdfs:subPropertyOf dul:usesConcept .
+
+frame:explainsDimension a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "explains dimension"@en ;
+    rdfs:comment "The parameter dimension the rationale is about."@en ;
+    rdfs:domain frame:DimensionRationale ;
+    rdfs:range core:ParameterDimension ;
+    rdfs:subPropertyOf dul:usesConcept .
+
+frame:rationaleConcernsSlot a owl:ObjectProperty ;
+    rdfs:label "rationale concerns slot"@en ;
+    rdfs:comment "A slot whose filler the dimension matters for."@en ;
+    rdfs:domain frame:DimensionRationale ;
+    rdfs:range core:FrameSlot ;
+    rdfs:subPropertyOf dul:usesConcept .
+
+frame:AdditionalConsequence a owl:Class ;
+    rdfs:label "additional consequence"@en ;
+    rdfs:comment "A change an action makes beyond the consequences the core lists, stated as the quantity of a slot's filler that rises or falls, such as the source becoming lighter."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty core:affectsSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        core:Consequence .
+
+frame:Decreases a frame:ChangeDirection,
+        owl:NamedIndividual ;
+    rdfs:label "decreases"@en ;
+    rdfs:comment "The quantity becomes smaller."@en .
+
+frame:DoesNotHold a frame:ConditionPolarity,
+        owl:NamedIndividual ;
+    rdfs:label "does not hold"@en ;
+    rdfs:comment "The condition is required not to hold."@en .
+
+frame:Holds a frame:ConditionPolarity,
+        owl:NamedIndividual ;
+    rdfs:label "holds"@en ;
+    rdfs:comment "The condition is required to hold."@en .
+
+frame:Increases a frame:ChangeDirection,
+        owl:NamedIndividual ;
+    rdfs:label "increases"@en ;
+    rdfs:comment "The quantity becomes larger."@en .
+
+frame:ChangeDirection a owl:Class ;
+    rdfs:label "change direction"@en ;
+    rdfs:comment "The direction in which a quantity changes."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( frame:Increases frame:Decreases ) ] .
+
+frame:ConditionPolarity a owl:Class ;
+    rdfs:label "condition polarity"@en ;
+    rdfs:comment "Whether a condition is required to hold or required not to hold."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( frame:Holds frame:DoesNotHold ) ] .
+
+frame:DimensionRationale a owl:Class ;
+    rdfs:label "dimension rationale"@en ;
+    rdfs:comment "Why a parameter dimension matters to the action: the slots it concerns and the outcome condition it decides, such as the position of the source's lip relative to the goal's opening deciding whether the substance lands in the goal."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:rationaleConcernsSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        [ a owl:Restriction ;
+            owl:onProperty frame:explainsDimension ;
+            owl:someValuesFrom core:ParameterDimension ],
+        dul:Description .
+
+frame:SlotExpectation a owl:Class ;
+    rdfs:label "slot expectation"@en ;
+    rdfs:comment "What a frame expects of one of its slots: the kind of thing that normally fills it and the conditions its filler is expected to meet. It holds by default and can be overridden."@en ;
+    rdfs:seeAlso <https://framenet.icsi.berkeley.edu/>,
+        <https://web.media.mit.edu/~minsky/papers/Frames/frames.html> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:expectsOfSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        dul:Description .
+
+frame:ActionDefault a owl:Class ;
+    rdfs:label "action default"@en ;
+    rdfs:comment "A default of the frame that holds when nothing says otherwise, such as pouring until the goal holds the wanted amount rather than until the source is empty."@en ;
+    rdfs:seeAlso <https://web.media.mit.edu/~minsky/papers/Frames/frames.html> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:defaultCondition ;
+            owl:someValuesFrom frame:SlotCondition ],
+        dul:Description .
+
+frame:SlotCondition a owl:Class ;
+    rdfs:label "slot condition"@en ;
+    rdfs:comment "A condition a world can check about the filler of a slot of an action frame, such as having a part, affording something or being in a state, rather than membership of a class."@en ;
+    rdfs:seeAlso <https://web.media.mit.edu/~minsky/papers/Frames/frames.html> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:conditionOnSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        dul:Description .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( frame:Increases frame:Decreases ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( frame:Holds frame:DoesNotHold ) .
+
