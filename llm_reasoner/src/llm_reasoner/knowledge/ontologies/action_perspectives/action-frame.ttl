@@ -19,6 +19,15 @@
 
 # %% classes
 
+frame:FrameStereotype a owl:Class ;
+    rdfs:label "frame stereotype"@en ;
+    rdfs:comment "What an action frame normally expects, as Minsky's frames describe a stereotyped situation: what each slot's filler is expected to be, have or afford, the defaults, what must hold before the action and why each parameter dimension matters."@en ;
+    rdfs:seeAlso <https://web.media.mit.edu/~minsky/papers/Frames/frames.html> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:stereotypeOf ;
+            owl:someValuesFrom core:ActionFrame ],
+        dul:Description .
+
 frame:SlotCondition a owl:Class ;
     rdfs:label "slot condition"@en ;
     rdfs:comment "A condition a world can check about the filler of a slot of an action frame, such as having a part, affording something or being in a state, rather than membership of a class."@en ;
@@ -100,19 +109,19 @@ frame:DimensionRationale a owl:Class ;
 
 # %% value partitions
 
-frame:ConditionPolarity a owl:Class ;
-    rdfs:label "condition polarity"@en ;
-    rdfs:comment "Whether a condition is required to hold or required not to hold."@en ;
+frame:SlotConditionPolarity a owl:Class ;
+    rdfs:label "slot condition polarity"@en ;
+    rdfs:comment "Whether a slot condition is required to hold or required not to hold."@en ;
     rdfs:subClassOf dul:Concept ;
     owl:equivalentClass [ a owl:Class ;
             owl:oneOf ( frame:Holds frame:DoesNotHold ) ] .
 
-frame:DoesNotHold a frame:ConditionPolarity,
+frame:DoesNotHold a frame:SlotConditionPolarity,
         owl:NamedIndividual ;
     rdfs:label "does not hold"@en ;
     rdfs:comment "The condition is required not to hold."@en .
 
-frame:Holds a frame:ConditionPolarity,
+frame:Holds a frame:SlotConditionPolarity,
         owl:NamedIndividual ;
     rdfs:label "holds"@en ;
     rdfs:comment "The condition is required to hold."@en .
@@ -167,31 +176,39 @@ frame:Posture a owl:Class ;
 
 # %% properties
 
+frame:stereotypeOf a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "stereotype of"@en ;
+    rdfs:comment "The action frame of the action core the stereotype is of."@en ;
+    rdfs:domain frame:FrameStereotype ;
+    rdfs:range core:ActionFrame ;
+    rdfs:subPropertyOf dul:isRelatedToDescription .
+
 frame:hasSlotExpectation a owl:ObjectProperty ;
     rdfs:label "has slot expectation"@en ;
     rdfs:comment "An expectation the frame holds of one of its slots."@en ;
-    rdfs:domain core:ActionFrame ;
+    rdfs:domain frame:FrameStereotype ;
     rdfs:range frame:SlotExpectation ;
     rdfs:subPropertyOf dul:isRelatedToDescription .
 
 frame:hasDefault a owl:ObjectProperty ;
     rdfs:label "has default"@en ;
     rdfs:comment "A default that holds in the frame when nothing says otherwise."@en ;
-    rdfs:domain core:ActionFrame ;
+    rdfs:domain frame:FrameStereotype ;
     rdfs:range frame:ActionDefault ;
     rdfs:subPropertyOf dul:isRelatedToDescription .
 
 frame:requiresBeforeStart a owl:ObjectProperty ;
     rdfs:label "requires before start"@en ;
     rdfs:comment "A condition that must hold before the action starts."@en ;
-    rdfs:domain core:ActionFrame ;
+    rdfs:domain frame:FrameStereotype ;
     rdfs:range frame:SlotCondition ;
     rdfs:subPropertyOf dul:isRelatedToDescription .
 
 frame:givesRationale a owl:ObjectProperty ;
     rdfs:label "gives rationale"@en ;
     rdfs:comment "An account of why a parameter dimension of the action matters."@en ;
-    rdfs:domain core:ActionFrame ;
+    rdfs:domain frame:FrameStereotype ;
     rdfs:range frame:DimensionRationale ;
     rdfs:subPropertyOf dul:isRelatedToDescription .
 
@@ -246,7 +263,7 @@ frame:hasPolarity a owl:FunctionalProperty,
     rdfs:label "has polarity"@en ;
     rdfs:comment "Whether the condition is required to hold or required not to hold."@en ;
     rdfs:domain frame:SlotCondition ;
-    rdfs:range frame:ConditionPolarity .
+    rdfs:range frame:SlotConditionPolarity .
 
 frame:defaultForSlot a owl:ObjectProperty ;
     rdfs:label "default for slot"@en ;

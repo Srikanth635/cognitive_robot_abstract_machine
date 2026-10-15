@@ -334,7 +334,17 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   parameter dimensions, so the frame reuses it for a posture condition and an additional
   consequence instead of declaring two copies of it; the core's Python is unchanged but
   for the field's docstring, and HermiT still finds the core consistent. Now 23
-  properties. Still in review; not registered as a module yet.
+  properties.
+- The action frame registered (2026-10-15, phase 1 of `knowledge_perspectives.md`): the
+  proposal writer writes one block per term in the proposal's order, so an edit to one
+  term changes only its lines; `action-frame.ttl` is the second action perspective module
+  (`ActionPerspectiveFile.ACTION_FRAME`), with its generated `action_frame.py` and tests
+  like the core's, and its proposal record stays under `proposals/`. On registering, its
+  statements about a frame moved onto a new `FrameStereotype` (`stereotypeOf` a core
+  frame), since with the core's `ActionFrame` as their domain they became fields of the
+  core's Python class; and its `ConditionPolarity` became `SlotConditionPolarity`, the
+  Flanagan core having a class of that name. HermiT finds the frame consistent with the
+  core, CRAM-AICOR and DUL and every class satisfiable. Nothing uses it yet (phase 2).
 
 ## 3. Live testing
 
