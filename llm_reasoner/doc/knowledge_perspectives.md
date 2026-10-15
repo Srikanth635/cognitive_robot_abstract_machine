@@ -93,6 +93,45 @@ definitions, so the modules below give the meanings the generation prompt needs.
 | `Effect`, `TaskRelativeEffect`, `Expectation`, `Affordance`, `ActionParameterSpace` | Consequences, expectations, what something affords, and parameters |
 | `ForceDynamicSchema`, `QualiaStructure` | Talmy-style force dynamics with role slots; telic, constitutive and agentive roles |
 
+### 4.1 The code's own schema (`cram_tbox.ttl`)
+
+`~/ontologies/cram_tbox.ttl` is generated from the Python source of the workspace
+(coraplex, giskardpy, krrood, probabilistic_model, random_events, robokudo,
+semantic_digital_twin): 3,122 classes, 2,154 object and 2,128 datatype properties; a class
+is a Python class with its docstring, a property a field scoped to its class, and
+inheritance is Python inheritance. Its own description says it is not a curated taxonomy.
+
+Useful here:
+
+- **The designator side of the roles-to-slots mapping.** Each action designator with its
+  fields, their types and docstrings, such as `PouringAction` (`source_container: Tool`,
+  `target_container: Body`, `tilt_angle: double` in radians, `pour_side_offset: double`
+  in metres, …), `NavigateAction` (`target_location: Pose`, `keep_joint_states`),
+  `PickUpAction` (`object_designator: HasRootBody`, `arm`, `grasp_description`) and
+  `PlaceAction` (`object_designator: Body`, `target_location: Pose`, `arm`). As RDF it can
+  be joined with CRAM-AICOR and the perspectives, and a mapping can be kept as triples
+  linking a field's IRI to a role or a parameter dimension.
+- **The world's kinds.** The semantic annotations (124 classes) are the kinds a role's
+  filler will be.
+
+Not wanted, and to be left out by a filter rather than by hand: exceptions (295 classes),
+classes from test paths (44), ROS middleware, adapters and visualisers, krrood's own
+internals (the query verbaliser alone has 264 classes), private fields such as
+`_action_plan`, implementation mixins as superclasses (`HasTcpGoalThresholds`,
+`PickUpTuningParameters`), and the placeholder namespace `https://example.org/cram/tbox`.
+It does not link to CRAM-AICOR. The slice worth keeping is the coraplex actions, their
+data structures and enums, and the semantic annotations.
+
+**What it shows about kinds.** Neither the code nor CRAM-AICOR says that a bowl holds
+things. In the code, `Bowl` is a `HasSupportingSurface` and `IsPerceivable`, `Cup` a
+`DrinkingContainer`, `PouringCup` a `Tool`, and `Milk` (documented as "a container of
+milk") a `Food`. In CRAM-AICOR, `Bowl` and `Cup` are `Vessel`s, and `Vessel` is a
+`Representation` (an information object), while `Container` is a separate physical class.
+So a role's expectations are stated as what the filler must have or afford (an opening,
+the ability to hold a substance, an upright stance), which a world can check, and not as
+membership of a class such as `Container`, which neither the code's nor CRAM-AICOR's
+classification would confirm.
+
 ## 5. The modules
 
 ```
@@ -139,7 +178,8 @@ can be brought above the goal's opening), consequences, and the role-level reaso
 each parameter dimension.
 
 Expectations are stated as conditions a world can check, in ontology terms
-(`OpenContainerState`, `contains`), never in terms of a particular world. The resolver
+(`OpenContainerState`, `contains`), never in terms of a particular world, and as what the
+filler has or affords rather than which class it belongs to (§4.1). The resolver
 grounds a role in an individual through `RoleBinding`, then checks the expectations on
 that individual with its world tools.
 
