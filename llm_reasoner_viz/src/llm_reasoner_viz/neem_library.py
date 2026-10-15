@@ -1,6 +1,7 @@
 """
 The NEEMs with where each came from: the plans of the database, each joined to the run
-whose log says it was kept, and to how that trial or execution went.
+whose log says it was kept, and to how that trial or execution went; and one NEEM with
+the steps of its plan.
 """
 
 from __future__ import annotations
@@ -10,7 +11,8 @@ from pathlib import Path
 
 from typing_extensions import Any, Dict, List, Mapping, Optional, Tuple
 
-from llm_reasoner_viz.neems import NeemDatabase, PlanSummary
+from llm_reasoner_viz.neem_plan import PlanNode
+from llm_reasoner_viz.neems import NeemDatabase, PlanSummary, UnknownNeem
 from llm_reasoner_viz.runs import EventLog, LogCache, RunLibrary
 from llm_reasoner_viz.vocabulary import EventField, KnownEvent, NeemKind
 
@@ -126,6 +128,32 @@ class NeemEntry:
         }
 
 
+@dataclass(frozen=True)
+class NeemDetail:
+    """
+    A NEEM with the steps of its plan.
+    """
+
+    entry: NeemEntry
+    """
+    The plan, how it went and where it came from.
+    """
+
+    nodes: List[PlanNode]
+    """
+    The steps of the plan, each followed by those below it.
+    """
+
+    def to_json(self) -> Dict[str, Any]:
+        """
+        :return: The NEEM as plain JSON.
+        """
+        return {
+            "neem": self.entry.to_json(),
+            "plan": [node.to_json() for node in self.nodes],
+        }
+
+
 # %% reading the logs
 
 
@@ -230,3 +258,12 @@ class NeemLibrary:
                 entry for entry in entries if entry.origin and entry.origin.run == run
             ]
         return sorted(entries, key=lambda entry: entry.plan.neem, reverse=True)
+
+    def detail(self, neem: int) -> NeemDetail:
+        """
+        :return: One NEEM with the steps of its plan.
+        :raises UnknownNeem: When the database holds no such plan.
+        """
+        nodes = self.database.nodes(neem)
+        (entry,) = [entry for entry in self.entries() if entry.plan.neem == neem]
+        return NeemDetail(entry=entry, nodes=nodes)

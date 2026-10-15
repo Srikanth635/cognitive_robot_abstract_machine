@@ -8,7 +8,6 @@ from __future__ import annotations
 import http.client
 import json
 import re
-import sqlite3
 import threading
 import urllib.error
 import urllib.request
@@ -50,7 +49,7 @@ from .logs import (
     trial_finished,
     write_run,
 )
-from .neem_files import write_neem_database
+from .neem_files import Change, being_written, change_database, write_neem_database
 
 # %% helpers
 
@@ -255,22 +254,43 @@ class TestNeems:
         assert payload["exists"] is False
         assert payload["neems"] == []
 
+    def test_one_neem_comes_with_the_steps_of_its_plan(self, neem_viewer):
+        payload = get_json(neem_viewer.url + "/api/neems/1")
+        library = NeemLibrary(
+            database=NeemDatabase(path=neem_viewer.database),
+            runs=RunLibrary(directory=neem_viewer.runs),
+        )
+        assert payload["ok"] is True
+        assert payload["neem"] == library.detail(1).to_json()["neem"]
+        assert payload["plan"] == library.detail(1).to_json()["plan"]
+
+    def test_a_neem_the_database_does_not_hold_is_not_found(self, neem_viewer):
+        assert status_of(neem_viewer.url + "/api/neems/99") == HTTPStatus.NOT_FOUND
+
+    def test_a_neem_that_is_no_number_is_not_found(self, neem_viewer):
+        assert status_of(neem_viewer.url + "/api/neems/first") == HTTPStatus.NOT_FOUND
+
+    def test_a_plan_with_a_row_missing_is_refused_with_what_is_missing(
+        self, neem_viewer
+    ):
+        change_database(neem_viewer.database, Change.DESIGNATOR_DELETED)
+        assert (
+            status_of(neem_viewer.url + "/api/neems/1")
+            == HTTPStatus.INTERNAL_SERVER_ERROR
+        )
+
     def test_a_database_being_written_is_reported_as_unavailable(self, neem_viewer):
-        writer = sqlite3.connect(neem_viewer.database, isolation_level=None)
-        try:
-            writer.execute("begin exclusive")
+        with being_written(neem_viewer.database):
             assert (
                 status_of(neem_viewer.url + "/api/neems")
                 == HTTPStatus.SERVICE_UNAVAILABLE
             )
-        finally:
-            writer.close()
 
     def test_a_database_of_another_kind_is_refused_with_what_it_lacks(
         self, neem_viewer
     ):
         neem_viewer.database.unlink()
-        sqlite3.connect(neem_viewer.database).close()
+        change_database(neem_viewer.database, Change.UNRELATED_TABLE)
         assert (
             status_of(neem_viewer.url + "/api/neems")
             == HTTPStatus.INTERNAL_SERVER_ERROR

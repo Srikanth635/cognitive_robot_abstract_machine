@@ -13,6 +13,8 @@ The requests it answers:
   goes on from where a reader stopped.
 - ``GET /api/neems``: the plans of the NEEM database with where each came from, newest
   first; ``?run=<run>`` takes only those the run kept.
+- ``GET /api/neems/<neem>``: one NEEM with the steps of its plan, what each was asked to
+  do and the things and places it refers to.
 
 Started with ``llm-reasoner-viz`` or ``python -m llm_reasoner_viz.server --port 8721``.
 """
@@ -35,7 +37,13 @@ from typing_extensions import Any, Callable, Dict, List, Optional
 
 from llm_reasoner_viz import configure_console_logging
 from llm_reasoner_viz.neem_library import NeemLibrary
-from llm_reasoner_viz.neems import NeemDatabase, NeemDatabaseBusy, UnknownNeemSchema
+from llm_reasoner_viz.neem_plan import MissingRow
+from llm_reasoner_viz.neems import (
+    NeemDatabase,
+    NeemDatabaseBusy,
+    UnknownNeem,
+    UnknownNeemSchema,
+)
 from llm_reasoner_viz.paths import (
     cram_viz_url,
     default_runs_directory,
@@ -76,6 +84,7 @@ RUNS_PATH = re.compile(r"/api/runs")
 EVENTS_PATH = re.compile(r"/api/runs/(?P<run>[^/]+)/events")
 STREAM_PATH = re.compile(r"/api/runs/(?P<run>[^/]+)/stream")
 NEEMS_PATH = re.compile(r"/api/neems")
+NEEM_PATH = re.compile(r"/api/neems/(?P<neem>\d+)")
 
 LAST_EVENT_ID = "Last-Event-ID"
 """
@@ -135,6 +144,7 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
             (EVENTS_PATH, self.events),
             (STREAM_PATH, self.stream),
             (NEEMS_PATH, self.neem_list),
+            (NEEM_PATH, self.neem),
         ]
         for pattern, route in routes:
             found = pattern.fullmatch(parsed.path)
@@ -151,7 +161,7 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
         """
         try:
             route(query=query, **arguments)
-        except UnknownRun as error:
+        except (UnknownRun, UnknownNeem) as error:
             self.send_json({"ok": False, "error": str(error)}, HTTPStatus.NOT_FOUND)
         except BadRequest as error:
             self.send_json({"ok": False, "error": str(error)}, HTTPStatus.BAD_REQUEST)
@@ -159,7 +169,7 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
             self.send_json(
                 {"ok": False, "error": str(error)}, HTTPStatus.SERVICE_UNAVAILABLE
             )
-        except UnknownNeemSchema as error:
+        except (UnknownNeemSchema, MissingRow) as error:
             self.send_json(
                 {"ok": False, "error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR
             )
@@ -234,6 +244,12 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
                 ],
             }
         )
+
+    def neem(self, neem: str, query: Query) -> None:
+        """
+        Send one NEEM with the steps of its plan.
+        """
+        self.send_json({"ok": True, **self.neems.detail(int(neem)).to_json()})
 
     @staticmethod
     def text(query: Query, name: str) -> Optional[str]:

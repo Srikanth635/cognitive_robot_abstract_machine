@@ -15,6 +15,7 @@ from pathlib import Path
 
 from typing_extensions import Any, Dict, Iterator, List, Optional
 
+from llm_reasoner_viz.neem_plan import PlanNode, PlanReader
 from llm_reasoner_viz.neem_schema import Column, Table
 
 # %% what can go wrong
@@ -45,6 +46,21 @@ class UnknownNeemSchema(LookupError):
         super().__init__(
             f"the database has no {self.missing}, which a NEEM database has"
         )
+
+
+@dataclass
+class UnknownNeem(LookupError):
+    """
+    The database holds no plan of the identifier asked for.
+    """
+
+    neem: int
+    """
+    The identifier asked for.
+    """
+
+    def __post_init__(self):
+        super().__init__(f"the NEEM database holds no plan {self.neem}")
 
 
 # %% the plans
@@ -208,6 +224,22 @@ class NeemDatabase:
                 order by plan.{Column.IDENTIFIER}
                 """).fetchall()
             return [self.summary_of(connection, *row) for row in rows]
+
+    def nodes(self, neem: int) -> List[PlanNode]:
+        """
+        :return: The steps of a plan, each followed by those below it.
+        :raises UnknownNeem: When the database holds no such plan.
+        """
+        if not self.exists:
+            raise UnknownNeem(neem)
+        with self.connection() as connection:
+            found = connection.execute(
+                f'select {Column.ROOT} from "{Table.PLAN}" where {Column.IDENTIFIER} = ?',
+                (neem,),
+            ).fetchone()
+            if found is None:
+                raise UnknownNeem(neem)
+            return PlanReader(connection=connection).nodes(found[0])
 
     def summary_of(
         self,

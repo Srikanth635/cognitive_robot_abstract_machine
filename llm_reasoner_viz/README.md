@@ -89,6 +89,7 @@ at what it points to.
 | `GET /api/runs` | The runs that have a log, newest first, each summed up: its query, scene, how resolving and performing went, how many events and model calls, tokens and cost |
 | `GET /api/runs/<run>/events` | The events of a run as one batch, with `next`, the offset to go on from; `?after=<offset>`, `?limit=<n>` |
 | `GET /api/neems` | The plans of the NEEM database, newest first, each with how its root ended, how long it lasted, how many nodes and steps it has, and where it came from (a trial or an execution of a run; none when no log names it); `?run=<run>` takes only those the run kept. `503` while the database is being written |
+| `GET /api/neems/<id>` | One NEEM: the entry above and `plan`, the steps of its plan in tree order, each with its `id`, `parent`, `depth`, `type` (`ActionNode`, `MotionNode`, `ConditionNode`, `SequentialNode`, ...), the `designator` it was asked to perform (`PouringAction`), its `parameters` (values as stored; a choice from an enumeration is the path of the member), its `references` (bodies by the name the world gives them, poses with their frame, position and orientation, and objects that are only values, such as how to grasp, with their values) and the table `rows` it is kept in. Only the root of a plan has a real status and time; the steps below it are stored as not started. `404` for a plan the database does not hold |
 | `GET /api/runs/<run>/stream` | The events as server-sent events, those written so far and then those written next; each frame's `id` is where its event ends in the log, so `?after=<offset>` or the `Last-Event-ID` header resumes a stream |
 
 ## Layout
@@ -99,7 +100,9 @@ src/llm_reasoner_viz/
     paths.py        where the runs and the NEEM database are kept
     runs.py         EventLog, RunSummary, RunLibrary
     neem_schema.py  the tables and columns of the NEEM database the viewer reads
-    neems.py        NeemDatabase: the plans of the database, read-only
+    neems.py        NeemDatabase: the plans and the steps of a plan, read-only
+    neem_tables.py  TableSchema: how the tables extend one another, found from the foreign keys
+    neem_plan.py    PlanReader: the steps of a plan with their values and references
     neem_library.py NeemLibrary: the plans joined to the runs that kept them
     stream.py       EventStream: following a log as it grows
     server.py       the HTTP server and the console entry point

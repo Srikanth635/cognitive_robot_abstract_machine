@@ -265,3 +265,31 @@ CREATE TABLE "Point3MappingDAO" (
 	PRIMARY KEY (database_id), 
 	FOREIGN KEY(database_id) REFERENCES "PointDAO" (database_id)
 );
+
+CREATE TABLE "QuaternionMappingDAO" (
+	database_id INTEGER NOT NULL, 
+	x FLOAT NOT NULL, 
+	y FLOAT NOT NULL, 
+	z FLOAT NOT NULL, 
+	w FLOAT NOT NULL, 
+	PRIMARY KEY (database_id), 
+	FOREIGN KEY(database_id) REFERENCES "SpatialTypeDAO" (database_id)
+);
+
+CREATE TABLE "ExecutionDataDAO" (
+	database_id INTEGER NOT NULL, 
+	execution_start_world_state BLOB NOT NULL, 
+	execution_end_world_state BLOB, 
+	polymorphic_type VARCHAR(255) NOT NULL, 
+	_execution_start_pose_id INTEGER, 
+	_execution_end_pose_id INTEGER, 
+	PRIMARY KEY (database_id), 
+	FOREIGN KEY(_execution_start_pose_id) REFERENCES "PoseMappingDAO" (database_id), 
+	FOREIGN KEY(_execution_end_pose_id) REFERENCES "PoseMappingDAO" (database_id)
+);
+
+CREATE TABLE "PouringCupDAO" (
+	database_id INTEGER NOT NULL, 
+	PRIMARY KEY (database_id), 
+	FOREIGN KEY(database_id) REFERENCES "ToolDAO" (database_id)
+);
