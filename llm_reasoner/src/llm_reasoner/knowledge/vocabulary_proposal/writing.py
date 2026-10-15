@@ -7,9 +7,14 @@ them.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
+from functools import partial
+from itertools import groupby
 
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, URIRef
 from rdflib.collection import Collection
+from rdflib.compare import to_canonical_graph
+from typing_extensions import Callable, List
 
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_ONTOLOGY_IRI,
@@ -54,6 +59,49 @@ RESTRICTION_PREDICATES = {
 How each kind of restriction names its filler.
 """
 
+TURTLE = "turtle"
+"""
+The format a module is written in.
+"""
+
+PREFIX_DIRECTIVE = "@prefix"
+"""
+How a line declaring a prefix starts in Turtle.
+"""
+
+SECTION_HEADER = "# %% {section}"
+"""
+The comment opening a section of a module, as in the hand-written modules.
+"""
+
+
+class ModuleSection(StrEnum):
+    """
+    The sections of a written module, in the order they are written.
+    """
+
+    ONTOLOGY = "ontology"
+    CLASSES = "classes"
+    VALUE_PARTITIONS = "value partitions"
+    PROPERTIES = "properties"
+
+
+@dataclass(frozen=True)
+class TermBlock:
+    """
+    The statements about one term of a module, written together.
+    """
+
+    section: ModuleSection
+    """
+    The section the block is written in.
+    """
+
+    graph: Graph
+    """
+    The statements, with the blank nodes only they refer to.
+    """
+
 
 @dataclass(frozen=True)
 class ProposalWriter:
@@ -80,28 +128,95 @@ class ProposalWriter:
             return Prefix.iri_of(name)
         return URIRef(self.perspective.namespace + name)
 
-    def graph(self) -> Graph:
+    def empty_graph(self) -> Graph:
         """
-        :return: The module as a graph.
+        :return: A graph knowing the prefixes of the module's terms.
         """
         graph = Graph()
         graph.bind(self.perspective.value.split("-")[-1], self.perspective.namespace)
         for prefix in Prefix:
             graph.bind(prefix.value, prefix.namespace)
-        self.write_header(graph)
-        for proposed in self.proposal.classes:
-            self.write_class(graph, proposed)
-        for partition in self.proposal.value_partitions:
-            self.write_value_partition(graph, partition)
-        for proposed in self.proposal.properties:
-            self.write_property(graph, proposed)
+        return graph
+
+    def block(
+        self, section: ModuleSection, write: Callable[[Graph], None]
+    ) -> TermBlock:
+        """
+        :return: The block of what ``write`` writes.
+        """
+        graph = self.empty_graph()
+        write(graph)
+        return TermBlock(section=section, graph=graph)
+
+    def blocks(self) -> List[TermBlock]:
+        """
+        :return: A block for the ontology and one for each term, in the order the
+            proposal declares them.
+        """
+        return [
+            self.block(ModuleSection.ONTOLOGY, self.write_header),
+            *(
+                self.block(
+                    ModuleSection.CLASSES, partial(self.write_class, proposed=proposed)
+                )
+                for proposed in self.proposal.classes
+            ),
+            *(
+                self.block(
+                    ModuleSection.VALUE_PARTITIONS,
+                    partial(self.write_value_partition, partition=partition),
+                )
+                for partition in self.proposal.value_partitions
+            ),
+            *(
+                self.block(
+                    ModuleSection.PROPERTIES,
+                    partial(self.write_property, proposed=proposed),
+                )
+                for proposed in self.proposal.properties
+            ),
+        ]
+
+    def graph(self) -> Graph:
+        """
+        :return: The module as a graph.
+        """
+        graph = self.empty_graph()
+        for block in self.blocks():
+            graph += block.graph
         return graph
 
     def turtle(self) -> str:
         """
-        :return: The module as Turtle.
+        :return: The module as Turtle, one block per term in the proposal's order, so an
+            edit to one term changes only its own lines.
         """
-        return self.graph().serialize(format="turtle")
+        blocks = self.blocks()
+        prefixes = [
+            line
+            for line in self.graph().serialize(format=TURTLE).splitlines()
+            if line.startswith(PREFIX_DIRECTIVE)
+        ]
+        sections = [
+            SECTION_HEADER.format(section=section.value)
+            + "\n\n"
+            + "\n\n".join(self.statements(block) for block in grouped)
+            for section, grouped in groupby(blocks, key=lambda block: block.section)
+        ]
+        return "\n".join(prefixes) + "\n\n" + "\n\n".join(sections) + "\n"
+
+    def statements(self, block: TermBlock) -> str:
+        """
+        :return: A block's statements as Turtle, its blank nodes named by their content
+            so that their order does not depend on the rest of the module.
+        """
+        canonical = self.empty_graph()
+        canonical += to_canonical_graph(block.graph)
+        return "\n".join(
+            line
+            for line in canonical.serialize(format=TURTLE).splitlines()
+            if not line.startswith(PREFIX_DIRECTIVE)
+        ).strip()
 
     def write_header(self, graph: Graph) -> None:
         """
@@ -203,8 +318,8 @@ class ProposalWriter:
 
     def write_property(self, graph: Graph, proposed: ProposedProperty) -> None:
         """
-        Write an object property, its domain, its range if it has one, and the properties
-        it specialises.
+        Write an object property, its domain, its range if it has one, and the
+        properties it specialises.
         """
         term = self.iri(proposed.name)
         graph.add((term, RDF.type, OWL.ObjectProperty))
