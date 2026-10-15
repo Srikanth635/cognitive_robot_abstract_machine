@@ -356,6 +356,16 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   module (`generation/briefs.py`), an action perspective's from its description beside the
   modules. The Flanagan prompts are byte-identical. Tested with a scripted answer, also
   admitted by HermiT against the real CRAM-AICOR and DUL.
+- Step 2 (2026-10-15): a perspective hypothesis on top of a stored core, such as
+  `the(FrameStereotype)(stereotype_of=<citation of the core frame>)`. A fixed value may cite
+  a stored fragment, keyed by its IRI and told to the model by its name; the cited
+  records' fragments are shown in a `<given>` section and referred to by name, and an
+  answer restating one or naming a fragment like one is returned for repair; the
+  open-world check sees them with the new fragments; the record lists what it
+  `builds_on`, and its Turtle refers to their IRIs without stating them, which the store
+  and the knowledge graph read back as the same fragments. A perspective's brief adds the
+  rule about the given core. Tested with scripted core and frame answers, both also
+  admitted by HermiT.
 
 ## 3. Live testing
 

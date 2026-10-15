@@ -14,6 +14,7 @@ from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.generation.prompts import written_value
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.ontologies import OntologyModuleFile
+from llm_reasoner.knowledge.storage.citation import Citation
 
 
 @dataclass
@@ -78,6 +79,20 @@ class HypothesisRequest:
         )
 
     @property
+    def builds_on(self) -> list[str]:
+        """
+        The records of the stored hypotheses whose fragments the request cites, in the
+        order first cited.
+        """
+        return list(
+            dict.fromkeys(
+                value.record_id
+                for value in self.fixed_values.values()
+                if isinstance(value, Citation)
+            )
+        )
+
+    @property
     def module_files(self) -> set[OntologyModuleFile]:
         """
         The ontology modules the requested hypothesis's vocabulary uses.
@@ -87,6 +102,10 @@ class HypothesisRequest:
     @property
     def written_fixed_values(self) -> dict[str, str]:
         """
-        The fixed values as the model is told them and the store keys them.
+        The fixed values as the store keys them: as the model is told them, but a cited
+        fragment by its IRI, which names its record too.
         """
-        return {name: written_value(value) for name, value in self.fixed_values.items()}
+        return {
+            name: value.iri if isinstance(value, Citation) else written_value(value)
+            for name, value in self.fixed_values.items()
+        }

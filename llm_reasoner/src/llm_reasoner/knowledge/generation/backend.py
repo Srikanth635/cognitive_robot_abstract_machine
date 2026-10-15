@@ -33,13 +33,34 @@ from llm_reasoner.knowledge.generation.prompts import GenerationPrompt
 from llm_reasoner.knowledge.generation.recording import HypothesisRecorder
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.knowledge.representation.rdf import GraphReader
+from llm_reasoner.exceptions import LLMReasonerError
+from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
 from llm_reasoner.observation.events import HypothesisRequested, HypothesisServed
 from llm_reasoner.observation.sinks import EventSink, NullSink
 from llm_reasoner.knowledge.storage.record import HypothesisRecord, qualified_name
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 T = TypeVar("T")
+
+
+@dataclass
+class GivenHypothesesUnavailable(LLMReasonerError):
+    """
+    A request cites fragments of stored hypotheses, but the backend has no store to read
+    them from.
+    """
+
+    record_ids: list[str]
+    """
+    The records the request cites.
+    """
+
+    def __post_init__(self):
+        super().__init__(
+            "the request builds on stored hypotheses "
+            + ", ".join(self.record_ids)
+            + ", but the backend has no store"
+        )
 
 
 @dataclass
@@ -116,6 +137,18 @@ class HypothesisBackend(GenerativeBackend):
     The most recent admitted hypothesis, with its warnings and exchanges.
     """
 
+    def given_for(self, request: HypothesisRequest) -> GivenFragments:
+        """
+        :return: The stored fragments of the hypotheses the request cites.
+        :raises GivenHypothesesUnavailable: When it cites some, but there is no store to
+            read them from.
+        """
+        if not request.builds_on:
+            return GivenFragments()
+        if self.store is None:
+            raise GivenHypothesesUnavailable(record_ids=request.builds_on)
+        return self.store.given(request.builds_on)
+
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
         request = HypothesisRequest.from_match(expression, self.instruction)
         self.observer.emit(
@@ -139,7 +172,7 @@ class HypothesisBackend(GenerativeBackend):
                     record_id=stored.record.record_id, from_store=True, attempts=0
                 )
             )
-            yield GraphReader().read(stored.graph).root_of(request.root_type)
+            yield self.store.read(stored.record.record_id).root_of(request.root_type)
             return
         dialogue = GenerationDialogue(
             client=self.client,
@@ -157,7 +190,7 @@ class HypothesisBackend(GenerativeBackend):
             observer=self.observer,
         )
         self.log = dialogue.exchanges
-        self.last_outcome = dialogue.generate(request)
+        self.last_outcome = dialogue.generate(request, self.given_for(request))
         self.last_record = HypothesisRecorder(
             client_identity=self.client.identity,
             consistency_checked=self.consistency is not None,

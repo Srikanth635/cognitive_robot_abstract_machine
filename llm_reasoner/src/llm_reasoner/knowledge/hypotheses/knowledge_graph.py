@@ -31,11 +31,16 @@ class KnowledgeGraph:
     def hypothesis(self, record_id: str) -> HypothesisView:
         """
         :return: The view of the stored hypothesis with the given record identifier,
-            read from the store the first time it is asked for.
+            read from the store the first time it is asked for, its references to the
+            hypotheses it builds on resolved to their fragments as this graph holds
+            them.
         """
         if record_id not in self.read_hypotheses:
             self.read_hypotheses[record_id] = HypothesisView.of(
-                self.store.get(record_id)
+                self.store.get(record_id),
+                self.store.read(
+                    record_id, read_given=lambda given: self.hypothesis(given).by_iri()
+                ),
             )
         return self.read_hypotheses[record_id]
 

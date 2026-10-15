@@ -26,6 +26,7 @@ class BriefRuleName(StrEnum):
     ROLES = "roles"
     QUANTITIES = "quantities"
     SLOTS = "slots"
+    GIVEN = "given"
 
 
 @dataclass(frozen=True)
@@ -61,12 +62,16 @@ class GenerationBrief:
     ) -> GenerationBrief:
         """
         :return: The brief of a generation rooted in a class of an action perspective
-            module: its description, and the rule that slots stand for kinds of
-            participant.
+            module: its description, the rule that slots stand for kinds of
+            participant, and for a perspective, that the core it describes is given.
         """
         return cls(
             role=ACTION_PERSPECTIVE_ROLE + "\n\n" + module_file.description,
-            rules=ACTION_PERSPECTIVE_RULES,
+            rules=(
+                ACTION_CORE_RULES
+                if module_file is ActionPerspectiveFile.ACTION_CORE
+                else PERSPECTIVE_RULES
+            ),
         )
 
 
@@ -108,13 +113,29 @@ What the model is asked to do when generating for an action perspective module, 
 that module's description.
 """
 
-ACTION_PERSPECTIVE_RULES = (
+SLOTS_RULE = PromptRule(
+    BriefRuleName.SLOTS,
+    'participants are the slots of the action\'s frame, such as "the source", never '
+    "particular objects, places or robots.",
+)
+"""
+The rule that an action perspective names participants by the slots of the frame.
+"""
+
+ACTION_CORE_RULES = (SLOTS_RULE,)
+"""
+The rules about what an answer describes for the action core.
+"""
+
+PERSPECTIVE_RULES = (
+    SLOTS_RULE,
     PromptRule(
-        BriefRuleName.SLOTS,
-        'participants are the slots of the action\'s frame, such as "the source", '
-        "never particular objects, places or robots.",
+        BriefRuleName.GIVEN,
+        "the fragments in <given> are the action core this perspective describes, as "
+        'written before: refer to them by their "id", and write only fragments of '
+        "this perspective's own types, never a given fragment again.",
     ),
 )
 """
-The rules about what an answer describes for an action perspective module.
+The rules about what an answer describes for a perspective on the action core.
 """

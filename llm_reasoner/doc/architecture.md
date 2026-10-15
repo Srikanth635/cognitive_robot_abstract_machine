@@ -252,7 +252,7 @@ instruction + query ──► 1 generation ──► 2 acceptance ──► 3 ad
 | 2 Acceptance | `acceptance/` | Closed-world checks — what is missing is an error, since a model tends to generate too little: `restrictions_hold` (each fragment meets its classes' OWL restrictions), `ranges_hold` (every linked value has the type its property allows), `shapes_hold` (SHACL shapes for rules across fragments, such as transitions connecting all phases), `components_declared` (everything a structure reaches, it declares), plus the values the query fixes. Violations are errors or warnings; warnings are kept with the hypothesis |
 | 3 Admission | `admission/`, `representation/` | Optionally (`consistency=HermitCheck(...)`), the hypothesis is written as RDF and checked in the open world against the ontology, CRAM-AICOR and DUL with HermiT; `ContradictionLocaliser` names the fragments that together contradict them. Concept references are checked against the linked ontologies (`linked_terms`) |
 | Repair | `generation/` | Errors from stages 1–3 are shown to the model, which answers with a *patch* (fragments added or changed, identifiers removed) applied to the answer with the fewest problems so far (`max_repairs = 2`) |
-| 4 Store | `storage/` | `HypothesisRecord` (instruction, root type, fixed values, client, every exchange, warnings, consistency verdict, the versions of the ontology modules its vocabulary uses) and the hypothesis as Turtle, one directory per hypothesis in `HypothesisStore`. A request is answered from the store when a record has the same root type and fixed values (situation features included) under the current module versions, whatever instruction it was generated for; otherwise it is generated |
+| 4 Store | `storage/` | `HypothesisRecord` (instruction, root type, fixed values, client, every exchange, warnings, consistency verdict, the versions of the ontology modules its vocabulary uses, the records it builds on) and the hypothesis as Turtle, one directory per hypothesis in `HypothesisStore`. A request is answered from the store when a record has the same root type and fixed values (situation features included) under the current module versions, whatever instruction it was generated for; otherwise it is generated |
 | 5 Reading | `hypotheses/` | `KnowledgeService.view_for(query, instruction)` returns the stored or newly generated hypothesis as a `HypothesisView`, which answers questions crossing fragments: `phases`, `next_phases`, `requirements_of`, `world_assumptions`, `gaze_fixations_for`, `force_couplings_in`, `failure_events`, `corrections_at`, `force_dynamics`. Every fragment is cited by the IRI it is stored under (`Citation`). `HypothesisGraphProjector` projects a hypothesis into the graph cram_viz shows |
 
 **The answer format.** A flat list of fragments that refer to each other by
@@ -271,6 +271,10 @@ concept as a prefixed term (`aicor:<Name>`, `dul:<Name>`, or `hypothesis:<Name>`
 concept CRAM-AICOR and DUL lack), a number, a truth value or text.
 
 A repair answers `{"fragments": [<added or changed>], "remove": [<identifiers>]}`.
+
+A request may fix a field to a fragment of a stored hypothesis (a `Citation`); the
+fragments of the cited hypotheses are then shown in a `<given>` section, written in this
+format, and the answer refers to them by their names without writing them again.
 Fragments are created first and linked second; a malformed answer is not an exception
 but a list of problems shown to the model.
 

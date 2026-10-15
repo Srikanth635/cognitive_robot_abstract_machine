@@ -25,6 +25,7 @@ from llm_reasoner.knowledge.generation.prompts import (
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.wire import DecodingResult
 from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
+from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.knowledge.representation.rdf import (
     HYPOTHESIS_NAMESPACE_ROOT,
     GraphWriter,
@@ -90,7 +91,7 @@ class HypothesisAssessor:
             f"the root fragment '{hypothesis.identifier_of(hypothesis.root)}' must have "
             f"{name} = {written_value(value)}"
             for name, value in fixed.items()
-            if not self.agrees(attrgetter(name)(hypothesis.root), value)
+            if not self.agrees(attrgetter(name)(hypothesis.root), value, hypothesis)
         ]
         violations = self.suite.violations(hypothesis.fragments)
         problems.extend(
@@ -100,7 +101,7 @@ class HypothesisAssessor:
         )
         if not problems and self.consistency is not None:
             conflict = ContradictionLocaliser(self.consistency).conflict(
-                GraphWriter(namespace=DRAFT_NAMESPACE).write(hypothesis)
+                GraphWriter(namespace=DRAFT_NAMESPACE).write_with_given(hypothesis)
             )
             if conflict:
                 problems.append(
@@ -138,10 +139,13 @@ class HypothesisAssessor:
         ]
 
     @staticmethod
-    def agrees(stated: Any, fixed: Any) -> bool:
+    def agrees(stated: Any, fixed: Any, hypothesis: DecodedHypothesis) -> bool:
         """
-        :return: Whether the value an answer states is the value the query fixes.
+        :return: Whether the value an answer states is the value the query fixes; for a
+            cited fragment, the given fragment stored under the citation's IRI.
         """
+        if isinstance(fixed, Citation):
+            return hypothesis.given.iris.get(id(stated)) == fixed.iri
         if isinstance(fixed, (list, tuple)):
             return list(stated) == list(fixed)
         return stated == fixed
