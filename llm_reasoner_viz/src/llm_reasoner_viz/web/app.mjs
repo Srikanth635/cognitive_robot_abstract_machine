@@ -14,6 +14,8 @@ import { mapState } from './map.mjs';
 import { MapView } from './map_view.mjs';
 import { KIND, RunModel, STATUS } from './model.mjs';
 import { plotOfTrials, triedPours } from './pour.mjs';
+import { neemsAddress } from './neems.mjs';
+import { NeemsView } from './neems_view.mjs';
 import { Replay } from './replay.mjs';
 import { ReplayView } from './replay_view.mjs';
 import { TimelineView } from './timeline_view.mjs';
@@ -79,6 +81,7 @@ class Viewer {
     this.timeline = new TimelineView(find('timeline'), (id) => this.choose(id));
     this.inspector = new InspectorView(find('inspector'), (id) => this.choose(id));
     this.events = new EventsView(find('events'));
+    this.neemsView = new NeemsView(find('neems-toggle'), find('neems-menu'), (scope) => this.loadNeems(scope), (neem) => this.showOriginOf(neem));
     this.attempts = new AttemptsView(find('attempts-panel'), (id) => this.choose(id));
     this.filter = new SpanFilter();
     this.filterView = new FilterView(find('filters'), this.filter, () => this.render(), () => this.chooseNextMatch());
@@ -191,6 +194,26 @@ class Viewer {
     this.showRuns();
   }
 
+  // %% NEEMs
+
+  // Asks the server for the NEEMs of the run shown or for all of them; the answer, or why
+  // there is none.
+  async loadNeems(scope) {
+    const response = await fetch(neemsAddress(scope, this.run)).catch(() => null);
+    return response === null ? { ok: false, error: Connection.UNREACHABLE } : response.json();
+  }
+
+  // Goes to the bar of the trial or execution a NEEM is the plan of, in the run that saved it.
+  showOriginOf(neem) {
+    if (neem.run === null) return;
+    if (neem.run !== this.run) {
+      this.wantedSpan = neem.spanId;
+      this.followRun(neem.run);
+    } else if (this.model.byId.has(neem.spanId)) {
+      this.choose(neem.spanId);
+    }
+  }
+
   // %% replay
 
   toggleReplay() {
@@ -253,6 +276,7 @@ class Viewer {
   settleChoice(model) {
     if (this.wantedSpan !== null && model.byId.has(this.wantedSpan)) {
       this.chosenId = this.wantedSpan;
+      this.setAddress(Parameter.SPAN, this.chosenId);
       this.wantedSpan = null;
     }
     if (this.chosenId !== null && (model.byId.has(this.chosenId) || this.replay !== null)) return;
@@ -342,6 +366,7 @@ class Viewer {
     this.replayToggle.disabled = this.replay === null && (this.isLive() || this.model.events.length === 0);
     if (this.replay !== null) this.replayView.show(this.replay);
     this.showTotals(model, now);
+    this.neemsView.update(this.run, this.model.neems.length);
     const matching = this.filter.active ? this.filter.matching(model) : null;
     this.filterView.show(matching, model.spans.length);
     this.map.update(mapState(model, live ? now : Number.POSITIVE_INFINITY), this.chosenLane);
