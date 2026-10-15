@@ -23,7 +23,7 @@ from cram_viz.live import hooks
 from cram_viz.live.bridge import BRIDGE
 from cram_viz.live.http import DEFAULT_PORT, serve
 from cram_viz.live.launcher import LiveArgument
-from cram_viz.live.steps import PlanStepReporter, following_plan
+from cram_viz.live.steps import PlanNodeReporter, PlanStepReporter, following_plan
 from cram_viz.neem import NeemRecorder, NeemRecording, NoNeemRecorder
 from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.runs import RunDirectory
@@ -150,10 +150,11 @@ class ResolvedRun(LiveTarget):
         logger.info("performing run: %s", self.directory)
         run = RunDirectory(directory=self.directory)
         sink = run.events
-        reporter = PlanStepReporter(sink=sink, run=run.name)
+        steps = PlanStepReporter(sink=sink, run=run.name)
+        nodes = PlanNodeReporter(sink=sink, run=run.name)
         with reporting_execution(sink, run.name), following_plan(
-            BRIDGE, reporter.observe
-        ):
+            BRIDGE, steps.observe
+        ), following_plan(BRIDGE, nodes.observe):
             PouringExecution.of_run(run, self.recorder(sink.path, run.name)).perform()
 
     def recorder(self, events: Path, run: str) -> NeemRecorder:

@@ -1,7 +1,7 @@
 """
-Tests of following a plan's steps as the bridge sees them: the steps of the plan, not
-the nodes below them, reported when their status changes, and what Execute reports of a
-resolution run being performed.
+Tests of following a plan as the bridge sees it: its steps, and every node of it,
+reported when their status changes, and what Execute reports of a resolution run being
+performed.
 """
 
 from __future__ import annotations
@@ -19,11 +19,12 @@ from cram_viz.events import (
     ExecutionFailed,
     ExecutionFinished,
     ExecutionStarted,
+    PlanNodeChanged,
     StepChanged,
 )
 from cram_viz.live.bridge import BRIDGE, Bridge, PlanNodeKey
 from cram_viz.live.runner import ResolvedRun
-from cram_viz.live.steps import NOT_STARTED, PlanStepReporter
+from cram_viz.live.steps import NOT_STARTED, PlanNodeReporter, PlanStepReporter
 from cram_viz.neem import DatabaseNeemRecorder, NoNeemRecorder, SqliteNeemStore
 from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.runs import RunFile
@@ -32,7 +33,11 @@ from cram_viz.resolution.runs import RunFile
 
 
 def node(
-    identifier: str, parent: str | None, label: str, status: str
+    identifier: str,
+    parent: str | None,
+    label: str,
+    status: str,
+    derived: bool = False,
 ) -> Dict[str, Any]:
     """
     :return: A plan node as the bridge snapshots it.
@@ -43,6 +48,7 @@ def node(
         PlanNodeKey.KIND: "ActionNode",
         PlanNodeKey.LABEL: label,
         PlanNodeKey.STATUS: status,
+        PlanNodeKey.DERIVED: derived,
     }
 
 
@@ -72,6 +78,13 @@ class TestBridge:
         bridge._plan = type("StubPlan", (), {"root": _stub_root()})()
         bridge.snapshot_plan()
         assert seen == [bridge.get_plan()["nodes"]]
+
+    def test_a_node_of_a_snapshot_has_every_key_the_reporters_read(self):
+        bridge = Bridge()
+        bridge._plan = type("StubPlan", (), {"root": _stub_root()})()
+        bridge.snapshot_plan()
+        (root,) = bridge.get_plan()["nodes"]
+        assert set(PlanNodeKey) <= set(root)
 
 
 def _stub_root():
@@ -139,6 +152,100 @@ class TestPlanStepReporter:
         reporter = PlanStepReporter(sink=sink, run="a-run")
         reporter.observe(plan_at(NOT_STARTED, NOT_STARTED, "RUNNING", "FAILED"))
         assert sink.events == []
+
+
+# %% following every node
+
+
+class TestPlanNodeReporter:
+    def test_every_node_is_reported_when_first_seen_whatever_its_status(self):
+        sink = MemorySink()
+        reporter = PlanNodeReporter(sink=sink, run="a-run")
+        snapshot = plan_at(NOT_STARTED, NOT_STARTED, NOT_STARTED, NOT_STARTED)
+        reporter.observe(snapshot)
+        assert all(type(event) is PlanNodeChanged for event in sink.events)
+        assert [event.node for event in sink.events] == [
+            node[PlanNodeKey.ID] for node in snapshot
+        ]
+
+    def test_a_node_is_reported_with_what_says_where_it_is_in_the_plan(self):
+        sink = MemorySink()
+        reporter = PlanNodeReporter(sink=sink, run="a-run")
+        reporter.observe(plan_at("RUNNING", NOT_STARTED, NOT_STARTED, NOT_STARTED))
+        root, first, *_ = sink.events
+        assert (root.run, root.parent, root.kind, root.label, root.status) == (
+            "a-run",
+            None,
+            "ActionNode",
+            "SequentialNode",
+            "RUNNING",
+        )
+        assert (first.node, first.parent, first.label, first.status) == (
+            "first",
+            "root",
+            "ParkArmsAction",
+            "RUNNING",
+        )
+
+    def test_a_status_is_reported_once_however_often_it_is_seen(self):
+        sink = MemorySink()
+        reporter = PlanNodeReporter(sink=sink, run="a-run")
+        for _ in range(3):
+            reporter.observe(plan_at("RUNNING", NOT_STARTED, NOT_STARTED, NOT_STARTED))
+        assert len(sink.events) == 5
+
+    def test_a_node_below_a_step_is_reported_when_its_status_changes(self):
+        sink = MemorySink()
+        reporter = PlanNodeReporter(sink=sink, run="a-run")
+        reporter.observe(plan_at("RUNNING", NOT_STARTED, NOT_STARTED, NOT_STARTED))
+        reporter.observe(plan_at("RUNNING", NOT_STARTED, "RUNNING", NOT_STARTED))
+        reporter.observe(plan_at("RUNNING", NOT_STARTED, "SUCCEEDED", NOT_STARTED))
+        changes = [
+            (event.node, event.status)
+            for event in sink.events
+            if event.node == "motion-first"
+        ]
+        assert changes == [
+            ("motion-first", NOT_STARTED),
+            ("motion-first", "RUNNING"),
+            ("motion-first", "SUCCEEDED"),
+        ]
+
+    def test_a_node_that_appears_later_is_reported_then_and_the_others_are_not_again(
+        self,
+    ):
+        sink = MemorySink()
+        reporter = PlanNodeReporter(sink=sink, run="a-run")
+        grown = plan_at("RUNNING", NOT_STARTED, NOT_STARTED, NOT_STARTED)
+        reporter.observe(grown[:2])
+        reporter.observe(grown)
+        assert [event.node for event in sink.events] == [
+            "root",
+            "first",
+            "motion-first",
+            "second",
+            "motion-second",
+        ]
+
+    def test_a_status_the_bridge_derived_says_so(self):
+        sink = MemorySink()
+        reporter = PlanNodeReporter(sink=sink, run="a-run")
+        reporter.observe(
+            [
+                node("root", None, "SequentialNode", "RUNNING", derived=True),
+                node("step", "root", "ParkArmsAction", "CREATED"),
+            ]
+        )
+        assert [event.derived for event in sink.events] == [True, False]
+
+    def test_a_node_is_written_as_plain_json_with_the_root_having_no_parent(self):
+        sink = MemorySink()
+        reporter = PlanNodeReporter(sink=sink, run="a-run")
+        reporter.observe([node("root", None, "SequentialNode", "RUNNING")])
+        written = sink.events[0].to_json()
+        assert written[EventKey.EVENT] == PlanNodeChanged.__name__
+        assert written["parent"] is None
+        assert json.loads(json.dumps(written)) == written
 
 
 # %% performing a run
@@ -235,13 +342,48 @@ class TestResolvedRun:
             ),
         )
         ResolvedRun(directory=tmp_path).run()
-        assert kinds(logged(tmp_path)) == [
+        assert [
+            kind for kind in kinds(logged(tmp_path)) if kind != PlanNodeChanged.__name__
+        ] == [
             ExecutionStarted.__name__,
             StepChanged.__name__,
             StepChanged.__name__,
             StepChanged.__name__,
             ExecutionFinished.__name__,
         ]
+
+    def test_every_node_of_a_run_performed_is_logged_as_it_changes_between_its_start_and_finish(
+        self, tmp_path, monkeypatch
+    ):
+        performing(
+            monkeypatch,
+            StubExecution(
+                snapshots=[
+                    plan_at("RUNNING", NOT_STARTED, "RUNNING", NOT_STARTED),
+                    plan_at("SUCCEEDED", "RUNNING", "SUCCEEDED", NOT_STARTED),
+                ]
+            ),
+        )
+        ResolvedRun(directory=tmp_path).run()
+        events = logged(tmp_path)
+        assert kinds(events)[0] == ExecutionStarted.__name__
+        assert kinds(events)[-1] == ExecutionFinished.__name__
+        changes = [
+            (event["node"], event["status"])
+            for event in events
+            if event[EventKey.EVENT] == PlanNodeChanged.__name__
+        ]
+        assert [change for change in changes if change[0] == "motion-first"] == [
+            ("motion-first", "RUNNING"),
+            ("motion-first", "SUCCEEDED"),
+        ]
+        assert {node for node, _ in changes} == {
+            "root",
+            "first",
+            "motion-first",
+            "second",
+            "motion-second",
+        }
 
     def test_a_run_that_fails_is_logged_as_failed_and_fails_as_before(
         self, tmp_path, monkeypatch

@@ -177,6 +177,17 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   the real Execute on a scratch copy of a run, and the viewer in a browser. One test against the
   real store is marked `slow`. Not yet: a switch to turn the recording off, and recording from
   `cram-viz-live` demo scripts.
+- Every node of the plan Execute performs is logged (15 Oct): `PlanNodeChanged` in the run's
+  `events.jsonl`, from the same bridge snapshots as `StepChanged` (`PlanNodeReporter`): when a
+  node first appears (the tree, which grows as an action is expanded) and whenever its status
+  changes, with its parent, kind, label and whether the bridge derived the status. Done so the
+  viewer can show the per-step status and timing that a saved NEEM lacks (it keeps a real status
+  for the root only). Checked on a real Execute of a copy of a stored run (bridge on its own
+  port, no NEEM kept): 65 events, 15 KB; each motion's start and end show, e.g. the tilting
+  motion of the pour from +8.6 s to +12.3 s. Known from the bridge, not changed: an action
+  never reaches `SUCCEEDED` (its conditions are not evaluated, so it reads `RUNNING` until the
+  plan ends) and the conditions of most steps stay `CREATED`; the motions and the root do end.
+  The viewer does not show these events yet (it ignores events it does not know).
 - The NEEM browser of the viewer, steps 1 and 2 (15 Oct; the screen follows). The viewer opens the
   shared NEEM database read-only (never changes it; reported as busy while a simulation writes;
   refused with what it lacks when it is no NEEM database). `GET /api/neems` lists the plans, each

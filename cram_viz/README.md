@@ -138,10 +138,15 @@ resolved, under the live bridge — the 3D scene's Live button shows it running,
 Plan tab shows the plan of the run (the bridge follows a plan performed through its root
 node as well as through `Plan.perform`, and publishes coraplex's `NOT_STARTED` and
 `PAUSED` as the `CREATED` and `PAUSE` its legend names). Execute also appends to the
-run's `events.jsonl`: that it started and ended or failed, and each step of the plan,
-the actions below its root, when its status changes. An action stays `RUNNING` in the
-bridge until the plan ends, since the conditions it would turn `SUCCEEDED` on are not
-evaluated in these runs, so a step is over when the next starts. **Demo** launches the
+run's `events.jsonl`: that it started and ended or failed, each step of the plan, the
+actions below its root, when its status changes (`StepChanged`), and every node of the plan
+(`PlanNodeChanged`: the node, the node above it, its kind, what it performs, its status and
+whether the bridge derived that status), when it first appears in a snapshot of the plan and
+whenever its status changes, so the log holds the tree of the plan and, with the time of each
+event, when each motion began and ended. A real Execute of 12 s wrote 65 of them, 15 KB. An
+action stays `RUNNING` in the bridge until the plan ends, since the conditions it would turn
+`SUCCEEDED` on are not evaluated in these runs, so a step is over when the next starts; its
+motions do end, with their own status. **Demo** launches the
 fixed demo instead, independent of the designators.
 
 ### NEEMs of the simulations

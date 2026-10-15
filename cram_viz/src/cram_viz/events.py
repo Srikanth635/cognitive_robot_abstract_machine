@@ -15,7 +15,7 @@ from time import perf_counter
 
 from llm_reasoner.observation.events import Event
 from llm_reasoner.observation.sinks import EventSink
-from typing_extensions import Any, Callable, Iterator, Mapping
+from typing_extensions import Any, Callable, Iterator, Mapping, Optional
 
 # %% reporting what begins and ends
 
@@ -258,6 +258,54 @@ class StepChanged(Event):
     status: str
     """
     The status it changed to, as the plan names it.
+    """
+
+
+@dataclass
+class PlanNodeChanged(Event):
+    """
+    A node of the plan a run performs was first seen, or changed status.
+
+    Every node is reported when it first appears in the snapshots of the plan, so the log
+    holds the tree of the plan and, with the time of each event, when each node began and
+    ended.
+    """
+
+    run: str
+    """
+    The name of the run.
+    """
+
+    node: str
+    """
+    Identifies the node among those of the plan, which the events of its children name as
+    their parent.
+    """
+
+    parent: Optional[str]
+    """
+    The node above it; none for the root of the plan.
+    """
+
+    kind: str
+    """
+    The kind of node it is, such as ``ActionNode``.
+    """
+
+    label: str
+    """
+    What it performs: the action or motion it was asked for, or else its kind.
+    """
+
+    status: str
+    """
+    Its status, as the plan names it.
+    """
+
+    derived: bool
+    """
+    Whether the status was worked out from the motions below the node, which is how a node
+    that is not performed itself shows progress, rather than being its own.
     """
 
 
