@@ -1,0 +1,80 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "classes", "properties", "value_partitions"],
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "What the vocabulary lets a knowledge base say about an action, in a few sentences."
+    },
+    "classes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "meaning", "parents", "restrictions", "see_also"],
+        "properties": {
+          "name": {"type": "string", "description": "One word starting in capitals, such as FillerExpectation."},
+          "meaning": {"type": "string", "description": "The class's definition, in one or two sentences."},
+          "parents": {"type": "array", "items": {"type": "string"}, "description": "The classes it specialises: prefixed terms (core:, aicor:, dul:) or classes of this proposal."},
+          "restrictions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["property", "quantifier", "filler"],
+              "properties": {
+                "property": {"type": "string", "description": "The restricted property."},
+                "quantifier": {"type": "string", "enum": ["some", "only", "value"]},
+                "filler": {"type": "string", "description": "A class for some and only, an individual for value."}
+              }
+            }
+          },
+          "see_also": {"type": "array", "items": {"type": "string"}, "description": "IRIs of the sources the class is taken from, such as a FrameNet frame or an image schema."}
+        }
+      }
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "meaning", "domain", "range", "parents", "functional", "see_also"],
+        "properties": {
+          "name": {"type": "string", "description": "One word starting in lower case, such as expectsOfSlot."},
+          "meaning": {"type": "string", "description": "The property's definition, in one sentence."},
+          "domain": {"type": "string", "description": "The class its subjects belong to."},
+          "range": {"type": "string", "description": "The class its values belong to."},
+          "parents": {"type": "array", "items": {"type": "string"}, "description": "The properties it specialises."},
+          "functional": {"type": "boolean", "description": "Whether a subject has at most one value of it."},
+          "see_also": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "value_partitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "meaning", "parents", "members"],
+        "properties": {
+          "name": {"type": "string", "description": "One word starting in capitals."},
+          "meaning": {"type": "string"},
+          "parents": {"type": "array", "items": {"type": "string"}},
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "meaning"],
+              "properties": {
+                "name": {"type": "string", "description": "One word starting in capitals."},
+                "meaning": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+@prefix : <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+:Expectation a owl:Class .
+:Container a owl:Class ;
+    rdfs:comment "A physical individual that can contain a substance." .
+:Substance a owl:Class .
+:OpenContainerState a owl:Class .
+:Pouring a owl:Class .
+:contains a owl:ObjectProperty .

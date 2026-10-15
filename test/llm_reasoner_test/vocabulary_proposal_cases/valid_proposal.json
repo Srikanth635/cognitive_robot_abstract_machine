@@ -1,0 +1,74 @@
+{
+  "summary": "What the fillers of an action's slots are expected to have or afford, and what must hold before the action.",
+  "classes": [
+    {
+      "name": "FillerExpectation",
+      "meaning": "What the filler of a slot is normally expected to have or to afford.",
+      "parents": ["aicor:Expectation"],
+      "restrictions": [
+        {"property": "expectsOfSlot", "quantifier": "some", "filler": "core:FrameSlot"},
+        {"property": "hasExpectedFeature", "quantifier": "some", "filler": "FillerFeature"}
+      ],
+      "see_also": ["https://framenet2.icsi.berkeley.edu/fnReports/data/frameIndex.xml?frame=Cause_fluidic_motion"]
+    },
+    {
+      "name": "Precondition",
+      "meaning": "What must hold before the action starts.",
+      "parents": ["dul:Description"],
+      "restrictions": [
+        {"property": "preconditionOnSlot", "quantifier": "some", "filler": "core:FrameSlot"}
+      ],
+      "see_also": []
+    }
+  ],
+  "properties": [
+    {
+      "name": "expectsOfSlot",
+      "meaning": "The slot whose filler the expectation is about.",
+      "domain": "FillerExpectation",
+      "range": "core:FrameSlot",
+      "parents": [],
+      "functional": true,
+      "see_also": []
+    },
+    {
+      "name": "hasExpectedFeature",
+      "meaning": "Something the filler is expected to have or to afford.",
+      "domain": "FillerExpectation",
+      "range": "FillerFeature",
+      "parents": [],
+      "functional": false,
+      "see_also": []
+    },
+    {
+      "name": "preconditionOnSlot",
+      "meaning": "A slot whose filler the precondition is about.",
+      "domain": "Precondition",
+      "range": "core:FrameSlot",
+      "parents": [],
+      "functional": false,
+      "see_also": []
+    },
+    {
+      "name": "holdsBefore",
+      "meaning": "A precondition of the action a frame describes.",
+      "domain": "core:ActionFrame",
+      "range": "Precondition",
+      "parents": [],
+      "functional": false,
+      "see_also": []
+    }
+  ],
+  "value_partitions": [
+    {
+      "name": "FillerFeature",
+      "meaning": "Something the filler of a slot can have or afford.",
+      "parents": ["dul:Concept"],
+      "members": [
+        {"name": "HasOpening", "meaning": "It has an opening through which things enter or leave it."},
+        {"name": "HoldsSubstance", "meaning": "It can hold a substance."},
+        {"name": "StandsUpright", "meaning": "It stands with its opening facing up."}
+      ]
+    }
+  ]
+}
