@@ -28,6 +28,7 @@ dependencies = [
   "krrood_spatial_math>=26.10.0",
   "cram_viz",
   "llm_reasoner",
+  "llm_reasoner_viz",
   "ipykernel>=7.2.0",
   "lark-parser>=0.12.0",
   "tqdm"
@@ -99,7 +100,8 @@ members = [
   "segmind",
   "domain_models/krrood_spatial_math",
   "cram_viz",
-  "llm_reasoner"
+  "llm_reasoner",
+  "llm_reasoner_viz"
 ]
 
 [tool.uv.sources]
@@ -117,6 +119,7 @@ experiments           = { workspace = true }
 krrood_spatial_math   = { workspace = true }
 cram_viz              = { workspace = true }
 llm_reasoner           = { workspace = true }
+llm_reasoner_viz       = { workspace = true }
 
 [tool.poetry]
 package-mode = false
