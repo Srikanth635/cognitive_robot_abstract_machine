@@ -191,10 +191,9 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:comment "The slot whose filler the choice is measured from, such as the goal a position above which is chosen; absent for a choice measured from nothing in particular."@en .
 
 :hasQuantityKind a owl:ObjectProperty , owl:FunctionalProperty ;
-    rdfs:domain :ParameterDimension ;
     rdfs:range :QuantityKind ;
     rdfs:label "has quantity kind"@en ;
-    rdfs:comment "What kind of quantity the choice sets."@en .
+    rdfs:comment "What kind of quantity something about an action is about, such as the quantity a choice sets, a condition constrains or a change changes."@en .
 
 # %% value partitions
 

@@ -448,7 +448,7 @@ class ParameterDimension(DescriptionEntity):
         ).as_dict(),
     )
     """
-    What kind of quantity the choice sets.
+    What kind of quantity something about an action is about, such as the quantity a choice sets, a condition constrains or a change changes.
     """
 
     relative_to_slot: Optional[FrameSlot] = field(
