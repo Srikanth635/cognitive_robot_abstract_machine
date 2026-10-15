@@ -175,8 +175,21 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   the plan id, database and a `sqlite3` command in the inspector, and counts them in the top bar.
   Checked with the real trial subprocess (a normal pour and one whose motion fails, both kept),
   the real Execute on a scratch copy of a run, and the viewer in a browser. One test against the
-  real store is marked `slow`. Not yet: a switch to turn the recording off, a browser of the NEEMs
-  in the viewer, and recording from `cram-viz-live` demo scripts.
+  real store is marked `slow`. Not yet: a switch to turn the recording off, and recording from
+  `cram-viz-live` demo scripts.
+- The NEEM browser of the viewer, steps 1 and 2 (15 Oct; the screen follows). The viewer opens the
+  shared NEEM database read-only (never changes it; reported as busy while a simulation writes;
+  refused with what it lacks when it is no NEEM database). `GET /api/neems` lists the plans, each
+  joined to the run whose log says it was kept and to how that trial or execution went (`?run=`
+  keeps one run's); `GET /api/neems/<id>` gives one plan as a tree of steps, each with what it was
+  asked to do (`PouringAction`, ...), its values, the things it refers to by the names the world
+  gives them (`bowl.stl`), poses with their frame, and the rows it is kept in. The reader follows
+  the ORM's one-table-per-level inheritance through the foreign keys, so it needs no list of
+  action classes. Facts found on the real database: only the root of a plan has a real status and
+  times (every step below reads `NOT_STARTED`, so the screen must not show a status per step);
+  bytes columns (world states) are left out; a step's references to other steps and to what its
+  execution recorded are left out as bookkeeping. Read a real 33-step plan in 0.01 s (38 KB).
+  Tests use SQL fixtures built from the real tables (`test/llm_reasoner_viz_test/neems`).
 - The viewer, step V6e: a live check. One real resolution with Sonnet 5.5 (the designator
   giving the objects, in `simple_pouring`) through a cram-viz of its own (its own data directory,
   its store a copy of an earlier run's, so no knowledge was generated) and a viewer of its own,

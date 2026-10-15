@@ -8,6 +8,11 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+DAO_SUFFIX = "DAO"
+"""
+What ends the name of every table, after the name of the class it keeps.
+"""
+
 
 class Table(StrEnum):
     """
@@ -34,6 +39,51 @@ class Table(StrEnum):
     The nodes that perform an action.
     """
 
+    EXECUTION_DATA = "ExecutionDataDAO"
+    """
+    What the execution of an action recorded, such as the state of the world before it.
+    """
+
+    ENTITY = "PlanEntityDAO"
+    """
+    The table every kind of node extends, saying which kind each is.
+    """
+
+    DESIGNATOR = "DesignatorDAO"
+    """
+    The table every action and motion extends, holding what the node was asked to do.
+    """
+
+    WORLD_ENTITY = "WorldEntityDAO"
+    """
+    The table every body and annotation of a world extends, naming it.
+    """
+
+    NAME = "PrefixedNameDAO"
+    """
+    The names of the things of a world.
+    """
+
+    SPATIAL = "SpatialTypeDAO"
+    """
+    The table points, orientations and poses extend, saying which frame they are in.
+    """
+
+    POSE = "PoseMappingDAO"
+    """
+    Where something is: a position and an orientation.
+    """
+
+    POINT = "Point3MappingDAO"
+    """
+    A position.
+    """
+
+    QUATERNION = "QuaternionMappingDAO"
+    """
+    An orientation.
+    """
+
 
 class Column(StrEnum):
     """
@@ -58,6 +108,56 @@ class Column(StrEnum):
     CHILD = "_child_id"
     """
     The node below, in an edge.
+    """
+
+    POLYMORPHIC_TYPE = "polymorphic_type"
+    """
+    In the table at the root of a family, the table of the class a row really is.
+    """
+
+    NAME = "name"
+    """
+    What a thing of a world is called.
+    """
+
+    NAME_REFERENCE = "_name_id"
+    """
+    The name of a thing of a world.
+    """
+
+    FRAME = "_reference_frame_id"
+    """
+    The body a position, an orientation or a pose is measured from.
+    """
+
+    POSITION = "_position_id"
+    """
+    The position of a pose.
+    """
+
+    ORIENTATION = "_orientation_id"
+    """
+    The orientation of a pose.
+    """
+
+    X = "x"
+    """
+    The first coordinate of a position, or part of an orientation.
+    """
+
+    Y = "y"
+    """
+    The second coordinate of a position, or part of an orientation.
+    """
+
+    Z = "z"
+    """
+    The third coordinate of a position, or part of an orientation.
+    """
+
+    W = "w"
+    """
+    The fourth part of an orientation.
     """
 
     STATUS = "status"

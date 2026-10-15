@@ -5,7 +5,6 @@ went, read without ever changing the database, and refused when it is not one.
 
 from __future__ import annotations
 
-import sqlite3
 from datetime import datetime
 from pathlib import Path
 
@@ -20,7 +19,7 @@ from llm_reasoner_viz.neems import (
     UnknownNeemSchema,
 )
 
-from .neem_files import write_neem_database
+from .neem_files import Change, being_written, change_database, write_neem_database
 
 # %% where the database is
 
@@ -74,10 +73,7 @@ class TestPlans:
         assert first.seconds == 2.5
 
     def test_a_plan_whose_root_has_not_ended_has_no_duration(self, database):
-        with sqlite3.connect(database.path) as connection:
-            connection.execute(
-                f'update "{Table.NODE}" set end_time = NULL where database_id = 1'
-            )
+        change_database(database.path, Change.END_TIME_CLEARED)
         first, _ = database.plans()
         assert first.ended is None
         assert first.seconds is None
@@ -121,20 +117,15 @@ class TestReadingSafely:
 
     def test_a_database_being_written_is_reported_as_busy(self, tmp_path):
         path = write_neem_database(tmp_path / "neems.sqlite")
-        writer = sqlite3.connect(path, isolation_level=None)
-        try:
-            writer.execute("begin exclusive")
+        with being_written(path):
             with pytest.raises(NeemDatabaseBusy):
                 NeemDatabase(path=path, timeout_seconds=0.1).plans()
-        finally:
-            writer.close()
 
     def test_a_database_that_is_not_one_of_neems_is_refused_with_the_table_it_lacks(
         self, tmp_path
     ):
         path = tmp_path / "other.sqlite"
-        with sqlite3.connect(path) as connection:
-            connection.execute("create table something_else (a integer)")
+        change_database(path, Change.UNRELATED_TABLE)
         with pytest.raises(UnknownNeemSchema) as refused:
             NeemDatabase(path=path).plans()
         assert refused.value.missing == Table.PLAN

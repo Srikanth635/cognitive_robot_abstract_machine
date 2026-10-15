@@ -11,7 +11,7 @@ import pytest
 from typing_extensions import Any, Dict, List
 
 from llm_reasoner_viz.neem_library import NeemLibrary, NeemOrigin
-from llm_reasoner_viz.neems import NeemDatabase
+from llm_reasoner_viz.neems import NeemDatabase, UnknownNeem
 from llm_reasoner_viz.runs import RunLibrary
 from llm_reasoner_viz.vocabulary import KnownEvent, NeemKind
 
@@ -189,3 +189,34 @@ class TestEntries:
         }
         (second,) = [entry for entry in library.entries() if entry.plan.neem == 2]
         assert second.to_json()["origin"] is None
+
+
+# %% one NEEM
+
+
+class TestDetail:
+    def test_a_neem_is_its_entry_with_the_steps_of_its_plan(self, tmp_path):
+        database = database_of(tmp_path)
+        library = library_with(
+            tmp_path,
+            {"run-a": [neem_recorded(110.0, NeemKind.TRIAL, "t-1", database, 1)]},
+        )
+        detail = library.detail(1)
+        (entry,) = [entry for entry in library.entries() if entry.plan.neem == 1]
+        assert detail.entry == entry
+        assert detail.nodes == library.database.nodes(1)
+
+    def test_a_neem_no_log_names_has_no_origin(self, tmp_path):
+        assert library_with(tmp_path, {}).detail(2).entry.origin is None
+
+    def test_a_neem_the_database_does_not_hold_is_unknown(self, tmp_path):
+        with pytest.raises(UnknownNeem):
+            library_with(tmp_path, {}).detail(99)
+
+    def test_a_neem_is_written_as_data_for_the_page(self, tmp_path):
+        library = library_with(tmp_path, {})
+        detail = library.detail(1)
+        assert detail.to_json() == {
+            "neem": detail.entry.to_json(),
+            "plan": [node.to_json() for node in detail.nodes],
+        }
