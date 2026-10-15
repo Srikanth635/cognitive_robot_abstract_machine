@@ -190,6 +190,13 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   bytes columns (world states) are left out; a step's references to other steps and to what its
   execution recorded are left out as bookkeeping. Read a real 33-step plan in 0.01 s (38 KB).
   Tests use SQL fixtures built from the real tables (`test/llm_reasoner_viz_test/neems`).
+  Step 3, the *neems* button (`neems.mjs` with node tests, `neems_view.mjs`): there only when
+  the open run saved NEEMs; its list starts with that run's NEEMs and widens to all of them,
+  filtered to trials or executions, each row saying how it ended and going to the bar of its
+  trial or execution in the run that saved it. Checked in a browser against a scratch database
+  (a trial and an execution, in two runs) and the real one: found and fixed a menu that closed
+  when a button in it was clicked (the list is redrawn, so the clicked element had left it
+  before the outside-click check ran), and the address now keeps the span chosen by a row.
 - The viewer, step V6e: a live check. One real resolution with Sonnet 5.5 (the designator
   giving the objects, in `simple_pouring`) through a cram-viz of its own (its own data directory,
   its store a copy of an earlier run's, so no knowledge was generated) and a viewer of its own,

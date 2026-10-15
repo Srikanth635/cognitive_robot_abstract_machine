@@ -51,7 +51,12 @@ modules with no build step and no library loaded from elsewhere.
   NEEM in a database (see cram_viz's README). A bar that has one carries a dot; the inspector
   of the trial or the execution says which plan it is, where it is kept and how long saving it
   took, with the `sqlite3` command that reads it, or why it could not be kept; the top bar
-  counts the NEEMs saved. The viewer reports them; it does not open the database.
+  counts the NEEMs saved. The *neems* button of the top bar, there only when the run saved
+  some, opens a list of them: the run's own, or with *all runs* every NEEM in the database,
+  filtered to trials or executions, each with how it ended (a pour landed or missed, an
+  execution finished or failed), the size and length of its plan and when it was saved. A
+  row goes to the bar of the trial or execution it is the plan of, in the run that saved it.
+  A NEEM that no log names is listed as of unknown origin.
 - **Attempts** (bottom): the attempts of the resolution the chosen span belongs to (the one
   asked for until something else is chosen), a card each: what it chose slot by slot, why
   the model chose it, the pour that was tried and how it ended, and what it was rejected
@@ -112,13 +117,14 @@ src/llm_reasoner_viz/
         replay.mjs      what a run looked like at any moment, and how a replay moves
         filters.mjs     picking out the spans that say some words or went wrong
         links.mjs       the address that opens a run in cram-viz
+        neems.mjs       where to ask for the NEEMs, which are shown and how each is worded
         attempts.mjs    the cards of the attempts of a resolution
         pour.mjs        the plan of where pours ended
         layout.mjs      spans packed into rows of the timeline
         inspector.mjs   what the inspector shows of a span
         map.mjs         the components, their connections and what each is doing
         *_view.mjs      the elements: map, timeline, inspector, events, replay, filters,
-                        attempts, plan of the pours
+                        attempts, plan of the pours, the NEEMs button and list
         app.mjs         follows a run and keeps the views in step
 ```
 

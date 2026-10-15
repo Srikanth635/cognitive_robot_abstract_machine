@@ -83,6 +83,11 @@ const NEEM_SPAN_PREFIX = Object.freeze({
   [NEEM_KIND.EXECUTION]: 'execution:',
 });
 
+// The identifier of the span of the trial or the execution a NEEM is the plan of.
+export function neemSpanId(kind, episode) {
+  return NEEM_SPAN_PREFIX[kind] + episode;
+}
+
 // The keys of the outcome of a pour tried in the simulation. Lengths are in metres, as seen
 // from the robot's base: ahead along its heading, right to its right.
 export const OUTCOME = Object.freeze({
@@ -482,7 +487,7 @@ export class RunModel {
   // %% what the simulation performed, kept as a NEEM
 
   neemSpan(event) {
-    return this.byId.get(NEEM_SPAN_PREFIX[event.kind] + event.episode);
+    return this.byId.get(neemSpanId(event.kind, event.episode));
   }
 
   neemRecorded(event) {
