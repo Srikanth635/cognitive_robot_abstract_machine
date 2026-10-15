@@ -15,28 +15,12 @@
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.1.0> ;
     owl:versionInfo "0.1.0" .
 
-frame:AffordanceCondition a owl:Class ;
-    rdfs:label "affordance condition"@en ;
-    rdfs:comment "A condition that the filler of a slot affords something, such as the ability to hold a substance."@en ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty frame:conditionAffords ;
-            owl:someValuesFrom aicor:Affordance ],
-        frame:SlotCondition .
-
 frame:FeatureCondition a owl:Class ;
     rdfs:label "feature condition"@en ;
     rdfs:comment "A condition that the filler of a slot has a part that fills a part slot of the frame, such as the source having a lip or the goal having an opening."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty frame:conditionRequiresPart ;
             owl:someValuesFrom core:PartSlot ],
-        frame:SlotCondition .
-
-frame:PostureCondition a owl:Class ;
-    rdfs:label "posture condition"@en ;
-    rdfs:comment "A condition on a quantity of the filler of a slot, such as its orientation being upright."@en ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty frame:conditionConcernsQuantity ;
-            owl:someValuesFrom core:QuantityKind ],
         frame:SlotCondition .
 
 frame:StateCondition a owl:Class ;
@@ -59,6 +43,19 @@ frame:changesQuantityKind a owl:ObjectProperty ;
     rdfs:comment "The kind of quantity of the affected filler that the consequence changes."@en ;
     rdfs:domain frame:AdditionalConsequence ;
     rdfs:range core:QuantityKind .
+
+frame:conditionAffordsAction a owl:ObjectProperty ;
+    rdfs:label "condition affords action"@en ;
+    rdfs:comment "A kind of action the filler must afford for the condition to hold, such as aicor:Grasping or aicor:Tilting."@en ;
+    rdfs:domain frame:AffordanceCondition ;
+    rdfs:range aicor:ActionEventType ;
+    rdfs:subPropertyOf aicor:affordsAction .
+
+frame:conditionAffordsState a owl:ObjectProperty ;
+    rdfs:label "condition affords state"@en ;
+    rdfs:comment "A state the filler must be able to be brought into for the condition to hold, such as aicor:ContainedState for a goal that can contain the substance."@en ;
+    rdfs:domain frame:AffordanceCondition ;
+    rdfs:range aicor:DiscreteMode .
 
 frame:conditionInvolvesSlot a owl:ObjectProperty ;
     rdfs:label "condition involves slot"@en ;
@@ -140,11 +137,16 @@ frame:requiresBeforeStart a owl:ObjectProperty ;
     rdfs:range frame:SlotCondition ;
     rdfs:subPropertyOf dul:isRelatedToDescription .
 
-frame:conditionAffords a owl:ObjectProperty ;
-    rdfs:label "condition affords"@en ;
-    rdfs:comment "What the filler must afford for the condition to hold."@en ;
-    rdfs:domain frame:SlotCondition ;
-    rdfs:range aicor:Affordance .
+frame:PostureCondition a owl:Class ;
+    rdfs:label "posture condition"@en ;
+    rdfs:comment "A condition that the filler of a slot stands in a given posture, such as the source standing upright before pouring."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:hasValue core:Orientation ;
+            owl:onProperty frame:conditionConcernsQuantity ],
+        [ a owl:Restriction ;
+            owl:onProperty frame:conditionRequiresPosture ;
+            owl:someValuesFrom frame:Posture ],
+        frame:SlotCondition .
 
 frame:conditionConcernsQuantity a owl:ObjectProperty ;
     rdfs:label "condition concerns quantity"@en ;
@@ -172,6 +174,13 @@ frame:conditionRequiresPart a owl:ObjectProperty ;
     rdfs:domain frame:SlotCondition ;
     rdfs:range core:PartSlot ;
     rdfs:subPropertyOf dul:usesConcept .
+
+frame:conditionRequiresPosture a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "condition requires posture"@en ;
+    rdfs:comment "The posture the filler must stand in for the condition to hold."@en ;
+    rdfs:domain frame:PostureCondition ;
+    rdfs:range frame:Posture .
 
 frame:defaultCondition a owl:ObjectProperty ;
     rdfs:label "default condition"@en ;
@@ -210,6 +219,11 @@ frame:AdditionalConsequence a owl:Class ;
             owl:someValuesFrom core:FrameSlot ],
         core:Consequence .
 
+frame:AffordanceCondition a owl:Class ;
+    rdfs:label "affordance condition"@en ;
+    rdfs:comment "A condition that the filler of a slot affords an action, such as the source being graspable or tiltable, or can be brought into a state, possibly with the filler of another slot, such as the goal being able to contain the substance."@en ;
+    rdfs:subClassOf frame:SlotCondition .
+
 frame:Decreases a frame:ChangeDirection,
         owl:NamedIndividual ;
     rdfs:label "decreases"@en ;
@@ -229,6 +243,21 @@ frame:Increases a frame:ChangeDirection,
         owl:NamedIndividual ;
     rdfs:label "increases"@en ;
     rdfs:comment "The quantity becomes larger."@en .
+
+frame:Inverted a frame:Posture,
+        owl:NamedIndividual ;
+    rdfs:label "inverted"@en ;
+    rdfs:comment "Upside down, with an opening facing down."@en .
+
+frame:Tilted a frame:Posture,
+        owl:NamedIndividual ;
+    rdfs:label "tilted"@en ;
+    rdfs:comment "Leaning away from its upright position, short of upside down."@en .
+
+frame:Upright a frame:Posture,
+        owl:NamedIndividual ;
+    rdfs:label "upright"@en ;
+    rdfs:comment "Standing in its usual position, with an opening facing up."@en .
 
 frame:ChangeDirection a owl:Class ;
     rdfs:label "change direction"@en ;
@@ -274,6 +303,13 @@ frame:ActionDefault a owl:Class ;
             owl:someValuesFrom frame:SlotCondition ],
         dul:Description .
 
+frame:Posture a owl:Class ;
+    rdfs:label "posture"@en ;
+    rdfs:comment "How a thing stands relative to the vertical, as a qualitative value of its orientation."@en ;
+    rdfs:subClassOf dul:Region ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( frame:Upright frame:Tilted frame:Inverted ) ] .
+
 frame:SlotCondition a owl:Class ;
     rdfs:label "slot condition"@en ;
     rdfs:comment "A condition a world can check about the filler of a slot of an action frame, such as having a part, affording something or being in a state, rather than membership of a class."@en ;
@@ -285,6 +321,9 @@ frame:SlotCondition a owl:Class ;
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( frame:Increases frame:Decreases ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( frame:Upright frame:Tilted frame:Inverted ) .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( frame:Holds frame:DoesNotHold ) .

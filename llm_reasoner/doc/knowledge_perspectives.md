@@ -285,7 +285,8 @@ is not worth its generation cost.
    **Proposed** 2026-10-15, awaiting review: `vocabulary_proposal/`, run with Sonnet 5.5
    for pouring; the first answer passed every rule and HermiT ($0.31). The proposal is
    `ontologies/action_perspectives/proposals/action-frame.ttl`, beside the record of how
-   it was made; it is registered as a module once reviewed.
+   it was made; it is registered as a module once reviewed. The review added postures
+   and affordances named by CRAM-AICOR actions and states, by hand (`status.md`).
 3. Hypotheses holding the core and the action frame; `knowledge_overview` answering with
    the core.
 4. The roles-to-slots mapping for `PouringAction`, and slot entries naming their roles.
