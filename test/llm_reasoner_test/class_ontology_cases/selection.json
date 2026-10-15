@@ -1,0 +1,7 @@
+{
+  "namespace": "http://www.example.org/ont/plans#",
+  "packages": ["plans.actions", "world.annotations"],
+  "roots": ["plans.actions.base.ActionDescription", "world.annotations.SemanticAnnotation"],
+  "expanded_packages": ["plans.datastructures"],
+  "ignored_bases": ["plans.designator.Designator"]
+}

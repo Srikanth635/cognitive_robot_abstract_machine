@@ -1,0 +1,16 @@
+{
+  "namespace": "http://www.ease-crc.org/ont/llm_reasoner/cram-classes#",
+  "packages": [
+    "coraplex.robot_plans",
+    "coraplex.datastructures",
+    "semantic_digital_twin.semantic_annotations",
+    "semantic_digital_twin.robots"
+  ],
+  "roots": [
+    "coraplex.robot_plans.actions.base.ActionDescription",
+    "coraplex.robot_plans.motions.base.BaseMotion",
+    "semantic_digital_twin.world_description.world_entity.SemanticAnnotation"
+  ],
+  "expanded_packages": ["coraplex.datastructures"],
+  "ignored_bases": ["coraplex.plans.designator.Designator"]
+}

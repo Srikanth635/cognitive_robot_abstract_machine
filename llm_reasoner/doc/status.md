@@ -46,6 +46,28 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   and imported when the source is made. With the robot predicates' module named, the
   simple_pouring world with its robot annotated offers 14 predicates instead of 8, the
   six robot ones answering through the tools.
+- The ontology of a code base (2026-10-15): `world/class_ontology/` writes the classes a
+  selection file names as OWL, read from the live classes as the world injector reads them
+  (`DocumentedClass`, which now also gives whole class and field docstrings, not only their
+  first lines): each class with its documentation and the described classes it specialises
+  (mixins left out, their fields kept), each field as a property scoped to the class that
+  adds it, with its documentation, type (a plain value, an individual of a class, a member of
+  an enumeration, optional, several), default and the type as written, and each enumeration
+  with its members. A type variable reads as what the class's generic bases fix it to, else
+  its bound. It names no package: `knowledge/ontologies/cram_classes/cram-classes.json`
+  selects CRAM's action and motion designators, semantic annotations and robots, with
+  coraplex's data structures in full and `Designator`'s bookkeeping left out, and
+  `cram-classes.ttl` is the result (392 classes, 13 enumerations, 300 KB; the hand-made
+  `cram_tbox.ttl` was 9.8 MB). It replaces `cram_tbox.ttl` as the designator side of the
+  knowledge perspectives' roles-to-slots mapping (`knowledge_perspectives.md` §4.1). 29
+  fields keep only their written type: unions of several classes, a type variable nothing
+  fixes, `Type[...]`. One coraplex module cannot be imported (`composite/searching.py`) and
+  is named in the file. A test in `test/experiments_test/llm_reasoner_cram_classes_test`
+  fails when the committed file no longer matches the code; regenerate with
+  `python -m llm_reasoner.world.class_ontology` and the two paths. Writing it twice gives
+  the same text, and it is the same whatever else the process imported (the test found
+  that krrood's resolved hints differ by process, so the generator works type variables
+  out itself and records the type as written in the source).
 
 ### Resolver
 - Candidates described by walking their fields (`4e534d505`); tests, static situation
