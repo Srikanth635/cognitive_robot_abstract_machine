@@ -332,6 +332,14 @@ class TestChecks:
         (asked,) = consistency.asked
         assert (FRAME_PERSPECTIVE.FillerExpectation, RDF.type, OWL.Class) in asked
 
+    def test_the_reasoner_is_given_no_import_to_fetch_since_it_has_the_files(
+        self, catalogue, answer
+    ):
+        consistency = RecordedConsistency(consistent=True)
+        checker(catalogue, consistency).problems(VocabularyProposal.from_json(answer))
+        (asked,) = consistency.asked
+        assert list(asked.triples((None, OWL.imports, None))) == []
+
     def test_the_reasoner_is_not_asked_about_a_proposal_that_already_broke_a_rule(
         self, catalogue, answer
     ):
