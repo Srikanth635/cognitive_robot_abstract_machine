@@ -15,14 +15,11 @@ from krrood.class_diagrams.class_diagram import WrappedClass
 from typing_extensions import Any, Optional
 
 from llm_reasoner.attribute_docstrings import attribute_docstrings
-from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
-    core,
-    gaze,
-    object_dynamics,
-    pouring,
-    prehension,
+from llm_reasoner.knowledge.ontologies import (
+    KNOWLEDGE_ONTOLOGY_MODULES,
+    OntologyModuleFile,
 )
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
     ConceptReference,
@@ -35,12 +32,9 @@ from llm_reasoner.knowledge.ontologies.terms import (
     python_attribute_name,
 )
 
-VOCABULARY_MODULES: dict[PredictiveManipulationOntologyFile, ModuleType] = {
-    PredictiveManipulationOntologyFile.CORE: core,
-    PredictiveManipulationOntologyFile.OBJECT_DYNAMICS: object_dynamics,
-    PredictiveManipulationOntologyFile.PREHENSION: prehension,
-    PredictiveManipulationOntologyFile.POURING: pouring,
-    PredictiveManipulationOntologyFile.GAZE: gaze,
+VOCABULARY_MODULES: dict[OntologyModuleFile, ModuleType] = {
+    module_file: module_file.vocabulary_module
+    for module_file in KNOWLEDGE_ONTOLOGY_MODULES
 }
 """
 The generated vocabulary module of every ontology module.
@@ -54,7 +48,7 @@ class Vocabulary:
     for.
     """
 
-    modules: dict[PredictiveManipulationOntologyFile, ModuleType] = field(
+    modules: dict[OntologyModuleFile, ModuleType] = field(
         default_factory=lambda: dict(VOCABULARY_MODULES)
     )
     """
@@ -70,6 +64,20 @@ class Vocabulary:
             if iri.startswith(module_file.namespace):
                 return module
         return None
+
+    def module_file_of(self, python_type: type) -> Optional[OntologyModuleFile]:
+        """
+        :return: The ontology module a generated class or enumeration stands for a term
+            of, ``None`` for a type generated from no module.
+        """
+        return next(
+            (
+                module_file
+                for module_file, module in self.modules.items()
+                if python_type.__module__ == module.__name__
+            ),
+            None,
+        )
 
     def definition_named(self, iri: str) -> Optional[type]:
         """

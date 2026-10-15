@@ -67,7 +67,7 @@ class HypothesisRecorder:
                 if self.consistency_checked
                 else ConsistencyVerdict.NOT_CHECKED
             ),
-            module_versions=current_module_versions(),
+            module_versions=current_module_versions(request.module_files),
         )
         if self.store is not None:
             namespace = Citation.namespace_of(record.record_id)

@@ -21,7 +21,6 @@ from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.ontologies.terms import is_inferred
 from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
-from llm_reasoner.knowledge.ontologies import PREDICTIVE_MANIPULATION_NAMESPACE_ROOT
 from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
@@ -268,7 +267,7 @@ class GraphReader:
         stated = [
             definition
             for type_iri in graph.objects(subject, RDF.type)
-            if str(type_iri).startswith(PREDICTIVE_MANIPULATION_NAMESPACE_ROOT)
+            if self.vocabulary.module_of(str(type_iri)) is not None
             for definition in [self.vocabulary.definition_named(str(type_iri))]
             if isinstance(definition, type)
             and issubclass(definition, DescriptionEntity)

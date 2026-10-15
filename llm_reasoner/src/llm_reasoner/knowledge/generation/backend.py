@@ -143,7 +143,14 @@ class HypothesisBackend(GenerativeBackend):
             return
         dialogue = GenerationDialogue(
             client=self.client,
-            assessor=HypothesisAssessor(suite=self.suite, consistency=self.consistency),
+            assessor=HypothesisAssessor(
+                suite=self.suite,
+                consistency=(
+                    None
+                    if self.consistency is None
+                    else self.consistency.covering(request.module_files)
+                ),
+            ),
             prompt=self.prompt,
             max_repairs=self.max_repairs,
             linked_terms=self.linked_terms,

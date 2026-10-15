@@ -17,7 +17,9 @@ from enum import StrEnum
 
 from rdflib import Graph
 from rdflib.term import Node
-from typing_extensions import Sequence
+from typing_extensions import Iterable, Sequence
+
+from llm_reasoner.knowledge.ontologies import OntologyModuleFile
 
 
 class OpenWorldCheck(StrEnum):
@@ -43,6 +45,14 @@ class ConsistencyCheck(ABC):
         """
         :return: Whether the hypothesis, together with the ontology, is consistent.
         """
+
+    def covering(self, module_files: Iterable[OntologyModuleFile]) -> ConsistencyCheck:
+        """
+        :param module_files: The ontology modules a hypothesis's vocabulary uses.
+        :return: A check that knows those modules too; this check itself when it judges
+            by means other than the modules' files.
+        """
+        return self
 
 
 @dataclass

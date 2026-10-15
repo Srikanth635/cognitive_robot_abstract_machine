@@ -7,23 +7,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import StrEnum
-from pathlib import Path
 
-from llm_reasoner.knowledge.ontologies import (
-    ACTION_PERSPECTIVES_NAMESPACE_ROOT,
-    ACTION_PERSPECTIVES_ONTOLOGY_DIRECTORY,
-    OntologyModuleFile,
-)
-
-DESCRIPTIONS_DIRECTORY = Path(__file__).parent / "perspectives"
-"""
-Where the description of each perspective is kept, one file each.
-"""
-
-DESCRIPTION_SUFFIX = ".md"
-"""
-The suffix of a perspective's description file.
-"""
+from llm_reasoner.knowledge.ontologies import ActionPerspectiveModule
 
 TURTLE_SUFFIX = ".ttl"
 """
@@ -37,30 +22,16 @@ Where a new word begins in a name written in capitals, such as ``FillerExpectati
 
 
 @dataclass(frozen=True)
-class ProposedModuleFile(OntologyModuleFile):
+class ProposedModuleFile(ActionPerspectiveModule):
     """
     The module file of a perspective whose vocabulary is proposed, which is not yet one
-    of the action perspective modules.
+    of the registered action perspective modules.
     """
 
     value: str
     """
     The file's name.
     """
-
-    @property
-    def directory(self) -> Path:
-        """
-        The directory of the action perspective modules.
-        """
-        return ACTION_PERSPECTIVES_ONTOLOGY_DIRECTORY
-
-    @property
-    def namespace_root(self) -> str:
-        """
-        The IRI prefix of the action perspective modules.
-        """
-        return ACTION_PERSPECTIVES_NAMESPACE_ROOT
 
 
 class Perspective(StrEnum):
@@ -79,11 +50,7 @@ class Perspective(StrEnum):
         """
         What the perspective covers, as the model is told.
         """
-        return (
-            (DESCRIPTIONS_DIRECTORY / (self.value + DESCRIPTION_SUFFIX))
-            .read_text()
-            .strip()
-        )
+        return self.module_file.description
 
     @property
     def module_file(self) -> ProposedModuleFile:

@@ -11,9 +11,10 @@ from enum import Enum, StrEnum
 
 from krrood.class_diagrams.class_diagram import WrappedClass
 from krrood.utils import recursive_subclasses
-from typing_extensions import Any
+from typing_extensions import Any, Optional
 
 from llm_reasoner.attribute_docstrings import attribute_docstrings
+from llm_reasoner.knowledge.ontologies import OntologyModuleFile
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.terms import (
     is_inferred,
@@ -207,17 +208,18 @@ class GenerationSchema:
         """
         :return: The schema of every type reachable from the root through fields,
             including the component fields a model does not fill, together with every
-            subclass of those types.
+            subclass of those types, as far as the root's module may use them.
         """
         vocabulary = Vocabulary()
+        scope = TypeScope.of_root(root)
         schema = cls(root=root)
         frontier = [root]
         while frontier:
             current = frontier.pop()
-            for candidate in generated_types(current):
+            for candidate in scope.generated_types(current):
                 if candidate.__name__ in schema.types:
                     continue
-                type_schema = type_schema_for(candidate)
+                type_schema = type_schema_for(candidate, scope)
                 schema.types[candidate.__name__] = type_schema
                 frontier.extend(
                     field_schema.value_type
@@ -226,6 +228,30 @@ class GenerationSchema:
                 )
                 frontier.extend(vocabulary.component_fields(candidate).values())
         return schema
+
+    def module_files(self) -> set[OntologyModuleFile]:
+        """
+        :return: The ontology modules declaring the types and enumerations an answer may
+            use.
+        """
+        vocabulary = Vocabulary()
+        used_types = {
+            used
+            for type_schema in self.types.values()
+            for used in (
+                type_schema.python_type,
+                *(
+                    field_schema.value_type
+                    for field_schema in type_schema.fields
+                    if field_schema.kind == FieldKind.ENUMERATION
+                ),
+            )
+        }
+        return {
+            module_file
+            for module_file in map(vocabulary.module_file_of, used_types)
+            if module_file is not None
+        }
 
     def get(self, name: str) -> TypeSchema | None:
         """
@@ -265,7 +291,68 @@ class GenerationSchema:
 # %% reading the generated classes
 
 
-def type_schema_for(python_type: type[DescriptionEntity]) -> TypeSchema:
+@dataclass(frozen=True)
+class TypeScope:
+    """
+    The generated classes a hypothesis may use: those of the modules its root's module
+    may be used with.
+    """
+
+    usable_modules: Optional[frozenset[OntologyModuleFile]] = None
+    """
+    The modules whose classes may be used; any module's when ``None``.
+    """
+
+    vocabulary: Vocabulary = field(default_factory=Vocabulary, compare=False)
+    """
+    The generated vocabulary, which knows the module of each class.
+    """
+
+    @classmethod
+    def of_root(cls, root: type[DescriptionEntity]) -> TypeScope:
+        """
+        :return: The scope of a hypothesis rooted in a class; unrestricted for a class
+            generated from no registered module.
+        """
+        vocabulary = Vocabulary()
+        module_file = vocabulary.module_file_of(root)
+        return cls(
+            usable_modules=(
+                None if module_file is None else frozenset(module_file.usable_modules)
+            ),
+            vocabulary=vocabulary,
+        )
+
+    def admits(self, python_type: type) -> bool:
+        """
+        :return: Whether a hypothesis in this scope may use the class.
+        """
+        return (
+            self.usable_modules is None
+            or self.vocabulary.module_file_of(python_type) in self.usable_modules
+        )
+
+    def generated_types(
+        self, base: type[DescriptionEntity]
+    ) -> list[type[DescriptionEntity]]:
+        """
+        :return: The generated classes in scope that are the base or specialise it, each
+            once, in name order.
+        """
+        return [
+            candidate for candidate in generated_types(base) if self.admits(candidate)
+        ]
+
+
+UNRESTRICTED = TypeScope()
+"""
+The scope admitting every generated class.
+"""
+
+
+def type_schema_for(
+    python_type: type[DescriptionEntity], scope: TypeScope = UNRESTRICTED
+) -> TypeSchema:
     """
     :return: The schema of one generated class, read through krrood.
     """
@@ -291,6 +378,7 @@ def type_schema_for(python_type: type[DescriptionEntity]) -> TypeSchema:
                 docstrings.get(name, ""),
                 vocabulary.value_type_of(python_type, name, wrapped.type_endpoint),
                 many,
+                scope,
             )
         )
     return TypeSchema(
@@ -313,7 +401,11 @@ def generated_types(base: type[DescriptionEntity]) -> list[type[DescriptionEntit
 
 
 def field_schema_for(
-    name: str, description: str, value_type: type, many: bool
+    name: str,
+    description: str,
+    value_type: type,
+    many: bool,
+    scope: TypeScope = UNRESTRICTED,
 ) -> FieldSchema:
     """
     :return: The schema of one field, from the value type krrood resolves for it.
@@ -326,7 +418,7 @@ def field_schema_for(
             many=many,
             value_type=value_type,
             accepted_types=tuple(
-                accepted.__name__ for accepted in generated_types(value_type)
+                accepted.__name__ for accepted in scope.generated_types(value_type)
             ),
         )
     if isinstance(value_type, type) and issubclass(value_type, Enum):

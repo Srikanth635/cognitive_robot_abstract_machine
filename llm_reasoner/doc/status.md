@@ -345,6 +345,17 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   core's Python class; and its `ConditionPolarity` became `SlotConditionPolarity`, the
   Flanagan core having a class of that name. HermiT finds the frame consistent with the
   core, CRAM-AICOR and DUL and every class satisfiable. Nothing uses it yet (phase 2).
+- Knowledge in the action perspective vocabularies, step 1 (2026-10-15, phase 2 of
+  `knowledge_perspectives.md`, §11): the pipeline generates, checks, stores and reads a
+  core hypothesis, `the(PouringFrame)(frames_action=aicor:Pouring)`, as it does a
+  Flanagan one. `Vocabulary` and the RDF reader cover both families; each family states
+  the modules a hypothesis rooted in it may use, and the schema keeps to them, both for
+  the types offered and for the types a field accepts; a hypothesis's open-world check
+  covers the modules it uses, and its record keeps only their versions, so stored
+  Flanagan records stay valid; the prompt's role and content rules come from the root's
+  module (`generation/briefs.py`), an action perspective's from its description beside the
+  modules. The Flanagan prompts are byte-identical. Tested with a scripted answer, also
+  admitted by HermiT against the real CRAM-AICOR and DUL.
 
 ## 3. Live testing
 

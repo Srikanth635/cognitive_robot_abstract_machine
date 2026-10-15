@@ -15,6 +15,7 @@ from typing_extensions import Any, Callable, Dict, List, Mapping, Sequence
 from llm_reasoner.knowledge.acceptance.derived import described
 from llm_reasoner.knowledge.acceptance.rules import Violation
 from llm_reasoner.knowledge.acceptance.shapes import StructureShape, StructureShapes
+from llm_reasoner.knowledge.generation.briefs import GenerationBrief
 from llm_reasoner.knowledge.generation.schema import (
     AnswerKey,
     FieldKind,
@@ -113,14 +114,6 @@ INPUT_MEANINGS = {
 What each section of a generation's prompts means, in the order they may appear.
 """
 
-ROLE = (
-    "Describe how a manipulation action is organised, as one structure of typed "
-    "fragments drawn from an ontology of predictive manipulation."
-)
-"""
-What the model is asked to do.
-"""
-
 # %% rules
 
 
@@ -129,9 +122,6 @@ class GenerationRuleName(StrEnum):
     The rules a generation's answer follows, each named for what it governs.
     """
 
-    CONTENT = "content"
-    ROLES = "roles"
-    QUANTITIES = "quantities"
     ROOT = "root"
     ANSWER_FORMAT = "answer_format"
     FRAGMENT_KEYS = "fragment_keys"
@@ -214,26 +204,9 @@ The forms a concept field's value takes.
 def generation_rules(root: str) -> List[PromptRule]:
     """
     :param root: The name of the type generated.
-    :return: Every rule a generation's answer follows.
+    :return: Every rule about the form of a generation's answer.
     """
     return [
-        PromptRule(
-            GenerationRuleName.CONTENT,
-            "describe the phases of the action, the subgoal each phase pursues and the "
-            "events that end it, the participants by their roles, the forces and "
-            "conditions involved, what the controller predicts at each event, how it "
-            "compares and corrects, and the quantities.",
-        ),
-        PromptRule(
-            GenerationRuleName.ROLES,
-            'participants are roles such as "the source container", never particular '
-            "objects.",
-        ),
-        PromptRule(
-            GenerationRuleName.QUANTITIES,
-            "quantities are ranges with units, never single measurements you have not "
-            "made.",
-        ),
         PromptRule(
             GenerationRuleName.ROOT,
             f"produce exactly one fragment of type {root}, with the fragments that "
@@ -408,9 +381,10 @@ class GenerationPrompt:
             stays the same for every attempt and every instruction and can be cached.
         """
         root = schema.root.__name__
+        brief = GenerationBrief.for_root(schema.root)
         return render_blocks(
             [
-                PromptBlock(section=GenerationSection.ROLE, body=ROLE),
+                PromptBlock(section=GenerationSection.ROLE, body=brief.role),
                 PromptBlock(
                     section=GenerationSection.INPUTS,
                     body="\n".join(
@@ -420,7 +394,10 @@ class GenerationPrompt:
                 ),
                 PromptBlock(
                     section=GenerationSection.RULES,
-                    body="\n".join(rule.render() for rule in generation_rules(root)),
+                    body="\n".join(
+                        rule.render()
+                        for rule in (*brief.rules, *generation_rules(root))
+                    ),
                 ),
                 PromptBlock(
                     section=GenerationSection.TYPES,

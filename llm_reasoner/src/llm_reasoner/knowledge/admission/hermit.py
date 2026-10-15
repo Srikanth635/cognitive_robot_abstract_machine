@@ -10,17 +10,21 @@ from __future__ import annotations
 import importlib.util
 import subprocess
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from functools import cached_property
 from pathlib import Path
 
 from rdflib import OWL, Graph
-from typing_extensions import Optional, Sequence
+from typing_extensions import Iterable, Optional, Sequence
 
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.ontologies import (
+    KNOWLEDGE_ONTOLOGY_MODULES,
+    OntologyModuleFile,
+    PredictiveManipulationOntologyFile,
+)
 from llm_reasoner.knowledge.ontologies.linked import OntologyFiles
 
 # %% constants
@@ -129,6 +133,19 @@ class HermitCheck(ConsistencyCheck):
                 *linked.paths,
             ]
         )
+
+    def covering(self, module_files: Iterable[OntologyModuleFile]) -> HermitCheck:
+        """
+        :return: A check whose background also holds the files of the given modules it
+            lacks, in the order the modules are registered.
+        """
+        wanted = set(module_files)
+        missing = [
+            module_file.path
+            for module_file in KNOWLEDGE_ONTOLOGY_MODULES
+            if module_file in wanted and module_file.path not in self.background_files
+        ]
+        return replace(self, background_files=[*self.background_files, *missing])
 
     @staticmethod
     def shipped_directory() -> Optional[Path]:
