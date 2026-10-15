@@ -464,7 +464,8 @@ vocabulary is proposed from too.
 4. The resolver consulting the core and the offered perspectives beside Flanagan.
    **Done** 2026-10-15, off by default.
 5. Live with Sonnet 5.5: the core and the frame for pouring, the cost reported, the
-   knowledge reviewed.
+   knowledge reviewed. **Done** 2026-10-15: both admitted on the first answer and found
+   consistent by HermiT, $0.065 together (`status.md`).
 
 ## Sources
 
