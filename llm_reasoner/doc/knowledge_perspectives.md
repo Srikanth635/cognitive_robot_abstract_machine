@@ -353,6 +353,97 @@ compatible) and kept as a file in the repository (D9).
    action concept; they would be proposed in our module, built from the primitives it has
    (`Reaching`, `Grasping`, `Lifting`; `PlacementTarget`).
 
+## 11. Phase 2 design (agreed 2026-10-15)
+
+Decided: the core once with each perspective on top (§11.2); consulted beside the
+Flanagan hypothesis (§11.6); one core and one hypothesis per perspective for each action
+concept, with no situation features, until phase 4 shows a need for them.
+
+### 11.1 What the pipeline already does for any vocabulary
+
+| Stage | Generic | Tied to the Flanagan modules |
+|---|---|---|
+| Generation | The schema walks every type reachable from the root, with subclasses; decoding, patches and repair | The role and the content rule of the prompt describe predictive manipulation (phases, events, forces) |
+| Acceptance | `RestrictionsHold`, `RangesHold` | `ShapesHold` and `ComponentsDeclared` apply only to Flanagan structures, so they find nothing to check elsewhere |
+| Vocabulary lookup | | `Vocabulary` (IRI → generated class) knows only the Flanagan modules |
+| Admission | HermiT, contradiction finding | `HermitCheck.from_environment` loads only the Flanagan modules |
+| Store | Key: root type and fixed values | The key's module versions are those of every Flanagan module |
+| Reading | `find_fragments`, `describe_fragment` | `HypothesisView.root` and `knowledge_overview` expect a phase structure |
+| Resolver | | A designator maps to one Flanagan structure; a consultation serves one record, and the tools read one record |
+
+### 11.2 Hypotheses: the core once, each perspective on top
+
+```
+core hypothesis          the(PouringFrame)(frames_action=aicor:Pouring)
+  PouringFrame, its slots and parts, objective, consequences, parameter dimensions
+        ▲ stereotype_of (a stored fragment, cited)
+frame hypothesis         the(FrameStereotype)(stereotype_of=<core frame>)
+  FrameStereotype, slot expectations, conditions, defaults, preconditions, rationales
+```
+
+- The **core hypothesis** is generated once per action and keyed as today.
+- A **perspective hypothesis** is generated *given* a stored core hypothesis: the model
+  is shown the core's fragments, refers to them by their ids and writes only the
+  perspective's fragments. It is keyed by its root type and the core frame it cites, so
+  it belongs to that core hypothesis.
+- A consultation reads the core and any subset of its perspectives. Every perspective
+  talks about the same slots, the core is paid for once, and phase 4 compares
+  consultations that differ only in the perspective.
+
+New: a fixed value that is a stored fragment. The request names it by its citation; the
+prompt shows the given fragments; the checks see the given and the new fragments
+together; the stored Turtle refers to the other record's IRIs, and the knowledge graph
+reads them back as the same objects.
+
+Not proposed: one hypothesis holding the core and the frame. It needs nothing new, but
+the core would be regenerated for every set of perspectives, so slots differ between
+them, and the answer grows with each perspective.
+
+### 11.3 The prompt's content per root
+
+The role and the content rule come from the root's module: the Flanagan text for a
+phase structure; for the core, a text describing an action's frame (kept as a file); for
+a perspective, its description (`perspectives/action-frame.md`), the text its vocabulary
+was proposed from.
+
+### 11.4 Lookup, admission and the store key
+
+- `Vocabulary` covers every registered module, both families.
+- The modules a hypothesis uses are those declaring the types its schema reaches. HermiT
+  is given those and the linked ontologies, and the record keeps their versions, so a
+  stored Flanagan record stays valid when an action perspective changes, and the reverse.
+- The acceptance suite stays as it is.
+
+### 11.5 Reading
+
+- `knowledge_overview` by root: for a phase structure as today; for the core, the action
+  concept, the frame, its slots with their parts, objectives with the state aimed at,
+  consequences, parameter dimensions with their quantity kinds and slots, and the
+  perspectives held.
+- `describe_fragment` on a slot already lists the fragments linking to it, so a slot's
+  expectations take one call; no new tool until phase 4 shows a need.
+- The tools read every record of a consultation as one body of knowledge.
+
+### 11.6 Resolver
+
+- A described action gains its core frame class (`core:PouringFrame`) beside its
+  Flanagan structure.
+- `consult` serves the Flanagan hypothesis as today, and the core with the perspectives
+  the requester offers (a setting; phase 4 compares none with the action frame).
+- The knowledge rule in the resolver's prompt names slots, expectations and defaults as
+  well as phases.
+
+### 11.7 Order (each test-first, with a scripted model until the last)
+
+1. Lookup over every module, the modules a root uses (HermiT background, record
+   versions), and the prompt's content per root; a core hypothesis generated, accepted,
+   admitted, stored and read back.
+2. Stored fragments as fixed values; a frame hypothesis on top of a core hypothesis.
+3. The overview of a core hypothesis; tools over a consultation's records.
+4. The resolver consulting the core and the offered perspectives beside Flanagan.
+5. Live with Sonnet 5.5: the core and the frame for pouring, the cost reported, the
+   knowledge reviewed.
+
 ## Sources
 
 - M. Beetz, M. Kümpel. *From Frames to Pouring: The CRAM Cognitive Architecture for
