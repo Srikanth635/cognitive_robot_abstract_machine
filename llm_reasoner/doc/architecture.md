@@ -96,6 +96,7 @@ model's functions.
 | `functions.py` | `WorldFunction`: a function declared with `symbolic_function`, what it takes and says, and calling it |
 | `tools.py`, `tool_definitions/` | The eight questions as tools for a model (§3.3) |
 | `encoding.py`, `exceptions.py` | Answers as JSON; `WorldQuestionError` and its kinds |
+| `class_ontology/` | The ontology of a code base: the classes a selection file names, written as OWL from the live classes (`python -m llm_reasoner.world.class_ontology <selection.json> <ontology.ttl>`); not used by the injector's tools. CRAM's selection and ontology are kept in `knowledge/ontologies/cram_classes/` |
 
 **Errors.** A question naming something the world lacks, or a function of the world
 model failing, raises a `WorldQuestionError` (`UnknownKind`, `AmbiguousKind`,

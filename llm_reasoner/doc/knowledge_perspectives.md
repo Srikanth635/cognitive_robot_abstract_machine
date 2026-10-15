@@ -93,7 +93,14 @@ definitions, so the modules below give the meanings the generation prompt needs.
 | `Effect`, `TaskRelativeEffect`, `Expectation`, `Affordance`, `ActionParameterSpace` | Consequences, expectations, what something affords, and parameters |
 | `ForceDynamicSchema`, `QualiaStructure` | Talmy-style force dynamics with role slots; telic, constitutive and agentive roles |
 
-### 4.1 The code's own schema (`cram_tbox.ttl`)
+### 4.1 The code's own schema
+
+Since 2026-10-15 the schema used here is `knowledge/ontologies/cram_classes/cram-classes.ttl`,
+written by `llm_reasoner.world.class_ontology` from the selection beside it: CRAM's action
+and motion designators, semantic annotations and robots, with coraplex's data structures in
+full and the designators' bookkeeping left out (392 classes, 13 enumerations). It keeps what
+is useful below and none of what is not wanted. What follows was found in the hand-made
+`cram_tbox.ttl` it replaces.
 
 `~/ontologies/cram_tbox.ttl` is generated from the Python source of the workspace
 (coraplex, giskardpy, krrood, probabilistic_model, random_events, robokudo,
