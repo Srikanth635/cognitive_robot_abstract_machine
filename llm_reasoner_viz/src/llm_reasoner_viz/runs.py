@@ -14,7 +14,17 @@ from enum import StrEnum
 from pathlib import Path
 from threading import Lock
 
-from typing_extensions import Any, Dict, Iterable, List, Optional, Tuple
+from typing_extensions import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+)
 
 from llm_reasoner_viz.vocabulary import EventField, KnownEvent
 
@@ -290,6 +300,53 @@ class UnknownRun(LookupError):
         self.name = name
 
 
+Reading = TypeVar("Reading")
+"""
+What is read of a log.
+"""
+
+
+@dataclass
+class LogCache(Generic[Reading]):
+    """
+    What is read of each log, kept as it was when the log last changed, so that a log
+    that has not changed is not read again.
+    """
+
+    read: Callable[[Path], Reading]
+    """
+    Reads a log.
+    """
+
+    readings: Dict[Path, Tuple[Tuple[int, int], Reading]] = field(
+        default_factory=dict, init=False, repr=False
+    )
+    """
+    The reading of each log and the size and time of the log it was made of, by the
+    log's path.
+    """
+
+    lock: Lock = field(default_factory=Lock, init=False, repr=False, compare=False)
+    """
+    Keeps the readers of several requests from interleaving.
+    """
+
+    def of(self, log: Path) -> Reading:
+        """
+        :return: What the log holds, read again only if the log changed since the last time.
+        """
+        status = log.stat()
+        signature = (status.st_size, status.st_mtime_ns)
+        with self.lock:
+            cached = self.readings.get(log)
+            if cached is not None and cached[0] == signature:
+                return cached[1]
+        reading = self.read(log)
+        with self.lock:
+            self.readings[log] = (signature, reading)
+        return reading
+
+
 @dataclass
 class RunLibrary:
     """
@@ -301,28 +358,32 @@ class RunLibrary:
     The directory of runs.
     """
 
-    summaries: Dict[Path, Tuple[Tuple[int, int], RunSummary]] = field(
-        default_factory=dict, init=False, repr=False
-    )
+    summaries: LogCache[RunSummary] = field(init=False, repr=False)
     """
-    The summary of each log as it was when it last changed, by the log's path, so a log
-    that has not changed is not read again.
+    The summary of each log as it was when it last changed.
     """
 
-    lock: Lock = field(default_factory=Lock, init=False, repr=False, compare=False)
-    """
-    Keeps the readers of several requests from interleaving.
-    """
+    def __post_init__(self) -> None:
+        self.summaries = LogCache(
+            read=lambda log: RunSummary.of(
+                log.parent.name,
+                (entry.event for entry in EventLog(path=log).read_from(0).entries),
+            )
+        )
+
+    def logs(self) -> List[Path]:
+        """
+        :return: The log of every run that has one.
+        """
+        if not self.directory.is_dir():
+            return []
+        return sorted(self.directory.glob(f"*/{LOG_FILE}"))
 
     def runs(self) -> List[RunSummary]:
         """
         :return: A summary of every run that has a log, the newest first.
         """
-        if not self.directory.is_dir():
-            return []
-        summaries = [
-            self.summary_of(log) for log in sorted(self.directory.glob(f"*/{LOG_FILE}"))
-        ]
+        summaries = [self.summary_of(log) for log in self.logs()]
         return sorted(
             summaries,
             key=lambda summary: summary.started_at or summary.last_event_at,
@@ -334,19 +395,7 @@ class RunLibrary:
         :return: A summary of the run whose log it is, read again only if the log
             changed since the last time.
         """
-        status = log.stat()
-        signature = (status.st_size, status.st_mtime_ns)
-        with self.lock:
-            cached = self.summaries.get(log)
-            if cached is not None and cached[0] == signature:
-                return cached[1]
-        summary = RunSummary.of(
-            log.parent.name,
-            (entry.event for entry in EventLog(path=log).read_from(0).entries),
-        )
-        with self.lock:
-            self.summaries[log] = (signature, summary)
-        return summary
+        return self.summaries.of(log)
 
     def log_of(self, run: str) -> EventLog:
         """

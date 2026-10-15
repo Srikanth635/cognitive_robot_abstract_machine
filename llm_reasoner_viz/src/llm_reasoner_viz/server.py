@@ -1,6 +1,6 @@
 """
-The viewer's HTTP server: the front page, the runs and the events of a run as JSON, and
-a stream that follows a run's log as it grows.
+The viewer's HTTP server: the front page, the runs and the events of a run as JSON, the
+NEEMs the simulations kept, and a stream that follows a run's log as it grows.
 
 The requests it answers:
 
@@ -11,6 +11,8 @@ The requests it answers:
 - ``GET /api/runs/<run>/stream``: the events of a run as server-sent events, those written
   so far and then those written next; ``?after=<offset>`` or the ``Last-Event-ID`` header
   goes on from where a reader stopped.
+- ``GET /api/neems``: the plans of the NEEM database with where each came from, newest
+  first; ``?run=<run>`` takes only those the run kept.
 
 Started with ``llm-reasoner-viz`` or ``python -m llm_reasoner_viz.server --port 8721``.
 """
@@ -24,6 +26,7 @@ import mimetypes
 import re
 import sys
 from functools import partial
+from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
@@ -31,7 +34,13 @@ from urllib.parse import parse_qs, unquote, urlparse
 from typing_extensions import Any, Callable, Dict, List, Optional
 
 from llm_reasoner_viz import configure_console_logging
-from llm_reasoner_viz.paths import cram_viz_url, default_runs_directory
+from llm_reasoner_viz.neem_library import NeemLibrary
+from llm_reasoner_viz.neems import NeemDatabase, NeemDatabaseBusy, UnknownNeemSchema
+from llm_reasoner_viz.paths import (
+    cram_viz_url,
+    default_runs_directory,
+    neem_database_path,
+)
 from llm_reasoner_viz.runs import RunLibrary, UnknownRun
 from llm_reasoner_viz.stream import EventStream
 
@@ -66,6 +75,7 @@ CONFIG_PATH = re.compile(r"/api/config")
 RUNS_PATH = re.compile(r"/api/runs")
 EVENTS_PATH = re.compile(r"/api/runs/(?P<run>[^/]+)/events")
 STREAM_PATH = re.compile(r"/api/runs/(?P<run>[^/]+)/stream")
+NEEMS_PATH = re.compile(r"/api/neems")
 
 LAST_EVENT_ID = "Last-Event-ID"
 """
@@ -88,13 +98,20 @@ class BadRequest(ValueError):
 
 class ViewerRequestHandler(BaseHTTPRequestHandler):
     """
-    Answers the viewer's requests from a library of runs and the packaged front end.
+    Answers the viewer's requests from a library of runs, the NEEMs of the simulations
+    and the packaged front end.
     """
 
     def __init__(
-        self, *arguments: Any, library: RunLibrary, web_root: Path, **keywords
+        self,
+        *arguments: Any,
+        library: RunLibrary,
+        neems: NeemLibrary,
+        web_root: Path,
+        **keywords,
     ):
         self.library = library
+        self.neems = neems
         self.web_root = web_root
         super().__init__(*arguments, **keywords)
 
@@ -117,6 +134,7 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
             (RUNS_PATH, self.runs),
             (EVENTS_PATH, self.events),
             (STREAM_PATH, self.stream),
+            (NEEMS_PATH, self.neem_list),
         ]
         for pattern, route in routes:
             found = pattern.fullmatch(parsed.path)
@@ -128,15 +146,23 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
         self, route: Callable[..., None], arguments: Dict[str, str], query: Query
     ) -> None:
         """
-        Answer a request of the API, refusing one for a run that has no log or one the
-        server cannot make sense of.
+        Answer a request of the API, refusing one for a run that has no log, one the
+        server cannot make sense of, and one the NEEM database cannot be read for.
         """
         try:
             route(query=query, **arguments)
         except UnknownRun as error:
-            self.send_json({"ok": False, "error": str(error)}, code=404)
+            self.send_json({"ok": False, "error": str(error)}, HTTPStatus.NOT_FOUND)
         except BadRequest as error:
-            self.send_json({"ok": False, "error": str(error)}, code=400)
+            self.send_json({"ok": False, "error": str(error)}, HTTPStatus.BAD_REQUEST)
+        except NeemDatabaseBusy as error:
+            self.send_json(
+                {"ok": False, "error": str(error)}, HTTPStatus.SERVICE_UNAVAILABLE
+            )
+        except UnknownNeemSchema as error:
+            self.send_json(
+                {"ok": False, "error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR
+            )
 
     # %% the API
 
@@ -192,6 +218,30 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             logger.info("  a reader of %s went away", run)
 
+    def neem_list(self, query: Query) -> None:
+        """
+        Send the plans of the NEEM database, those one run kept when the query names it.
+        """
+        database = self.neems.database
+        self.send_json(
+            {
+                "ok": True,
+                "database": str(database.path),
+                "exists": database.exists,
+                "neems": [
+                    entry.to_json()
+                    for entry in self.neems.entries(run=self.text(query, "run"))
+                ],
+            }
+        )
+
+    @staticmethod
+    def text(query: Query, name: str) -> Optional[str]:
+        """
+        :return: What the query gives for a parameter, none when it gives nothing.
+        """
+        return query[name][0] if name in query else None
+
     @staticmethod
     def number(query: Query, name: str, default: Optional[int]) -> Optional[int]:
         """
@@ -245,25 +295,31 @@ def make_server(
     host: str = DEFAULT_HOST,
     port: int = DEFAULT_PORT,
     web_root: Path = WEB_ROOT,
+    neems: Optional[NeemLibrary] = None,
 ) -> ThreadingHTTPServer:
     """
     :param library: The runs to show.
     :param host: The address to listen on.
     :param port: The port to listen on; zero for any that is free, as tests ask.
     :param web_root: The directory of the front end.
+    :param neems: The NEEMs to show; those of the database cram_viz keeps by default.
     :return: A server ready to serve, each request on a thread of its own so a stream does
         not keep the others waiting.
     """
+    neems = neems or NeemLibrary(
+        database=NeemDatabase(path=neem_database_path()), runs=library
+    )
     return ThreadingHTTPServer(
-        (host, port), partial(ViewerRequestHandler, library=library, web_root=web_root)
+        (host, port),
+        partial(ViewerRequestHandler, library=library, neems=neems, web_root=web_root),
     )
 
 
 def parse_arguments(argv: List[str]) -> argparse.Namespace:
     """
     :param argv: The command line after the program.
-    :return: What the command line asks for: the address and port to listen on and the
-        directory of runs to show.
+    :return: What the command line asks for: the address and port to listen on, the
+        directory of runs to show and the database of NEEMs.
     """
     parser = argparse.ArgumentParser(
         prog="llm-reasoner-viz",
@@ -279,6 +335,12 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
         default=default_runs_directory(),
         help="the directory of runs to show",
     )
+    parser.add_argument(
+        "--neems",
+        type=Path,
+        default=neem_database_path(),
+        help="the database the NEEMs of the simulations are kept in",
+    )
     return parser.parse_args(argv)
 
 
@@ -288,8 +350,12 @@ def main(argv: Optional[List[str]] = None) -> None:
     """
     configure_console_logging()
     arguments = parse_arguments(sys.argv[1:] if argv is None else argv)
+    library = RunLibrary(directory=arguments.runs)
     with make_server(
-        RunLibrary(directory=arguments.runs), arguments.host, arguments.port
+        library,
+        arguments.host,
+        arguments.port,
+        neems=NeemLibrary(database=NeemDatabase(path=arguments.neems), runs=library),
     ) as server:
         logger.info(
             "llm_reasoner viewer running at http://%s:%d/",
@@ -305,6 +371,7 @@ def main(argv: Optional[List[str]] = None) -> None:
                 else "  (none yet: resolve a designator in cram-viz)"
             ),
         )
+        logger.info("NEEMs: %s", arguments.neems)
         try:
             server.serve_forever()
         except KeyboardInterrupt:

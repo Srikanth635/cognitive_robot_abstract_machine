@@ -9,18 +9,20 @@ from cram_viz.events import (
     ExecutionFailed,
     ExecutionFinished,
     ExecutionStarted,
+    NeemKind as CramVizNeemKind,
     NeemNotRecorded,
     NeemRecorded,
     RunFailed,
     RunFinished,
     RunStarted,
+    TrialFinished,
 )
 from dataclasses import fields
 
 from llm_reasoner.clients.usage import TokenUsage
 from llm_reasoner.observation.events import EventKey, ModelAnswered
 
-from llm_reasoner_viz.vocabulary import EventField, KnownEvent
+from llm_reasoner_viz.vocabulary import EventField, KnownEvent, NeemKind
 
 
 class TestVocabulary:
@@ -58,3 +60,11 @@ class TestVocabulary:
     def test_the_events_of_keeping_a_neem_are_named_as_cram_viz_names_them(self):
         assert KnownEvent.NEEM_RECORDED == NeemRecorded.__name__
         assert KnownEvent.NEEM_NOT_RECORDED == NeemNotRecorded.__name__
+
+    def test_a_pour_tried_ending_is_named_as_cram_viz_names_it(self):
+        assert KnownEvent.TRIAL_FINISHED == TrialFinished.__name__
+
+    def test_what_a_neem_is_the_episode_of_is_named_as_cram_viz_names_it(self):
+        assert {kind.value for kind in NeemKind} == {
+            kind.value for kind in CramVizNeemKind
+        }
