@@ -26,6 +26,7 @@ dependencies = [
   "segmind",
   "cram_viz",
   "llm_reasoner",
+  "llm_reasoner_viz",
   "ipykernel>=7.2.0",
   "lark-parser>=0.12.0",
   "tqdm"
@@ -92,7 +93,8 @@ members = [
   "experiments",
   "segmind",
   "cram_viz",
-  "llm_reasoner"
+  "llm_reasoner",
+  "llm_reasoner_viz"
 ]
 
 [tool.uv.sources]
@@ -108,6 +110,7 @@ segmind               = { workspace = true }
 experiments           = { workspace = true }
 cram_viz              = { workspace = true }
 llm_reasoner           = { workspace = true }
+llm_reasoner_viz       = { workspace = true }
 
 [tool.poetry]
 package-mode = false
