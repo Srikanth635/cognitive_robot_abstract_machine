@@ -277,23 +277,53 @@ trials and repair rounds, which slots are grounded in knowledge, and whether the
 explanations name the right roles and relations. A perspective that does not change these
 is not worth its generation cost.
 
-## 9. Steps (each a separate change, test-first)
+## 9. Phases (each change test-first)
 
-1. The action-core module for pouring, written against `cram-aicor-ontology.ttl`; the code
-   generator and the existing checks run on it. **Done** 2026-10-15:
-   `ontologies/action_perspectives/action-core.ttl` and its generated `action_core.py`.
-2. The vocabulary-proposal stage (§6) with its rules, run for the action-frame perspective
-   of pouring; the proposal is reviewed and checked in.
-   **Proposed** 2026-10-15, awaiting review: `vocabulary_proposal/`, run with Sonnet 5.5
-   for pouring; the first answer passed every rule and HermiT ($0.31). The proposal is
-   `ontologies/action_perspectives/proposals/action-frame.ttl`, beside the record of how
-   it was made; it is registered as a module once reviewed. The review added postures
-   and affordances named by CRAM-AICOR actions and states, by hand (`status.md`).
-3. Hypotheses holding the core and the action frame; `knowledge_overview` answering with
-   the core.
-4. The roles-to-slots mapping for `PouringAction`, and slot entries naming their roles.
-5. A live comparison on the pouring cases, with and without the frame perspective.
-6. The image-schema perspective, the same way; then failures and corrections.
+Pouring with one perspective goes all the way to the resolver and is measured before
+another perspective is built (phase 4 decides whether to go on).
+
+**Phase 0 — the base. Done 2026-10-15.**
+- The action core for pouring (`action-core.ttl`, generated `action_core.py`).
+- The vocabulary-proposal stage (§6, `vocabulary_proposal/`), run for the action-frame
+  perspective of pouring with Sonnet 5.5 ($0.31, accepted on the first answer).
+- The review of that proposal (`status.md`): postures and affordances named by CRAM-AICOR
+  actions and states; CRAM-AICOR concepts named by IRI without a range, as in the core; the
+  core's `hasQuantityKind` reused instead of copied.
+
+**Phase 1 — register the action frame.**
+1. The proposal writer writes the same Turtle for the same vocabulary, so a proposal and
+   its review read as a plain git diff.
+2. `action-frame.ttl` becomes an action perspective module (`ActionPerspectiveFile`), with
+   its generated Python vocabulary and tests like the core's (structure, links to
+   CRAM-AICOR and DUL, HermiT). The proposal's record stays under `proposals/`.
+
+**Phase 2 — knowledge in the new vocabularies (the hypothesis stage, §6).**
+1. A hypothesis about pouring holding the core and the action frame: generated, accepted
+   and admitted like the Flanagan ones, and stored under a key naming its perspectives.
+2. `knowledge_overview` answers with the core (slots, objective, consequences, parameter
+   dimensions) and which perspectives the hypothesis holds; a drill-down tool answers a
+   slot's expectations.
+
+**Phase 3 — roles to slots (§7).**
+1. The mapping from the core's slots and parameter dimensions to `PouringAction`'s
+   fields, proposed by the model from the designator's docstrings and the code ontology
+   (`cram_classes`), accepted by automatic checks and kept as a file (D9).
+2. Each slot's entry in the resolver's prompt names the slot or dimension it maps to.
+
+**Phase 4 — measure (§8).** A live comparison on the pouring cases with and without the
+action frame: first-try success, trials, repair rounds, grounded slots, explanations. Go on
+only if the frame helps.
+
+**Phase 5 — the image-schema perspective (§5.3)**, through the same path: propose, review,
+register, knowledge, compare.
+
+**Phase 6 — failures and corrections (§5.4)**, the same way.
+
+**Phase 7 — the Flanagan modules on the core's slots (§5.5)**, so every perspective talks
+about the same participants.
+
+**Phase 8 — more actions (D8):** navigating, picking up and placing in the core, with the
+concepts CRAM-AICOR lacks proposed in our module (§10), and their perspectives.
 
 ## 10. Open questions
 
