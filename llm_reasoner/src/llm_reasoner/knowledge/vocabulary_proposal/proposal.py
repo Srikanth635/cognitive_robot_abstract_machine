@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from typing_extensions import Any, Dict, Tuple
+from typing_extensions import Any, Dict, Optional, Tuple
 
 from llm_reasoner.knowledge.vocabulary_proposal.catalogue import TermKind
 
@@ -160,9 +160,10 @@ class ProposedProperty:
     The class its subjects belong to.
     """
 
-    value_class: str
+    value_class: Optional[str]
     """
-    The class its values belong to, its range.
+    The class its values belong to, its range; ``None`` when its values name a CRAM-AICOR
+    concept, such as an action category or a state type, by its IRI.
     """
 
     parents: Tuple[str, ...]

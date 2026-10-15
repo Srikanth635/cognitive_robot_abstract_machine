@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 from rdflib.collection import Collection
 from typing_extensions import Any, Dict, List
@@ -127,6 +128,14 @@ def answer() -> Dict[str, Any]:
     return json.loads((CASES / "valid_proposal.json").read_text())
 
 
+@pytest.fixture
+def concept_naming_property() -> Dict[str, Any]:
+    """
+    A property whose values name a CRAM-AICOR concept by its IRI, so it has no range.
+    """
+    return json.loads((CASES / "concept_naming_property.json").read_text())
+
+
 def checker(catalogue: TermCatalogue, consistency=None) -> ProposalChecker:
     return ProposalChecker(
         catalogue=catalogue,
@@ -208,6 +217,12 @@ class TestReading:
             "HoldsSubstance",
             "StandsUpright",
         ]
+
+    def test_a_property_without_a_range_is_read_without_one(
+        self, answer, concept_naming_property
+    ):
+        answer["properties"].append(concept_naming_property)
+        assert VocabularyProposal.from_json(answer).properties[-1].value_class is None
 
 
 # %% the rules a proposal follows
@@ -307,6 +322,12 @@ class TestChecks:
         answer["properties"][3]["domain"] = "core:definesSlot"
         assert ProblemKind.WRONG_KIND in problem_kinds(catalogue, answer)
 
+    def test_a_property_naming_a_concept_needs_no_range(
+        self, catalogue, answer, concept_naming_property
+    ):
+        answer["properties"].append(concept_naming_property)
+        assert problem_kinds(catalogue, answer) == []
+
     def test_a_vocabulary_the_generator_cannot_write_as_python_is_refused(
         self, catalogue, answer
     ):
@@ -404,6 +425,15 @@ class TestWriting:
             RDF.type,
             OWL.FunctionalProperty,
         ) not in graph
+
+    def test_a_property_without_a_range_is_written_without_one(
+        self, answer, concept_naming_property
+    ):
+        answer["properties"].append(concept_naming_property)
+        graph = written(answer)
+        expects_state = FRAME_PERSPECTIVE[concept_naming_property["name"]]
+        assert (expects_state, RDF.type, OWL.ObjectProperty) in graph
+        assert graph.value(expects_state, RDFS.range) is None
 
     def test_a_value_partition_lists_its_members(self, answer):
         graph = written(answer)
@@ -503,6 +533,12 @@ class TestProposing:
         given = proposer(catalogue, [answer])
         given.propose(Perspective.ACTION_FRAME, ACTION, FRAME)
         assert given.client.schemas == [PROPOSAL_SCHEMA]
+
+    def test_the_proposal_schema_lets_a_property_name_a_concept_without_a_range(
+        self, answer, concept_naming_property
+    ):
+        answer["properties"].append(concept_naming_property)
+        assert list(Draft202012Validator(PROPOSAL_SCHEMA).iter_errors(answer)) == []
 
     def test_a_proposal_breaking_a_rule_is_returned_with_its_problems_for_repair(
         self, catalogue, answer

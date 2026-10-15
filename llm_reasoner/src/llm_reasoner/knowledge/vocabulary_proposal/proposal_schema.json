@@ -44,7 +44,7 @@
           "name": {"type": "string", "description": "One word starting in lower case, such as expectsOfSlot."},
           "meaning": {"type": "string", "description": "The property's definition, in one sentence."},
           "domain": {"type": "string", "description": "The class its subjects belong to."},
-          "range": {"type": "string", "description": "The class its values belong to."},
+          "range": {"type": ["string", "null"], "description": "The class its values belong to; null when its values name a CRAM-AICOR concept, such as an action category or a state type, by its IRI."},
           "parents": {"type": "array", "items": {"type": "string"}, "description": "The properties it specialises."},
           "functional": {"type": "boolean", "description": "Whether a subject has at most one value of it."},
           "see_also": {"type": "array", "items": {"type": "string"}}

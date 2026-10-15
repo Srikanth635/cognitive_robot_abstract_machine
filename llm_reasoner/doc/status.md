@@ -326,7 +326,11 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   action the filler affords (`conditionAffordsAction`, under `aicor:affordsAction`) or
   the state it can be brought into (`conditionAffordsState`, such as
   `aicor:ContainedState`), since CRAM-AICOR's `Affordance` has no kinds to name. Now 25
-  properties and 3 value partitions. Still in review; not registered as a module yet.
+  properties and 3 value partitions. A property whose values are CRAM-AICOR concepts now
+  names them by IRI with no range, as the core's `framesAction` and `aimsAtState` do: a
+  proposal may leave a property's range out, a rule tells the model so, and the frame's
+  `conditionHasState`, `conditionAffordsState`, `conditionAffordsAction` and
+  `normallyFilledBy` follow it. Still in review; not registered as a module yet.
 
 ## 3. Live testing
 

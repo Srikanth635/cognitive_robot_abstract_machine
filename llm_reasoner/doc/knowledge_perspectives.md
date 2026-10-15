@@ -246,6 +246,8 @@ Rules for a proposed vocabulary:
   perspective's.
 - Terms taken from FrameNet or ImageSchemaNet cite them with `rdfs:seeAlso`.
 - Quantities carry a physical dimension and a unit.
+- A property whose values are CRAM-AICOR concepts (an action category, a state type, a
+  kind of object) names them by IRI and has no range, as the core's properties do.
 
 Generation cost matters: one perspective took about three minutes in the real run. Each
 perspective is generated separately, so the cost is paid once per perspective and

@@ -26,10 +26,7 @@ frame:FeatureCondition a owl:Class ;
 frame:StateCondition a owl:Class ;
     rdfs:label "state condition"@en ;
     rdfs:comment "A condition that the filler of a slot, possibly in relation to the filler of another slot, is in a given discrete state, such as the agent grasping the source or the substance being contained in the goal."@en ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty frame:conditionHasState ;
-            owl:someValuesFrom aicor:DiscreteMode ],
-        frame:SlotCondition .
+    rdfs:subClassOf frame:SlotCondition .
 
 frame:changesInDirection a owl:FunctionalProperty,
         owl:ObjectProperty ;
@@ -46,16 +43,19 @@ frame:changesQuantityKind a owl:ObjectProperty ;
 
 frame:conditionAffordsAction a owl:ObjectProperty ;
     rdfs:label "condition affords action"@en ;
-    rdfs:comment "A kind of action the filler must afford for the condition to hold, such as aicor:Grasping or aicor:Tilting."@en ;
+    rdfs:comment "A kind of action the filler must afford for the condition to hold, as the IRI of a CRAM-AICOR action category, such as aicor:Grasping or aicor:Tilting."@en ;
     rdfs:domain frame:AffordanceCondition ;
-    rdfs:range aicor:ActionEventType ;
     rdfs:subPropertyOf aicor:affordsAction .
 
 frame:conditionAffordsState a owl:ObjectProperty ;
     rdfs:label "condition affords state"@en ;
-    rdfs:comment "A state the filler must be able to be brought into for the condition to hold, such as aicor:ContainedState for a goal that can contain the substance."@en ;
-    rdfs:domain frame:AffordanceCondition ;
-    rdfs:range aicor:DiscreteMode .
+    rdfs:comment "A state the filler must be able to be brought into for the condition to hold, as the IRI of a CRAM-AICOR state type, such as aicor:ContainedState for a goal that can contain the substance."@en ;
+    rdfs:domain frame:AffordanceCondition .
+
+frame:conditionHasState a owl:ObjectProperty ;
+    rdfs:label "condition has state"@en ;
+    rdfs:comment "The state the filler must be in for the condition to hold, as the IRI of a CRAM-AICOR state type, such as aicor:GraspedState."@en ;
+    rdfs:domain frame:SlotCondition .
 
 frame:conditionInvolvesSlot a owl:ObjectProperty ;
     rdfs:label "condition involves slot"@en ;
@@ -126,9 +126,8 @@ frame:hasSlotExpectation a owl:ObjectProperty ;
 
 frame:normallyFilledBy a owl:ObjectProperty ;
     rdfs:label "normally filled by"@en ;
-    rdfs:comment "A kind of thing that normally fills the slot, such as a kind of container for the source of a pour; the kind is used as a value."@en ;
-    rdfs:domain frame:SlotExpectation ;
-    rdfs:range dul:Entity .
+    rdfs:comment "A kind of thing that normally fills the slot, as the IRI of a CRAM-AICOR class, such as aicor:Container for the source of a pour."@en ;
+    rdfs:domain frame:SlotExpectation .
 
 frame:requiresBeforeStart a owl:ObjectProperty ;
     rdfs:label "requires before start"@en ;
@@ -141,11 +140,11 @@ frame:PostureCondition a owl:Class ;
     rdfs:label "posture condition"@en ;
     rdfs:comment "A condition that the filler of a slot stands in a given posture, such as the source standing upright before pouring."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
-            owl:hasValue core:Orientation ;
-            owl:onProperty frame:conditionConcernsQuantity ],
-        [ a owl:Restriction ;
             owl:onProperty frame:conditionRequiresPosture ;
             owl:someValuesFrom frame:Posture ],
+        [ a owl:Restriction ;
+            owl:hasValue core:Orientation ;
+            owl:onProperty frame:conditionConcernsQuantity ],
         frame:SlotCondition .
 
 frame:conditionConcernsQuantity a owl:ObjectProperty ;
@@ -153,12 +152,6 @@ frame:conditionConcernsQuantity a owl:ObjectProperty ;
     rdfs:comment "The kind of quantity of the filler that the condition constrains."@en ;
     rdfs:domain frame:SlotCondition ;
     rdfs:range core:QuantityKind .
-
-frame:conditionHasState a owl:ObjectProperty ;
-    rdfs:label "condition has state"@en ;
-    rdfs:comment "The discrete state the filler must be in for the condition to hold."@en ;
-    rdfs:domain frame:SlotCondition ;
-    rdfs:range aicor:DiscreteMode .
 
 frame:conditionOnSlot a owl:FunctionalProperty,
         owl:ObjectProperty ;
@@ -277,11 +270,11 @@ frame:DimensionRationale a owl:Class ;
     rdfs:label "dimension rationale"@en ;
     rdfs:comment "Why a parameter dimension matters to the action: the slots it concerns and the outcome condition it decides, such as the position of the source's lip relative to the goal's opening deciding whether the substance lands in the goal."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty frame:rationaleConcernsSlot ;
-            owl:someValuesFrom core:FrameSlot ],
-        [ a owl:Restriction ;
             owl:onProperty frame:explainsDimension ;
             owl:someValuesFrom core:ParameterDimension ],
+        [ a owl:Restriction ;
+            owl:onProperty frame:rationaleConcernsSlot ;
+            owl:someValuesFrom core:FrameSlot ],
         dul:Description .
 
 frame:SlotExpectation a owl:Class ;
@@ -320,10 +313,10 @@ frame:SlotCondition a owl:Class ;
         dul:Description .
 
 [] a owl:AllDifferent ;
-    owl:distinctMembers ( frame:Increases frame:Decreases ) .
+    owl:distinctMembers ( frame:Upright frame:Tilted frame:Inverted ) .
 
 [] a owl:AllDifferent ;
-    owl:distinctMembers ( frame:Upright frame:Tilted frame:Inverted ) .
+    owl:distinctMembers ( frame:Increases frame:Decreases ) .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( frame:Holds frame:DoesNotHold ) .
