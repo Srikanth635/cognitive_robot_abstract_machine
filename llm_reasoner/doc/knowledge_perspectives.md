@@ -71,8 +71,8 @@ twins and episodic memories as their own pillars for this reason.
 | D5 | Everything is stated in CRAM-AICOR terms where CRAM-AICOR has them | So the knowledge fits the CRAM architecture |
 | D6 | The action core's frame of a manipulation sits under `aicor:ManipulationFrame` (user, 2026-10-15) | CRAM-AICOR's frame layer is where frame elements (`RoleSlot`s) already hang |
 | D7 | The model proposes the vocabulary of one perspective at a time (user, 2026-10-15) | Each proposal stays small enough to review and understand before the next |
-| D9 | A proposed vocabulary is reviewed by a person before it is used; a designator's roles-to-slots mapping is accepted when it passes automatic checks and is written to the mapping file in the repository, where a change shows as a diff (user, 2026-10-15) | The vocabulary is what everything else is built on and changes rarely; the mappings are small, one per designator, and a wrong one shows in the resolver's grounds |
 | D8 | After pouring: navigating, picking up and placing (user, 2026-10-15) | The actions of the coraplex designators `NavigateAction`, `PickUpAction` and `PlaceAction`, which a pouring plan also performs |
+| D9 | A proposed vocabulary is reviewed by a person before it is used; a designator's roles-to-slots mapping is accepted when it passes automatic checks and is written to the mapping file in the repository, where a change shows as a diff (user, 2026-10-15) | The vocabulary is what everything else is built on and changes rarely; the mappings are small, one per designator, and a wrong one shows in the resolver's grounds |
 
 ## 4. What CRAM-AICOR already offers
 
