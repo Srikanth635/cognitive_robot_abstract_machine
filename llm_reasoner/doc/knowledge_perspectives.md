@@ -278,7 +278,8 @@ is not worth its generation cost.
 ## 9. Steps (each a separate change, test-first)
 
 1. The action-core module for pouring, written against `cram-aicor-ontology.ttl`; the code
-   generator and the existing checks run on it.
+   generator and the existing checks run on it. **Done** 2026-10-15:
+   `ontologies/action_perspectives/action-core.ttl` and its generated `action_core.py`.
 2. The vocabulary-proposal stage (§6) with its rules, run for the action-frame perspective
    of pouring; the proposal is reviewed and checked in.
 3. Hypotheses holding the core and the action frame; `knowledge_overview` answering with

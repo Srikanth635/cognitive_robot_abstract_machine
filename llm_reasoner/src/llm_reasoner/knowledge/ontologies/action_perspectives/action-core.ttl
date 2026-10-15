@@ -1,0 +1,220 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.1.0> ;
+    owl:versionInfo "0.1.0" ;
+    owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
+    rdfs:label "Action perspectives: action core"@en ;
+    rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
+
+A perspective, such as the action frame, the image schemas or predictive control, describes the action in terms of the core's slots and parameter dimensions and never in terms of another perspective. The resolver grounds a slot in an individual of the world through a CRAM-AICOR role binding, and maps the slots and parameter dimensions to the fields of an action designator.
+
+Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots are CRAM-AICOR role slots specialising its participant roles, an objective is a CRAM-AICOR telos, a consequence a CRAM-AICOR effect, and a parameter dimension a DUL parameter in CRAM-AICOR's action parameter space. Axioms are read under the open-world assumption."""@en .
+
+# %% frames
+
+:ActionFrame a owl:Class ;
+    rdfs:subClassOf aicor:dul_Description , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom :ParticipantSlot ] ,
+        [ a owl:Restriction ; owl:onProperty :statesObjective ; owl:someValuesFrom :Objective ] ;
+    rdfs:label "action frame"@en ;
+    rdfs:comment "The frame of a kind of action: the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open. Every perspective on the action refers to the slots its frame defines."@en .
+
+:ManipulationActionFrame a owl:Class ;
+    rdfs:subClassOf :ActionFrame , aicor:ManipulationFrame ;
+    rdfs:label "manipulation action frame"@en ;
+    rdfs:comment "The frame of an action that manipulates objects, which CRAM-AICOR calls a manipulation frame; an action that manipulates nothing, such as moving the robot's base, has a frame that is not one."@en .
+
+:PouringFrame a owl:Class ;
+    rdfs:subClassOf :ManipulationActionFrame ,
+        [ a owl:Restriction ; owl:onProperty :framesAction ; owl:hasValue aicor:Pouring ] ,
+        [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom :AgentSlot ] ,
+        [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom :SourceSlot ] ,
+        [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom :SubstanceSlot ] ,
+        [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom :GoalSlot ] ,
+        [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :PartSlot [ a owl:Restriction ; owl:onProperty :isPartOfSlot ; owl:someValuesFrom :SourceSlot ] ) ] ] ,
+        [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :PartSlot [ a owl:Restriction ; owl:onProperty :isPartOfSlot ; owl:someValuesFrom :GoalSlot ] ) ] ] ,
+        [ a owl:Restriction ; owl:onProperty :statesObjective ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :Objective [ a owl:Restriction ; owl:onProperty :aimsAtState ; owl:hasValue aicor:AccumulatedState ] ) ] ] ,
+        [ a owl:Restriction ; owl:onProperty :bringsAbout ; owl:someValuesFrom :Consequence ] ,
+        [ a owl:Restriction ; owl:onProperty :leavesOpen ; owl:someValuesFrom :ParameterDimension ] ;
+    rdfs:label "pouring frame"@en ;
+    rdfs:comment "The frame of pouring, CRAM-AICOR's aicor:Pouring: an agent makes a substance leave a source over a part of it, such as its lip, and enter a goal through a part of it, such as its opening, so that the substance accumulates in the goal, as aicor:PouringIntention and its telos say. It names the agent, the source, the substance and the goal."@en .
+
+:framesAction a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :ActionFrame ;
+    rdfs:label "frames action"@en ;
+    rdfs:comment "The kind of action the frame describes, as the IRI of a CRAM-AICOR action category, such as aicor:Pouring."@en .
+
+:definesSlot a owl:ObjectProperty ;
+    rdfs:subPropertyOf dul:defines ;
+    rdfs:domain :ActionFrame ;
+    rdfs:range :FrameSlot ;
+    rdfs:label "defines slot"@en ;
+    rdfs:comment "A slot of the frame, which a participant of the action, or a part of one, fills."@en .
+
+:statesObjective a owl:ObjectProperty ;
+    rdfs:domain :ActionFrame ;
+    rdfs:range :Objective ;
+    rdfs:label "states objective"@en ;
+    rdfs:comment "What the action is for."@en .
+
+:bringsAbout a owl:ObjectProperty ;
+    rdfs:domain :ActionFrame ;
+    rdfs:range :Consequence ;
+    rdfs:label "brings about"@en ;
+    rdfs:comment "A change the action makes to one of its participants."@en .
+
+:leavesOpen a owl:ObjectProperty ;
+    rdfs:subPropertyOf dul:defines ;
+    rdfs:domain :ActionFrame ;
+    rdfs:range :ParameterDimension ;
+    rdfs:label "leaves open"@en ;
+    rdfs:comment "A kind of choice the frame does not settle, which whoever performs the action makes."@en .
+
+# %% slots
+
+:FrameSlot a owl:Class ;
+    rdfs:subClassOf aicor:RoleSlot ;
+    rdfs:label "frame slot"@en ;
+    rdfs:comment "A place in a frame that something taking part in the action fills; a CRAM-AICOR role binding binds an individual of the world to it."@en .
+
+:ParticipantSlot a owl:Class ;
+    rdfs:subClassOf :FrameSlot ;
+    rdfs:label "participant slot"@en ;
+    rdfs:comment "A slot that a participant of the action fills as a whole, such as the source of a pour."@en .
+
+:PartSlot a owl:Class ;
+    rdfs:subClassOf :FrameSlot ,
+        [ a owl:Restriction ; owl:onProperty :isPartOfSlot ; owl:someValuesFrom :ParticipantSlot ] ;
+    rdfs:label "part slot"@en ;
+    rdfs:comment "A slot that a part of a participant fills, which the action involves on its own, such as the lip of the source of a pour or the opening of its goal."@en .
+
+[ a owl:AllDisjointClasses ; owl:members ( :ParticipantSlot :PartSlot ) ] .
+
+:isPartOfSlot a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :PartSlot ;
+    rdfs:range :ParticipantSlot ;
+    rdfs:label "is part of slot"@en ;
+    rdfs:comment "The participant slot whose filler the part belongs to."@en .
+
+:AgentSlot a owl:Class ;
+    rdfs:subClassOf :ParticipantSlot , aicor:AgentRole ;
+    rdfs:label "agent slot"@en ;
+    rdfs:comment "The slot of the one who performs the action."@en .
+
+:SourceSlot a owl:Class ;
+    rdfs:subClassOf :ParticipantSlot , aicor:SourceRole ;
+    rdfs:label "source slot"@en ;
+    rdfs:comment "The slot of where something the action moves comes from, such as the container poured from."@en .
+
+:SubstanceSlot a owl:Class ;
+    rdfs:subClassOf :ParticipantSlot , aicor:SubstanceRole ;
+    rdfs:label "substance slot"@en ;
+    rdfs:comment "The slot of the material the action moves, as distinct from what holds it."@en .
+
+:GoalSlot a owl:Class ;
+    rdfs:subClassOf :ParticipantSlot , aicor:GoalRole ;
+    rdfs:label "goal slot"@en ;
+    rdfs:comment "The slot of where what the action moves ends up, such as the container poured into."@en .
+
+:InstrumentSlot a owl:Class ;
+    rdfs:subClassOf :ParticipantSlot , aicor:InstrumentRole ;
+    rdfs:label "instrument slot"@en ;
+    rdfs:comment "The slot of a tool the agent acts with on something else."@en .
+
+:PatientSlot a owl:Class ;
+    rdfs:subClassOf :ParticipantSlot , aicor:PatientRole ;
+    rdfs:label "patient slot"@en ;
+    rdfs:comment "The slot of what the action acts on and changes."@en .
+
+# %% what the action is for and brings about
+
+:Objective a owl:Class ;
+    rdfs:subClassOf aicor:Telos ,
+        [ a owl:Restriction ; owl:onProperty :concernsSlot ; owl:someValuesFrom :FrameSlot ] ;
+    rdfs:label "objective"@en ;
+    rdfs:comment "What an action is for: a state of its participants it aims at, which CRAM-AICOR calls a telos."@en .
+
+:concernsSlot a owl:ObjectProperty ;
+    rdfs:domain :Objective ;
+    rdfs:range :FrameSlot ;
+    rdfs:label "concerns slot"@en ;
+    rdfs:comment "A slot whose filler the objective is about."@en .
+
+:aimsAtState a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :Objective ;
+    rdfs:label "aims at state"@en ;
+    rdfs:comment "The state the objective aims at, as the IRI of a CRAM-AICOR state type, such as aicor:AccumulatedState."@en .
+
+:Consequence a owl:Class ;
+    rdfs:subClassOf aicor:Effect , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :affectsSlot ; owl:someValuesFrom :FrameSlot ] ;
+    rdfs:label "consequence"@en ;
+    rdfs:comment "A change an action makes to one of its participants, intended or not, such as the source of a pour holding less, which CRAM-AICOR calls an effect."@en .
+
+:affectsSlot a owl:ObjectProperty ;
+    rdfs:domain :Consequence ;
+    rdfs:range :FrameSlot ;
+    rdfs:label "affects slot"@en ;
+    rdfs:comment "A slot whose filler the consequence changes."@en .
+
+:resultsInState a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :Consequence ;
+    rdfs:label "results in state"@en ;
+    rdfs:comment "The state the filler is in afterwards, as the IRI of a CRAM-AICOR state type, such as aicor:ContainedState."@en .
+
+# %% the choices an action leaves open
+
+:ParameterDimension a owl:Class ;
+    rdfs:subClassOf dul:Parameter , aicor:ActionParameterSpace ,
+        [ a owl:Restriction ; owl:onProperty :aboutSlot ; owl:someValuesFrom :FrameSlot ] ,
+        [ a owl:Restriction ; owl:onProperty :hasQuantityKind ; owl:someValuesFrom :QuantityKind ] ;
+    rdfs:label "parameter dimension"@en ;
+    rdfs:comment "A kind of choice an action leaves open, independent of any designator: how much, how fast, where relative to another participant, which way something faces, how far or how long, or which of several. A designator's field is one way of making the choice."@en .
+
+:aboutSlot a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :ParameterDimension ;
+    rdfs:range :FrameSlot ;
+    rdfs:label "about slot"@en ;
+    rdfs:comment "The slot whose filler the choice is about, such as the source whose orientation is chosen."@en .
+
+:relativeToSlot a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :ParameterDimension ;
+    rdfs:range :FrameSlot ;
+    rdfs:label "relative to slot"@en ;
+    rdfs:comment "The slot whose filler the choice is measured from, such as the goal a position above which is chosen; absent for a choice measured from nothing in particular."@en .
+
+:hasQuantityKind a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :ParameterDimension ;
+    rdfs:range :QuantityKind ;
+    rdfs:label "has quantity kind"@en ;
+    rdfs:comment "What kind of quantity the choice sets."@en .
+
+# %% value partitions
+
+:QuantityKind a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Amount :Rate :Position :Orientation :Distance :Duration :Selection ) ] ;
+    rdfs:label "quantity kind"@en ;
+    rdfs:comment "The kind of quantity a choice an action leaves open sets."@en .
+:Amount a owl:NamedIndividual , :QuantityKind ; rdfs:label "amount"@en ;
+    rdfs:comment "How much of something, such as the volume poured."@en .
+:Rate a owl:NamedIndividual , :QuantityKind ; rdfs:label "rate"@en ;
+    rdfs:comment "How fast something changes, such as the flow or the tilting."@en .
+:Position a owl:NamedIndividual , :QuantityKind ; rdfs:label "position"@en ;
+    rdfs:comment "Where something is, such as where the lip is over the goal."@en .
+:Orientation a owl:NamedIndividual , :QuantityKind ; rdfs:label "orientation"@en ;
+    rdfs:comment "Which way something faces, such as how far the source is tilted."@en .
+:Distance a owl:NamedIndividual , :QuantityKind ; rdfs:label "distance"@en ;
+    rdfs:comment "How far apart two things are, such as the height of the lip above the goal."@en .
+:Duration a owl:NamedIndividual , :QuantityKind ; rdfs:label "duration"@en ;
+    rdfs:comment "How long something lasts."@en .
+:Selection a owl:NamedIndividual , :QuantityKind ; rdfs:label "selection"@en ;
+    rdfs:comment "Which of several alternatives is taken, such as the hand that holds the source."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Amount :Rate :Position :Orientation :Distance :Duration :Selection ) ] .

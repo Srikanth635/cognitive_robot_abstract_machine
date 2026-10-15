@@ -105,7 +105,7 @@ def writer() -> VocabularyWriter:
     """
     The writer that generates the vocabulary modules.
     """
-    return VocabularyWriter.for_predictive_manipulation()
+    return VocabularyWriter.for_knowledge_modules()
 
 
 # %% helpers

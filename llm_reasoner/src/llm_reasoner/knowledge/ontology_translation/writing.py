@@ -21,7 +21,7 @@ from krrood.code_generation.generator import CodeGenerator
 from typing_extensions import Optional, Sequence
 
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.ontologies import OntologyModuleFile
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
     ComplementOf,
@@ -268,13 +268,13 @@ class VocabularyWriter:
         filters["optional_expression"] = optional_expression
 
     @classmethod
-    def for_predictive_manipulation(cls) -> VocabularyWriter:
+    def for_knowledge_modules(cls) -> VocabularyWriter:
         """
-        :return: A writer over every predictive manipulation module file.
+        :return: A writer over the module file of every family.
         """
-        return cls(OntologyReader.for_predictive_manipulation())
+        return cls(OntologyReader.for_knowledge_modules())
 
-    def rendered(self, module_file: PredictiveManipulationOntologyFile) -> str:
+    def rendered(self, module_file: OntologyModuleFile) -> str:
         """
         :return: The module's source as the template renders it, before formatting.
         """
@@ -283,6 +283,10 @@ class VocabularyWriter:
         return self.generator.render(
             TemplateName.VOCABULARY_MODULE.value,
             module=module,
+            packages={
+                read.vocabulary_module_name: read.vocabulary_package
+                for read in self.reader.modules
+            },
             reference=rendering.reference,
             bases=rendering.bases,
             super_descriptors=rendering.super_descriptors,
@@ -290,7 +294,7 @@ class VocabularyWriter:
             default=rendering.default,
         )
 
-    def source(self, module_file: PredictiveManipulationOntologyFile) -> str:
+    def source(self, module_file: OntologyModuleFile) -> str:
         """
         :return: The module's formatted source.
         """
@@ -323,5 +327,5 @@ class VocabularyWriter:
         """
         Write every vocabulary module next to the ontology file it is generated from.
         """
-        for module_file in PredictiveManipulationOntologyFile:
+        for module_file in self.reader.modules:
             module_file.vocabulary_path.write_text(self.source(module_file))
