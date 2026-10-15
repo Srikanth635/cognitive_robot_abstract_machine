@@ -169,6 +169,7 @@ class PageFixture:
 
 
 PAGE_FIXTURES = [
+    PageFixture(file="neem_pour.json", neem=1, changes=[]),
     PageFixture(file="neem_navigation.json", neem=2, changes=[]),
     PageFixture(
         file="neem_pick_up.json",
