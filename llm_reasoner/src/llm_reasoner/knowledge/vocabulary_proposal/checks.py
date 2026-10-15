@@ -13,6 +13,7 @@ from collections import Counter
 from dataclasses import dataclass
 from enum import StrEnum
 
+from rdflib import OWL
 from typing_extensions import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
@@ -197,7 +198,8 @@ class ProposalChecker:
     def problems(self, proposal: VocabularyProposal) -> List[Problem]:
         """
         :return: Every rule the proposal breaks. The generator and the reasoner are only
-            asked about a proposal that breaks none of the other rules.
+            asked about a proposal that breaks none of the other rules; the reasoner is
+            given the module without its imports, since it has the imported files.
         """
         found = [
             *self.name_problems(proposal),
@@ -212,6 +214,7 @@ class ProposalChecker:
         if found or self.consistency is None:
             return found
         graph = ProposalWriter(proposal=proposal, perspective=self.perspective).graph()
+        graph.remove((None, OWL.imports, None))
         if self.consistency.is_consistent(graph):
             return []
         return [

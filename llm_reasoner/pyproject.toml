@@ -29,7 +29,7 @@ where = ["src"]
 include = ["llm_reasoner*"]
 
 [tool.setuptools.package-data]
-llm_reasoner = ["knowledge/ontologies/predictive_manipulation/*.ttl", "knowledge/ontologies/action_perspectives/*.ttl", "knowledge/ontologies/predictive_manipulation/shapes/*.ttl", "knowledge/ontologies/*.json", "knowledge/ontologies/cram_classes/*", "knowledge/ontology_translation/templates/*.jinja", "world/tool_definitions/*.json", "knowledge/hypotheses/tool_definitions/*.json", "clients/*.json"]
+llm_reasoner = ["knowledge/ontologies/predictive_manipulation/*.ttl", "knowledge/ontologies/action_perspectives/*.ttl", "knowledge/vocabulary_proposal/*.json", "knowledge/vocabulary_proposal/perspectives/*.md", "knowledge/ontologies/predictive_manipulation/shapes/*.ttl", "knowledge/ontologies/*.json", "knowledge/ontologies/cram_classes/*", "knowledge/ontology_translation/templates/*.jinja", "world/tool_definitions/*.json", "knowledge/hypotheses/tool_definitions/*.json", "clients/*.json"]
 
 [tool.setuptools.dynamic]
 version = { attr = "llm_reasoner._version.__version__" }
