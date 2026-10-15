@@ -10,11 +10,10 @@ from dataclasses import dataclass, field
 
 from krrood.entity_query_language.core.base_expressions import SymbolicExpression
 from krrood.entity_query_language.query.match import AttributeMatch, Match
-from krrood.entity_query_language.verbalization.rendering.source_documentation import (
-    _attribute_docstrings,
-)
 from krrood.utils import recursive_subclasses
 from typing_extensions import Any, Dict, List, Optional, Sequence
+
+from llm_reasoner.attribute_docstrings import attribute_docstrings
 
 # %% slot classification
 
@@ -516,13 +515,17 @@ class SlotReflector:
 
     def _docstring_for(self, owner: type, attribute_name: str) -> Optional[str]:
         """
-        :param owner: The class declaring the attribute.
+        :param owner: The class the attribute is matched on.
         :param attribute_name: The field name on the owner.
-        :return: The attribute's docstring, when it has one.
+        :return: The attribute's whole docstring, written in the owner or in the class it
+            specialises that declares the field, such as a mixin; ``None`` when it has none.
         """
-        if owner not in self.docstrings_by_owner:
-            self.docstrings_by_owner[owner] = _attribute_docstrings(owner)
-        return self.docstrings_by_owner[owner].get(attribute_name)
+        for ancestor in owner.__mro__:
+            if ancestor not in self.docstrings_by_owner:
+                self.docstrings_by_owner[ancestor] = attribute_docstrings(ancestor)
+            if attribute_name in self.docstrings_by_owner[ancestor]:
+                return self.docstrings_by_owner[ancestor][attribute_name]
+        return None
 
 
 def reflect_slots(expression: Match) -> List[Slot]:

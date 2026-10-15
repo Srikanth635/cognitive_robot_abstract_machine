@@ -5,18 +5,12 @@ which of its fields hold content.
 
 from __future__ import annotations
 
-import ast
 import inspect
-import sys
-import textwrap
 from dataclasses import MISSING, Field, dataclass, fields, is_dataclass
 from enum import Enum, StrEnum
 from functools import cache, cached_property
 from operator import attrgetter
 
-from krrood.entity_query_language.verbalization.rendering.source_documentation import (
-    _attribute_docstrings,
-)
 from krrood.patterns.field_metadata import JSONMetadata
 from typing_extensions import (
     Any,
@@ -29,6 +23,7 @@ from typing_extensions import (
     Union,
 )
 
+from llm_reasoner.attribute_docstrings import attribute_docstrings
 from llm_reasoner.world.description import ClassSummary
 
 PLAIN_TYPES = (bool, int, float, str, Enum, type(None))
@@ -41,37 +36,10 @@ PRIVATE_PREFIX = "_"
 The prefix of a field that is bookkeeping rather than content.
 """
 
-MODULE_FILE = "__file__"
-"""
-The module attribute naming the file a module was read from, which a module built in
-memory lacks.
-"""
-
 SLOTS_ATTRIBUTE = "__slots__"
 """
 The class attribute declaring that instances keep no attribute dictionary.
 """
-
-
-def attribute_documentation(described: type) -> Dict[str, str]:
-    """
-    :param described: A class.
-    :return: The whole docstring below each field its own body declares, by field name;
-        nothing for a class whose source is not in a file.
-    """
-    module = sys.modules.get(described.__module__)
-    if module is None or vars(module).get(MODULE_FILE) is None:
-        return {}
-    body = ast.parse(textwrap.dedent(inspect.getsource(described))).body[0].body
-    return {
-        declaration.target.id: inspect.cleandoc(following.value.value)
-        for declaration, following in zip(body, body[1:])
-        if isinstance(declaration, ast.AnnAssign)
-        and isinstance(declaration.target, ast.Name)
-        and isinstance(following, ast.Expr)
-        and isinstance(following.value, ast.Constant)
-        and isinstance(following.value.value, str)
-    }
 
 
 class FoundationModule(StrEnum):
@@ -185,25 +153,14 @@ class DocumentedClass:
         return inspect.cleandoc(docstring)
 
     @cached_property
-    def field_documentation(self) -> Dict[str, str]:
-        """
-        The whole docstring of every field, inherited ones included, by field name.
-        """
-        documentation: Dict[str, str] = {}
-        for ancestor in reversed(self.described.__mro__):
-            if is_dataclass(ancestor):
-                documentation.update(attribute_documentation(ancestor))
-        return documentation
-
-    @cached_property
     def meanings(self) -> Dict[str, str]:
         """
-        The docstring of every field, inherited ones included, by field name.
+        The whole docstring of every field, inherited ones included, by field name.
         """
         meanings: Dict[str, str] = {}
         for ancestor in reversed(self.described.__mro__):
             if is_dataclass(ancestor):
-                meanings.update(_attribute_docstrings(ancestor))
+                meanings.update(attribute_docstrings(ancestor))
         return meanings
 
     @cached_property

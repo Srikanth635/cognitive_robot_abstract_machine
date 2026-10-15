@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import inspect
 import json
+import typing
 from dataclasses import fields as dataclass_fields
 from pathlib import Path
 
@@ -116,14 +117,14 @@ class TestFullDocumentation:
     def test_a_dataclass_without_a_docstring_has_no_documentation(self):
         assert DocumentedClass.of(geometry.Pose).documentation == ""
 
-    def test_a_field_is_documented_by_every_line_of_its_docstring(self):
-        documentation = DocumentedClass.of(designators.PourAction).field_documentation
+    def test_a_field_means_every_paragraph_of_its_docstring(self):
+        documentation = DocumentedClass.of(designators.PourAction).meanings
         assert documentation["tilt"] == (
             "How far the vessel is tilted, in radians.\n\nMeasured from upright."
         )
 
     def test_a_field_a_parent_declares_keeps_the_parents_documentation(self):
-        documentation = DocumentedClass.of(designators.PourAction).field_documentation
+        documentation = DocumentedClass.of(designators.PourAction).meanings
         assert documentation["speed_limit"].startswith(
             "The fastest the effector may move"
         )
@@ -273,7 +274,7 @@ class TestFieldDescription:
     def test_a_field_is_documented_in_full(self, ontology):
         tilt = fields_of(ontology, designators.PourAction)["tilt"]
         assert tilt.documentation == (
-            DocumentedClass.of(designators.PourAction).field_documentation["tilt"]
+            DocumentedClass.of(designators.PourAction).meanings["tilt"]
         )
 
     def test_a_field_holding_an_individual_refers_to_its_class(self, ontology):
@@ -352,6 +353,20 @@ class TestFieldDescription:
         )
         assert field_type.target is None
         assert field_type.collection
+
+    def test_the_type_as_written_survives_code_that_overwrites_a_fields_type(
+        self, monkeypatch
+    ):
+        speed_limit = next(
+            declared
+            for declared in dataclass_fields(designators.PourAction)
+            if declared.name == "speed_limit"
+        )
+        monkeypatch.setattr(speed_limit, "type", typing.Optional[float])
+        field_type = FieldTypeReader(described=designators.PourAction).read(speed_limit)
+        assert field_type.written == (
+            designators.HasSpeedLimit.__annotations__["speed_limit"]
+        )
 
     def test_the_other_fields_of_that_class_are_still_resolved(self, ontology):
         target_location = fields_of(ontology, designators.InspectAction)[
