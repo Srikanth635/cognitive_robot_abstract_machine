@@ -15,7 +15,7 @@ from operator import attrgetter
 
 from rdflib import OWL, RDF, RDFS, XSD, Graph, Literal, URIRef
 from rdflib.term import Node
-from typing_extensions import Any, Optional, Sequence
+from typing_extensions import Any, Mapping, Optional, Sequence
 
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.exceptions import LLMReasonerError
@@ -107,14 +107,39 @@ class GraphWriter:
             property values, leaving out properties the ontology infers from
             sub-properties.
         """
-        names = {
-            id(fragment): URIRef(
-                self.namespace
-                + (hypothesis.identifier_of(fragment) or f"fragment_{position}")
-            )
-            for position, fragment in enumerate(hypothesis.fragments)
+        return self.write_fragments(hypothesis.fragments, self.names(hypothesis))
+
+    def write_with_given(self, hypothesis: DecodedHypothesis) -> Graph:
+        """
+        :return: The hypothesis together with the stored fragments it builds on, under
+            the IRIs they are stored under, so the two can be checked together.
+        """
+        return self.write_fragments(
+            [*hypothesis.fragments, *hypothesis.given.fragments],
+            self.names(hypothesis),
+        )
+
+    def names(self, hypothesis: DecodedHypothesis) -> dict[int, URIRef]:
+        """
+        :return: The IRI of every fragment of the hypothesis, in this writer's
+            namespace, and of every fragment it builds on, as it is stored, keyed by the
+            fragment's identity.
+        """
+        return {
+            **{
+                identity: URIRef(iri) for identity, iri in hypothesis.given.iris.items()
+            },
+            **{
+                id(fragment): URIRef(
+                    self.namespace
+                    + (
+                        hypothesis.identifiers.get(id(fragment))
+                        or f"fragment_{position}"
+                    )
+                )
+                for position, fragment in enumerate(hypothesis.fragments)
+            },
         }
-        return self.write_fragments(hypothesis.fragments, names)
 
     def write_fragments(
         self, fragments: Sequence[DescriptionEntity], names: dict[int, URIRef]
@@ -212,6 +237,12 @@ class ReadHypothesis:
     The statements about the fragments that no field of theirs stands for.
     """
 
+    def by_iri(self) -> dict[str, DescriptionEntity]:
+        """
+        :return: Every fragment, by the IRI it is stored under.
+        """
+        return {self.identifiers[id(fragment)]: fragment for fragment in self.fragments}
+
     def root_of(self, root_type: type[DescriptionEntity]) -> DescriptionEntity:
         """
         :return: The one fragment of the given type, which a stored hypothesis was
@@ -234,25 +265,35 @@ class GraphReader:
     The generated vocabulary the IRIs are looked up in.
     """
 
-    def read(self, graph: Graph) -> ReadHypothesis:
+    def read(
+        self,
+        graph: Graph,
+        known: Optional[Mapping[str, DescriptionEntity]] = None,
+    ) -> ReadHypothesis:
         """
+        :param graph: The hypothesis.
+        :param known: Fragments of other stored hypotheses the graph refers to, by the
+            IRI they are stored under; a reference to one is that fragment itself.
         :return: Every individual typed with a vocabulary class as an instance of its
             most specific class, linked by its property values.
         """
-        instances: dict[Node, DescriptionEntity] = {}
+        instances: dict[Node, DescriptionEntity] = {
+            URIRef(iri): fragment for iri, fragment in (known or {}).items()
+        }
+        own: list[Node] = []
         for subject in sorted(set(graph.subjects(RDF.type, None)), key=str):
             generated = self.class_of(graph, subject)
-            if generated is not None:
+            if generated is not None and subject not in instances:
                 instances[subject] = generated()
+                own.append(subject)
         unread: list[Statement] = []
-        for subject, instance in instances.items():
+        for subject in own:
+            instance = instances[subject]
             unread.extend(self.fill(graph, subject, instance, instances))
             self.vocabulary.fill_entailed_values(instance)
         return ReadHypothesis(
-            fragments=list(instances.values()),
-            identifiers={
-                id(instance): str(subject) for subject, instance in instances.items()
-            },
+            fragments=[instances[subject] for subject in own],
+            identifiers={id(instances[subject]): str(subject) for subject in own},
             unread_statements=unread,
         )
 

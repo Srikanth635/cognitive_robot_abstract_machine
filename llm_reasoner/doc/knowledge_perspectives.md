@@ -390,10 +390,15 @@ frame hypothesis         the(FrameStereotype)(stereotype_of=<core frame>)
   talks about the same slots, the core is paid for once, and phase 4 compares
   consultations that differ only in the perspective.
 
-New: a fixed value that is a stored fragment. The request names it by its citation; the
-prompt shows the given fragments; the checks see the given and the new fragments
-together; the stored Turtle refers to the other record's IRIs, and the knowledge graph
-reads them back as the same objects.
+New: a fixed value that is a stored fragment, as built: the request fixes it to a
+`Citation`, which the store keys by its IRI and the model is told by its name. The
+backend reads the cited records (`HypothesisStore.given`) and the prompt shows their
+fragments in a `<given>` section, written as the answer writes fragments; the answer
+refers to them by name, and an answer naming a fragment like a given one, or stating a
+fragment of the core, is returned for repair. The open-world check sees the given and the
+new fragments together. The record lists the records it `builds_on`, its Turtle refers to
+their fragments' IRIs without stating them again, and the store and the knowledge graph
+read those references as the given fragments themselves.
 
 Not proposed: one hypothesis holding the core and the frame. It needs nothing new, but
 the core would be regenerated for every set of perspectives, so slots differ between
@@ -445,6 +450,7 @@ vocabulary is proposed from too.
    admitted, stored and read back. **Done** 2026-10-15; the Flanagan prompts are
    unchanged byte for byte.
 2. Stored fragments as fixed values; a frame hypothesis on top of a core hypothesis.
+   **Done** 2026-10-15.
 3. The overview of a core hypothesis; tools over a consultation's records.
 4. The resolver consulting the core and the offered perspectives beside Flanagan.
 5. Live with Sonnet 5.5: the core and the frame for pouring, the cost reported, the

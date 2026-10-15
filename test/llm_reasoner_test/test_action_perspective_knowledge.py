@@ -6,12 +6,13 @@ the Flanagan ones, each under the versions of the modules its vocabulary uses.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
 from krrood.entity_query_language.factories import the
-from rdflib import Graph, Namespace
+from rdflib import RDF, Graph, Namespace, URIRef
 from typing_extensions import Iterable, List
 
 from llm_reasoner.clients.base import ScriptedClient
@@ -26,6 +27,7 @@ from llm_reasoner.knowledge.generation.prompts import (
     GenerationPrompt,
     GenerationSection,
 )
+from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
 from llm_reasoner.knowledge.ontologies import (
@@ -46,6 +48,7 @@ from llm_reasoner.knowledge.storage.record import (
     ConsistencyVerdict,
     current_module_versions,
 )
+from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.knowledge.vocabulary_proposal.perspective import Perspective
 
@@ -350,3 +353,207 @@ class TestGenerationBrief:
             Perspective.ACTION_FRAME.description
             == ActionPerspectiveFile.ACTION_FRAME.description
         )
+
+
+# %% a perspective hypothesis on top of a stored core
+
+
+class AnswerCase:
+    """
+    The scripted answers about pouring, by file.
+    """
+
+    CORE = "pouring_core.json"
+    FRAME = "pouring_frame.json"
+
+
+def answer_text(case: str) -> str:
+    """
+    :return: A scripted answer as the model writes it.
+    """
+    return (CASES / case).read_text()
+
+
+def frame_answer_adding(fragment: dict) -> str:
+    """
+    :return: The scripted frame answer with one more fragment.
+    """
+    answer = json.loads(answer_text(AnswerCase.FRAME))
+    answer["fragments"].append(fragment)
+    return json.dumps(answer)
+
+
+def service_answering(store: HypothesisStore, *answers: str, consistency=None):
+    """
+    :return: A knowledge service whose model gives the answers in turn.
+    """
+    return KnowledgeService(
+        backend=HypothesisBackend(
+            client=ScriptedClient(responses=list(answers)),
+            store=store,
+            consistency=consistency,
+        )
+    )
+
+
+def frame_query_on(core_view):
+    """
+    :return: A query for the frame stereotype of a stored core hypothesis's frame.
+    """
+    return the(action_frame.FrameStereotype)(
+        stereotype_of=core_view.citation_of(core_view.root)
+    )
+
+
+CITED_CORE_FRAME = Citation(record_id="core-record", fragment_name="pouring")
+"""
+A citation of the frame of a stored core hypothesis.
+"""
+
+
+class TestCitedFixedValues:
+    def test_a_cited_fragment_is_keyed_by_its_iri(self):
+        request = HypothesisRequest.from_match(
+            the(action_frame.FrameStereotype)(stereotype_of=CITED_CORE_FRAME), ""
+        )
+        assert request.written_fixed_values == {"stereotype_of": CITED_CORE_FRAME.iri}
+
+    def test_the_model_is_told_a_cited_fragment_by_its_name(self):
+        prompt = GenerationPrompt().initial(
+            GenerationSchema.for_root(action_frame.FrameStereotype),
+            "pour",
+            {"stereotype_of": CITED_CORE_FRAME},
+        )
+        (fixed,) = bodies(prompt, GenerationSection.FIXED_VALUES)
+        assert json.loads(fixed) == {"stereotype_of": CITED_CORE_FRAME.fragment_name}
+
+    def test_a_request_builds_on_the_records_it_cites(self):
+        request = HypothesisRequest.from_match(
+            the(action_frame.FrameStereotype)(stereotype_of=CITED_CORE_FRAME), ""
+        )
+        assert request.builds_on == [CITED_CORE_FRAME.record_id]
+
+
+class TestPerspectiveHypothesis:
+    def test_a_frame_hypothesis_is_about_the_stored_core_frame_itself(self, tmp_path):
+        service = service_answering(
+            HypothesisStore(directory=tmp_path),
+            answer_text(AnswerCase.CORE),
+            answer_text(AnswerCase.FRAME),
+        )
+        core_view = service.view_for(core_query())
+        frame_view = service.view_for(frame_query_on(core_view))
+        assert frame_view.root.stereotype_of is core_view.root
+
+    def test_its_expectations_name_the_core_slots_themselves(self, tmp_path):
+        service = service_answering(
+            HypothesisStore(directory=tmp_path),
+            answer_text(AnswerCase.CORE),
+            answer_text(AnswerCase.FRAME),
+        )
+        core_view = service.view_for(core_query())
+        frame_view = service.view_for(frame_query_on(core_view))
+        expected_slots = {
+            id(expectation.expects_of_slot)
+            for expectation in frame_view.root.has_slot_expectation
+        }
+        assert expected_slots <= {id(slot) for slot in core_view.root.defines_slot}
+
+    def test_the_model_is_shown_the_core_fragments_as_given(self, tmp_path):
+        service = service_answering(
+            HypothesisStore(directory=tmp_path),
+            answer_text(AnswerCase.CORE),
+            answer_text(AnswerCase.FRAME),
+        )
+        core_view = service.view_for(core_query())
+        frame_view = service.view_for(frame_query_on(core_view))
+        (given,) = bodies(frame_view.record.exchanges[0].user, GenerationSection.GIVEN)
+        assert {entry["id"] for entry in json.loads(given)} == {
+            core_view.citation_of(fragment).fragment_name
+            for fragment in core_view.fragments
+        }
+
+    def test_its_record_builds_on_the_core_record(self, tmp_path):
+        service = service_answering(
+            HypothesisStore(directory=tmp_path),
+            answer_text(AnswerCase.CORE),
+            answer_text(AnswerCase.FRAME),
+        )
+        core_record = service.serve(core_query())
+        frame_record = service.serve(frame_query_on(service.view(core_record)))
+        assert service.view(frame_record).record.builds_on == [core_record]
+
+    def test_its_stored_turtle_refers_to_the_core_fragments_without_restating_them(
+        self, tmp_path
+    ):
+        store = HypothesisStore(directory=tmp_path)
+        service = service_answering(
+            store, answer_text(AnswerCase.CORE), answer_text(AnswerCase.FRAME)
+        )
+        core_view = service.view_for(core_query())
+        frame_graph = store.get(service.serve(frame_query_on(core_view))).graph
+        core_frame = URIRef(core_view.citation_of(core_view.root).iri)
+        assert (None, None, core_frame) in frame_graph
+        assert (core_frame, RDF.type, None) not in frame_graph
+
+    def test_an_answer_restating_a_core_fragment_is_returned_for_repair(self, tmp_path):
+        restating = frame_answer_adding(
+            {"id": "second_source", "type": "SourceSlot", "label": "another source"}
+        )
+        service = service_answering(
+            HypothesisStore(directory=tmp_path),
+            answer_text(AnswerCase.CORE),
+            restating,
+            json.dumps({"fragments": [], "remove": ["second_source"]}),
+        )
+        core_view = service.view_for(core_query())
+        exchanges = service.view_for(frame_query_on(core_view)).record.exchanges
+        (problems,) = bodies(exchanges[1].user, GenerationSection.PROBLEMS)
+        assert "second_source" in problems
+        assert len(exchanges) == 2
+
+    def test_an_answer_naming_a_fragment_like_a_given_one_is_returned_for_repair(
+        self, tmp_path
+    ):
+        answer = json.loads(answer_text(AnswerCase.FRAME))
+        answer["fragments"][1]["id"] = "goal"
+        answer["fragments"][0]["has_slot_expectation"][0] = "goal"
+        repair = {
+            "fragments": json.loads(answer_text(AnswerCase.FRAME))["fragments"],
+            "remove": ["goal"],
+        }
+        service = service_answering(
+            HypothesisStore(directory=tmp_path),
+            answer_text(AnswerCase.CORE),
+            json.dumps(answer),
+            json.dumps(repair),
+        )
+        core_view = service.view_for(core_query())
+        exchanges = service.view_for(frame_query_on(core_view)).record.exchanges
+        (problems,) = bodies(exchanges[1].user, GenerationSection.PROBLEMS)
+        assert "'goal'" in problems
+
+    def test_it_is_served_from_the_store_without_asking_again(self, tmp_path):
+        service = service_answering(
+            HypothesisStore(directory=tmp_path),
+            answer_text(AnswerCase.CORE),
+            answer_text(AnswerCase.FRAME),
+        )
+        core_view = service.view_for(core_query())
+        first = service.serve(frame_query_on(core_view))
+        assert service.serve(frame_query_on(core_view)) == first
+
+    @pytest.mark.slow
+    def test_it_is_admitted_by_the_reasoner_with_the_core_it_builds_on(self, tmp_path):
+        check = HermitCheck.from_environment()
+        if check is None or HermitCheck.shipped_directory() is None:
+            pytest.skip("needs the linked ontologies and owlready2's HermiT")
+        service = service_answering(
+            HypothesisStore(directory=tmp_path),
+            answer_text(AnswerCase.CORE),
+            answer_text(AnswerCase.FRAME),
+            consistency=check,
+        )
+        core_view = service.view_for(core_query())
+        frame_view = service.view_for(frame_query_on(core_view))
+        assert frame_view.record.consistency == ConsistencyVerdict.CONSISTENT

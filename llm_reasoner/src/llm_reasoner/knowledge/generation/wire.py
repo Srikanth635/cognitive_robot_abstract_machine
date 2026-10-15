@@ -24,7 +24,10 @@ from llm_reasoner.knowledge.generation.schema import (
     FieldSchema,
     GenerationSchema,
 )
-from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
+from llm_reasoner.knowledge.representation.hypothesis import (
+    DecodedHypothesis,
+    GivenFragments,
+)
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
@@ -111,6 +114,12 @@ class FragmentDecoder:
     must be among; without them such concepts are not checked.
     """
 
+    given: GivenFragments = field(default_factory=GivenFragments)
+    """
+    The stored fragments the answer builds on, which it refers to by name and does not
+    state again.
+    """
+
     def decode(self, raw_response: str) -> DecodingResult:
         """
         :return: The hypothesis the answer describes, or the problems preventing one
@@ -124,8 +133,9 @@ class FragmentDecoder:
             ).python_type()
             for entry in usable
         }
+        references = {**self.given.named(), **instances}
         for entry in usable:
-            problems.extend(self.link(entry, instances))
+            problems.extend(self.link(entry, references))
         roots = [
             instance
             for instance in instances.values()
@@ -146,6 +156,7 @@ class FragmentDecoder:
             identifiers={
                 id(instance): identifier for identifier, instance in instances.items()
             },
+            given=self.given,
         )
         if problems:
             return DecodingResult(problems=problems, partial=hypothesis)
@@ -184,11 +195,35 @@ class FragmentDecoder:
             if identifier in seen:
                 problems.append(f"identifier '{identifier}' is used twice")
             seen.add(identifier)
+            problems.extend(self.given_problems(identifier, entry.get(AnswerKey.TYPE)))
             if self.schema.get(entry.get(AnswerKey.TYPE, "")) is None:
                 problems.append(
                     f"fragment '{identifier}' has unknown type '{entry.get(AnswerKey.TYPE)}'"
                 )
         return entries, problems
+
+    def given_problems(self, identifier: str, type_name: Any) -> list[str]:
+        """
+        :return: Why an entry may not stand beside the given fragments: it is named like
+            one, or it is of a type of the modules they describe, which the answer
+            refers to rather than states again.
+        """
+        if identifier in self.given.named():
+            return [
+                f"identifier '{identifier}' names a given fragment; refer to it, and "
+                "give a new fragment an identifier of its own"
+            ]
+        type_schema = self.schema.get(type_name) if isinstance(type_name, str) else None
+        if not self.given.fragments or type_schema is None:
+            return []
+        own_module = self.vocabulary.module_file_of(self.schema.root)
+        module_file = self.vocabulary.module_file_of(type_schema.python_type)
+        if module_file == own_module:
+            return []
+        return [
+            f"fragment '{identifier}' is a {type_name} of {module_file.value}, which "
+            "the given fragments state; refer to a given fragment instead"
+        ]
 
     def declaring_types(self, name: str) -> str:
         """
@@ -272,6 +307,7 @@ class FragmentDecoder:
                 or identifier in seen
                 or not isinstance(type_name, str)
                 or self.schema.get(type_name) is None
+                or self.given_problems(identifier, type_name)
             ):
                 continue
             seen.add(identifier)

@@ -11,8 +11,12 @@ from enum import StrEnum
 from pathlib import Path
 
 from rdflib import Graph
-from typing_extensions import Optional
+from typing_extensions import Callable, Iterable, Mapping, Optional
 
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
+from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
+from llm_reasoner.knowledge.representation.rdf import GraphReader, ReadHypothesis
+from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.knowledge.storage.record import HypothesisRecord
 
 
@@ -82,6 +86,42 @@ class HypothesisStore:
             ),
             graph=Graph().parse(location / StoredFile.HYPOTHESIS, format="turtle"),
         )
+
+    def read(
+        self,
+        record_id: str,
+        read_given: Optional[Callable[[str], Mapping[str, DescriptionEntity]]] = None,
+    ) -> ReadHypothesis:
+        """
+        :param record_id: The record identifier of a stored hypothesis.
+        :param read_given: Reads the fragments of a hypothesis this one builds on, by
+            IRI; by default each is read afresh from the store.
+        :return: The stored hypothesis as vocabulary instances, its references to the
+            hypotheses it builds on resolved to their fragments.
+        """
+        stored = self.get(record_id)
+        read_given = read_given or (lambda given: self.read(given).by_iri())
+        known = {
+            iri: fragment
+            for given in stored.record.builds_on
+            for iri, fragment in read_given(given).items()
+        }
+        return GraphReader().read(stored.graph, known)
+
+    def given(self, record_ids: Iterable[str]) -> GivenFragments:
+        """
+        :param record_ids: The records of the stored hypotheses a new one builds on.
+        :return: Their fragments, each named as its citation names it.
+        """
+        fragments: list[DescriptionEntity] = []
+        names: dict[int, str] = {}
+        iris: dict[int, str] = {}
+        for record_id in record_ids:
+            for iri, fragment in self.read(record_id).by_iri().items():
+                fragments.append(fragment)
+                names[id(fragment)] = Citation.from_iri(iri).fragment_name
+                iris[id(fragment)] = iri
+        return GivenFragments(fragments=fragments, names=names, iris=iris)
 
     def records(self) -> list[HypothesisRecord]:
         """

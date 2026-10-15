@@ -7,10 +7,11 @@ own name, as every prompt of llm_reasoner is written.
 from __future__ import annotations
 
 import json
+from operator import attrgetter
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
 
-from typing_extensions import Any, Callable, Dict, List, Mapping, Sequence
+from typing_extensions import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
 from llm_reasoner.knowledge.acceptance.derived import described
 from llm_reasoner.knowledge.acceptance.rules import Violation
@@ -24,7 +25,9 @@ from llm_reasoner.knowledge.generation.schema import (
     TypeSchema,
 )
 from llm_reasoner.knowledge.generation.wire import prefixed_name
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity
+from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
+from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.prompt_structure import (
     SECTION_SEPARATOR,
     PromptBlock,
@@ -83,6 +86,12 @@ class GenerationSection(StrEnum):
     FIXED_VALUES = "fixed_values"
     """
     The values the root fragment must have, as data.
+    """
+
+    GIVEN = "given"
+    """
+    The stored fragments the answer builds on, as data written as the answer writes
+    fragments.
     """
 
     REJECTED_ANSWER = "rejected_answer"
@@ -284,8 +293,10 @@ def generation_rules(root: str) -> List[PromptRule]:
 
 def written_value(value: Any) -> str:
     """
-    :return: A fixed value as the model writes it.
+    :return: A fixed value as the model writes it; a cited fragment by its name.
     """
+    if isinstance(value, Citation):
+        return value.fragment_name
     if isinstance(value, ConceptReference):
         return prefixed_name(value.iri)
     if isinstance(value, Enum):
@@ -293,6 +304,45 @@ def written_value(value: Any) -> str:
     if isinstance(value, (list, tuple)):
         return "[" + ", ".join(written_value(item) for item in value) + "]"
     return repr(value)
+
+
+def given_entry(
+    fragment: DescriptionEntity, given: GivenFragments, schema: GenerationSchema
+) -> Dict[str, Any]:
+    """
+    :return: A given fragment as the answer writes fragments: its name, its type, its
+        label and the fields it states, a reference to another given fragment by name.
+    """
+    type_schema = schema.get(type(fragment).__name__)
+    entry: Dict[str, Any] = {
+        AnswerKey.IDENTIFIER: given.names[id(fragment)],
+        AnswerKey.TYPE: type(fragment).__name__,
+    }
+    for field_schema in type_schema.fields:
+        value = attrgetter(field_schema.name)(fragment)
+        held = value if isinstance(value, list) else [value]
+        written = [
+            item
+            for item in (given_value(item, given) for item in held)
+            if item is not None and item != ""
+        ]
+        if written:
+            entry[field_schema.name] = written if field_schema.many else written[0]
+    return entry
+
+
+def given_value(value: Any, given: GivenFragments) -> Any:
+    """
+    :return: A value of a given fragment as the answer writes it; ``None`` for a
+        reference to a fragment that is not given.
+    """
+    if isinstance(value, DescriptionEntity):
+        return given.names.get(id(value))
+    if isinstance(value, ConceptReference):
+        return prefixed_name(value.iri)
+    if isinstance(value, Enum):
+        return value.name
+    return value
 
 
 def field_takes(field_schema: FieldSchema) -> Dict[str, Any]:
@@ -431,11 +481,13 @@ class GenerationPrompt:
         schema: GenerationSchema,
         instruction: str,
         fixed_values: Mapping[str, Any],
+        given: Optional[GivenFragments] = None,
     ) -> str:
         """
         :param schema: The fragment types the answer may use.
         :param instruction: The action to describe, in plain words.
         :param fixed_values: Values the root fragment must have, by field name.
+        :param given: The stored fragments the answer builds on, if any.
         :return: The prompt asking for a hypothesis of the instruction.
         """
         blocks = [PromptBlock(section=GenerationSection.INSTRUCTION, body=instruction)]
@@ -448,6 +500,18 @@ class GenerationPrompt:
                             name: written_value(value)
                             for name, value in fixed_values.items()
                         }
+                    ),
+                )
+            )
+        if given is not None and given.fragments:
+            blocks.append(
+                PromptBlock(
+                    section=GenerationSection.GIVEN,
+                    body=as_json(
+                        [
+                            given_entry(fragment, given, schema)
+                            for fragment in given.fragments
+                        ]
                     ),
                 )
             )

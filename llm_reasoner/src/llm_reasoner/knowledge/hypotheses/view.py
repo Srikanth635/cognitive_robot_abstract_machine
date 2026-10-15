@@ -16,7 +16,7 @@ from typing_extensions import Optional, TypeVar
 from krrood.utils import resolve_class_from_full_name
 
 from llm_reasoner.knowledge.storage.citation import Citation
-from llm_reasoner.knowledge.representation.rdf import GraphReader
+from llm_reasoner.knowledge.representation.rdf import GraphReader, ReadHypothesis
 from llm_reasoner.knowledge.storage.record import HypothesisRecord
 from llm_reasoner.knowledge.storage.store import StoredHypothesis
 from llm_reasoner.exceptions import LLMReasonerError
@@ -103,11 +103,16 @@ class HypothesisView:
     """
 
     @classmethod
-    def of(cls, stored: StoredHypothesis) -> HypothesisView:
+    def of(
+        cls, stored: StoredHypothesis, read: Optional[ReadHypothesis] = None
+    ) -> HypothesisView:
         """
+        :param stored: The stored hypothesis.
+        :param read: Its fragments, read with the fragments it builds on; read from its
+            graph alone when not given.
         :return: The view of a stored hypothesis.
         """
-        read = GraphReader().read(stored.graph)
+        read = read or GraphReader().read(stored.graph)
         return cls(
             record=stored.record,
             fragments=read.fragments,
@@ -124,6 +129,12 @@ class HypothesisView:
             fragment for fragment in self.fragments if isinstance(fragment, root_type)
         ]
         return root
+
+    def by_iri(self) -> dict[str, DescriptionEntity]:
+        """
+        :return: Every fragment, by the IRI it is stored under.
+        """
+        return {self.identifiers[id(fragment)]: fragment for fragment in self.fragments}
 
     def instances_of(self, kind: type[Fragment]) -> list[Fragment]:
         """

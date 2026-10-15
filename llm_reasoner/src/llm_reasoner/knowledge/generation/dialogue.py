@@ -17,6 +17,7 @@ from llm_reasoner.knowledge.generation.assessment import HypothesisAssessor
 from llm_reasoner.knowledge.generation.prompts import GenerationPrompt
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
+from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
 from llm_reasoner.knowledge.generation.wire import FragmentDecoder
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
@@ -142,16 +143,21 @@ class GenerationDialogue:
     Every exchange of the dialogue, in order.
     """
 
-    def generate(self, request: HypothesisRequest) -> GenerationOutcome:
+    def generate(
+        self, request: HypothesisRequest, given: Optional[GivenFragments] = None
+    ) -> GenerationOutcome:
         """
+        :param request: What is asked for.
+        :param given: The stored fragments the request builds on, if any.
         :return: The admitted hypothesis, with its warnings and every exchange.
         :raises HypothesisRejected: When no answer is admitted within the repair budget.
         """
+        given = given or GivenFragments()
         schema = GenerationSchema.for_root(request.root_type)
-        decoder = FragmentDecoder(schema, linked_terms=self.linked_terms)
+        decoder = FragmentDecoder(schema, linked_terms=self.linked_terms, given=given)
         system_prompt = self.prompt.system(schema)
         initial_prompt = self.prompt.initial(
-            schema, request.instruction, request.fixed_values
+            schema, request.instruction, request.fixed_values, given
         )
         prompt = initial_prompt
         under_repair: Optional[AnswerUnderRepair] = None

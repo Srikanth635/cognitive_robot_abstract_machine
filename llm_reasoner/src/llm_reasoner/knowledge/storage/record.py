@@ -122,6 +122,11 @@ class RecordField(StrEnum):
     The ontology module versions.
     """
 
+    BUILDS_ON = "builds_on"
+    """
+    The records of the stored hypotheses the hypothesis builds on.
+    """
+
 
 @dataclass
 class HypothesisRecord(SubclassJSONSerializer):
@@ -182,6 +187,12 @@ class HypothesisRecord(SubclassJSONSerializer):
     When the hypothesis was admitted, as an ISO 8601 timestamp.
     """
 
+    builds_on: list[str] = field(default_factory=list)
+    """
+    The records of the stored hypotheses whose fragments the hypothesis refers to
+    without stating them, such as the action core a perspective describes.
+    """
+
     def to_json(self) -> Dict[str, Any]:
         return {
             **super().to_json(),
@@ -195,6 +206,7 @@ class HypothesisRecord(SubclassJSONSerializer):
             RecordField.WARNINGS: self.warnings,
             RecordField.CONSISTENCY: self.consistency.value,
             RecordField.MODULE_VERSIONS: self.module_versions,
+            RecordField.BUILDS_ON: self.builds_on,
         }
 
     @classmethod
@@ -212,6 +224,7 @@ class HypothesisRecord(SubclassJSONSerializer):
             warnings=data[RecordField.WARNINGS],
             consistency=ConsistencyVerdict(data[RecordField.CONSISTENCY]),
             module_versions=data[RecordField.MODULE_VERSIONS],
+            builds_on=data.get(RecordField.BUILDS_ON, []),
         )
 
     def answers(self, root_type: str, fixed_values: dict[str, str]) -> bool:
