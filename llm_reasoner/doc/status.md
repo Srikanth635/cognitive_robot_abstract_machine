@@ -443,6 +443,22 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   records counted no ground on the frame; a shown ground now keeps its citation
   (`39b555192`), and this run's grounds were classified afterwards against each run's
   stored records.
+- Measuring the action frame, the kitchen (2026-10-16): K1–K5 once per arm, both reading
+  the same store, into which the first arm generated the three situations not yet stored
+  (granular; liquid until the target quantity; granular until the source is exhausted),
+  their cost not recorded by the kitchen's live harness (about $0.3–0.5 each by earlier
+  runs). Every case chose the same in both arms: the right arm, the default tilt of
+  1.85 rad and the default pour geometry. With the frame, four of five answers rested on
+  the core's tilt choice (K3 on the phase structure only), each read three to six
+  knowledge tools against one or two, and the resolver cost $0.098 a case against $0.075
+  ($0.49 against $0.37 for the five). K4's "until the bowl is half full" meets the frame's
+  default of pouring until the goal holds the wanted amount, but `PouringAction` has no
+  amount to choose.
+
+  Phase 4's verdict, both measurements: the action frame changes what an answer rests on
+  and what the model reads, not what it chooses, at 30 % (kitchen) to 100 % (simulated
+  pour) more resolver cost. Where the pouring cases fail, they fail on where the lip
+  ends for given values, which the simulated pour's feedback corrects in both arms.
 
 ## 3. Live testing
 
