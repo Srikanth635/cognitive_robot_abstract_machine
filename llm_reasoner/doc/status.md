@@ -459,6 +459,24 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   and what the model reads, not what it chooses, at 30 % (kitchen) to 100 % (simulated
   pour) more resolver cost. Where the pouring cases fail, they fail on where the lip
   ends for given values, which the simulated pour's feedback corrects in both arms.
+- Measuring the action frame where the containers are open (2026-10-16, twice per arm,
+  $2.14): the kitchen's P2 (the bowl among the bowl, the bread and a spoon), P3 (every
+  body a candidate) and P8 (every optional field open), and cram_viz's `objects_open` (the
+  pitcher and the bowl beside a milk carton and a cereal box). Both arms chose the cup or
+  the pitcher and the bowl in every run; the kitchen's expectations were met in all 12.
+  With the frame, every kitchen answer rested on the frame's expectations of the goal and
+  the source (`exp_goal`, `exp_source`; once also the goal's opening and the source being
+  held), where without it the answers rested on the tilt phase only; the model read five
+  to eight knowledge tools against one or two, for about 20 % more ($0.100 a case
+  against $0.080). `objects_open` missed every pour in both arms, its pour geometry not
+  open to correct the 0.188 m miss, and its later tilts failed the motion ($0.27 against
+  $0.26 a run).
+
+  Phase 4, all three measurements: the frame does not change a choice on the pouring
+  cases measured, the baseline already choosing well where a choice was open; it makes
+  the answers rest on explicit expectations of the participants, which is the grounding
+  the knowledge component is for, at 20–100 % more resolver cost. Off by default it costs
+  nothing.
 
 ## 3. Live testing
 
