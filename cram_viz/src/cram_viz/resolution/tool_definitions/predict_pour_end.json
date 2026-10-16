@@ -1,0 +1,40 @@
+{
+  "name": "predict_pour_end",
+  "description": {
+    "purpose": "Predict where the source container's mouth ends when the pouring is performed with the given values, as the simulated pour would measure it.",
+    "returns": "Whether the mouth ends over the target's opening; the mouth's position and the opening's centre in the world; the opening's radius; the mouth's distance from the opening's centre across the floor, how far ahead of and right of it it ends as seen from the robot, and how high above the opening.",
+    "use_when": "Choosing the pour's geometry: predict the values you would answer, and change pour_side_offset, pour_approach_offset, pour_height or tilt_angle until the mouth lands in the opening.",
+    "avoid": "Answering a pour whose prediction does not land in the opening without saying why."
+  },
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "source_container": {"type": "string", "description": "The handle of the container poured from."},
+      "target_container": {"type": "string", "description": "The handle of the container poured into."},
+      "arm": {"type": "string", "enum": ["LEFT", "RIGHT"]},
+      "tilt_angle": {"type": "number"},
+      "pour_side": {"type": "string", "enum": ["LEFT", "RIGHT"]},
+      "pour_side_offset": {"type": "number"},
+      "pour_approach_offset": {"type": "number"},
+      "pour_height": {"type": "number"}
+    },
+    "required": ["source_container", "target_container", "arm"],
+    "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "lands_in_opening": {"type": "boolean"},
+      "units": {"type": "string"},
+      "mouth_position": {"type": "array", "items": {"type": "number"}},
+      "opening_centre": {"type": "array", "items": {"type": "number"}},
+      "opening_radius": {"type": "number"},
+      "mouth_distance_from_opening_centre": {"type": "number"},
+      "mouth_ahead_of_opening_centre": {"type": "number"},
+      "mouth_right_of_opening_centre": {"type": "number"},
+      "mouth_above_opening": {"type": "number"}
+    },
+    "required": ["lands_in_opening", "mouth_position", "opening_centre", "mouth_distance_from_opening_centre"],
+    "additionalProperties": false
+  }
+}

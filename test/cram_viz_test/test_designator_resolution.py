@@ -46,6 +46,7 @@ from cram_viz.resolution.designators import (
     QuerySlots,
     SceneNamespace,
 )
+from cram_viz.resolution.prediction import PREDICTION_RULE
 from cram_viz.resolution.resolver import (
     RESOLVER_MAX_TOKENS,
     WORLD_MODEL_MODULES,
@@ -626,3 +627,41 @@ class TestOfferingTheFrame:
             .resolution.perspective_record_ids
             == []
         )
+
+
+# %% predicting where a pour ends
+
+
+class TestPredictingPours:
+    def test_a_resolver_predicting_pours_states_the_prediction_rule(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = replace(
+            resolver_replaying(
+                PouringDesignator.OBJECTS_GIVEN,
+                HypothesisStore(directory=tmp_path / "store"),
+                tmp_path / "runs",
+            ),
+            predicts_pours=True,
+        )
+        resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        system, _ = resolver.client.calls[-1]
+        assert PREDICTION_RULE.render() in system
+
+    def test_by_default_a_resolver_predicts_nothing(self, pouring_bundle, tmp_path):
+        resolver = resolver_replaying(
+            PouringDesignator.OBJECTS_GIVEN,
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        system, _ = resolver.client.calls[-1]
+        assert PREDICTION_RULE.render() not in system
