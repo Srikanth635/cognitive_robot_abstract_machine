@@ -32,7 +32,6 @@ from llm_reasoner.knowledge.generation.prompts import (
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.hypotheses.knowledge_access import KnowledgeToolName
-from llm_reasoner.knowledge.hypotheses.questions import perspective_of_name
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
@@ -921,36 +920,3 @@ class TestConditionsStated:
             tmp_path, frame_answer_without("source_held", "condition_has_state")
         )
         assert "'source_held'" in problems
-
-
-# %% which perspective a fragment name belongs to
-
-
-class TestPerspectiveOfName:
-    def test_a_name_the_tools_give_a_core_fragment_belongs_to_the_core(
-        self, stored_pouring
-    ):
-        overview = asked(
-            stored_pouring.toolbox(stored_pouring.core_record),
-            KnowledgeToolName.KNOWLEDGE_OVERVIEW,
-            {},
-        )
-        assert (
-            perspective_of_name(overview["frame"]["frame"]["name"])
-            is ActionPerspectiveFile.ACTION_CORE
-        )
-
-    def test_a_name_the_tools_give_a_frame_fragment_belongs_to_the_frame(
-        self, stored_pouring
-    ):
-        found = asked(
-            stored_pouring.toolbox(stored_pouring.frame_record),
-            KnowledgeToolName.FIND_FRAGMENTS,
-            {"kind": action_frame.SlotExpectation.__name__},
-        )
-        assert {
-            perspective_of_name(fragment["name"]) for fragment in found["fragments"]
-        } == {ActionPerspectiveFile.ACTION_FRAME}
-
-    def test_a_name_of_a_phase_structure_fragment_belongs_to_no_perspective(self):
-        assert perspective_of_name("tilting") is None

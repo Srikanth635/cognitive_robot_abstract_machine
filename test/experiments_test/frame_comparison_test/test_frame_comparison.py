@@ -13,6 +13,7 @@ from pathlib import Path
 from llm_reasoner.clients.usage import SONNET_5_5_PRICES
 from llm_reasoner.knowledge.access import (
     ActionPerspectiveFile,
+    Citation,
     HypothesisStore,
     KnowledgeToolName,
 )
@@ -46,7 +47,19 @@ CASE = "pour_geometry_open"
 The case the scripted runs are of.
 """
 
+FRAME_RECORD = "frame-record"
+"""
+The record of the frame hypothesis the scripted runs offering the frame consulted.
+"""
+
 # %% helpers
+
+
+def knowledge_ground(cited: Citation) -> ShownGround:
+    """
+    :return: A ground resting on a cited knowledge fragment, named as cram_viz names it.
+    """
+    return ShownGround(GroundKey.KNOWLEDGE, cited.fragment_name, cited.iri)
 
 
 def tried(lands: bool, distance: float) -> TriedPour:
@@ -89,6 +102,7 @@ def resolved(trials: list[TriedPour], grounds: list[ShownGround]) -> ResolvedDes
         cost=0.1,
         run="a-run",
         trials=trials,
+        perspective_record_ids=["core-record", FRAME_RECORD],
     )
 
 
@@ -150,15 +164,15 @@ class TestPourRecord:
         assert record.first_try_success is False
         assert [trial.distance for trial in record.trials] == [0.188, 0.005]
 
-    def test_a_ground_named_after_a_perspective_cites_the_frame(self, tmp_path):
+    def test_a_ground_citing_a_consulted_perspective_cites_the_frame(self, tmp_path):
         record = pour_record(
             tmp_path,
             ComparisonArm.WITH_FRAME,
             [tried(True, 0.01)],
             grounds=[
-                ShownGround(GroundKey.KNOWLEDGE, "action-frame/lip_over_opening"),
-                ShownGround(GroundKey.KNOWLEDGE, "ph_tilt"),
-                ShownGround(GroundKey.WORLD, "Body#1 (bowl.stl)"),
+                knowledge_ground(Citation(FRAME_RECORD, "lip_over_opening")),
+                knowledge_ground(Citation("phase-record", "ph_tilt")),
+                ShownGround(GroundKey.WORLD, "Body#1 (bowl.stl)", "Body#1"),
             ],
         )
         assert [ground.cites_perspective for ground in record.grounds] == [
@@ -218,7 +232,7 @@ class TestSummary:
                 tmp_path,
                 ComparisonArm.WITH_FRAME,
                 [tried(True, 0.01)],
-                grounds=[ShownGround(GroundKey.KNOWLEDGE, "action-core/lip_pos")],
+                grounds=[knowledge_ground(Citation(FRAME_RECORD, "lip_pos"))],
             ),
             pour_record(tmp_path, ComparisonArm.WITH_FRAME, [tried(True, 0.01)]),
         ]

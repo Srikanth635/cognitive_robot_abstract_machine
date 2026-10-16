@@ -17,6 +17,7 @@ from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.access import (
     ActionPerspectiveFile,
+    Citation,
     HypothesisStore,
     KnowledgeService,
     action_core,
@@ -319,6 +320,15 @@ class TestResolution:
         assert [(ground.source, ground.name) for ground in action.grounds] == [
             (GroundKey.KNOWLEDGE, "pour"),
         ]
+
+    def test_a_knowledge_ground_keeps_the_citation_it_rests_on(
+        self, pouring_bundle, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (action,) = run.resolution.actions
+        (ground,) = action.grounds
+        view = run.knowledge.view(run.resolution.record_id)
+        assert Citation.from_iri(ground.identifier) == view.citation_of(view.root)
 
     def test_a_resolution_reports_the_knowledge_it_consulted(
         self, pouring_bundle, tmp_path

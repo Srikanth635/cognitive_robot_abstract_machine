@@ -17,7 +17,6 @@ from llm_reasoner.knowledge.access import (
     ActionPerspectiveFile,
     Citation,
     KnowledgeToolName,
-    perspective_of_name,
 )
 from llm_reasoner.resolver.grounds import GroundKey
 from typing_extensions import Any, List, Optional, Sequence
@@ -231,6 +230,7 @@ class RunRecord:
         :return: The record of a run of cram_viz's pour.
         """
         (action,) = resolved.actions
+        perspective_records = set(resolved.perspective_record_ids)
         return cls(
             measurement=Measurement.SIMULATED_POUR,
             case=case,
@@ -240,9 +240,10 @@ class RunRecord:
             grounds=[
                 GroundRecord(
                     source=ground.source,
-                    name=ground.name,
-                    cites_perspective=ground.source is GroundKey.KNOWLEDGE
-                    and perspective_of_name(ground.name) is not None,
+                    name=ground.identifier or ground.name,
+                    cites_perspective=cites_one_of(
+                        ground.source, ground.identifier, perspective_records
+                    ),
                 )
                 for ground in action.grounds
             ],
@@ -281,9 +282,9 @@ class RunRecord:
                 GroundRecord(
                     source=ground.source,
                     name=ground.identifier,
-                    cites_perspective=ground.source is GroundKey.KNOWLEDGE
-                    and Citation.from_iri(ground.identifier).record_id
-                    in perspective_records,
+                    cites_perspective=cites_one_of(
+                        ground.source, ground.identifier, perspective_records
+                    ),
                 )
                 for ground in justification.grounds
             ],
@@ -295,6 +296,17 @@ class RunRecord:
             ],
             cost=resolution.cost(prices),
         )
+
+
+def cites_one_of(source: GroundKey, identifier: str, records: set[str]) -> bool:
+    """
+    :return: Whether a ground cites a fragment of one of the given stored hypotheses.
+    """
+    return (
+        source is GroundKey.KNOWLEDGE
+        and bool(identifier)
+        and Citation.from_iri(identifier).record_id in records
+    )
 
 
 def knowledge_tools_in(events: Path) -> List[str]:
