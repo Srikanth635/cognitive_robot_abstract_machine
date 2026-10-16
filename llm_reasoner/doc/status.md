@@ -418,6 +418,31 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   pouring's usual choices, height above the goal among them, and a core generated with it
   fills all six fields. A description is not part of a module's version, so stored cores
   are still served.
+- Measuring the action frame, the simulated pour (2026-10-16, phase 4 of
+  `knowledge_perspectives.md`, §13; `experiments.frame_comparison`, Sonnet 5.5): cram_viz's
+  `pour_geometry_open` in `simple_pouring`, three runs per arm, both arms reading the same
+  stored knowledge (the liquid pouring hypothesis, and the core and frame with the height
+  choice), nothing generated, $1.03 in total.
+
+  | | Without the frame | With the frame |
+  |---|---|---|
+  | First pour lands | 0 of 3 (0.188 m off each) | 0 of 3 (0.188 m off each) |
+  | Pours tried | 2, 2, 2 | 2, 2, 2 |
+  | Final distance from the opening's centre | 0.018, 0.005, 0.014 m | 0.019, 0.005, 0.019 m |
+  | Knowledge the answer rests on | the phase structure, in one run | the core's lip position, tilt and height, in every run |
+  | Fragments described | none | 1, 9 and none |
+  | Resolver cost per run | $0.083–0.133 | $0.193–0.291 |
+
+  The frame changed what the answers rest on and what was read, not what was chosen: every
+  first answer kept the default geometry, the frame arm's with the reason "the code
+  already shifts the pour point sideways by sin(tilt) times the mouth height, so both extra
+  offsets stay at 0", after reading the frame's rationale that the lip's position decides
+  whether the substance lands in the goal. Knowing *what* matters did not say *where* the
+  lip ends for given values; the simulated pour's feedback corrected it in both arms. The
+  comparison showed cram_viz naming a knowledge ground by its fragment name alone, so its
+  records counted no ground on the frame; a shown ground now keeps its citation
+  (`39b555192`), and this run's grounds were classified afterwards against each run's
+  stored records.
 
 ## 3. Live testing
 
