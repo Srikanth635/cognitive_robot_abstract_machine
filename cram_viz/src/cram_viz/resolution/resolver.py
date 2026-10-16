@@ -53,11 +53,8 @@ from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunEnvironmen
 from cram_viz.resolution.scene_geometry import SceneGeometry
 from cram_viz.resolution.slot_data import SlotData
 from cram_viz.resolution.trial import SimulatedPouring, TriedPour
-from cram_viz.resolution.prediction import (
-    MeasuredHolding,
-    PourPrediction,
-    PourPredictor,
-)
+from cram_viz.resolution.hold_measurement import MeasuredHolding
+from cram_viz.resolution.prediction import PourPrediction, PourPredictor
 from cram_viz.resolution.scene_world import SceneWorlds
 
 RESOLVER_MAX_TOKENS = 8192
