@@ -45,7 +45,22 @@ opening, and whether it lands in the opening.
   pour's values as the answer writes them and answering with the predicted outcome. The
   simulated pour stays as the check after the answer.
 
-## 4. Measured
+## 4. Measured (2026-10-16)
 
-`experiments.frame_comparison` gains the arm "with the prediction": first-try success on
-`pour_geometry_open`, against the three runs without it, which all missed.
+`experiments.frame_comparison`'s arm "with the prediction", three runs of
+`pour_geometry_open` against the three recorded without it:
+
+| | Without the prediction | With the prediction |
+|---|---|---|
+| First pour lands | 0 of 3 (0.188 m off) | 3 of 3 |
+| Pours tried | 2, 2, 2 | 1, 1, 1 |
+| Final distance from the opening's centre | 0.018, 0.005, 0.014 m | 0.011, 0.005, 0.011 m |
+| Resolver cost per run | $0.083–0.133 | $0.046–0.091 |
+
+Every run predicted three pours: the defaults (0.188 m off), the left arm (the pick-up
+fails), and a corrected side offset (−0.185 or −0.188 m, landing), which it answered;
+each prediction of the final pour was within 5 mm of where the simulated pour measured
+it. Two earlier attempts found two faults, both fixed before these runs: the measuring
+process wrote its held source as `__main__.HeldSource` (it now runs a module of its
+own, `hold_measurement`), and a pick-up the arm cannot make raised instead of being
+predicted as a failed motion.
