@@ -522,7 +522,9 @@ rule says to read those first.
    live core, `source_container` and `target_container` fill its source and goal,
    `tilt_angle` its orientation choice, `pour_side_offset` and `pour_approach_offset`
    its lip-position choice; `pour_height` fills nothing, that core having no distance
-   choice.
+   choice. Reviewed 2026-10-16: kept as written, both offsets on the lip position; the
+   core's description now names pouring's usual choices (tilt, lip position, height above
+   the goal, amount), and a core generated with it fills all six fields ($0.069).
 
 ## Sources
 
