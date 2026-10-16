@@ -20,11 +20,11 @@ from semantic_digital_twin.semantic_annotations.semantic_annotations import Pour
 
 from cram_viz import paths
 from cram_viz.resolution.execution import PouringExecution
+from cram_viz.resolution.hold_measurement import MeasuredHolding
 from cram_viz.resolution.prediction import (
     PREDICT_POUR_END,
     HeldSource,
     Holding,
-    MeasuredHolding,
     PourPrediction,
     PourPredictor,
     PredictPourEnd,
@@ -222,6 +222,14 @@ class TestMeasuredHolding:
         held = HeldSource(source_in_tool_frame=np.eye(4), robot_yaw=0.5)
         holding = MeasuredHolding(bundle=tmp_path, run=ProcessWritingTheHold(held=held))
         assert holding.held(POURING_VALUES).robot_yaw == held.robot_yaw
+
+    @pytest.mark.slow
+    def test_the_hold_measured_in_a_process_of_its_own_is_read_back(self):
+        bundle = paths.scenes_dir() / "simple_pouring"
+        if not bundle.is_dir() or os.environ.get("CRAM_VIZ_SCENES") is None:
+            pytest.skip("needs the simple_pouring scene")
+        held = MeasuredHolding(bundle=bundle).held(POURING_VALUES)
+        assert held.source_in_tool_frame.shape == (4, 4)
 
 
 @dataclass

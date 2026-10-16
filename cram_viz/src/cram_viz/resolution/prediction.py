@@ -11,13 +11,9 @@ process of its own.
 
 from __future__ import annotations
 
-import argparse
 import json
-import subprocess
-import sys
-import tempfile
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
@@ -31,23 +27,11 @@ from llm_reasoner.resolver.outcomes import OutcomePrediction
 from llm_reasoner.resolver.prompt_format import PromptRule, RuleName
 from llm_reasoner.world.access import WorldAccess
 from semantic_digital_twin.world import World
-from typing_extensions import Any, Callable, Dict, List, Mapping, Self
+from typing_extensions import Any, Dict, List, Mapping, Self
 
-from cram_viz import configure_console_logging
 from cram_viz.resolution.execution import PouringExecution
-from cram_viz.resolution.scene_world import SceneWorldBuilder
 from cram_viz.resolution.slot_data import SlotData
 from cram_viz.resolution.trial import PourOutcome, top_centre_in_own_frame
-
-HOLDING_MODULE = __spec__.name
-"""
-The module a process measuring how the gripper holds the source runs.
-"""
-
-HELD_SOURCE_FILE = "held_source.json"
-"""
-The file such a process writes what it measured to.
-"""
 
 PREDICT_POUR_END = "predict_pour_end"
 """
@@ -166,56 +150,6 @@ class Holding(ABC):
         """
 
 
-@dataclass
-class MeasuredHolding(Holding):
-    """
-    Measures how the gripper holds the source once per source and arm, each in a process
-    of its own performing the steps before the pour from the scene's initial world.
-    """
-
-    bundle: Path
-    """
-    The scene's bundle directory, from which the world is built anew.
-    """
-
-    run: Callable[..., Any] = subprocess.run
-    """
-    Runs a measuring process.
-    """
-
-    measured: Dict[tuple[str, str], HeldSource] = field(default_factory=dict)
-    """
-    What was measured so far, by source and arm.
-    """
-
-    def held(self, values: Mapping[str, Any]) -> HeldSource:
-        key = (json.dumps(values["source_container"]), values["arm"])
-        if key not in self.measured:
-            self.measured[key] = self.measure(values)
-        return self.measured[key]
-
-    def measure(self, values: Mapping[str, Any]) -> HeldSource:
-        """
-        :return: How the gripper holds the source, read from a measuring process.
-        """
-        with tempfile.TemporaryDirectory() as directory:
-            held_file = Path(directory) / HELD_SOURCE_FILE
-            self.run(
-                [
-                    sys.executable,
-                    "-m",
-                    HOLDING_MODULE,
-                    str(self.bundle),
-                    json.dumps(dict(values)),
-                    str(held_file),
-                ],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            return HeldSource.from_json(json.loads(held_file.read_text()))
-
-
 # %% predicting
 
 
@@ -312,27 +246,3 @@ class PourPrediction(OutcomePrediction):
     @property
     def rule(self) -> PromptRule:
         return PREDICTION_RULE
-
-
-# %% measuring in a process of its own
-
-
-def main() -> None:
-    """
-    Measure how the gripper holds the source after the steps before a pour, from a
-    scene's initial world, and write it to a file.
-    """
-    configure_console_logging()
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("bundle", type=Path)
-    parser.add_argument("values")
-    parser.add_argument("held_file", type=Path)
-    arguments = parser.parse_args()
-    held = HeldSource.measure_in(
-        SceneWorldBuilder.robot_world(arguments.bundle), json.loads(arguments.values)
-    )
-    arguments.held_file.write_text(json.dumps(held.to_json()))
-
-
-if __name__ == "__main__":
-    main()
