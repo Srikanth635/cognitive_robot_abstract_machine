@@ -395,6 +395,11 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   the cache, 2.7k output). Two weak spots: most conditions leave their polarity out,
   which the vocabulary allows, and "the source is empty" was stated without the state it
   denies.
+- The two weak spots fixed (2026-10-16, action frame 0.2.0): every slot condition must state
+  its polarity, and a state condition its state (`conditionHasState some owl:Thing`, as
+  the Flanagan core says "has some value"); the state condition's definition now gives
+  the negated example, the source empty as the substance not contained in it. An answer
+  missing either is returned for repair.
 
 ## 3. Live testing
 
