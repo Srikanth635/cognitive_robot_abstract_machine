@@ -25,12 +25,15 @@ from cram_viz.resolution.prediction import (
     PREDICT_POUR_END,
     HeldSource,
     Holding,
+    PickUpFailed,
     PourPrediction,
     PourPredictor,
     PredictPourEnd,
 )
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 from cram_viz.resolution.trial import OutcomeKey
+
+from .resolutions import FinishedTrial
 
 RECORDED_POURS = (
     Path(__file__).parent / "resolution_cases" / "recorded_simple_pouring_pours.json"
@@ -48,6 +51,11 @@ POURING_VALUES = {
 }
 """
 A pour from the pitcher into the bowl, its geometry left to the action's defaults.
+"""
+
+PICK_UP_FAILURE = "MotionDidNotFinish: out of reach"
+"""
+Why a scripted pick-up fails, as the last line a failing process writes.
 """
 
 HELD_AT_THE_TOOL_FRAME = HeldSource(source_in_tool_frame=np.eye(4), robot_yaw=0.0)
@@ -169,6 +177,33 @@ class TestTool:
             )
         )
 
+    def test_a_pour_whose_pick_up_fails_is_predicted_as_a_failed_motion(
+        self, pouring_kitchen
+    ):
+        view = WorldView()
+        cup = pouring_kitchen.get_semantic_annotations_by_type(PouringCup)[0]
+        bowl = pouring_kitchen.get_body_by_name("bowl.stl")
+        tool = PredictPourEnd(
+            predictor=PourPredictor(
+                world=pouring_kitchen, holding=HoldingThatCannotPickUp()
+            ),
+            world=view,
+        )
+        outcome = json.loads(
+            tool.run(
+                {
+                    "source_container": view.handle_of(cup),
+                    "target_container": view.handle_of(bowl),
+                    "arm": "LEFT",
+                }
+            ).content
+        )
+        assert outcome == {
+            OutcomeKey.LANDS_IN_OPENING: False,
+            OutcomeKey.MOTION_FAILED: PICK_UP_FAILURE,
+        }
+        Draft202012Validator(tool.definition.output_schema).validate(outcome)
+
     def test_the_prediction_offers_the_tool_with_its_rule(self, predictor):
         prediction = PourPrediction(predictor=predictor, world=WorldView())
         assert [tool.definition.name for tool in prediction.tools()] == [
@@ -218,6 +253,14 @@ class TestMeasuredHolding:
         holding.held({**POURING_VALUES, "arm": "LEFT"})
         assert len(run.commands) == 2
 
+    def test_a_hold_the_process_cannot_pick_up_is_refused_with_its_reason(
+        self, tmp_path
+    ):
+        holding = MeasuredHolding(bundle=tmp_path, run=ProcessFailingToPickUp())
+        with pytest.raises(PickUpFailed) as failed:
+            holding.held(POURING_VALUES)
+        assert failed.value.reason == PICK_UP_FAILURE
+
     def test_the_hold_measured_is_what_the_process_wrote(self, tmp_path):
         held = HeldSource(source_in_tool_frame=np.eye(4), robot_yaw=0.5)
         holding = MeasuredHolding(bundle=tmp_path, run=ProcessWritingTheHold(held=held))
@@ -251,3 +294,26 @@ class ProcessWritingTheHold:
     def __call__(self, command, **settings):
         self.commands.append(command)
         Path(command[-1]).write_text(json.dumps(self.held.to_json()))
+        return FinishedTrial(returncode=0)
+
+
+@dataclass
+class ProcessFailingToPickUp:
+    """
+    Runs no process: each call finishes as a measuring process whose pick-up failed.
+    """
+
+    def __call__(self, command, **settings):
+        return FinishedTrial(
+            returncode=1, stderr="Traceback\nMotionDidNotFinish: out of reach\n"
+        )
+
+
+@dataclass
+class HoldingThatCannotPickUp(Holding):
+    """
+    Fails to pick up every source.
+    """
+
+    def held(self, values) -> HeldSource:
+        raise PickUpFailed(reason=PICK_UP_FAILURE)
