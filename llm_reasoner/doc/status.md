@@ -414,7 +414,10 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   perspectives are offered, each open slot's entry in `<slots>` names the frame parts it
   fills (`"frame"`), and the frame rule says to read those first. The `PouringAction`
   mapping is written by hand for review; against the live core, five of its six fields
-  find their part, `pour_height` none.
+  find their part, `pour_height` none. Reviewed: kept; the core's description now names
+  pouring's usual choices, height above the goal among them, and a core generated with it
+  fills all six fields. A description is not part of a module's version, so stored cores
+  are still served.
 
 ## 3. Live testing
 
