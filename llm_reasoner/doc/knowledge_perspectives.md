@@ -566,6 +566,11 @@ every run) and doubled the resolver's cost; the first answers kept the default g
 in both arms, trusting coraplex's built-in sideways shift (`status.md`). The miss is a
 question of where the lip ends for given values, which no stereotype answers.
 
+The kitchen's K1–K5 (2026-10-16): the same choices in every case and arm; with the frame,
+four of five answers rested on the core's tilt choice and the model read three to six
+knowledge tools against one or two, for 30 % more. The frame changes grounding, not
+choices, on these cases: phase 4's condition for going on is not met by them.
+
 ### 13.5 What is built for it
 
 - `Reasoner` gains the requester's `perspectives` setting, so cram_viz and the kitchen
