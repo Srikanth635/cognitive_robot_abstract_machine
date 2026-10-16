@@ -229,6 +229,12 @@ class RuleName(StrEnum):
     offered.
     """
 
+    OUTCOME_PREDICTION = "outcome_prediction"
+    """
+    How what an answer would bring about is predicted before answering, when tools for
+    it are offered.
+    """
+
     GROUNDS = "grounds"
     """
     How an element names what its choices rest on.

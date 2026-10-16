@@ -13,13 +13,16 @@ from pathlib import Path
 from krrood.entity_query_language.factories import the, variable
 
 from llm_reasoner.clients.base import ScriptedClient
+from llm_reasoner.clients.tools import ScriptedToolRequest, Tool
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
-from llm_reasoner.resolver.outcomes import OutcomeCheck
-from llm_reasoner.resolver.prompt_format import PromptSection
+from llm_reasoner.resolver.outcomes import OutcomeCheck, OutcomePrediction
+from llm_reasoner.resolver.prompt_format import PromptRule, PromptSection, RuleName
+from llm_reasoner.world.view import WorldView
 from typing_extensions import Any, List, Sequence
 
 from .prompt_sections import bodies
+from .test_observed import ECHO, ToolAnsweringWithItsInput
 from .world_mimics import ActionWithBodyAndValueSlots, WorldBody, body_with_geometry
 
 CASES = Path(__file__).parent / "resolver_cases"
@@ -120,3 +123,75 @@ class TestOutcomeCheck:
         body_with_geometry()
         backend = checked_backend(MinimumAngleCheck(required=REQUIRED_ANGLE))
         assert backend.situation_backend_for(tilt_query()).outcome_check is None
+
+
+# %% predicting what an answer brings about
+
+
+ECHO_PREDICTION_RULE = PromptRule(
+    RuleName.OUTCOME_PREDICTION,
+    f"{ECHO} predicts nothing; it answers with its input.",
+)
+"""
+The rule of the prediction offering the echoing tool.
+"""
+
+
+@dataclass
+class PredictionAnsweringWithItsInput(OutcomePrediction):
+    """
+    A prediction offering one tool, which answers with the input it was called with.
+    """
+
+    def tools(self) -> List[Tool]:
+        return [ToolAnsweringWithItsInput()]
+
+    @property
+    def rule(self) -> PromptRule:
+        return ECHO_PREDICTION_RULE
+
+
+def predicting_backend(*turns: object) -> LanguageModelBackend:
+    """
+    :return: A backend asking with the world tools and the echoing prediction, its model
+        taking the scripted turns in order.
+    """
+    return LanguageModelBackend.with_world_tools(
+        client=ScriptedClient(tool_turns=list(turns)),
+        world=WorldView(),
+        outcome_prediction=PredictionAnsweringWithItsInput(),
+    )
+
+
+def tilt_of(body) -> object:
+    """
+    :return: A query for tilting the given body, its angle left open.
+    """
+    return the(ActionWithBodyAndValueSlots)(source=body, angle=...)
+
+
+class TestOutcomePrediction:
+    def test_the_prediction_is_offered_beside_the_world_tools(self):
+        backend = predicting_backend(
+            [ScriptedToolRequest(ECHO, {"angle": 1.2})],
+            answer("angle_chosen.json"),
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        (call,) = backend.conversations[0].calls
+        assert call.name == ECHO
+        assert json.loads(call.outcome.content) == {"angle": 1.2}
+
+    def test_the_rule_of_the_prediction_is_stated(self):
+        backend = predicting_backend(answer("angle_chosen.json"))
+        assert ECHO_PREDICTION_RULE in backend.rules
+
+    def test_a_backend_asking_without_tools_is_offered_no_prediction(self):
+        backend = LanguageModelBackend(
+            client=ScriptedClient(responses=[answer("angle_chosen.json")]),
+            outcome_prediction=PredictionAnsweringWithItsInput(),
+        )
+        assert ECHO_PREDICTION_RULE not in backend.rules
+
+    def test_the_situation_pass_is_offered_no_prediction(self):
+        backend = predicting_backend()
+        assert backend.situation_backend_for(tilt_query()).outcome_prediction is None

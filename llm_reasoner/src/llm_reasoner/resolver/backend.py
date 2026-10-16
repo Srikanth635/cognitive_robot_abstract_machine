@@ -69,7 +69,7 @@ from llm_reasoner.resolver.grounds import (
     Justification,
 )
 from llm_reasoner.resolver.knowledge import KnowledgeConsultation, KnowledgeRequester
-from llm_reasoner.resolver.outcomes import OutcomeCheck
+from llm_reasoner.resolver.outcomes import OutcomeCheck, OutcomePrediction
 from llm_reasoner.resolver.prompt_format import PromptRule
 from llm_reasoner.resolver.prompts import (
     OpenValueMeaning,
@@ -159,6 +159,12 @@ class LanguageModelBackend(GenerativeBackend):
     """
     Tries the instances an answer constructs before they are accepted, refusing the
     answer with its outcome when they fall short; none tries nothing.
+    """
+
+    outcome_prediction: Optional[OutcomePrediction] = field(kw_only=True, default=None)
+    """
+    Offers the model tools predicting what an answer would bring about, beside the
+    backend's own tools when it asks with tools; none offers nothing.
     """
 
     observer: EventSink = field(kw_only=True, default_factory=NullSink)
@@ -282,16 +288,26 @@ class LanguageModelBackend(GenerativeBackend):
         return bool(self.tools) and bool(self.knowledge_tools)
 
     @property
+    def offers_prediction(self) -> bool:
+        """
+        Whether the model is offered tools predicting what an answer would bring about:
+        when the backend asks with tools and has a prediction.
+        """
+        return bool(self.tools) and self.outcome_prediction is not None
+
+    @property
     def request_completion(self) -> Completion:
         """
-        How the model is asked for the current request: with the knowledge tools beside
-        the backend's own when it is offered knowledge.
+        How the model is asked for the current request: with the knowledge tools and the
+        prediction's tools beside the backend's own when they are offered.
         """
-        if not self.offers_knowledge:
+        further_tools = [
+            *(self.knowledge_tools if self.offers_knowledge else []),
+            *(self.outcome_prediction.tools() if self.offers_prediction else []),
+        ]
+        if not further_tools:
             return self.completion
-        return ToolCompletion(
-            client=self.client, tools=[*self.tools, *self.knowledge_tools]
-        )
+        return ToolCompletion(client=self.client, tools=[*self.tools, *further_tools])
 
     @property
     def system_prompt(self) -> str:
@@ -330,6 +346,8 @@ class LanguageModelBackend(GenerativeBackend):
         rules = list(self.request_completion.answer_rules)
         if self.offers_knowledge:
             rules.extend(self.knowledge.rules_for(self.consultation))
+        if self.offers_prediction:
+            rules.append(self.outcome_prediction.rule)
         if self.ground_sources:
             rules.append(PromptBuilder.grounds_rule(self.ground_sources))
         return rules
@@ -561,7 +579,8 @@ class LanguageModelBackend(GenerativeBackend):
         :return: A backend choosing the situation features of the knowledge describing
             the action: this backend's model, tools and context with the action stated,
             one structure described by its docstrings, its values facts rather than
-            choices, and neither a consultation nor an outcome check of its own.
+            choices, and neither a consultation, an outcome check nor a prediction of
+            its own.
         """
         return replace(
             self,
@@ -578,6 +597,7 @@ class LanguageModelBackend(GenerativeBackend):
             open_values=OpenValueMeaning.FACT,
             knowledge=None,
             outcome_check=None,
+            outcome_prediction=None,
             purpose=ResolutionPurpose.SITUATION,
         )
 
