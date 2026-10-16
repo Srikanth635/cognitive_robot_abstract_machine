@@ -400,6 +400,9 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   the Flanagan core says "has some value"); the state condition's definition now gives
   the negated example, the source empty as the substance not contained in it. An answer
   missing either is returned for repair.
+  Live again on the stored core ($0.044, first answer, consistent): every condition now
+  states its polarity, and the source being empty is `ContainedState` not holding of the
+  source with the substance.
 
 ## 3. Live testing
 
