@@ -240,6 +240,13 @@ class SlotCondition(DescriptionEntity):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot"
                 ),
             ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#hasPolarity",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#SlotConditionPolarity"
+                ),
+            ),
         ),
         definition=None,
     )
@@ -656,7 +663,7 @@ class SlotExpectation(DescriptionEntity):
 @dataclass(eq=False)
 class StateCondition(SlotCondition):
     """
-    A condition that the filler of a slot, possibly in relation to the filler of another slot, is in a given discrete state, such as the agent grasping the source or the substance being contained in the goal.
+    A condition that the filler of a slot, possibly in relation to the filler of another slot, is in a given discrete state, such as the agent grasping the source or the substance being contained in the goal; with the polarity that it does not hold, that it is not in that state, such as the source being empty: the substance not contained in it.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -664,7 +671,13 @@ class StateCondition(SlotCondition):
         linked_terms=(),
         evidence_status="",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionHasState",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(iri="http://www.w3.org/2002/07/owl#Thing"),
+            ),
+        ),
         definition=None,
     )
     """

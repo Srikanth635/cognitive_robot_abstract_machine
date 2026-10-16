@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.1.0> ;
-    owl:versionInfo "0.1.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.2.0> ;
+    owl:versionInfo "0.2.0" .
 
 # %% classes
 
@@ -35,6 +35,9 @@ frame:SlotCondition a owl:Class ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty frame:conditionOnSlot ;
             owl:someValuesFrom core:FrameSlot ],
+        [ a owl:Restriction ;
+            owl:onProperty frame:hasPolarity ;
+            owl:someValuesFrom frame:SlotConditionPolarity ],
         dul:Description .
 
 frame:FeatureCondition a owl:Class ;
@@ -52,8 +55,11 @@ frame:AffordanceCondition a owl:Class ;
 
 frame:StateCondition a owl:Class ;
     rdfs:label "state condition"@en ;
-    rdfs:comment "A condition that the filler of a slot, possibly in relation to the filler of another slot, is in a given discrete state, such as the agent grasping the source or the substance being contained in the goal."@en ;
-    rdfs:subClassOf frame:SlotCondition .
+    rdfs:comment "A condition that the filler of a slot, possibly in relation to the filler of another slot, is in a given discrete state, such as the agent grasping the source or the substance being contained in the goal; with the polarity that it does not hold, that it is not in that state, such as the source being empty: the substance not contained in it."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty frame:conditionHasState ;
+            owl:someValuesFrom owl:Thing ],
+        frame:SlotCondition .
 
 frame:PostureCondition a owl:Class ;
     rdfs:label "posture condition"@en ;

@@ -875,3 +875,48 @@ class TestPerspectiveRoots:
         query = PERSPECTIVE_ROOTS[ActionPerspectiveFile.ACTION_FRAME].query(cited)
         assert query.type is action_frame.FrameStereotype
         assert query.kwargs == {"stereotype_of": cited}
+
+
+# %% what every condition of the frame must state
+
+
+def frame_answer_without(fragment_id: str, field_name: str) -> str:
+    """
+    :return: The scripted frame answer with one field left out of one fragment.
+    """
+    answer = json.loads(answer_text(AnswerCase.FRAME))
+    for fragment in answer["fragments"]:
+        if fragment["id"] == fragment_id:
+            del fragment[field_name]
+    return json.dumps(answer)
+
+
+def problems_of_first_frame_answer(tmp_path, first_answer: str) -> str:
+    """
+    :return: The problems the first frame answer was returned for repair with, the
+        repair being the scripted frame answer in full.
+    """
+    service = service_answering(
+        HypothesisStore(directory=tmp_path),
+        answer_text(AnswerCase.CORE),
+        first_answer,
+        answer_text(AnswerCase.FRAME),
+    )
+    core_view = service.view_for(core_query())
+    exchanges = service.view_for(frame_query_on(core_view)).record.exchanges
+    (problems,) = bodies(exchanges[1].user, GenerationSection.PROBLEMS)
+    return problems
+
+
+class TestConditionsStated:
+    def test_a_condition_without_its_polarity_is_returned_for_repair(self, tmp_path):
+        problems = problems_of_first_frame_answer(
+            tmp_path, frame_answer_without("source_has_lip", "has_polarity")
+        )
+        assert "'source_has_lip'" in problems
+
+    def test_a_state_condition_without_its_state_is_returned_for_repair(self, tmp_path):
+        problems = problems_of_first_frame_answer(
+            tmp_path, frame_answer_without("source_held", "condition_has_state")
+        )
+        assert "'source_held'" in problems
