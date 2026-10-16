@@ -62,7 +62,8 @@ class Measurement(StrEnum):
 
 class ComparisonArm(StrEnum):
     """
-    The two ways the resolver is run, which differ only in the perspectives consulted.
+    The ways the resolver is run, which differ only in the perspectives consulted and in
+    whether it may predict where a pour ends.
     """
 
     WITHOUT_FRAME = "without_frame"
@@ -75,14 +76,26 @@ class ComparisonArm(StrEnum):
     The phase structure, the action core and the action frame on it.
     """
 
+    WITH_PREDICTION = "with_prediction"
+    """
+    The phase structure, and the tool predicting where a pour ends.
+    """
+
     @property
     def perspectives(self) -> tuple[ActionPerspectiveFile, ...]:
         """
         The perspectives on the action core the arm consults.
         """
-        if self is ComparisonArm.WITHOUT_FRAME:
-            return ()
-        return (ActionPerspectiveFile.ACTION_FRAME,)
+        if self is ComparisonArm.WITH_FRAME:
+            return (ActionPerspectiveFile.ACTION_FRAME,)
+        return ()
+
+    @property
+    def predicts_pours(self) -> bool:
+        """
+        Whether the arm may predict where a pour ends before answering.
+        """
+        return self is ComparisonArm.WITH_PREDICTION
 
 
 # %% a run

@@ -144,6 +144,14 @@ class TestArms:
     def test_the_arm_without_the_frame_consults_no_perspective(self):
         assert ComparisonArm.WITHOUT_FRAME.perspectives == ()
 
+    def test_only_the_arm_with_the_prediction_predicts_pours(self):
+        assert [arm for arm in ComparisonArm if arm.predicts_pours] == [
+            ComparisonArm.WITH_PREDICTION
+        ]
+
+    def test_the_arm_with_the_prediction_consults_no_perspective(self):
+        assert ComparisonArm.WITH_PREDICTION.perspectives == ()
+
     def test_the_arm_with_the_frame_consults_the_action_frame(self):
         assert ComparisonArm.WITH_FRAME.perspectives == (
             ActionPerspectiveFile.ACTION_FRAME,

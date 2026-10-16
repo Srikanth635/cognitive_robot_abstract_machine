@@ -46,6 +46,12 @@ POURING_SCENE = "simple_pouring"
 The scene cram_viz's pour is resolved and tried in.
 """
 
+FRAME_ARMS = (ComparisonArm.WITHOUT_FRAME, ComparisonArm.WITH_FRAME)
+"""
+The arms differing in the action frame, the only ones the kitchen, which tries no pour,
+compares.
+"""
+
 COMPARED_KITCHEN_CASES = KNOWLEDGE_CASES[:5]
 """
 The kitchen's knowledge cases K1 to K5.
@@ -94,6 +100,7 @@ def resolve_and_record(
         baseline=LIVE.reasoner(store).knowledge,
         runs=ResolutionRuns(directory=output.directory / "runs"),
         perspectives=arm.perspectives,
+        predicts_pours=arm.predicts_pours,
     )
     resolved = resolver.resolve(
         DesignatorQuery.shipped(designator), POURING_SCENE, bundle
@@ -133,7 +140,7 @@ def test_the_pour_choosing_its_containers_is_resolved_and_tried(
     ],
     ids=lambda case: case.identifier,
 )
-@pytest.mark.parametrize("arm", list(ComparisonArm))
+@pytest.mark.parametrize("arm", FRAME_ARMS)
 def test_a_kitchen_case_choosing_its_containers_is_resolved(
     arm, case, run, kitchen, output, store
 ):
@@ -157,7 +164,7 @@ def test_a_kitchen_case_choosing_its_containers_is_resolved(
 @pytest.mark.parametrize(
     "case", COMPARED_KITCHEN_CASES, ids=lambda case: case.identifier
 )
-@pytest.mark.parametrize("arm", list(ComparisonArm))
+@pytest.mark.parametrize("arm", FRAME_ARMS)
 def test_a_kitchen_case_is_resolved(arm, case, run, kitchen, output, store):
     reasoner = replace(LIVE.reasoner(store), perspectives=arm.perspectives)
     resolution = KitchenResolver(reasoner=reasoner).resolve(
