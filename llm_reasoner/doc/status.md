@@ -477,6 +477,19 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   the answers rest on explicit expectations of the participants, which is the grounding
   the knowledge component is for, at 20–100 % more resolver cost. Off by default it costs
   nothing.
+- Predicting where a pour ends (2026-10-16, `pour_prediction.md`): coraplex computes the
+  pour's tool poses when its plan is built, before the pitcher is picked up, so its
+  sideways compensation misses by sin(tilt) × the mouth's height; those poses, computed
+  in the scene's world before anything is performed and carried with how the gripper
+  holds the pitcher after a simulated pick-up, put the mouth within 5 mm of every
+  recorded simulated pour. llm_reasoner gains `OutcomePrediction` (tools predicting an
+  answer's outcome, offered beside the world tools with their rule); cram_viz's
+  `PourPrediction` offers `predict_pour_end`, the hold measured once per pitcher and arm
+  in a process of its own (`hold_measurement`), a pick-up the arm cannot make predicted as
+  a failed motion; `DesignatorResolver.predicts_pours`, off by default. Live on
+  `pour_geometry_open`, three runs: the first pour landed in every run (none did without
+  the prediction), one pour each, the final prediction within 5 mm of the simulated pour,
+  for $0.062 a run against $0.114. coraplex is unchanged.
 
 ## 3. Live testing
 
