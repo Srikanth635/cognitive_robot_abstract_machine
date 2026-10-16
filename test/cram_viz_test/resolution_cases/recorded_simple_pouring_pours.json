@@ -1,0 +1,194 @@
+[
+ {
+  "values": {
+   "arm": "RIGHT",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": 0.0,
+   "pour_approach_offset": 0.0,
+   "pour_height": 0.13
+  },
+  "mouth": [
+   2.402,
+   2.26,
+   1.116
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.184,
+  "ahead": 0.038,
+  "distance": 0.188,
+  "above": 0.087
+ },
+ {
+  "values": {
+   "arm": "RIGHT",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": -0.18,
+   "pour_approach_offset": 0.04,
+   "pour_height": 0.13
+  },
+  "mouth": [
+   2.391,
+   2.432,
+   1.116
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.017,
+  "ahead": -0.006,
+  "distance": 0.018,
+  "above": 0.087
+ },
+ {
+  "values": {
+   "arm": "RIGHT",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": -0.188,
+   "pour_approach_offset": 0.0,
+   "pour_height": 0.13
+  },
+  "mouth": [
+   2.396,
+   2.446,
+   1.119
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.003,
+  "ahead": -0.004,
+  "distance": 0.005,
+  "above": 0.089
+ },
+ {
+  "values": {
+   "arm": "RIGHT",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": -0.17,
+   "pour_approach_offset": 0.0,
+   "pour_height": 0.13
+  },
+  "mouth": [
+   2.397,
+   2.429,
+   1.117
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.019,
+  "ahead": -0.0,
+  "distance": 0.019,
+  "above": 0.088
+ },
+ {
+  "values": {
+   "arm": "RIGHT",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": -0.184,
+   "pour_approach_offset": 0.038,
+   "pour_height": 0.09
+  },
+  "mouth": [
+   2.393,
+   2.436,
+   1.076
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.013,
+  "ahead": -0.005,
+  "distance": 0.014,
+  "above": 0.047
+ },
+ {
+  "values": {
+   "arm": "RIGHT",
+   "tilt_angle": 1.85,
+   "pour_side": null,
+   "pour_side_offset": null,
+   "pour_approach_offset": null,
+   "pour_height": null
+  },
+  "mouth": [
+   2.402,
+   2.26,
+   1.116
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.184,
+  "ahead": 0.038,
+  "distance": 0.188,
+  "above": 0.087
+ },
+ {
+  "values": {
+   "arm": "RIGHT",
+   "tilt_angle": 1.5708,
+   "pour_side": null,
+   "pour_side_offset": null,
+   "pour_approach_offset": null,
+   "pour_height": null
+  },
+  "mouth": [
+   2.401,
+   2.249,
+   1.133
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.195,
+  "ahead": 0.038,
+  "distance": 0.199,
+  "above": 0.104
+ },
+ {
+  "values": {
+   "arm": "RIGHT",
+   "tilt_angle": 1.57,
+   "pour_side": null,
+   "pour_side_offset": null,
+   "pour_approach_offset": null,
+   "pour_height": null
+  },
+  "mouth": [
+   2.401,
+   2.249,
+   1.133
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.196,
+  "ahead": 0.038,
+  "distance": 0.199,
+  "above": 0.104
+ }
+]

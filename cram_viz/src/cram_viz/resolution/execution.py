@@ -16,6 +16,7 @@ from coraplex.datastructures.grasp import GraspDescription
 from coraplex.execution_environment import simulated_robot
 from coraplex.language import SequentialNode
 from coraplex.plans.factories import sequential
+from coraplex.robot_plans.actions.base import ActionDescription
 from coraplex.robot_plans.actions.composite.tool_based import PouringAction
 from coraplex.robot_plans.actions.core.navigation import NavigateAction
 from coraplex.robot_plans.actions.core.pick_up import PickUpAction
@@ -26,7 +27,7 @@ from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.spatial_types import Pose
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import TYPE_CHECKING, Any, Dict, Optional
+from typing_extensions import TYPE_CHECKING, Any, Dict, List, Optional
 
 from cram_viz.designator_knowledge import resolved_field_type
 from cram_viz.neem import NeemRecorder, NoNeemRecorder
@@ -190,24 +191,36 @@ class PouringExecution:
             pick it up with the resolved arm, pour.
         """
         action = self.action()
+        return sequential(
+            [*self.steps_before_pour(action), action], context=self.context()
+        )
+
+    def steps_before_pour(self, action: PouringAction) -> List[ActionDescription]:
+        """
+        :param action: The pouring the steps prepare.
+        :return: Parking the arms, lowering the torso, facing the source container and
+            picking it up with the action's arm.
+        """
         robot = self.robot
         grasp = GraspDescription(
             approach_direction=ApproachDirection.FRONT,
             vertical_alignment=VerticalAlignment.NoAlignment,
             end_effector=ViewManager.get_end_effector_view(action.arm, robot),
         )
-        return sequential(
-            [
-                ParkArmsAction(Arms.BOTH),
-                MoveTorsoAction(REACHING_TORSO),
-                NavigateAction(
-                    standing_pose(self.world, robot.root, action.source_container.root)
-                ),
-                PickUpAction(action.source_container, action.arm, grasp),
-                action,
-            ],
-            context=Context(world=self.world, robot=robot, evaluate_conditions=False),
-        )
+        return [
+            ParkArmsAction(Arms.BOTH),
+            MoveTorsoAction(REACHING_TORSO),
+            NavigateAction(
+                standing_pose(self.world, robot.root, action.source_container.root)
+            ),
+            PickUpAction(action.source_container, action.arm, grasp),
+        ]
+
+    def context(self) -> Context:
+        """
+        :return: The context the plan is built and performed in.
+        """
+        return Context(world=self.world, robot=self.robot, evaluate_conditions=False)
 
     def perform(self) -> None:
         """

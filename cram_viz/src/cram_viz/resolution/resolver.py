@@ -33,6 +33,7 @@ from llm_reasoner.resolver.grounds import Ground, GroundKey, Justification
 from llm_reasoner.resolver.prompts import SourceDetail
 from llm_reasoner.world.sources import SymbolGraphSource
 from llm_reasoner.world.view import WorldView
+from semantic_digital_twin.world import World
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
@@ -52,6 +53,11 @@ from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunEnvironmen
 from cram_viz.resolution.scene_geometry import SceneGeometry
 from cram_viz.resolution.slot_data import SlotData
 from cram_viz.resolution.trial import SimulatedPouring, TriedPour
+from cram_viz.resolution.prediction import (
+    MeasuredHolding,
+    PourPrediction,
+    PourPredictor,
+)
 from cram_viz.resolution.scene_world import SceneWorlds
 
 RESOLVER_MAX_TOKENS = 8192
@@ -292,6 +298,12 @@ class DesignatorResolver:
     structure; none by default.
     """
 
+    predicts_pours: bool = False
+    """
+    Whether the resolver may predict where a pour ends before it answers; not by
+    default.
+    """
+
     @classmethod
     def for_viewer(
         cls, source: ModelHypothesisSource, worlds: SceneWorlds
@@ -419,6 +431,7 @@ class DesignatorResolver:
         slots = QuerySlots.of(query)
         trials = self.trials_for(query, slots, bundle, sink, self.neems_of(run))
         view = self.world_view()
+        prediction = self.prediction_for(query, bundle, geometry.world, view)
         backend = Reasoner(
             client=self.client,
             knowledge=knowledge,
@@ -431,6 +444,7 @@ class DesignatorResolver:
             number_of_candidates=1,
             source_detail=SourceDetail.FULL,
             outcome_check=trials,
+            outcome_prediction=prediction,
             max_repairs=POUR_TRIALS,
         )
         instances = list(query.evaluate(backend=backend))
@@ -462,6 +476,27 @@ class DesignatorResolver:
                 if consultation is None
                 else list(consultation.perspective_record_ids)
             ),
+        )
+
+    def prediction_for(
+        self, query: Match, bundle: Path, world: World, view: WorldView
+    ) -> Optional[PourPrediction]:
+        """
+        :param query: The designator's query on the scene.
+        :param bundle: The scene's bundle directory, from which the source's hold is
+            measured.
+        :param world: The scene's world, in which nothing is performed.
+        :param view: The world as the resolver names its individuals.
+        :return: The prediction of where a pour ends, offered to the resolver when it
+            predicts pours and the query is a pouring; none otherwise.
+        """
+        if not self.predicts_pours or query.type is not PouringAction:
+            return None
+        return PourPrediction(
+            predictor=PourPredictor(
+                world=world, holding=MeasuredHolding(bundle=bundle, run=self.simulate)
+            ),
+            world=view,
         )
 
     def neems_of(self, run: RunDirectory) -> Optional[NeemRecording]:

@@ -94,11 +94,18 @@ def top_centre(body: Body) -> np.ndarray:
     :return: The world position of the centre of the top of the body's bounding box,
         taken in the body's own frame: a container's opening.
     """
+    return (body.global_transform.to_np() @ top_centre_in_own_frame(body))[:3]
+
+
+def top_centre_in_own_frame(body: Body) -> np.ndarray:
+    """
+    :return: The centre of the top of the body's bounding box in the body's own frame,
+        as homogeneous coordinates: a container's opening.
+    """
     box = body.visual.as_bounding_box_collection_in_frame(body).bounding_box()
-    centre = np.array(
+    return np.array(
         [0.5 * (box.min_x + box.max_x), 0.5 * (box.min_y + box.max_y), box.max_z, 1.0]
     )
-    return (body.global_transform.to_np() @ centre)[:3]
 
 
 @dataclass(frozen=True)
@@ -135,12 +142,26 @@ class PourOutcome:
         """
         :return: Where the source's mouth is now, against the target's opening.
         """
+        return cls.at(
+            top_centre(source.root),
+            target,
+            float(robot_base.global_pose.to_quaternion().to_rpy()[2]),
+        )
+
+    @classmethod
+    def at(cls, mouth: np.ndarray, target: Body, robot_yaw: float) -> PourOutcome:
+        """
+        :param mouth: The world position of the source container's mouth.
+        :param target: The target container.
+        :param robot_yaw: The heading of the robot's base, in radians.
+        :return: Where the mouth is against the target's opening, as seen from the robot.
+        """
         box = target.visual.as_bounding_box_collection_in_frame(target).bounding_box()
         return cls(
-            mouth=top_centre(source.root),
+            mouth=np.asarray(mouth, dtype=float),
             opening_centre=top_centre(target),
             opening_radius=0.5 * min(box.max_x - box.min_x, box.max_y - box.min_y),
-            robot_yaw=float(robot_base.global_pose.to_quaternion().to_rpy()[2]),
+            robot_yaw=robot_yaw,
         )
 
     @property
