@@ -577,6 +577,12 @@ source and the goal, for about 20 % more. Verdict: on the pouring cases measured
 improves the grounding of answers, not their choices; the cases where a choice failed
 failed on geometry, which no perspective describes.
 
+Decided after phase 4 (2026-10-16): the action frame stays, opt-in, for the grounding it
+gives answers; trap cases where common sense should decide (a closed carton or an
+upside-down bowl as the only plausible goal) are measured later, before any further
+perspective; the geometric miss is addressed by the resolver predicting where the pour
+ends, without changing coraplex.
+
 ### 13.5 What is built for it
 
 - `Reasoner` gains the requester's `perspectives` setting, so cram_viz and the kitchen
