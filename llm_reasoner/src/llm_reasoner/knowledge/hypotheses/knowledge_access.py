@@ -9,11 +9,12 @@ from abc import ABC, abstractmethod
 from enum import StrEnum
 
 from krrood.entity_query_language.query.match import Match
-from typing_extensions import Optional
+from typing_extensions import Mapping, Optional
 
 from llm_reasoner.clients.tools import Tool
+from llm_reasoner.knowledge.ontologies.frame_fields import FramePartDescription
 
-KNOWLEDGE_ACCESS_VERSION = "1.2"
+KNOWLEDGE_ACCESS_VERSION = "1.3"
 """
 The version of this contract: of the operations below and of the definitions and answer
 shapes of the knowledge tools.
@@ -81,6 +82,22 @@ class KnowledgeAccess(ABC):
         :return: The IRI citing the named fragment of the hypothesis, ``None`` when the
             hypothesis itself has no fragment of that name.
         """
+
+    def frame_parts_filled(
+        self,
+        record_id: str,
+        frame_fields: Mapping[str, FramePartDescription],
+    ) -> dict[str, list[str]]:
+        """
+        :param record_id: The record identifier of a stored hypothesis about an
+            action's frame in the action core.
+        :param frame_fields: The part of the frame each field of the action's designator
+            fills, described in the core's vocabulary, by field name.
+        :return: The names the knowledge tools give the parts of that frame each field
+            fills, by field name; a field filling none is absent, and knowledge without
+            frames names none.
+        """
+        return {}
 
     @abstractmethod
     def instances_of(self, kind: type) -> list:

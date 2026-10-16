@@ -36,6 +36,7 @@ from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.context import StructuralCandidateRenderer
 from llm_reasoner.resolver.exceptions import UnknownGround
 from llm_reasoner.resolver.grounds import Ground, GroundKey
+from llm_reasoner.knowledge.ontologies.frame_fields import DimensionDescription
 from llm_reasoner.observation.events import KnowledgeConsulted
 from llm_reasoner.observation.sinks import MemorySink
 from llm_reasoner.resolver.knowledge import (
@@ -43,7 +44,7 @@ from llm_reasoner.resolver.knowledge import (
     KNOWLEDGE_RULE,
     KnowledgeRequester,
 )
-from llm_reasoner.resolver.prompt_format import PromptSection
+from llm_reasoner.resolver.prompt_format import PromptSection, SlotKey
 from llm_reasoner.resolver.prompts import (
     ESTABLISHED_VALUES_RULE,
     INPUT_MEANINGS,
@@ -562,6 +563,13 @@ TILT_FRAMED_AS_POURING = DescribedAction(
     concept=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring"),
     structure=pouring.PouringPhaseStructure,
     frame=action_core.PouringFrame,
+    frame_fields={
+        "angle": DimensionDescription(
+            quantity=action_core.QuantityKind.POSITION,
+            about=action_core.SourceSlot,
+            relative_to=action_core.GoalSlot,
+        )
+    },
 )
 """
 The tilting action, described by the knowledge about pouring and framed by the action
@@ -721,3 +729,61 @@ class TestConsultingPerspectives:
         assert list(consulted.perspective_record_ids) == (
             backend.consultation.perspective_record_ids
         )
+
+
+def slot_entries_of_request(backend: LanguageModelBackend) -> dict:
+    """
+    :return: The open slots' entries in the latest request to the model, by field
+        name.
+    """
+    (slots,) = bodies(backend.log[-1].user, PromptSection.SLOTS)
+    return {
+        entry[SlotKey.PATH].rpartition(".")[2]: entry for entry in json.loads(slots)
+    }
+
+
+def world_backend_offering_the_frame(store: HypothesisStore) -> LanguageModelBackend:
+    """
+    :return: A backend asking with the world tools that consults the core and the
+        action frame about the tilting action framed as pouring.
+    """
+    return LanguageModelBackend.with_world_tools(
+        client=ScriptedClient(
+            tool_turns=[answer("situation_granular.json"), answer("angle_chosen.json")]
+        ),
+        world=WorldView(),
+        knowledge=requester_offering_the_frame(store),
+    )
+
+
+class TestSlotsNamingTheFrame:
+    def test_an_open_slot_names_the_frame_parts_it_fills(self, tmp_path):
+        backend = world_backend_offering_the_frame(HypothesisStore(directory=tmp_path))
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        core_record = backend.consultation.perspective_record_ids[0]
+        service = backend.knowledge.service
+        view = service.view(core_record)
+        (part,) = TILT_FRAMED_AS_POURING.frame_fields.values()
+        filled = part.fragments_in(view.root)
+        names = slot_entries_of_request(backend)["angle"][SlotKey.FRAME]
+        assert [service.citation(core_record, name) for name in names] == [
+            view.citation_of(fragment).iri for fragment in filled
+        ]
+
+    def test_without_perspectives_no_slot_names_the_frame(self, tmp_path):
+        requester = requester_generating(
+            HypothesisStore(directory=tmp_path), GenerationCase.GRANULAR_POURING
+        )
+        requester.described_actions = DescribedActions(entries=[TILT_FRAMED_AS_POURING])
+        backend = LanguageModelBackend.with_world_tools(
+            client=ScriptedClient(
+                tool_turns=[
+                    answer("situation_granular.json"),
+                    answer("angle_chosen.json"),
+                ]
+            ),
+            world=WorldView(),
+            knowledge=requester,
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert SlotKey.FRAME not in slot_entries_of_request(backend)["angle"]

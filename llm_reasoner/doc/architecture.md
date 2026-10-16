@@ -665,7 +665,7 @@ property (`matched_with`) holds both ways. A hypothesis is therefore built, admi
 read in any process, whatever krrood's symbol graph knows, including one that loaded a
 world first (I1; the first R7 run failed on exactly that).
 
-### 3.7 Resolver → knowledge component: the knowledge-access contract (version 1.2)
+### 3.7 Resolver → knowledge component: the knowledge-access contract (version 1.3)
 
 The resolver reads the knowledge component's own graph through `KnowledgeAccess`
 (`hypotheses/knowledge_access.py`, exported by `access.py`), as it reads the world
@@ -675,6 +675,7 @@ through `WorldAccess`. `KnowledgeService` fulfils it.
 |---|---|
 | `serve(query, instruction="")` | The record identifier of the hypothesis for a request (§3.6) |
 | `tools(*record_ids)` | The knowledge tools over those hypotheses and the ones they build on, read as one body of knowledge, named by `KnowledgeToolName` (several records since version 1.2) |
+| `frame_parts_filled(record_id, frame_fields)` | The names of the parts of a stored core frame each field of a designator fills, given the designator's mapping (`described_actions.json` `"frame_fields"`); none from knowledge without frames (version 1.3) |
 | `citation(record_id, name)` | The IRI citing a fragment of the hypothesis by the name the tools gave it, `None` when it has none (version 1.1) |
 | `instances_of(kind)` | The stored fragments of a vocabulary class: an EQL domain |
 | `is_vocabulary_class(kind)` | Whether a class's instances are knowledge rather than parts of the world |

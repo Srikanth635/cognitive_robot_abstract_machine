@@ -11,9 +11,10 @@ from enum import StrEnum
 from time import perf_counter
 
 from krrood.entity_query_language.query.match import Match
-from typing_extensions import Any, Callable, List, Mapping, Optional, TypeVar
+from typing_extensions import Any, Callable, Dict, List, Mapping, Optional, TypeVar
 
 from llm_reasoner.clients.tools import Tool
+from llm_reasoner.knowledge.ontologies.frame_fields import FramePartDescription
 from llm_reasoner.knowledge.hypotheses.knowledge_access import KnowledgeAccess
 from llm_reasoner.observation.events import (
     Component,
@@ -50,6 +51,7 @@ class KnowledgeOperation(StrEnum):
     SERVE = "serve"
     TOOLS = "tools"
     CITATION = "citation"
+    FRAME_PARTS_FILLED = "frame_parts_filled"
     INSTANCES_OF = "instances_of"
     IS_VOCABULARY_CLASS = "is_vocabulary_class"
 
@@ -65,6 +67,7 @@ class ArgumentKey(StrEnum):
     INSTRUCTION = "instruction"
     RECORD = "record"
     RECORDS = "records"
+    FIELDS = "fields"
     NAME = "name"
     KIND = "kind"
 
@@ -299,6 +302,18 @@ class ObservedKnowledge(KnowledgeAccess):
             {ArgumentKey.RECORD: record_id, ArgumentKey.NAME: name},
             lambda: self.knowledge.citation(record_id, name),
             lambda cited: cited,
+        )
+
+    def frame_parts_filled(
+        self,
+        record_id: str,
+        frame_fields: Mapping[str, FramePartDescription],
+    ) -> Dict[str, List[str]]:
+        return self.reporter.made(
+            KnowledgeOperation.FRAME_PARTS_FILLED,
+            {ArgumentKey.RECORD: record_id, ArgumentKey.FIELDS: list(frame_fields)},
+            lambda: self.knowledge.frame_parts_filled(record_id, frame_fields),
+            lambda filled: filled,
         )
 
     def instances_of(self, kind: type) -> list:

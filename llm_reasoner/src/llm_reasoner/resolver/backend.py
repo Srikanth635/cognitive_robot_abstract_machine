@@ -236,6 +236,12 @@ class LanguageModelBackend(GenerativeBackend):
     before one, or when no knowledge describes the queried action.
     """
 
+    frame_parts: Dict[str, List[str]] = field(default_factory=dict, init=False)
+    """
+    The names of the parts of the action's frame each field of the queried action fills,
+    from the latest consultation; none when no frame was consulted.
+    """
+
     justifications: List[Justification] = field(default_factory=list, init=False)
     """
     Why each instance of the latest resolution was chosen and what its choices rest on.
@@ -535,6 +541,7 @@ class LanguageModelBackend(GenerativeBackend):
         self.situation_backend = self.situation_backend_for(expression)
         self.consultation = self.knowledge.consult(expression, self.situation_backend)
         self.knowledge_tools = self.knowledge.tools_for(self.consultation)
+        self.frame_parts = self.knowledge.frame_parts_for(self.consultation)
         self.observer.emit(
             KnowledgeConsulted(
                 resolution=resolution,
@@ -607,6 +614,7 @@ class LanguageModelBackend(GenerativeBackend):
             referent_naming=self.referent_naming,
             source_detail=self.source_detail,
             open_values=self.open_values,
+            frame_parts=self.frame_parts if self.offers_knowledge else {},
         )
 
     # %% decoding
