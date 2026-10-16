@@ -31,7 +31,11 @@ from typing_extensions import Any, Dict, List, Mapping, Self
 
 from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.slot_data import SlotData
-from cram_viz.resolution.trial import PourOutcome, top_centre_in_own_frame
+from cram_viz.resolution.trial import (
+    OutcomeKey,
+    PourOutcome,
+    top_centre_in_own_frame,
+)
 
 PREDICT_POUR_END = "predict_pour_end"
 """
@@ -61,6 +65,22 @@ PREDICTION_RULE = PromptRule(
 """
 The rule saying how the resolver uses the prediction.
 """
+
+
+@dataclass
+class PickUpFailed(Exception):
+    """
+    The robot could not pick the source container up with the arm a pour names, so no
+    pour with it can be predicted.
+    """
+
+    reason: str
+    """
+    Why the pick-up failed, as the simulation said.
+    """
+
+    def __post_init__(self):
+        super().__init__(f"the pick-up failed: {self.reason}")
 
 
 class HeldSourceKey(StrEnum):
@@ -147,6 +167,7 @@ class Holding(ABC):
         :param values: The pour's values as data, naming the source, the target and the
             arm.
         :return: How the arm's gripper holds the source after picking it up.
+        :raises PickUpFailed: When the arm cannot pick the source up.
         """
 
 
@@ -221,7 +242,20 @@ class PredictPourEnd(Tool):
             )
             for name, value in arguments.items()
         }
-        return ToolOutcome(content=json.dumps(self.predictor.predict(values).as_data()))
+        return ToolOutcome(content=json.dumps(self.predicted_outcome(values)))
+
+    def predicted_outcome(self, values: Mapping[str, Any]) -> Dict[str, Any]:
+        """
+        :return: The predicted outcome of the pour, as the simulated pour states one: a
+            pick-up the arm cannot make is a failed motion, the resolver's to correct.
+        """
+        try:
+            return self.predictor.predict(values).as_data()
+        except PickUpFailed as failed:
+            return {
+                OutcomeKey.LANDS_IN_OPENING: False,
+                OutcomeKey.MOTION_FAILED: failed.reason,
+            }
 
 
 @dataclass

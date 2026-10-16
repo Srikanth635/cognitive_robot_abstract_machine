@@ -20,7 +20,7 @@ from pathlib import Path
 from typing_extensions import Any, Callable, Dict, Mapping
 
 from cram_viz import configure_console_logging
-from cram_viz.resolution.prediction import HeldSource, Holding
+from cram_viz.resolution.prediction import HeldSource, Holding, PickUpFailed
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 
 HOLDING_MODULE = __spec__.name
@@ -65,10 +65,11 @@ class MeasuredHolding(Holding):
     def measure(self, values: Mapping[str, Any]) -> HeldSource:
         """
         :return: How the gripper holds the source, read from a measuring process.
+        :raises PickUpFailed: When the process could not pick the source up.
         """
         with tempfile.TemporaryDirectory() as directory:
             held_file = Path(directory) / HELD_SOURCE_FILE
-            self.run(
+            finished = self.run(
                 [
                     sys.executable,
                     "-m",
@@ -79,8 +80,9 @@ class MeasuredHolding(Holding):
                 ],
                 capture_output=True,
                 text=True,
-                check=True,
             )
+            if finished.returncode != 0:
+                raise PickUpFailed(reason=finished.stderr.strip().splitlines()[-1])
             return HeldSource.from_json(json.loads(held_file.read_text()))
 
 
