@@ -558,7 +558,15 @@ Both arms read stored knowledge: the Flanagan, core and frame hypotheses are gen
 once into a baseline store before the runs, and every run consults a copy of it, so no
 run pays for or varies by a generation.
 
-### 13.4 What is built for it
+### 13.4 Result of the simulated pour (2026-10-16)
+
+No difference in outcome: no first pour landed in either arm, each run needed two pours.
+The frame changed what the answers rest on (the core's lip position, tilt and height in
+every run) and doubled the resolver's cost; the first answers kept the default geometry
+in both arms, trusting coraplex's built-in sideways shift (`status.md`). The miss is a
+question of where the lip ends for given values, which no stereotype answers.
+
+### 13.5 What is built for it
 
 - `Reasoner` gains the requester's `perspectives` setting, so cram_viz and the kitchen
   can offer the frame (test-first).
