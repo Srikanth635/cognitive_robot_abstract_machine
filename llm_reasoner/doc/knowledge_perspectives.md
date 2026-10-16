@@ -526,6 +526,44 @@ rule says to read those first.
    core's description now names pouring's usual choices (tilt, lip position, height above
    the goal, amount), and a core generated with it fills all six fields ($0.069).
 
+## 13. Phase 4 design (agreed 2026-10-16)
+
+Decided: both measurements; three runs per arm of the simulated pour, and K1–K5 once per
+arm; the comparison kept in `experiments/` so it can be rerun after each change and for
+later perspectives. About $1.5–2.
+
+The question: does the action frame, read beside today's Flanagan hypothesis, change what
+the resolver does, and for the better? Each comparison runs the same cases with the
+requester offering no perspective (today) and offering the action frame; nothing else
+differs.
+
+### 13.1 Where it is measured
+
+| | Pouring in simulation (main) | The kitchen's knowledge cases |
+|---|---|---|
+| Cases | cram_viz's `pour_geometry_open` in `simple_pouring`: the cup and the bowl given, the arm, the tilt and the pour geometry open | K1–K5 of `experiments/llm_reasoner_kitchen`: one `PouringAction`, the arm and the tilt open, five tasks |
+| What decides success | `SimulatedPouring`: each answer is poured in coraplex's simulation and where the pitcher's mouth ends is measured against the bowl's opening, up to three trials | No outcome; what was chosen and what it rests on |
+| Why | The frame says the lip's position over the opening decides whether the substance lands in the goal; the baseline's first answer kept the defaults and missed by 0.188 m | Whether the frame changes choices and grounds where only the task differs |
+
+### 13.2 What is recorded per run
+
+First-try success (the mouth over the opening on the first trial), the trials and
+repair rounds, the distance of the mouth from the opening's centre on each trial, the
+values chosen, which grounds cite the frame (`action-core/…`, `action-frame/…`) or the
+Flanagan hypothesis, which knowledge tools were called, and the cost.
+
+### 13.3 Keeping the arms apart from generation
+
+Both arms read stored knowledge: the Flanagan, core and frame hypotheses are generated
+once into a baseline store before the runs, and every run consults a copy of it, so no
+run pays for or varies by a generation.
+
+### 13.4 What is built for it
+
+- `Reasoner` gains the requester's `perspectives` setting, so cram_viz and the kitchen
+  can offer the frame (test-first).
+- A comparison script running both arms and writing one record per run and a summary.
+
 ## Sources
 
 - M. Beetz, M. Kümpel. *From Frames to Pouring: The CRAM Cognitive Architecture for
