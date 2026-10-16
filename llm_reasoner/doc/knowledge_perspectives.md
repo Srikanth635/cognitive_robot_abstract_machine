@@ -571,6 +571,12 @@ four of five answers rested on the core's tilt choice and the model read three t
 knowledge tools against one or two, for 30 % more. The frame changes grounding, not
 choices, on these cases: phase 4's condition for going on is not met by them.
 
+The containers open (P2, P3, P8, `objects_open`, twice per arm): both arms chose right in
+every run; with the frame every kitchen answer rested on the frame's expectations of the
+source and the goal, for about 20 % more. Verdict: on the pouring cases measured the frame
+improves the grounding of answers, not their choices; the cases where a choice failed
+failed on geometry, which no perspective describes.
+
 ### 13.5 What is built for it
 
 - `Reasoner` gains the requester's `perspectives` setting, so cram_viz and the kitchen
