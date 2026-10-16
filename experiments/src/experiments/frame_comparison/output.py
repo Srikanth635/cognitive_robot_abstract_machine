@@ -37,6 +37,16 @@ KITCHEN_RUNS_PER_ARM = 1
 How many times each arm resolves each kitchen case.
 """
 
+OPEN_CONTAINER_RUNS_PER_ARM = 2
+"""
+How many times each arm resolves each case leaving the containers to choose.
+"""
+
+OPEN_CONTAINER_KITCHEN_CASES = ("P2", "P3", "P8")
+"""
+The kitchen's pouring cases leaving the containers to choose among the world's bodies.
+"""
+
 
 class ComparisonFile(StrEnum):
     """

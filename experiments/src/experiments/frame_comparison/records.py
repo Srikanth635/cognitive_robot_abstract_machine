@@ -21,8 +21,12 @@ from llm_reasoner.knowledge.access import (
 from llm_reasoner.resolver.grounds import GroundKey
 from typing_extensions import Any, List, Optional, Sequence
 
+from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
+from semantic_digital_twin.world_description.world_entity import Body
+
 from cram_viz.resolution.resolver import ResolvedDesignator
 from cram_viz.resolution.trial import OutcomeKey, TriedPour
+from experiments.llm_reasoner_kitchen.cases import name_of
 from experiments.llm_reasoner_kitchen.resolution import Resolution
 
 TOOL_CALLED = "ToolCalled"
@@ -192,6 +196,12 @@ class RunRecord:
     The pours tried in the simulation, in order; none in the kitchen.
     """
 
+    meets: Optional[bool] = None
+    """
+    Whether the actions met what the case expects; ``None`` when the case expects
+    nothing checked here.
+    """
+
     @property
     def first_try_success(self) -> Optional[bool]:
         """
@@ -260,10 +270,13 @@ class RunRecord:
         arm: ComparisonArm,
         run: int,
         prices: TokenPrices,
+        meets: Optional[bool] = None,
     ) -> RunRecord:
         """
         :param resolution: What the kitchen's resolver resolved, with its backend.
         :param prices: What the model charges.
+        :param meets: Whether the actions met what the case expects, when it expects
+            something.
         :return: The record of a run of a kitchen case.
         """
         backend = resolution.backend
@@ -295,6 +308,7 @@ class RunRecord:
                 if call.name in set(KnowledgeToolName)
             ],
             cost=resolution.cost(prices),
+            meets=meets,
         )
 
 
@@ -324,14 +338,41 @@ def knowledge_tools_in(events: Path) -> List[str]:
 
 def chosen_values(action: Any) -> dict[str, str]:
     """
-    :return: The plain values and enumeration members an action holds, by field name, as
-        text; the objects it acts on are left out.
+    :return: What an action holds, by field name, as text: its plain values, its
+        enumeration members by name and the objects it acts on by
+        :func:`written_object`; anything else is left out.
     """
     return {
-        name: value.name if isinstance(value, Enum) else str(value)
+        name: written
         for name, value in vars(action).items()
-        if isinstance(value, (bool, int, float, str, Enum)) and not name.startswith("_")
+        if not name.startswith("_")
+        for written in [written_value(value)]
+        if written is not None
     }
+
+
+def written_value(value: Any) -> Optional[str]:
+    """
+    :return: A value an action holds, as text; ``None`` for a value neither plain, an
+        enumeration member nor an object of the world.
+    """
+    if isinstance(value, Enum):
+        return value.name
+    if isinstance(value, (bool, int, float, str)):
+        return str(value)
+    if isinstance(value, (Body, HasRootBody)):
+        return written_object(value)
+    return None
+
+
+def written_object(chosen: Body | HasRootBody) -> str:
+    """
+    :return: An object of the world as text: a body by its name, an annotated object by
+        its kind and its body's name.
+    """
+    if isinstance(chosen, Body):
+        return name_of(chosen)
+    return f"{type(chosen).__name__} ({name_of(chosen.root)})"
 
 
 # %% summarising the arms

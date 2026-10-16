@@ -25,12 +25,14 @@ from cram_viz.resolution.resolver import RESOLVER_MAX_TOKENS, DesignatorResolver
 from cram_viz.resolution.runs import ResolutionRuns, RunFile
 from experiments.frame_comparison.output import (
     KITCHEN_RUNS_PER_ARM,
+    OPEN_CONTAINER_KITCHEN_CASES,
+    OPEN_CONTAINER_RUNS_PER_ARM,
     POUR_RUNS_PER_ARM,
     ComparisonOutput,
     ComparisonVariable,
 )
 from experiments.frame_comparison.records import ComparisonArm, RunRecord
-from experiments.llm_reasoner_kitchen.cases import KNOWLEDGE_CASES
+from experiments.llm_reasoner_kitchen.cases import KNOWLEDGE_CASES, RESOLUTION_CASES
 from experiments.llm_reasoner_kitchen.live import LIVE_MODEL, LiveCheck
 from experiments.llm_reasoner_kitchen.resolution import KitchenResolver
 
@@ -73,9 +75,17 @@ def store(tmp_path_factory) -> HypothesisStore:
     )
 
 
-@pytest.mark.parametrize("run", range(POUR_RUNS_PER_ARM))
-@pytest.mark.parametrize("arm", list(ComparisonArm))
-def test_the_pour_is_resolved_and_tried(arm, run, output, store):
+def resolve_and_record(
+    designator: PouringDesignator,
+    arm: ComparisonArm,
+    run: int,
+    output: ComparisonOutput,
+    store: HypothesisStore,
+) -> None:
+    """
+    Resolve one of cram_viz's pouring designators in its scene, trying its pours in the
+    simulation, and keep the run's record.
+    """
     bundle = paths.scenes_dir() / POURING_SCENE
     if not bundle.is_dir():
         pytest.skip(f"the {POURING_SCENE} scene is not available")
@@ -86,16 +96,58 @@ def test_the_pour_is_resolved_and_tried(arm, run, output, store):
         perspectives=arm.perspectives,
     )
     resolved = resolver.resolve(
-        DesignatorQuery.shipped(PouringDesignator.POUR_GEOMETRY_OPEN),
-        POURING_SCENE,
-        bundle,
+        DesignatorQuery.shipped(designator), POURING_SCENE, bundle
     ).resolution
     record = RunRecord.of_designator(
         resolved,
         output.directory / "runs" / resolved.run / RunFile.EVENTS,
-        case=PouringDesignator.POUR_GEOMETRY_OPEN.value,
+        case=designator.value,
         arm=arm,
         run=run,
+    )
+    output.add(record)
+    print(record.to_json())
+
+
+@pytest.mark.parametrize("run", range(POUR_RUNS_PER_ARM))
+@pytest.mark.parametrize("arm", list(ComparisonArm))
+def test_the_pour_is_resolved_and_tried(arm, run, output, store):
+    resolve_and_record(PouringDesignator.POUR_GEOMETRY_OPEN, arm, run, output, store)
+
+
+@pytest.mark.parametrize("run", range(OPEN_CONTAINER_RUNS_PER_ARM))
+@pytest.mark.parametrize("arm", list(ComparisonArm))
+def test_the_pour_choosing_its_containers_is_resolved_and_tried(
+    arm, run, output, store
+):
+    resolve_and_record(PouringDesignator.OBJECTS_OPEN, arm, run, output, store)
+
+
+@pytest.mark.parametrize("run", range(OPEN_CONTAINER_RUNS_PER_ARM))
+@pytest.mark.parametrize(
+    "case",
+    [
+        case
+        for case in RESOLUTION_CASES
+        if case.identifier in OPEN_CONTAINER_KITCHEN_CASES
+    ],
+    ids=lambda case: case.identifier,
+)
+@pytest.mark.parametrize("arm", list(ComparisonArm))
+def test_a_kitchen_case_choosing_its_containers_is_resolved(
+    arm, case, run, kitchen, output, store
+):
+    reasoner = replace(LIVE.reasoner(store), perspectives=arm.perspectives)
+    resolution = KitchenResolver(reasoner=reasoner).resolve(
+        case.query(kitchen), case.task
+    )
+    record = RunRecord.of_kitchen(
+        resolution,
+        case.identifier,
+        arm,
+        run,
+        SONNET_5_5_PRICES,
+        meets=case.meets(resolution.actions),
     )
     output.add(record)
     print(record.to_json())

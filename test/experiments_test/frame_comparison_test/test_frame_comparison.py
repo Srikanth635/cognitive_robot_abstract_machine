@@ -7,7 +7,7 @@ kitchen, and how the arms are summarised.
 from __future__ import annotations
 
 import json
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from llm_reasoner.clients.usage import SONNET_5_5_PRICES
@@ -18,6 +18,11 @@ from llm_reasoner.knowledge.access import (
     KnowledgeToolName,
 )
 from llm_reasoner.resolver.grounds import GroundKey
+
+from coraplex.datastructures.enums import Arms
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.semantic_annotations.semantic_annotations import PouringCup
+from semantic_digital_twin.world_description.world_entity import Body
 
 from cram_viz.resolution.resolver import (
     ResolvedAction,
@@ -32,7 +37,9 @@ from experiments.frame_comparison.records import (
     ComparisonArm,
     Measurement,
     RunRecord,
+    chosen_values,
     summarise,
+    written_object,
 )
 from experiments.llm_reasoner_kitchen.resolution import Resolution
 
@@ -301,3 +308,54 @@ class TestOutput:
         output.add(pour_record(tmp_path, ComparisonArm.WITH_FRAME, [tried(True, 0.01)]))
         summarise_directory([str(output.directory)])
         assert output.summary_path.is_file()
+
+
+# %% the objects chosen
+
+
+@dataclass
+class PourChoosingObjects:
+    """
+    A pour whose containers, arm and tilt have been chosen.
+    """
+
+    source_container: PouringCup
+    target_container: Body
+    arm: Arms
+    tilt_angle: float
+
+
+class TestChosenValues:
+    def test_a_body_chosen_is_recorded_by_its_name(self):
+        assert written_object(Body(name=PrefixedName("bowl.stl"))) == "bowl.stl"
+
+    def test_an_annotated_object_chosen_is_recorded_by_its_kind_and_body(self):
+        cup = PouringCup(root=Body(name=PrefixedName("cup.stl")))
+        assert written_object(cup) == "PouringCup (cup.stl)"
+
+    def test_every_object_and_value_chosen_is_recorded(self):
+        pour = PourChoosingObjects(
+            source_container=PouringCup(root=Body(name=PrefixedName("cup.stl"))),
+            target_container=Body(name=PrefixedName("bowl.stl")),
+            arm=Arms.RIGHT,
+            tilt_angle=1.85,
+        )
+        assert chosen_values(pour) == {
+            "source_container": "PouringCup (cup.stl)",
+            "target_container": "bowl.stl",
+            "arm": "RIGHT",
+            "tilt_angle": "1.85",
+        }
+
+    def test_a_kitchen_record_keeps_whether_its_case_was_met(self, tmp_path):
+        backend = world_backend_offering_the_frame(HypothesisStore(directory=tmp_path))
+        (action,) = tilt_of(body_with_geometry()).evaluate(backend=backend)
+        record = RunRecord.of_kitchen(
+            Resolution(actions=[action], backend=backend),
+            case="P3",
+            arm=ComparisonArm.WITH_FRAME,
+            run=0,
+            prices=SONNET_5_5_PRICES,
+            meets=False,
+        )
+        assert record.meets is False
