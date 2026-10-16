@@ -29,7 +29,6 @@ from llm_reasoner.knowledge.hypotheses.knowledge_access import (
     KnowledgeToolName,
 )
 from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
-from llm_reasoner.knowledge.hypotheses.questions import perspective_of_name
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies import (
@@ -119,7 +118,6 @@ __all__ = [
     "OntologyFiles",
     "PERSPECTIVE_ROOTS",
     "PerspectiveRoot",
-    "perspective_of_name",
     "pouring",
     "PredictiveManipulationOntologyFile",
     "PREDICTIVE_MANIPULATION_NAMESPACE_ROOT",

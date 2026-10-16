@@ -123,6 +123,12 @@ class ShownGround:
     Its name: a knowledge fragment's, or a world individual's handle with what it is.
     """
 
+    identifier: str = ""
+    """
+    What identifies it in its source: the IRI citing a knowledge fragment, or a world
+    individual's handle; empty in a run kept before it was recorded.
+    """
+
 
 @dataclass(frozen=True)
 class ResolvedAction:
@@ -529,11 +535,13 @@ class DesignatorResolver:
             return ShownGround(
                 source=ground.source,
                 name=Citation.from_iri(ground.identifier).fragment_name,
+                identifier=ground.identifier,
             )
         individual = view.individual_of(ground.identifier)
         return ShownGround(
             source=ground.source,
             name=f"{ground.identifier} ({self.written(individual)})",
+            identifier=ground.identifier,
         )
 
     @staticmethod

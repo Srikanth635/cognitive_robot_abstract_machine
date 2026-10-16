@@ -41,25 +41,6 @@ the name the tools give the fragment.
 """
 
 
-def perspective_of_name(name: str) -> Optional[ActionPerspectiveFile]:
-    """
-    :param name: A fragment's name, as the knowledge tools give it.
-    :return: The action perspective module the name is named after, ``None`` for a
-        fragment of a phase structure.
-    """
-    prefix, separator, _ = name.partition(NAME_SEPARATOR)
-    if not separator:
-        return None
-    return next(
-        (
-            module_file
-            for module_file in ActionPerspectiveFile
-            if Path(module_file.value).stem == prefix
-        ),
-        None,
-    )
-
-
 # %% errors
 
 
