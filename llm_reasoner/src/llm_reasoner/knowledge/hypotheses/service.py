@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 
 from krrood.entity_query_language.query.match import Match
-from typing_extensions import Optional, Sequence
+from typing_extensions import Mapping, Optional, Sequence
 
 from llm_reasoner.clients.tools import Tool
 from llm_reasoner.knowledge.storage.citation import Citation
@@ -20,6 +20,8 @@ from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
 from llm_reasoner.knowledge.hypotheses.questions import KnowledgeQuestions
 from llm_reasoner.knowledge.hypotheses.tools import KNOWLEDGE_TOOL_KINDS
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.frame_fields import FramePartDescription
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 
 
@@ -89,6 +91,23 @@ class KnowledgeService(KnowledgeAccess):
             name
         )
         return cited.iri if cited is not None and cited.record_id == record_id else None
+
+    def frame_parts_filled(
+        self,
+        record_id: str,
+        frame_fields: Mapping[str, FramePartDescription],
+    ) -> dict[str, list[str]]:
+        frame = self.view(record_id).root
+        if not isinstance(frame, action_core.ActionFrame):
+            return {}
+        questions = KnowledgeQuestions(hypotheses=[self.view(record_id)])
+        named = {
+            field_name: [
+                questions.name_of(fragment) for fragment in part.fragments_in(frame)
+            ]
+            for field_name, part in frame_fields.items()
+        }
+        return {field_name: names for field_name, names in named.items() if names}
 
     def views_read_with(self, record_ids: Sequence[str]) -> list[HypothesisView]:
         """

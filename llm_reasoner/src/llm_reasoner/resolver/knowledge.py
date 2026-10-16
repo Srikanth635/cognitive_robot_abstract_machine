@@ -53,8 +53,9 @@ FRAME_KNOWLEDGE_RULE = PromptRule(
     "and the choices it leaves open, and perspectives on it, such as what each slot's "
     "filler is normally expected to be, have or afford and the defaults that hold "
     f"otherwise; {KnowledgeToolName.DESCRIBE_FRAGMENT} on a slot lists what is expected "
-    "of it. Relate each open slot to the frame's slot or choice it fills, check what is "
-    "expected of it against the world, and ground your choice on it.",
+    "of it. An open slot's \"frame\" names the frame's slots or choices it fills: "
+    "describe those first, check what is expected of them against the world, and "
+    "ground your choice on them.",
 )
 """
 The rule stating how the action's frame and the perspectives on it are read and used,
@@ -243,6 +244,20 @@ class KnowledgeRequester:
                 service=self.service, record_ids=tuple(consultation.record_ids)
             )
         ]
+
+    def frame_parts_for(
+        self, consultation: KnowledgeConsultation
+    ) -> dict[str, list[str]]:
+        """
+        :return: The names of the parts of the consulted core's frame each field of the
+            action fills, by field name; none when no core was consulted.
+        """
+        described = self.described_actions.describing(consultation.designator)
+        if not consultation.perspective_record_ids or described is None:
+            return {}
+        return self.service.frame_parts_filled(
+            consultation.perspective_record_ids[0], described.frame_fields
+        )
 
     def rules_for(self, consultation: KnowledgeConsultation) -> list[PromptRule]:
         """

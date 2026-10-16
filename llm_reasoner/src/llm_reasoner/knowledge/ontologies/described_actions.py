@@ -20,6 +20,10 @@ from typing_extensions import Any, Mapping, Optional
 
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.frame_fields import (
+    FramePartDescription,
+    frame_part_from_json,
+)
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 
@@ -55,6 +59,12 @@ class DescribedActionKey(StrEnum):
     one.
     """
 
+    FRAME_FIELDS = "frame_fields"
+    """
+    The part of the frame each field of the designator fills, by field name, when the
+    core has a frame of the action.
+    """
+
 
 @dataclass(frozen=True)
 class DescribedAction:
@@ -81,6 +91,12 @@ class DescribedAction:
     """
     The generated class of the action core's frame of the action, ``None`` when the core
     has none.
+    """
+
+    frame_fields: Mapping[str, FramePartDescription] = field(default_factory=dict)
+    """
+    The part of the frame each field of the designator fills, by field name; a field
+    the frame says nothing about is absent.
     """
 
     def query(self, values: Mapping[str, Any]) -> Match:
@@ -115,6 +131,12 @@ class DescribedAction:
                 if DescribedActionKey.FRAME in stored
                 else None
             ),
+            frame_fields={
+                field_name: frame_part_from_json(part)
+                for field_name, part in stored.get(
+                    DescribedActionKey.FRAME_FIELDS, {}
+                ).items()
+            },
         )
 
 

@@ -502,9 +502,10 @@ At a consultation, each mapped field is matched to the fragments of the consulte
 hypothesis: a slot class to its slots of that class; a dimension description to its
 dimensions of that quantity kind about that slot or a part of it, and measured from that
 slot when the description names one. A field matching nothing is named nothing. This is
-the knowledge component's: the knowledge-access contract gains `frame_names(record_id,
-designator)`, the names of the fragments each field fills (version 1.3; a component
-without frames names none).
+the knowledge component's: the knowledge-access contract gains
+`frame_parts_filled(record_id, frame_fields)`, the names of the fragments each field
+fills, given the mapping the resolver holds (version 1.3; a component without frames
+names none).
 
 ### 12.4 In the resolver's prompt
 
@@ -515,9 +516,13 @@ rule says to read those first.
 ### 12.5 Order (each test-first)
 
 1. The mapping in `described_actions.json`, its checks, and matching it to a core
-   hypothesis.
-2. Slot entries naming the fragments they fill.
-3. The mapping for `PouringAction`, reviewed.
+   hypothesis. **Done** 2026-10-16 (`ontologies/frame_fields.py`).
+2. Slot entries naming the fragments they fill. **Done** 2026-10-16.
+3. The mapping for `PouringAction`, reviewed. Written 2026-10-16, for review: against the
+   live core, `source_container` and `target_container` fill its source and goal,
+   `tilt_angle` its orientation choice, `pour_side_offset` and `pour_approach_offset`
+   its lip-position choice; `pour_height` fills nothing, that core having no distance
+   choice.
 
 ## Sources
 

@@ -258,6 +258,12 @@ class SlotKey(StrEnum):
     The slot's docstring.
     """
 
+    FRAME = "frame"
+    """
+    The names of the parts of the action's frame the slot fills, when the frame is
+    offered.
+    """
+
     WITHIN = "within"
     """
     The nested description the slot is filled through, when it sits inside one.

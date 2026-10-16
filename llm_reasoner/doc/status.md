@@ -403,6 +403,18 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   Live again on the stored core ($0.044, first answer, consistent): every condition now
   states its polarity, and the source being empty is `ContainedState` not holding of the
   source with the substance.
+- Roles to slots (2026-10-16, phase 3 of `knowledge_perspectives.md`, §12): a designator's
+  fields mapped to the parts of the action core's frame in the core's vocabulary
+  (`described_actions.json` `"frame_fields"`; `ontologies/frame_fields.py`): a slot by its
+  class, a choice by its quantity kind, the slot it is about and the slot it is measured
+  from, a part of a slot counting as the slot. The mapping is checked against the code
+  ontology (`cram-classes.ttl`: an object field fills a slot, a number or enumeration a
+  choice, every field exists) in a test, and matched to the consulted core by the
+  knowledge component (`frame_parts_filled`, knowledge-access contract 1.3). When
+  perspectives are offered, each open slot's entry in `<slots>` names the frame parts it
+  fills (`"frame"`), and the frame rule says to read those first. The `PouringAction`
+  mapping is written by hand for review; against the live core, five of its six fields
+  find their part, `pour_height` none.
 
 ## 3. Live testing
 

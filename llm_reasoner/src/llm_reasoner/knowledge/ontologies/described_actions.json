@@ -3,6 +3,33 @@
     "designator": "coraplex.robot_plans.actions.composite.tool_based.PouringAction",
     "concept": "http://aicor.knowledge/l2-ontology.owl#Pouring",
     "structure": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure",
-    "frame": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame"
+    "frame": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame",
+    "frame_fields": {
+      "source_container": {
+        "slot": "SourceSlot"
+      },
+      "target_container": {
+        "slot": "GoalSlot"
+      },
+      "tilt_angle": {
+        "quantity": "ORIENTATION",
+        "about": "SourceSlot"
+      },
+      "pour_side_offset": {
+        "quantity": "POSITION",
+        "about": "SourceSlot",
+        "relative_to": "GoalSlot"
+      },
+      "pour_approach_offset": {
+        "quantity": "POSITION",
+        "about": "SourceSlot",
+        "relative_to": "GoalSlot"
+      },
+      "pour_height": {
+        "quantity": "DISTANCE",
+        "about": "SourceSlot",
+        "relative_to": "GoalSlot"
+      }
+    }
   }
 ]

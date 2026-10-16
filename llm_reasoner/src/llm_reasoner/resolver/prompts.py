@@ -15,7 +15,7 @@ from enum import StrEnum
 from krrood.entity_query_language.backends import QueryBackend
 from krrood.entity_query_language.query.match import Match
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
-from typing_extensions import Any, Dict, List, Optional, Sequence
+from typing_extensions import Any, Dict, List, Mapping, Optional, Sequence
 
 from llm_reasoner.resolver.context import CandidateRenderer
 from llm_reasoner.resolver.exceptions import RetryableModelFailure
@@ -311,6 +311,12 @@ class PromptBuilder:
     open_values: OpenValueMeaning = OpenValueMeaning.CHOICE
     """What an answer to an open value slot stands for."""
 
+    frame_parts: Mapping[str, Sequence[str]] = field(default_factory=dict)
+    """
+    The names of the parts of the action's frame each field of the action fills, by
+    field name; none when the frame is not offered.
+    """
+
     # %% the system prompt
 
     def rules(self, further_rules: Sequence[PromptRule] = ()) -> List[PromptRule]:
@@ -492,12 +498,14 @@ class PromptBuilder:
         """
         :param slot: An open slot.
         :param expression: The match being resolved, passed to the renderer.
-        :return: The slot as data: its path, type, meaning, what it accepts, its default
-            and its candidates.
+        :return: The slot as data: its path, type, meaning, the parts of the action's
+            frame it fills, what it accepts, its default and its candidates.
         """
         entry: Dict[str, Any] = {SlotKey.PATH: slot.path, SlotKey.TYPE: slot.type_name}
         if slot.docstring:
             entry[SlotKey.MEANING] = slot.docstring
+        if slot.group_path is None and slot.attribute_name in self.frame_parts:
+            entry[SlotKey.FRAME] = list(self.frame_parts[slot.attribute_name])
         if slot.group_path is not None:
             entry[SlotKey.WITHIN] = self.group_entry(slot)
         if slot.kind is SlotKind.SORTAL:
