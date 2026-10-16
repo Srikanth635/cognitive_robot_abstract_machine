@@ -11,7 +11,7 @@ from typing_extensions import Any, Optional
 
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.clients.usage import TokenPrices
-from llm_reasoner.knowledge.access import KnowledgeAccess
+from llm_reasoner.knowledge.access import ActionPerspectiveFile, KnowledgeAccess
 from llm_reasoner.knowledge.hypotheses.tools import KnowledgeTool
 from llm_reasoner.observation.components import ObservedKnowledge, ObservedWorld
 from llm_reasoner.observation.events import Component
@@ -65,6 +65,12 @@ class Reasoner:
     What the model charges, to report what each completion cost.
     """
 
+    perspectives: tuple[ActionPerspectiveFile, ...] = ()
+    """
+    The perspectives on the action core consulted with it beside the phase structure;
+    none by default.
+    """
+
     def backend(self, **settings: Any) -> LanguageModelBackend:
         """
         :param settings: Further settings of the backend, such as its context provider.
@@ -77,7 +83,9 @@ class Reasoner:
             return LanguageModelBackend.with_world_tools(
                 client=self.client,
                 world=self.world,
-                knowledge=KnowledgeRequester(service=self.knowledge),
+                knowledge=KnowledgeRequester(
+                    service=self.knowledge, perspectives=self.perspectives
+                ),
                 **settings,
             )
         return LanguageModelBackend.with_world_tools(
@@ -90,7 +98,8 @@ class Reasoner:
             ),
             world=ObservedWorld(world=self.world, sink=self.sink),
             knowledge=KnowledgeRequester(
-                service=ObservedKnowledge(knowledge=self.knowledge, sink=self.sink)
+                service=ObservedKnowledge(knowledge=self.knowledge, sink=self.sink),
+                perspectives=self.perspectives,
             ),
             **{"observer": self.sink, **settings},
         )

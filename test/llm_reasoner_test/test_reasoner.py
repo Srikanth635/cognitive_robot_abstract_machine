@@ -5,14 +5,18 @@ the knowledge component's symbols, and consulting that component about every act
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.access import (
     AcceptanceSuite,
+    ActionPerspectiveFile,
     HypothesisBackend,
     HypothesisStore,
     KnowledgeService,
     pouring,
 )
+from llm_reasoner.observation.sinks import MemorySink
 from llm_reasoner.reasoner import Reasoner
 from llm_reasoner.resolver.context import TaskContextProvider
 
@@ -73,3 +77,31 @@ class TestBackend:
         reasoner = reasoner_storing_in(HypothesisStore(directory=tmp_path))
         task = TaskContextProvider(goal="Pour until the bowl is half full.")
         assert reasoner.backend(context_provider=task).context_provider is task
+
+
+# %% the perspectives consulted
+
+
+class TestPerspectives:
+    def test_by_default_no_perspective_is_consulted(self, tmp_path):
+        reasoner = reasoner_storing_in(HypothesisStore(directory=tmp_path))
+        assert reasoner.backend().knowledge.perspectives == ()
+
+    def test_the_perspectives_named_are_consulted(self, tmp_path):
+        reasoner = replace(
+            reasoner_storing_in(HypothesisStore(directory=tmp_path)),
+            perspectives=(ActionPerspectiveFile.ACTION_FRAME,),
+        )
+        assert reasoner.backend().knowledge.perspectives == (
+            ActionPerspectiveFile.ACTION_FRAME,
+        )
+
+    def test_the_perspectives_named_are_consulted_when_reported_too(self, tmp_path):
+        reasoner = replace(
+            reasoner_storing_in(HypothesisStore(directory=tmp_path)),
+            perspectives=(ActionPerspectiveFile.ACTION_FRAME,),
+            sink=MemorySink(),
+        )
+        assert reasoner.backend().knowledge.perspectives == (
+            ActionPerspectiveFile.ACTION_FRAME,
+        )

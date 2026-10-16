@@ -19,7 +19,11 @@ from krrood.entity_query_language.query.match import Match
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.clients.usage import SONNET_5_5_PRICES, TokenPrices
 from llm_reasoner.clients.anthropic_client import AnthropicClient
-from llm_reasoner.knowledge.access import Citation, KnowledgeService
+from llm_reasoner.knowledge.access import (
+    ActionPerspectiveFile,
+    Citation,
+    KnowledgeService,
+)
 from llm_reasoner.observation.events import Component
 from llm_reasoner.observation.observed import ObservedClient
 from llm_reasoner.observation.sinks import EventSink
@@ -31,7 +35,7 @@ from llm_reasoner.world.sources import SymbolGraphSource
 from llm_reasoner.world.view import WorldView
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import Any, Callable, Dict, List, Optional
+from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
 
 from cram_viz import paths
 from cram_viz.events import reporting_run
@@ -192,6 +196,12 @@ class ResolvedDesignator:
     The pours tried in the simulation before the resolution was accepted, in order.
     """
 
+    perspective_record_ids: List[str] = field(default_factory=list)
+    """
+    The hypotheses about the action core's frame and the perspectives on it consulted,
+    the core first; none when no perspective was offered.
+    """
+
     @property
     def query_on_one_line(self) -> str:
         """
@@ -268,6 +278,12 @@ class DesignatorResolver:
     simulate: Callable[..., Any] = subprocess.run
     """
     Runs the process trying a pour in the simulation.
+    """
+
+    perspectives: Tuple[ActionPerspectiveFile, ...] = ()
+    """
+    The perspectives on the action core the resolver consults beside the phase
+    structure; none by default.
     """
 
     @classmethod
@@ -403,6 +419,7 @@ class DesignatorResolver:
             world=view,
             sink=sink,
             prices=self.prices,
+            perspectives=self.perspectives,
         ).backend(
             context_provider=geometry,
             number_of_candidates=1,
@@ -434,6 +451,11 @@ class DesignatorResolver:
             cost=self.cost_of(backend),
             run=run.name,
             trials=[] if trials is None else trials.trials,
+            perspective_record_ids=(
+                []
+                if consultation is None
+                else list(consultation.perspective_record_ids)
+            ),
         )
 
     def neems_of(self, run: RunDirectory) -> Optional[NeemRecording]:

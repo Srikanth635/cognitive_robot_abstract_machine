@@ -8,14 +8,20 @@ from __future__ import annotations
 
 import json
 import sys
-from dataclasses import fields
+from dataclasses import fields, replace
 from pathlib import Path
 
 import pytest
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.clients.base import ScriptedClient
-from llm_reasoner.knowledge.access import HypothesisStore
+from llm_reasoner.knowledge.access import (
+    ActionPerspectiveFile,
+    HypothesisStore,
+    KnowledgeService,
+    action_core,
+    action_frame,
+)
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
 from llm_reasoner.resolver.grounds import GroundKey
 from semantic_digital_twin.semantic_annotations.semantic_annotations import PouringCup
@@ -530,3 +536,83 @@ class TestResolverNeems:
         )
         (command,) = resolver.simulate.commands
         assert NeemOption.DATABASE not in command
+
+
+# %% offering the action frame
+
+
+ACTION_PERSPECTIVE_CASES = (
+    Path(__file__).parents[1] / "llm_reasoner_test" / "action_perspective_cases"
+)
+"""
+The scripted answers describing pouring in the action perspectives.
+"""
+
+
+def resolver_offering_the_frame(
+    store: HypothesisStore, runs: Path
+) -> DesignatorResolver:
+    """
+    :return: The resolver replaying the designator giving the objects, offering the
+        action frame, its knowledge component generating the recorded phase structure,
+        then the scripted core and frame of pouring.
+    """
+    resolver = resolver_replaying(PouringDesignator.OBJECTS_GIVEN, store, runs)
+    return replace(
+        resolver,
+        perspectives=(ActionPerspectiveFile.ACTION_FRAME,),
+        baseline=KnowledgeService(
+            backend=replace(
+                resolver.baseline.backend,
+                client=ScriptedClient(
+                    responses=[
+                        *resolver.baseline.backend.client.responses,
+                        (ACTION_PERSPECTIVE_CASES / "pouring_core.json").read_text(),
+                        (ACTION_PERSPECTIVE_CASES / "pouring_frame.json").read_text(),
+                    ]
+                ),
+            )
+        ),
+    )
+
+
+class TestOfferingTheFrame:
+    def test_a_resolution_reports_the_core_and_the_frame_it_consulted(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = resolver_offering_the_frame(
+            HypothesisStore(directory=tmp_path / "store"), tmp_path / "runs"
+        )
+        run = resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        core_record, frame_record = run.resolution.perspective_record_ids
+        assert isinstance(
+            run.knowledge.view(core_record).root, action_core.PouringFrame
+        )
+        assert isinstance(
+            run.knowledge.view(frame_record).root, action_frame.FrameStereotype
+        )
+
+    def test_by_default_a_resolution_consults_no_perspective(
+        self, pouring_bundle, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        assert run.resolution.perspective_record_ids == []
+
+    def test_a_run_kept_before_perspectives_were_reported_is_reopened(
+        self, pouring_bundle, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
+        stored = json.loads((kept.directory / RunFile.RESOLUTION).read_text())
+        del stored["perspective_record_ids"]
+        (kept.directory / RunFile.RESOLUTION).write_text(json.dumps(stored))
+        assert (
+            reopening_resolver(tmp_path)
+            .reopen(run.resolution.run)
+            .resolution.perspective_record_ids
+            == []
+        )
