@@ -467,6 +467,58 @@ vocabulary is proposed from too.
    knowledge reviewed. **Done** 2026-10-15: both admitted on the first answer and found
    consistent by HermiT, $0.065 together (`status.md`).
 
+## 12. Phase 3 design (agreed 2026-10-16)
+
+Decided: the mapping is keyed by vocabulary terms (§12.1); it is written by hand for
+`PouringAction`, checked automatically and reviewed as a diff, and a model proposes
+mappings once navigating, picking up and placing need them (phase 8); the tolerances,
+`arm` and `pour_side` are not mapped.
+
+### 12.1 What a mapping says
+
+For one designator, each field the action's frame speaks about, and what it speaks about
+in the core's vocabulary, so the mapping holds for any core hypothesis of the action
+(whose fragments, such as `action-core/p_pos`, are named anew each time it is
+generated):
+
+| Field holds | Maps to | `PouringAction` |
+|---|---|---|
+| An object filling a participant | A participant slot, by class | `source_container` → `SourceSlot`; `target_container` → `GoalSlot` |
+| A choice the action leaves open | A parameter dimension, described by its quantity kind, the slot it is about (or a part of it) and, when it has one, the slot it is measured from | `tilt_angle` → orientation of the source; `pour_side_offset` → position of the source relative to the goal; `pour_height` → distance of the source from the goal; `pour_approach_offset` → position of the source relative to the goal |
+| Anything else | Nothing | `position_threshold`, `orientation_threshold` (the controller's tolerances); `arm`, `pour_side` (which arm and side: the robot's, not the action's) |
+
+The mapping is kept with the designator's other knowledge in `described_actions.json`.
+
+### 12.2 Checked automatically, reviewed as a diff (D9)
+
+Every mapped field exists on the designator (read from the code ontology,
+`cram_classes`); every slot class and quantity kind exists in the core; a field holding an
+object maps to a participant slot, a field holding a number to a dimension; a field maps
+to one thing.
+
+### 12.3 Matching a mapping to a core hypothesis
+
+At a consultation, each mapped field is matched to the fragments of the consulted core
+hypothesis: a slot class to its slots of that class; a dimension description to its
+dimensions of that quantity kind about that slot or a part of it, and measured from that
+slot when the description names one. A field matching nothing is named nothing. This is
+the knowledge component's: the knowledge-access contract gains `frame_names(record_id,
+designator)`, the names of the fragments each field fills (version 1.3; a component
+without frames names none).
+
+### 12.4 In the resolver's prompt
+
+When perspectives are offered, each open slot's entry in `<slots>` names the core's slots
+or dimensions it fills (`"frame": ["action-core/source"]`), and the `frame_knowledge`
+rule says to read those first.
+
+### 12.5 Order (each test-first)
+
+1. The mapping in `described_actions.json`, its checks, and matching it to a core
+   hypothesis.
+2. Slot entries naming the fragments they fill.
+3. The mapping for `PouringAction`, reviewed.
+
 ## Sources
 
 - M. Beetz, M. Kümpel. *From Frames to Pouring: The CRAM Cognitive Architecture for
