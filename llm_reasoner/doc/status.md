@@ -489,7 +489,9 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   a failed motion; `DesignatorResolver.predicts_pours`, off by default. Live on
   `pour_geometry_open`, three runs: the first pour landed in every run (none did without
   the prediction), one pour each, the final prediction within 5 mm of the simulated pour,
-  for $0.062 a run against $0.114. coraplex is unchanged.
+  for $0.062 a run against $0.114. coraplex is unchanged. Kept off by default
+  (decided 2026-10-18) until the open-container cases (P2, P3, P8) and the trap cases
+  are measured with it.
 
 ## 3. Live testing
 
