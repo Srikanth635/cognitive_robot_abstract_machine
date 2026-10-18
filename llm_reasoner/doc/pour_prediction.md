@@ -64,3 +64,37 @@ it. Two earlier attempts found two faults, both fixed before these runs: the mea
 process wrote its held source as `__main__.HeldSource` (it now runs a module of its
 own, `hold_measurement`), and a pick-up the arm cannot make raised instead of being
 predicted as a failed motion.
+
+## 5. Measured with the containers open (2026-10-18)
+
+Two runs of `objects_open` with the prediction against the two recorded without it
+(`comparison_open`). Its query leaves the source, the target, the arm and the tilt open;
+the side offset, approach offset and height keep coraplex's defaults, so the tilt is the
+only value that moves the mouth.
+
+| | Without the prediction | With the prediction |
+|---|---|---|
+| Containers chosen | the pouring cup into the bowl, both runs | the same |
+| First pour lands | 0 of 2 | 0 of 2 |
+| Any pour lands | 0 of 2 | 1 of 2 (the third, at a tilt of 0.2 rad) |
+| Resolver cost per run | $0.243, $0.271 | $0.391, $0.264 |
+
+The prediction did not help here, for three reasons the runs show:
+
+- **Only the tilt is open.** With the default geometry the mouth ends 0.188 m beside the
+  opening; the prediction lands it only near 3 rad (the pitcher almost upside down) or
+  near 0 rad (barely tilted). The rule still names `pour_side_offset`,
+  `pour_approach_offset` and `pour_height` as the values to change, which this query
+  does not leave open.
+- **The prediction does not know which tilts the arm can reach.** It predicted 2.8, 2.9,
+  3.0 and 3.07 rad to land within 0.001–0.053 m; all five pours tried at those tilts
+  failed as motions (`MotionDidNotFinish` on the tool's orientation). A pick-up the arm
+  cannot make is predicted as a failed motion, but the pour's own motion is not checked.
+- **The check accepts a pour that pours nothing.** The one landing pour was at 0.2 rad,
+  11°: the mouth ends over the opening, which is all `PourOutcome` measures, but a
+  pitcher tilted that little does not flow.
+
+What would make the prediction help here, all on the resolver's side: predict whether
+the pour's own motion can be made, not only the pick-up; name in the rule only the
+values the query leaves open; and have the check require the tilt the knowledge states
+for flow onset.
