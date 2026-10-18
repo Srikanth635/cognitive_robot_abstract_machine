@@ -491,7 +491,12 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   the prediction), one pour each, the final prediction within 5 mm of the simulated pour,
   for $0.062 a run against $0.114. coraplex is unchanged. Kept off by default
   (decided 2026-10-18) until the open-container cases (P2, P3, P8) and the trap cases
-  are measured with it.
+  are measured with it. On `objects_open` (2026-10-18, `pour_prediction.md` §5), where
+  only the tilt moves the mouth, it did not help: no first pour landed in either
+  arm; the tilts it predicted to land (2.8–3.07 rad) failed as motions, since the
+  pour's own motion is not predicted, and the one landing pour, at 0.2 rad, would
+  not flow. The kitchen's P2, P3 and P8 try no pour, so the prediction does not
+  apply to them.
 
 ## 3. Live testing
 
