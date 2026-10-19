@@ -1,6 +1,6 @@
 # Knowledge perspectives: design note
 
-Status (2026-10-19): **phases 0–4 are built and measured; phases 5 and 6 are built and tested, not yet measured; phases 7–8 are not started.**
+Status (2026-10-19): **phases 0–4 are built and measured; phases 5 and 6 are built, tested and measured (§13.6); phases 7–8 are not started.**
 The action core, the action frame, knowledge in both vocabularies, the roles-to-slots
 mapping and the phase 4 comparison are done (§9, §11–§13); the action frame stays opt-in
 (§13.4). It refines [`architecture.md`](architecture.md) §2.3 and answers the item
@@ -329,17 +329,15 @@ only if the frame helps.
 proposed (Sonnet 5.5, $0.53, accepted on the second answer, HermiT consistent), reviewed and
 registered as `image-schemas.ttl` (5 schema kinds, participations, requirements naming the
 core's parameter dimensions and the quantities that decide them), its statements hanging off
-a `SchemaStereotype`. Scripted knowledge tests pass. Not yet measured: compare is open.
+a `SchemaStereotype`. Scripted knowledge tests pass. Measured with the failures in §13.6.
 
 **Phase 6 — failures and corrections (§5.4). Built 2026-10-19**, the same way and seeded with
 the failures measured on pouring (lands beside the opening, tilted too little to flow, the arm
 cannot reach the pour pose; `pour_prediction.md` §5–§7): proposed for $0.50 (second answer,
 HermiT consistent), reviewed and registered as `failures.ttl` under a `FailureStereotype`; a
 correction is a change to a parameter dimension with a direction, a timing and what the new
-choice must satisfy. Not yet measured. The comparison arms `with_image_schemas`,
-`with_failures` and `with_image_schemas_and_failures` exist (`experiments.frame_comparison`);
-the first live attempt (2026-10-19) stopped at the API's credit limit after one run, so no
-result is recorded.
+choice must satisfy. Measured in §13.6 (arms `with_image_schemas`, `with_failures`,
+`with_image_schemas_and_failures` in `experiments.frame_comparison`).
 
 **Phase 7 — the Flanagan modules on the core's slots (§5.5)**, so every perspective talks
 about the same participants; the Flanagan core's `ConditionPolarity` and the frame's
@@ -602,6 +600,35 @@ ends, without changing coraplex.
 - `Reasoner` gains the requester's `perspectives` setting, so cram_viz and the kitchen
   can offer the frame (test-first).
 - A comparison script running both arms and writing one record per run and a summary.
+
+### 13.6 Image schemas and failures (2026-10-19)
+
+Measured 2026-10-19 (Sonnet 5.5, $3.34 for 18 recorded runs; hypotheses for the new
+perspectives generated into the store on first use, their cost not recorded):
+
+| | Default | Image schemas | Failures | Both |
+|---|---|---|---|---|
+| `pour_geometry_open`, first pour lands | 0 of 3 | 0 of 3 | 0 of 2 | 0 of 3 |
+| `pour_geometry_open`, any pour lands (two pours each) | 3 of 3 | 3 of 3 | 2 of 2 | 3 of 3 |
+| `pour_geometry_open`, resolver cost per run | $0.102 | $0.126 | $0.142 | $0.125 |
+| `objects_open`, any pour lands | 0 of 2 | 0 of 2 | 0 of 1 | 0 of 2 |
+| `objects_open`, resolver cost per run | $0.242 | $0.261 | $0.422 | $0.285 |
+| Grounds citing the core or a perspective | none | 10 (`pour_geometry_open`), 2 | 8, 3 | 9, 5 |
+
+- Same verdict as the action frame: the perspectives change what the answers rest on, not
+  what they choose. Every first pour kept the default geometry and missed by 0.188 m, and
+  the corrected second pour landed within 5–19 mm in every arm; `objects_open` landed no
+  pour in any arm.
+- The new knowledge costs 20–70 % more per run, the failures most (it was read through up to
+  15 tool calls).
+- The failures arm failed in 3 of its 5 runs: generating its hypothesis was cut off at the
+  structured output limit (8192 tokens), so it is a vocabulary the generator cannot yet
+  complete reliably. Two of the three runs that finished were the ones with the stored
+  hypothesis.
+- The tilt and reach failures (`pour_prediction.md` §5–§7) were not recovered by the
+  resolver: `objects_open` tried tilts down to 1.0 and up to 2.7 rad and none landed.
+
+Decided: both stay opt-in, like the frame.
 
 ## Sources
 

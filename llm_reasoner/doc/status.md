@@ -507,8 +507,10 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
 - The image schemas and the failures (2026-10-19, phases 5 and 6 of `knowledge_perspectives.md`,
   `4`+`5` live proposals $0.53 and $0.50): two more action perspective modules, `image-schemas.ttl`
   and `failures.ttl`, with generated Python, scripted-knowledge tests and HermiT checks, offered
-  opt-in through `KnowledgeRequester.perspectives` and as comparison arms. Not measured: the
-  live comparison stopped at the API's credit limit.
+  opt-in through `KnowledgeRequester.perspectives` and as comparison arms. Measured live
+  ($3.34, `knowledge_perspectives.md` §13.6): they change what the answers rest on, not what
+  they choose, for 20–70 % more resolver cost; the failures hypothesis was cut off at the
+  8192-token structured output limit in 3 of 5 runs, which is open.
 
 ## 3. Live testing
 
