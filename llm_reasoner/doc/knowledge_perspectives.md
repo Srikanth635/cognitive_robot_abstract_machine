@@ -1,6 +1,6 @@
 # Knowledge perspectives: design note
 
-Status (2026-10-19): **phases 0–4 are built and measured; phases 5–8 are not started.**
+Status (2026-10-19): **phases 0–4 are built and measured; phases 5 and 6 are built and tested, not yet measured; phases 7–8 are not started.**
 The action core, the action frame, knowledge in both vocabularies, the roles-to-slots
 mapping and the phase 4 comparison are done (§9, §11–§13); the action frame stays opt-in
 (§13.4). It refines [`architecture.md`](architecture.md) §2.3 and answers the item
@@ -325,10 +325,21 @@ another perspective is built (phase 4 decides whether to go on).
 action frame: first-try success, trials, repair rounds, grounded slots, explanations. Go on
 only if the frame helps.
 
-**Phase 5 — the image-schema perspective (§5.3)**, through the same path: propose, review,
-register, knowledge, compare.
+**Phase 5 — the image-schema perspective (§5.3). Built 2026-10-19**, through the same path:
+proposed (Sonnet 5.5, $0.53, accepted on the second answer, HermiT consistent), reviewed and
+registered as `image-schemas.ttl` (5 schema kinds, participations, requirements naming the
+core's parameter dimensions and the quantities that decide them), its statements hanging off
+a `SchemaStereotype`. Scripted knowledge tests pass. Not yet measured: compare is open.
 
-**Phase 6 — failures and corrections (§5.4)**, the same way.
+**Phase 6 — failures and corrections (§5.4). Built 2026-10-19**, the same way and seeded with
+the failures measured on pouring (lands beside the opening, tilted too little to flow, the arm
+cannot reach the pour pose; `pour_prediction.md` §5–§7): proposed for $0.50 (second answer,
+HermiT consistent), reviewed and registered as `failures.ttl` under a `FailureStereotype`; a
+correction is a change to a parameter dimension with a direction, a timing and what the new
+choice must satisfy. Not yet measured. The comparison arms `with_image_schemas`,
+`with_failures` and `with_image_schemas_and_failures` exist (`experiments.frame_comparison`);
+the first live attempt (2026-10-19) stopped at the API's credit limit after one run, so no
+result is recorded.
 
 **Phase 7 — the Flanagan modules on the core's slots (§5.5)**, so every perspective talks
 about the same participants; the Flanagan core's `ConditionPolarity` and the frame's
