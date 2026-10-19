@@ -12,7 +12,10 @@ from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any
 
 from llm_reasoner.knowledge.ontologies import ActionPerspectiveFile
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_frame
+from llm_reasoner.knowledge.ontologies.action_perspectives import (
+    action_frame,
+    image_schemas,
+)
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 
 
@@ -44,6 +47,9 @@ class PerspectiveRoot:
 PERSPECTIVE_ROOTS: dict[ActionPerspectiveFile, PerspectiveRoot] = {
     ActionPerspectiveFile.ACTION_FRAME: PerspectiveRoot(
         root=action_frame.FrameStereotype, frame_field="stereotype_of"
+    ),
+    ActionPerspectiveFile.IMAGE_SCHEMAS: PerspectiveRoot(
+        root=image_schemas.SchemaStereotype, frame_field="schema_stereotype_of"
     ),
 }
 """

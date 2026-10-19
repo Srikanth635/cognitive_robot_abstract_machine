@@ -1,0 +1,427 @@
+@prefix core: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schemas: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#> .
+
+# %% ontology
+
+<http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas> a owl:Ontology ;
+    rdfs:label "Action perspectives: image schemas"@en ;
+    rdfs:comment "An action's frame can be said to instantiate image schemas (source-path-goal, containment, verticality, support, contact). Each schema states which of the frame's slots take part and in which schema role, what relations it requires between those slots before, after or throughout the action, which of the core's parameter dimensions each relation constrains, and which kinds of quantity about which slots decide whether the relation holds, without giving any quantity a value."@en ;
+    owl:imports <http://aicor.knowledge/l2-ontology.owl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
+        <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas/0.1.0> ;
+    owl:versionInfo "0.1.0" .
+
+# %% classes
+
+schemas:SchemaStereotype a owl:Class ;
+    rdfs:label "schema stereotype"@en ;
+    rdfs:comment "The image schemas an action's frame normally instantiates: for each, the slots that take part and what it requires of them."@en ;
+    rdfs:seeAlso <https://en.wikipedia.org/wiki/Image_schema> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty schemas:schemaStereotypeOf ;
+            owl:someValuesFrom core:ActionFrame ],
+        dul:Description .
+
+schemas:ImageSchema a owl:Class ;
+    rdfs:label "image schema"@en ;
+    rdfs:comment "A recurring spatial or force pattern, such as a path, a containment or a support, that the frame of an action instantiates; it says which slots take part and what it requires of them."@en ;
+    rdfs:seeAlso <https://en.wikipedia.org/wiki/Image_schema> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty schemas:hasParticipation ;
+            owl:someValuesFrom schemas:SchemaParticipation ],
+        dul:Description .
+
+schemas:SourcePathGoalSchema a owl:Class ;
+    rdfs:label "source path goal schema"@en ;
+    rdfs:comment "The image schema of something moving along a path from a source to a goal."@en ;
+    rdfs:seeAlso <https://en.wikipedia.org/wiki/Image_schema> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:hasValue schemas:SourcePathGoal ;
+            owl:onProperty schemas:schemaKind ],
+        schemas:ImageSchema .
+
+schemas:ContainmentSchema a owl:Class ;
+    rdfs:label "containment schema"@en ;
+    rdfs:comment "The image schema of something being inside, entering or leaving a bounded interior."@en ;
+    rdfs:seeAlso <https://en.wikipedia.org/wiki/Image_schema> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:hasValue schemas:Containment ;
+            owl:onProperty schemas:schemaKind ],
+        schemas:ImageSchema .
+
+schemas:VerticalitySchema a owl:Class ;
+    rdfs:label "verticality schema"@en ;
+    rdfs:comment "The image schema of one thing being above or below another along the vertical axis."@en ;
+    rdfs:seeAlso <https://en.wikipedia.org/wiki/Image_schema> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:hasValue schemas:Verticality ;
+            owl:onProperty schemas:schemaKind ],
+        schemas:ImageSchema .
+
+schemas:SupportSchema a owl:Class ;
+    rdfs:label "support schema"@en ;
+    rdfs:comment "The image schema of one thing holding up another against gravity."@en ;
+    rdfs:seeAlso <https://en.wikipedia.org/wiki/Image_schema> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:hasValue schemas:SupportPattern ;
+            owl:onProperty schemas:schemaKind ],
+        schemas:ImageSchema .
+
+schemas:ContactSchema a owl:Class ;
+    rdfs:label "contact schema"@en ;
+    rdfs:comment "The image schema of two things touching, with no gap between them."@en ;
+    rdfs:seeAlso <https://en.wikipedia.org/wiki/Image_schema> ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:hasValue schemas:ContactPattern ;
+            owl:onProperty schemas:schemaKind ],
+        schemas:ImageSchema .
+
+schemas:SchemaParticipation a owl:Class ;
+    rdfs:label "schema participation"@en ;
+    rdfs:comment "The taking part of one slot of the frame in a schema, in one role of that schema."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty schemas:participatingSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        dul:Description .
+
+schemas:SchemaRequirement a owl:Class ;
+    rdfs:label "schema requirement"@en ;
+    rdfs:comment "A relation a schema requires between two slots of the frame during one phase of the action, such as the lip of the source being above the opening of the goal before the substance leaves."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty schemas:referenceSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        [ a owl:Restriction ;
+            owl:onProperty schemas:subjectSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        dul:Description .
+
+schemas:DecidingQuantity a owl:Class ;
+    rdfs:label "deciding quantity"@en ;
+    rdfs:comment "A kind of quantity about a slot, such as the centre or size of an opening or the position of a lip, that decides whether a required relation holds; it carries no value."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty core:hasQuantityKind ;
+            owl:someValuesFrom core:QuantityKind ],
+        [ a owl:Restriction ;
+            owl:onProperty schemas:quantityOfSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        dul:Description .
+
+# %% value partitions
+
+schemas:ContactPattern a schemas:SchemaKind,
+        owl:NamedIndividual ;
+    rdfs:label "contact pattern"@en ;
+    rdfs:comment "Touching without a gap."@en .
+
+schemas:Containment a schemas:SchemaKind,
+        owl:NamedIndividual ;
+    rdfs:label "containment"@en ;
+    rdfs:comment "Being inside, entering or leaving a bounded interior."@en .
+
+schemas:SourcePathGoal a schemas:SchemaKind,
+        owl:NamedIndividual ;
+    rdfs:label "source path goal"@en ;
+    rdfs:comment "Movement along a path from a source to a goal."@en .
+
+schemas:SupportPattern a schemas:SchemaKind,
+        owl:NamedIndividual ;
+    rdfs:label "support pattern"@en ;
+    rdfs:comment "Holding something up against gravity."@en .
+
+schemas:Verticality a schemas:SchemaKind,
+        owl:NamedIndividual ;
+    rdfs:label "verticality"@en ;
+    rdfs:comment "Being above or below along the vertical axis."@en .
+
+schemas:SchemaKind a owl:Class ;
+    rdfs:label "schema kind"@en ;
+    rdfs:comment "The kinds of image schema an action's frame can instantiate."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( schemas:SourcePathGoal schemas:Containment schemas:Verticality schemas:SupportPattern schemas:ContactPattern ) ] .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( schemas:SourcePathGoal schemas:Containment schemas:Verticality schemas:SupportPattern schemas:ContactPattern ) .
+
+schemas:Containing a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "containing"@en ;
+    rdfs:comment "The bounded thing that has an interior."@en .
+
+schemas:Content a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "content"@en ;
+    rdfs:comment "What is inside the containing thing."@en .
+
+schemas:Entrance a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "entrance"@en ;
+    rdfs:comment "The way in to a bounded interior."@en .
+
+schemas:Higher a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "higher"@en ;
+    rdfs:comment "The thing that is above in a vertical relation."@en .
+
+schemas:Landmark a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "landmark"@en ;
+    rdfs:comment "The thing against which a trajector is located or moves."@en .
+
+schemas:Lower a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "lower"@en ;
+    rdfs:comment "The thing that is below in a vertical relation."@en .
+
+schemas:PathEnd a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "path end"@en ;
+    rdfs:comment "Where the path ends."@en .
+
+schemas:PathStart a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "path start"@en ;
+    rdfs:comment "Where the path begins."@en .
+
+schemas:Supported a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "supported"@en ;
+    rdfs:comment "The thing that is held up."@en .
+
+schemas:Supporter a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "supporter"@en ;
+    rdfs:comment "The thing that holds up another."@en .
+
+schemas:Toucher a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "toucher"@en ;
+    rdfs:comment "A thing in contact with another."@en .
+
+schemas:Trajector a schemas:SchemaRoleKind,
+        owl:NamedIndividual ;
+    rdfs:label "trajector"@en ;
+    rdfs:comment "The thing that moves or is located relative to another."@en .
+
+schemas:SchemaRoleKind a owl:Class ;
+    rdfs:label "schema role kind"@en ;
+    rdfs:comment "The roles a slot can take within an image schema."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( schemas:Trajector schemas:Landmark schemas:PathStart schemas:PathEnd schemas:Entrance schemas:Containing schemas:Content schemas:Higher schemas:Lower schemas:Supporter schemas:Supported schemas:Toucher ) ] .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( schemas:Trajector schemas:Landmark schemas:PathStart schemas:PathEnd schemas:Entrance schemas:Containing schemas:Content schemas:Higher schemas:Lower schemas:Supporter schemas:Supported schemas:Toucher ) .
+
+schemas:Above a schemas:RelationKind,
+        owl:NamedIndividual ;
+    rdfs:label "above"@en ;
+    rdfs:comment "The subject is higher than the reference along the vertical axis."@en .
+
+schemas:Below a schemas:RelationKind,
+        owl:NamedIndividual ;
+    rdfs:label "below"@en ;
+    rdfs:comment "The subject is lower than the reference along the vertical axis."@en .
+
+schemas:HoldsUp a schemas:RelationKind,
+        owl:NamedIndividual ;
+    rdfs:label "holds up"@en ;
+    rdfs:comment "The subject holds up the reference."@en .
+
+schemas:InContactWith a schemas:RelationKind,
+        owl:NamedIndividual ;
+    rdfs:label "in contact with"@en ;
+    rdfs:comment "The subject touches the reference."@en .
+
+schemas:OutsideInterior a schemas:RelationKind,
+        owl:NamedIndividual ;
+    rdfs:label "outside interior"@en ;
+    rdfs:comment "The subject is not within the interior of the reference."@en .
+
+schemas:VerticallyOver a schemas:RelationKind,
+        owl:NamedIndividual ;
+    rdfs:label "vertically over"@en ;
+    rdfs:comment "The subject is above the reference and within its horizontal extent."@en .
+
+schemas:WithinInterior a schemas:RelationKind,
+        owl:NamedIndividual ;
+    rdfs:label "within interior"@en ;
+    rdfs:comment "The subject is within the interior of the reference."@en .
+
+schemas:RelationKind a owl:Class ;
+    rdfs:label "relation kind"@en ;
+    rdfs:comment "The kinds of relation a schema can require between two slots."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( schemas:Above schemas:Below schemas:VerticallyOver schemas:WithinInterior schemas:OutsideInterior schemas:InContactWith schemas:HoldsUp ) ] .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( schemas:Above schemas:Below schemas:VerticallyOver schemas:WithinInterior schemas:OutsideInterior schemas:InContactWith schemas:HoldsUp ) .
+
+schemas:AfterAction a schemas:RequirementPhase,
+        owl:NamedIndividual ;
+    rdfs:label "after action"@en ;
+    rdfs:comment "Holds once the action has ended."@en .
+
+schemas:BeforeAction a schemas:RequirementPhase,
+        owl:NamedIndividual ;
+    rdfs:label "before action"@en ;
+    rdfs:comment "Holds before the action starts."@en .
+
+schemas:ThroughoutAction a schemas:RequirementPhase,
+        owl:NamedIndividual ;
+    rdfs:label "throughout action"@en ;
+    rdfs:comment "Holds during the whole action."@en .
+
+schemas:RequirementPhase a owl:Class ;
+    rdfs:label "requirement phase"@en ;
+    rdfs:comment "The phases of an action in which a requirement holds."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( schemas:BeforeAction schemas:AfterAction schemas:ThroughoutAction ) ] .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( schemas:BeforeAction schemas:AfterAction schemas:ThroughoutAction ) .
+
+schemas:Centre a schemas:QuantityAspect,
+        owl:NamedIndividual ;
+    rdfs:label "centre"@en ;
+    rdfs:comment "The centre of the filler or of its opening."@en .
+
+schemas:Extent a schemas:QuantityAspect,
+        owl:NamedIndividual ;
+    rdfs:label "extent"@en ;
+    rdfs:comment "The size of the filler or of its opening."@en .
+
+schemas:Location a schemas:QuantityAspect,
+        owl:NamedIndividual ;
+    rdfs:label "location"@en ;
+    rdfs:comment "Where the filler or a part of it is."@en .
+
+schemas:QuantityAspect a owl:Class ;
+    rdfs:label "quantity aspect"@en ;
+    rdfs:comment "The aspects of a slot's filler that a deciding quantity can measure."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( schemas:Centre schemas:Extent schemas:Location ) ] .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( schemas:Centre schemas:Extent schemas:Location ) .
+
+# %% properties
+
+schemas:schemaStereotypeOf a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "schema stereotype of"@en ;
+    rdfs:comment "The action frame of the action core the stereotype is of."@en ;
+    rdfs:domain schemas:SchemaStereotype ;
+    rdfs:range core:ActionFrame ;
+    rdfs:subPropertyOf dul:isRelatedToDescription .
+
+schemas:hasSchema a owl:ObjectProperty ;
+    rdfs:label "has schema"@en ;
+    rdfs:comment "An image schema that the action's frame instantiates."@en ;
+    rdfs:domain schemas:SchemaStereotype ;
+    rdfs:range schemas:ImageSchema ;
+    rdfs:subPropertyOf dul:isRelatedToDescription .
+
+schemas:schemaKind a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "schema kind"@en ;
+    rdfs:comment "Which kind of image schema this is, such as source-path-goal or containment."@en ;
+    rdfs:domain schemas:ImageSchema ;
+    rdfs:range schemas:SchemaKind .
+
+schemas:hasParticipation a owl:ObjectProperty ;
+    rdfs:label "has participation"@en ;
+    rdfs:comment "A participation of a slot of the frame in the schema."@en ;
+    rdfs:domain schemas:ImageSchema ;
+    rdfs:range schemas:SchemaParticipation .
+
+schemas:participatingSlot a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "participating slot"@en ;
+    rdfs:comment "The slot of the frame that takes part in the schema."@en ;
+    rdfs:domain schemas:SchemaParticipation ;
+    rdfs:range core:FrameSlot .
+
+schemas:inSchemaRole a owl:ObjectProperty ;
+    rdfs:label "in schema role"@en ;
+    rdfs:comment "The role of the schema that the slot takes, such as where the path starts or the way in."@en ;
+    rdfs:domain schemas:SchemaParticipation ;
+    rdfs:range schemas:SchemaRoleKind .
+
+schemas:hasRequirement a owl:ObjectProperty ;
+    rdfs:label "has requirement"@en ;
+    rdfs:comment "A relation between slots that the schema requires."@en ;
+    rdfs:domain schemas:ImageSchema ;
+    rdfs:range schemas:SchemaRequirement .
+
+schemas:subjectSlot a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "subject slot"@en ;
+    rdfs:comment "The slot that the required relation is about."@en ;
+    rdfs:domain schemas:SchemaRequirement ;
+    rdfs:range core:FrameSlot .
+
+schemas:referenceSlot a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "reference slot"@en ;
+    rdfs:comment "The slot that the required relation is measured against."@en ;
+    rdfs:domain schemas:SchemaRequirement ;
+    rdfs:range core:FrameSlot .
+
+schemas:requiredRelationKind a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "required relation kind"@en ;
+    rdfs:comment "The kind of relation required between the subject slot and the reference slot."@en ;
+    rdfs:domain schemas:SchemaRequirement ;
+    rdfs:range schemas:RelationKind .
+
+schemas:namesSpatialRelation a owl:ObjectProperty ;
+    rdfs:label "names spatial relation"@en ;
+    rdfs:comment "The CRAM-AICOR spatial relation concept, such as aicor:Inside or aicor:On, that the requirement names by its IRI."@en ;
+    rdfs:domain schemas:SchemaRequirement .
+
+schemas:namesState a owl:ObjectProperty ;
+    rdfs:label "names state"@en ;
+    rdfs:comment "The CRAM-AICOR state type, such as aicor:ContainedState, that the requirement amounts to, named by its IRI."@en ;
+    rdfs:domain schemas:SchemaRequirement .
+
+schemas:holdsInPhase a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "holds in phase"@en ;
+    rdfs:comment "The phase of the action in which the requirement holds."@en ;
+    rdfs:domain schemas:SchemaRequirement ;
+    rdfs:range schemas:RequirementPhase .
+
+schemas:constrainsDimension a owl:ObjectProperty ;
+    rdfs:label "constrains dimension"@en ;
+    rdfs:comment "A parameter dimension of the core that the required relation constrains."@en ;
+    rdfs:domain schemas:SchemaRequirement ;
+    rdfs:range core:ParameterDimension .
+
+schemas:decidedBy a owl:ObjectProperty ;
+    rdfs:label "decided by"@en ;
+    rdfs:comment "A kind of quantity that decides whether the required relation holds."@en ;
+    rdfs:domain schemas:SchemaRequirement ;
+    rdfs:range schemas:DecidingQuantity .
+
+schemas:quantityOfSlot a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "quantity of slot"@en ;
+    rdfs:comment "The slot whose filler the deciding quantity is about."@en ;
+    rdfs:domain schemas:DecidingQuantity ;
+    rdfs:range core:FrameSlot .
+
+schemas:quantityAspect a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "quantity aspect"@en ;
+    rdfs:comment "Which aspect of the slot's filler the quantity measures, such as its centre or its extent."@en ;
+    rdfs:domain schemas:DecidingQuantity ;
+    rdfs:range schemas:QuantityAspect .
