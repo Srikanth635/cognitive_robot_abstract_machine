@@ -52,8 +52,9 @@ FRAME_KNOWLEDGE_RULE = PromptRule(
     '"frame"): the slots its participants fill, what it is for, what it brings about '
     "and the choices it leaves open, and perspectives on it, such as what each slot's "
     "filler is normally expected to be, have or afford and the defaults that hold "
-    f"otherwise; {KnowledgeToolName.DESCRIBE_FRAGMENT} on a slot lists what is expected "
-    "of it. An open slot's \"frame\" names the frame's slots or choices it fills: "
+    "otherwise, or the relations between slots that its image schemas require and the "
+    f"choices each constrains; {KnowledgeToolName.DESCRIBE_FRAGMENT} on a slot lists "
+    "what is expected of it. An open slot's \"frame\" names the frame's slots or choices it fills: "
     "describe those first, check what is expected of them against the world, and "
     "ground your choice on them.",
 )
