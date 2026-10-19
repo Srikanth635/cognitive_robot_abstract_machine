@@ -282,6 +282,13 @@ class ActionPerspectiveFile(ActionPerspectiveModule, StrEnum):
     it changes and why each parameter dimension matters.
     """
 
+    IMAGE_SCHEMAS = "image-schemas.ttl"
+    """
+    The spatial and force structure underneath an action: the image schemas its frame
+    instantiates, which slots take part, what each requires of them and which parameter
+    dimensions it constrains.
+    """
+
     @property
     def usable_modules(self) -> set[OntologyModuleFile]:
         """
