@@ -98,3 +98,13 @@ What would make the prediction help here, all on the resolver's side: predict wh
 the pour's own motion can be made, not only the pick-up; name in the rule only the
 values the query leaves open; and have the check require the tilt the knowledge states
 for flow onset.
+
+## 6. The check requires the tilt for flow (2026-10-19)
+
+The third of those is done. cram_viz's `FlowOnsetKnowledge` reads the lowest lower bound,
+in degrees, that any stored hypothesis states for a `FlowOnsetThreshold`, and
+`SimulatedPouring` refuses a pour that lands in the opening but is tilted less, stating
+`tilt_reaches_flow_onset` and `flow_onset_tilt_radians` in the outcome so the resolver
+reads what it needs. The last allowed trial is still accepted, and the tilt is left
+unchecked while no stored hypothesis states a threshold in degrees. Not yet measured
+live; the knowledge generated for the milk pour states 60-110 degrees.
