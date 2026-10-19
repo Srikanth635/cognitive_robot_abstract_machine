@@ -81,14 +81,36 @@ class ComparisonArm(StrEnum):
     The phase structure, and the tool predicting where a pour ends.
     """
 
+    WITH_IMAGE_SCHEMAS = "with_image_schemas"
+    """
+    The phase structure, the action core and its image schemas.
+    """
+
+    WITH_FAILURES = "with_failures"
+    """
+    The phase structure, the action core and its failures and corrections.
+    """
+
+    WITH_IMAGE_SCHEMAS_AND_FAILURES = "with_image_schemas_and_failures"
+    """
+    The phase structure, the action core, its image schemas and its failures and
+    corrections.
+    """
+
     @property
     def perspectives(self) -> tuple[ActionPerspectiveFile, ...]:
         """
         The perspectives on the action core the arm consults.
         """
-        if self is ComparisonArm.WITH_FRAME:
-            return (ActionPerspectiveFile.ACTION_FRAME,)
-        return ()
+        return {
+            ComparisonArm.WITH_FRAME: (ActionPerspectiveFile.ACTION_FRAME,),
+            ComparisonArm.WITH_IMAGE_SCHEMAS: (ActionPerspectiveFile.IMAGE_SCHEMAS,),
+            ComparisonArm.WITH_FAILURES: (ActionPerspectiveFile.FAILURES,),
+            ComparisonArm.WITH_IMAGE_SCHEMAS_AND_FAILURES: (
+                ActionPerspectiveFile.IMAGE_SCHEMAS,
+                ActionPerspectiveFile.FAILURES,
+            ),
+        }.get(self, ())
 
     @property
     def predicts_pours(self) -> bool:

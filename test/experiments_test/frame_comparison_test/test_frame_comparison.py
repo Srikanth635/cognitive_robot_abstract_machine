@@ -157,6 +157,27 @@ class TestArms:
             ActionPerspectiveFile.ACTION_FRAME,
         )
 
+    def test_the_arm_with_the_image_schemas_consults_only_them(self):
+        assert ComparisonArm.WITH_IMAGE_SCHEMAS.perspectives == (
+            ActionPerspectiveFile.IMAGE_SCHEMAS,
+        )
+
+    def test_the_arm_with_the_failures_consults_only_them(self):
+        assert ComparisonArm.WITH_FAILURES.perspectives == (
+            ActionPerspectiveFile.FAILURES,
+        )
+
+    def test_the_arm_with_both_consults_the_image_schemas_and_the_failures(self):
+        assert ComparisonArm.WITH_IMAGE_SCHEMAS_AND_FAILURES.perspectives == (
+            ActionPerspectiveFile.IMAGE_SCHEMAS,
+            ActionPerspectiveFile.FAILURES,
+        )
+
+    def test_no_new_arm_predicts_pours(self):
+        assert [arm for arm in ComparisonArm if arm.predicts_pours] == [
+            ComparisonArm.WITH_PREDICTION
+        ]
+
 
 # %% recording a run of the pour
 
