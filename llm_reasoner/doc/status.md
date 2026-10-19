@@ -5,7 +5,7 @@ decided, and what is proposed next. Read it with [`architecture.md`](architectur
 which describes how the package is built. Update both in the same change whenever the
 work moves on.
 
-Last updated: 2026-10-12; code at commit `6743d6116`.
+Last updated: 2026-10-19; code at commit `a1dc8de3d`.
 
 ## 1. State at a glance
 
@@ -15,8 +15,8 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
 | Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
-| Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model (R1–R7, verified live), but its hypotheses are **not yet read** by the resolver's request (knowledge tools are next) |
-| Offline tests | `python -m pytest test/llm_reasoner_test`: 385 passed, 2 skipped |
+| Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model, which reads the hypothesis through three knowledge tools and cites its fragments as grounds (R1–R7 and I1–I5, verified live). Two vocabulary families: the Flanagan predictive-control modules and the action perspectives (action core and action frame, phases 0–4 of `knowledge_perspectives.md`, offered opt-in). A pour's predicted end and the flow-onset tilt are checked on the resolver side (`pour_prediction.md`) |
+| Offline tests | `python -m pytest test/llm_reasoner_test`: 834 passed, 6 skipped, 29 deselected as slow (2026-10-19) |
 
 ## 2. Completed
 
@@ -708,9 +708,10 @@ and camera functions, and the class predicates (`IsReachableBy`, `GripperIsFree`
 `robot_holds_body` answered `false` for the pitcher, and a call that fails answered as
 `PredicateFailed`. Whether a live model uses them is not yet checked.
 
-**Seen but not yet acted on (R7):** the request resolved every case alike (RIGHT, the default
-tilt of 1.85 rad), whatever the task, since it does not read the hypothesis yet; and
-the world does not say what the cup holds, so the material came from the task alone.
+**Seen in R7, since acted on:** the request resolved every case alike (RIGHT, the default
+tilt of 1.85 rad), whatever the task, since it did not read the hypothesis yet; I3–I5 added
+the knowledge tools (above). Still true: the world does not say what the cup holds, so the
+material came from the task alone, unless the scene geometry and world reads establish it.
 
 ## 4. Decisions
 
@@ -770,9 +771,9 @@ the world does not say what the cup holds, so the material came from the task al
   responsibility, its interface unchanged: `HypothesisRequest` (`c041e3c5b`),
   `HypothesisAssessor` (`b9cd77467`), `GenerationDialogue` (`3fee61653`) and
   `HypothesisRecorder` with the backend left to orchestrate (`c4bb49ec9`). The
-  reorganisation adds no functionality; next is designing the request from the resolver
-  (K3) with situation features (option A), the knowledge tools and structured
-  generation prompts.
+  reorganisation added no functionality; the request from the resolver (K3, situation
+  features), the knowledge tools and the structured generation prompts followed and are
+  done (the next subsection, §6).
 - `doc/drafts/object_qualities/` is an uncommitted draft on object qualities in the
   ontology (affordances, dispositions after DUL). It waits for decisions on where the
   module lives and on changes to `core.ttl`.
@@ -812,8 +813,8 @@ approval.
 | Item | Why | State |
 |---|---|---|
 | Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Functions: met for those taking individuals and plain values (contact, support, and the robot and camera ones, which the viewer's resolver now has: it annotates the robot and names their module); not met for those taking a pose, a vector, an array or a list. Properties (poses, bounding boxes): deferred; options (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
-| Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | The request is built (R1–R6, `architecture.md` §3.6): the resolver obtains the hypothesis before every request to its model. Reading it, as knowledge tools (`architecture.md` §2.3), is next after R7 |
-| Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below. Design proposed 2026-10-15 in [`knowledge_perspectives.md`](knowledge_perspectives.md): an action core and one module per perspective (action frame first, then image schemas, then failures and corrections, Flanagan kept), each importing `cram-aicor-ontology.ttl`; the model proposes each perspective's vocabulary, which is checked and reviewed before use. For review; nothing built |
+| Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | **Done** (R1–R7, I1–I5; `architecture.md` §3.6, §3.7): the resolver obtains the hypothesis before every request to its model and reads it with the knowledge tools |
+| Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below. Designed in [`knowledge_perspectives.md`](knowledge_perspectives.md): an action core and one module per perspective, each importing `cram-aicor-ontology.ttl`; the model proposes each perspective's vocabulary, which is checked and reviewed before use. Built: the core and the action frame, with knowledge, tools, roles-to-slots and the phase 4 measurement (phases 0–4, §2). Not built: image schemas (5), failures and corrections (6), the Flanagan modules on the core's slots (7), more actions (8). Trap cases come before any further perspective |
 | Structured prompts for the knowledge component | Its system, initial and repair prompts were prose built in Python, unlike the resolver's tagged sections | **Done** 2026-10-12 (`architecture.md` §3.2): tagged sections, JSON data and named rules; the system prompt grew from about 80k to 130k characters (the types as indented JSON) |
 | Designator slots supplied from the SDT world (containers, arms) | Replaces hand-written bindings | Deferred |
 | Choosing smaller pouring structures from the world state | The full 12-phase pouring structure is always required | Deferred |
@@ -831,8 +832,8 @@ approval.
 |---|---|---|
 | K1 | Generation backed by an ontology linked to CRAM-AICOR, so that language-model knowledge stays consistent, structured and reasonable | Met: the Flanagan ontology links CRAM-AICOR and DUL; acceptance and HermiT enforce it |
 | K2 | Knowledge as objects generated from the ontology, queryable with EQL over the knowledge component's own graph, independent of krrood's symbol graph (reworded 2026-10-12; first stated as "first-class krrood symbols") | Met: independent of krrood's symbol graph since I1; `KnowledgeGraph.instances_of` gives EQL its domains since I2 |
-| K3 | Requests come from the resolver, not as a natural-language instruction; knowledge is generated for that input | Not met: `KnowledgeService.view_for(instruction, query)` takes an instruction, which also keys the store |
-| K4 | The knowledge component is independent of the world; situational facts it needs (such as a material's flow regime, whether a target is open, sizes, or poses as values) reach it only through the resolver, in the ontology's terms | Met for independence (it imports no world); not met for receiving situational facts |
+| K3 | Requests come from the resolver, not as a natural-language instruction; knowledge is generated for that input | Met (R3–R6): the query comes first, the store is keyed by root class, fixed values and ontology versions, and the instruction is provenance only |
+| K4 | The knowledge component is independent of the world; situational facts it needs (such as a material's flow regime, whether a target is open, sizes, or poses as values) reach it only through the resolver, in the ontology's terms | Met for independence (it imports no world) and, for the material regime and termination reason, for receiving situational facts (R1–R6, the situation features); sizes and poses are not features |
 
 K3 supersedes the earlier proposal that the resolver only reads stored knowledge: the
 resolver's request now triggers generation. K4 was first stated as the knowledge
@@ -863,7 +864,9 @@ beyond the Flanagan microworld* (several perspectives); see §4.
    store lookup by concept rather than by instruction. *Answered by R3 and R4:* a mapping
    kept as data, and the store keyed by root class, fixed values and ontology versions.
 5. **Roles and slots.** Whether ontology roles (source, target, the pouring lip) map onto
-   designator slots, as the cram_viz Designator tab sketches.
+   designator slots, as the cram_viz Designator tab sketches. *Answered 2026-10-16
+   (phase 3 of `knowledge_perspectives.md`):* a mapping kept in `described_actions.json`,
+   checked automatically and reviewed as a diff.
 6. **Situation features (from K4).** Proposed: the knowledge component declares the
    situation features it accepts, in ontology terms (a material's flow regime, an open
    or narrow target, a fill level, sizes or poses as values), and the resolver derives

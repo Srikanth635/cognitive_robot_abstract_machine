@@ -1,8 +1,11 @@
 # Knowledge perspectives: design note
 
-Status: **proposed** (2026-10-15), for review; nothing here is built. It refines
-[`architecture.md`](architecture.md) §2.3 ("Intended role and design") and answers the
-item *Representing knowledge for tools* in [`status.md`](status.md) §6.
+Status (2026-10-19): **phases 0–4 are built and measured; phases 5–8 are not started.**
+The action core, the action frame, knowledge in both vocabularies, the roles-to-slots
+mapping and the phase 4 comparison are done (§9, §11–§13); the action frame stays opt-in
+(§13.4). It refines [`architecture.md`](architecture.md) §2.3 and answers the item
+*Representing knowledge for tools* in [`status.md`](status.md) §6. Sections 2 and 5 are
+written as the design stood on 2026-10-15; §9 and §13 record what was done since.
 
 ## 1. Why the knowledge component exists
 
