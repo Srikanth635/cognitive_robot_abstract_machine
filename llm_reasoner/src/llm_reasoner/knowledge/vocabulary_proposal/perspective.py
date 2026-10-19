@@ -45,6 +45,13 @@ class Perspective(StrEnum):
     preconditions and what it changes, as FrameNet and Minsky's frames describe it.
     """
 
+    IMAGE_SCHEMAS = "image-schemas"
+    """
+    The spatial and force structure underneath an action, as Johnson, Lakoff and Talmy
+    describe it: source-path-goal, containment, verticality, support and contact between
+    the core's slots, and the parameter dimensions each constrains.
+    """
+
     @property
     def description(self) -> str:
         """

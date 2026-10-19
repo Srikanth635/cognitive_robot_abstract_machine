@@ -502,6 +502,28 @@ class TestWriting:
         assert answer["classes"][1]["meaning"] in added[0]
 
 
+# %% the perspectives
+
+
+class TestPerspectives:
+    def test_each_perspective_has_a_description_of_its_own(self):
+        descriptions = [perspective.description for perspective in Perspective]
+        assert all(descriptions)
+        assert len(set(descriptions)) == len(descriptions)
+
+    def test_each_perspective_declares_its_terms_in_a_namespace_of_its_own(self):
+        namespaces = [perspective.namespace for perspective in Perspective]
+        assert len(set(namespaces)) == len(namespaces)
+
+    def test_the_image_schemas_are_proposed_in_the_core_s_terms(self, catalogue):
+        request = ProposalPrompt(catalogue=catalogue).request(
+            Perspective.IMAGE_SCHEMAS, ACTION, FRAME
+        )
+        (perspective,) = bodies(request, ProposalSection.PERSPECTIVE)
+        assert perspective == Perspective.IMAGE_SCHEMAS.description
+        assert Perspective.IMAGE_SCHEMAS.ontology_iri.endswith("image-schemas")
+
+
 # %% the prompts
 
 
