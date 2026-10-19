@@ -249,10 +249,20 @@ Where the simple_pouring scene's recording starts the robot and places its objec
 
 
 @pytest.fixture()
-def pouring_kitchen(pr2_apartment_world) -> World:
+def pouring_kitchen(pouring_kitchen_template) -> World:
     """
     :return: A copy of the PR2 in the apartment, at the start the simple_pouring scene
         records, with the pitcher and the bowl where the scene places them.
+    """
+    return deepcopy(pouring_kitchen_template)
+
+
+@pytest.fixture(scope="session")
+def pouring_kitchen_template(pr2_apartment_world) -> World:
+    """
+    :return: The PR2 in the apartment, at the start the simple_pouring scene records,
+        with the pitcher and the bowl where the scene places them; to be copied, not
+        changed.
     """
     world = deepcopy(pr2_apartment_world)
     kitchen = json.loads(KITCHEN.read_text())

@@ -500,6 +500,9 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
   The simulated check now refuses a landing pour tilted less than the flow onset the
   stored knowledge states (2026-10-19, `pour_prediction.md` §6); tests pass. Live on
   `objects_open` no pour landed in four runs ($1.04), so it had nothing to refuse.
+  The prediction now also says when the arm cannot move to the pour pose (inverse
+  kinematics from the pick-up's end, `pour_prediction.md` §7): refused at 2.8 and 3.0 rad,
+  accepted where the simulation finishes, not yet measured live.
 
 ## 3. Live testing
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -27,6 +28,7 @@ from cram_viz.resolution.prediction import (
     Holding,
     PickUpFailed,
     PourPrediction,
+    PourUnreachable,
     PourPredictor,
     PredictPourEnd,
 )
@@ -58,9 +60,27 @@ PICK_UP_FAILURE = "MotionDidNotFinish: out of reach"
 Why a scripted pick-up fails, as the last line a failing process writes.
 """
 
-HELD_AT_THE_TOOL_FRAME = HeldSource(source_in_tool_frame=np.eye(4), robot_yaw=0.0)
+HELD_AT_THE_TOOL_FRAME = HeldSource(
+    source_in_tool_frame=np.eye(4), robot_yaw=0.0, joint_positions={}
+)
 """
-A source held with its frame at the gripper's tool frame, the robot facing along x.
+A source held with its frame at the gripper's tool frame, the robot facing along x, no
+joint moved.
+"""
+
+REACHABLE_TILTS = (1.85, 2.09)
+"""
+Tilts, in radians, at which the right arm moves the held pitcher to the pour pose: the
+second is one a single inverse kinematics solve from the pick-up's end fails at, though
+the simulated pour finishes.
+"""
+
+UNREACHABLE_TILT = 3.0
+"""
+A tilt, in radians, at which the right arm cannot move the held pitcher to the pour
+pose:
+
+the simulated pour fails with a motion that does not finish.
 """
 
 # %% helpers
@@ -81,14 +101,23 @@ class HoldingAtOnePose(Holding):
         return self.held_at
 
 
-@pytest.fixture
-def predictor(pouring_kitchen) -> PourPredictor:
+@pytest.fixture(scope="module")
+def picked_up(pouring_kitchen_template) -> HeldSource:
     """
-    A predictor in the PR2's kitchen laid out as the simple_pouring scene, the source
-    held at the tool frame.
+    How the right gripper holds the pitcher after a simulated pick-up in the PR2's
+    kitchen laid out as the simple_pouring scene, measured once.
+    """
+    return HeldSource.measure_in(deepcopy(pouring_kitchen_template), POURING_VALUES)
+
+
+@pytest.fixture
+def predictor(pouring_kitchen, picked_up) -> PourPredictor:
+    """
+    A predictor in the PR2's kitchen laid out as the simple_pouring scene, the pitcher
+    held as the pick-up leaves it.
     """
     return PourPredictor(
-        world=pouring_kitchen, holding=HoldingAtOnePose(held_at=HELD_AT_THE_TOOL_FRAME)
+        world=pouring_kitchen, holding=HoldingAtOnePose(held_at=picked_up)
     )
 
 
@@ -98,11 +127,17 @@ def predictor(pouring_kitchen) -> PourPredictor:
 class TestHeldSource:
     def test_a_held_source_is_kept_as_json_and_read_back(self):
         held = HeldSource(
-            source_in_tool_frame=np.diag([1.0, 1.0, 1.0, 1.0]), robot_yaw=0.25
+            source_in_tool_frame=np.diag([1.0, 1.0, 1.0, 1.0]),
+            robot_yaw=0.25,
+            joint_positions={"pr2/torso_lift_joint": 0.3},
         )
         read = HeldSource.from_json(json.loads(json.dumps(held.to_json())))
         assert np.array_equal(read.source_in_tool_frame, held.source_in_tool_frame)
         assert read.robot_yaw == held.robot_yaw
+        assert read.joint_positions == held.joint_positions
+
+    def test_measuring_keeps_the_joints_the_pick_up_moved(self, picked_up):
+        assert picked_up.joint_positions["pr2/torso_lift_joint"] > 0.0
 
 
 # %% predicting
@@ -136,6 +171,50 @@ class TestPrediction:
         before = source.global_pose.to_position().to_np()
         predictor.predict(POURING_VALUES)
         assert np.array_equal(source.global_pose.to_position().to_np(), before)
+
+
+# %% reaching the pour pose
+
+
+class TestReachingThePourPose:
+    @pytest.mark.parametrize("tilt_angle", REACHABLE_TILTS)
+    def test_a_pour_the_arm_can_make_is_predicted(self, predictor, tilt_angle):
+        outcome = predictor.predict({**POURING_VALUES, "tilt_angle": tilt_angle})
+        assert outcome.mouth.shape == (3,)
+
+    def test_a_pour_the_arm_cannot_make_is_refused_with_why(self, predictor):
+        with pytest.raises(PourUnreachable) as unreachable:
+            predictor.predict({**POURING_VALUES, "tilt_angle": UNREACHABLE_TILT})
+        assert unreachable.value.reason
+
+    def test_asking_leaves_the_robot_where_it_was(self, predictor):
+        before = predictor.world.state.positions.copy()
+        with pytest.raises(PourUnreachable):
+            predictor.predict({**POURING_VALUES, "tilt_angle": UNREACHABLE_TILT})
+        assert np.array_equal(predictor.world.state.positions, before)
+
+    def test_the_tool_predicts_such_a_pour_as_a_failed_motion(self, predictor):
+        view = WorldView()
+        cup = predictor.world.get_semantic_annotations_by_type(PouringCup)[0]
+        bowl = predictor.world.get_body_by_name("bowl.stl")
+        tool = PredictPourEnd(predictor=predictor, world=view)
+        outcome = json.loads(
+            tool.run(
+                {
+                    "source_container": view.handle_of(cup),
+                    "target_container": view.handle_of(bowl),
+                    "arm": "RIGHT",
+                    "tilt_angle": UNREACHABLE_TILT,
+                }
+            ).content
+        )
+        with pytest.raises(PourUnreachable) as unreachable:
+            predictor.predict({**POURING_VALUES, "tilt_angle": UNREACHABLE_TILT})
+        assert outcome == {
+            OutcomeKey.LANDS_IN_OPENING: False,
+            OutcomeKey.MOTION_FAILED: unreachable.value.reason,
+        }
+        Draft202012Validator(tool.definition.output_schema).validate(outcome)
 
 
 # %% the tool
@@ -262,7 +341,9 @@ class TestMeasuredHolding:
         assert failed.value.reason == PICK_UP_FAILURE
 
     def test_the_hold_measured_is_what_the_process_wrote(self, tmp_path):
-        held = HeldSource(source_in_tool_frame=np.eye(4), robot_yaw=0.5)
+        held = HeldSource(
+            source_in_tool_frame=np.eye(4), robot_yaw=0.5, joint_positions={}
+        )
         holding = MeasuredHolding(bundle=tmp_path, run=ProcessWritingTheHold(held=held))
         assert holding.held(POURING_VALUES).robot_yaw == held.robot_yaw
 
