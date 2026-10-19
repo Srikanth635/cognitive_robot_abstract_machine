@@ -523,6 +523,14 @@ class TestPerspectives:
         assert perspective == Perspective.IMAGE_SCHEMAS.description
         assert Perspective.IMAGE_SCHEMAS.ontology_iri.endswith("image-schemas")
 
+    def test_the_failures_are_proposed_in_the_core_s_terms(self, catalogue):
+        request = ProposalPrompt(catalogue=catalogue).request(
+            Perspective.FAILURES, ACTION, FRAME
+        )
+        (perspective,) = bodies(request, ProposalSection.PERSPECTIVE)
+        assert perspective == Perspective.FAILURES.description
+        assert Perspective.FAILURES.ontology_iri.endswith("failures")
+
 
 # %% the prompts
 
