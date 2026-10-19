@@ -510,7 +510,7 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
   opt-in through `KnowledgeRequester.perspectives` and as comparison arms. Measured live
   ($3.34, `knowledge_perspectives.md` §13.6): they change what the answers rest on, not what
   they choose, for 20–70 % more resolver cost; the failures hypothesis was cut off at the
-  8192-token structured output limit in 3 of 5 runs, which is open.
+  8192-token structured output limit in 2 of 5 runs, which is open.
 
 ## 3. Live testing
 
