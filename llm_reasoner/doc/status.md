@@ -504,6 +504,12 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
   kinematics from the pick-up's end, `pour_prediction.md` §7): refused at 2.8 and 3.0 rad,
   accepted where the simulation finishes, not yet measured live.
 
+- The image schemas and the failures (2026-10-19, phases 5 and 6 of `knowledge_perspectives.md`,
+  `4`+`5` live proposals $0.53 and $0.50): two more action perspective modules, `image-schemas.ttl`
+  and `failures.ttl`, with generated Python, scripted-knowledge tests and HermiT checks, offered
+  opt-in through `KnowledgeRequester.perspectives` and as comparison arms. Not measured: the
+  live comparison stopped at the API's credit limit.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
