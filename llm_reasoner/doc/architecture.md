@@ -31,7 +31,7 @@ ontology is [`flanagan_scientific_contract.md`](flanagan_scientific_contract.md)
   knowledge, which has no part in krrood's. The resolver is the component that reads
   both: it answers a query by retrieving what it needs from the world (through
   `WorldAccess`) and from the knowledge (through `KnowledgeAccess`). Decided
-  2026-10-12; being built (`status.md`, steps I1–I5).
+  2026-10-12; built (`status.md`, steps I1–I5).
 
 ## 2. Components
 
@@ -302,7 +302,7 @@ underspecified query with a model, checks and repairs. The resolver produces one
 resolved instance grounded in the live world; the knowledge component produces reusable
 description knowledge checked by an ontology.
 
-#### Intended role and design (agreed 2026-10-12; not built yet)
+#### Intended role and design (agreed 2026-10-12; built since, see §3.6, §3.7 and `knowledge_perspectives.md`)
 
 **Role.** The knowledge component provides the *stereotypical* knowledge associated with
 an action, from several perspectives — FrameNet frames, Minsky frames, image schemas,
@@ -345,7 +345,7 @@ answer: slot values and reasons citing both (world handles, knowledge identifier
 | Structured and backed by an ontology | The ontology is the source of truth; the Python vocabulary is generated from it |
 | Consistent under ontological reasoning (HermiT) | Each hypothesis written as RDF in the ontology's terms and checked in the open world |
 | Queryable with krrood's EQL | Vocabulary classes are dataclasses generated from the ontology (`DescriptionEntity`), outside krrood's symbol graph (I1); EQL queries them over domains from the knowledge component's own graph, such as `variable(core.ActionPhase, domain=graph.instances_of(core.ActionPhase))` (I2) |
-| Requested by the resolver, not by a natural-language instruction | To build: the knowledge component answers the resolver's request for an action and generates for it |
+| Requested by the resolver, not by a natural-language instruction | Met (§3.6): the knowledge component answers the resolver's request for an action and generates for it |
 | Independent of the world | Kept: it imports and calls no world; situational facts it needs come in the resolver's request, in ontology terms |
 
 The resolver is the only component reading the world, and the only one grounding roles
@@ -357,10 +357,10 @@ world injector  ◄── resolver ──►  knowledge component
                      grounds roles)      features in its own terms)
 ```
 
-Which situation features the knowledge accepts, and how the resolver derives them, is
-open (`status.md`).
+The situation features the knowledge accepts, and how the resolver derives them, are
+described in §3.6.
 
-**Design points this implies** (to be designed with the representation requirements):
+**Design points this implied** (now built: the contract is §3.7, the perspectives are in `knowledge_perspectives.md`):
 
 - A `KnowledgeAccess` contract mirroring `WorldAccess`: versioned, its own tools, and
   stable identifiers for knowledge fragments so they can be cited.
