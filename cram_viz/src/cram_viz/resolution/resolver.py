@@ -52,6 +52,7 @@ from cram_viz.resolution.designators import (
 from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunEnvironment
 from cram_viz.resolution.scene_geometry import SceneGeometry
 from cram_viz.resolution.slot_data import SlotData
+from cram_viz.resolution.flow_onset import FlowOnsetKnowledge
 from cram_viz.resolution.trial import SimulatedPouring, TriedPour
 from cram_viz.resolution.hold_measurement import MeasuredHolding
 from cram_viz.resolution.prediction import PourPrediction, PourPredictor
@@ -426,7 +427,9 @@ class DesignatorResolver:
             tried in the simulation.
         """
         slots = QuerySlots.of(query)
-        trials = self.trials_for(query, slots, bundle, sink, self.neems_of(run))
+        trials = self.trials_for(
+            query, slots, bundle, sink, self.neems_of(run), knowledge
+        )
         view = self.world_view()
         prediction = self.prediction_for(query, bundle, geometry.world, view)
         backend = Reasoner(
@@ -512,9 +515,12 @@ class DesignatorResolver:
         bundle: Path,
         sink: EventSink,
         neems: Optional[NeemRecording],
+        knowledge: KnowledgeService,
     ) -> Optional[SimulatedPouring]:
         """
         :param neems: Where the NEEM of each trial is kept and reported.
+        :param knowledge: The knowledge component the run consults, whose stated flow
+            onset a trial's tilt is held to.
         :return: The check trying a pouring in the simulation before it is accepted,
             each trial reported to the sink, or none for any other action.
         """
@@ -527,6 +533,7 @@ class DesignatorResolver:
             run=self.simulate,
             observer=sink,
             neems=neems,
+            flow_onset=FlowOnsetKnowledge(knowledge=knowledge),
         )
 
     def resolved_action(

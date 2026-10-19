@@ -37,6 +37,7 @@ from cram_viz import configure_console_logging
 from cram_viz.events import NeemKind, TrialFinished, TrialStarted
 from cram_viz.neem import NeemRecorder, NeemRecording, NoNeemRecorder
 from cram_viz.resolution.execution import PouringExecution
+from cram_viz.resolution.flow_onset import FlowOnsetKnowledge
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 from cram_viz.resolution.slot_data import SlotData
 
@@ -87,6 +88,8 @@ class OutcomeKey(StrEnum):
     RIGHT_OF_OPENING_CENTRE = "mouth_right_of_opening_centre"
     ABOVE_OPENING = "mouth_above_opening"
     MOTION_FAILED = "motion_failed"
+    TILT_REACHES_FLOW_ONSET = "tilt_reaches_flow_onset"
+    FLOW_ONSET_TILT_RADIANS = "flow_onset_tilt_radians"
 
 
 def top_centre(body: Body) -> np.ndarray:
@@ -337,18 +340,55 @@ class SimulatedPouring(OutcomeCheck):
     Where the NEEM of each trial is kept and reported; none is kept by default.
     """
 
+    flow_onset: Optional[FlowOnsetKnowledge] = None
+    """
+    The tilt the knowledge states for the substance to start flowing; a pour tilted less
+    is refused.
+
+    Without it the tilt is not checked.
+    """
+
     def check(self, instances: Sequence[Any]) -> None:
         instance, *_ = instances
         values = {
             name: SlotData.from_value(attrgetter(name)(instance)) for name in self.slots
         }
-        outcome = self.outcome_of(values)
+        outcome = self.with_flow(self.outcome_of(values), instance.tilt_angle)
         self.trials.append(TriedPour(values=values, outcome=outcome))
-        if outcome[OutcomeKey.LANDS_IN_OPENING]:
+        if self.pours_into_opening(outcome):
             return
         if len(self.trials) >= self.allowed_trials:
             return
         raise OutcomeFellShort(outcome=outcome)
+
+    def with_flow(self, outcome: Dict[str, Any], tilt_angle: float) -> Dict[str, Any]:
+        """
+        :param tilt_angle: The answer's tilt, in radians, whether or not the query
+            leaves it open.
+        :return: The outcome stating whether the tilt reaches the one the knowledge
+            gives for the substance to flow, unchanged when it gives none or the
+            simulation failed.
+        """
+        if self.flow_onset is None or OutcomeKey.MOTION_FAILED in outcome:
+            return outcome
+        onset = self.flow_onset.tilt()
+        if onset is None:
+            return outcome
+        return {
+            **outcome,
+            OutcomeKey.TILT_REACHES_FLOW_ONSET: bool(tilt_angle >= onset),
+            OutcomeKey.FLOW_ONSET_TILT_RADIANS: onset,
+        }
+
+    @staticmethod
+    def pours_into_opening(outcome: Dict[str, Any]) -> bool:
+        """
+        :return: Whether the pour lands in the opening and, where the knowledge states
+            when the substance flows, is tilted enough to flow.
+        """
+        return outcome[OutcomeKey.LANDS_IN_OPENING] and outcome.get(
+            OutcomeKey.TILT_REACHES_FLOW_ONSET, True
+        )
 
     def outcome_of(self, values: Dict[str, Any]) -> Dict[str, Any]:
         """
