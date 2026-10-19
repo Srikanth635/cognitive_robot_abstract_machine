@@ -498,8 +498,8 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   not flow. The kitchen's P2, P3 and P8 try no pour, so the prediction does not
   apply to them.
   The simulated check now refuses a landing pour tilted less than the flow onset the
-  stored knowledge states (2026-10-19, `pour_prediction.md` §6); tests pass, not yet
-  measured live.
+  stored knowledge states (2026-10-19, `pour_prediction.md` §6); tests pass. Live on
+  `objects_open` no pour landed in four runs ($1.04), so it had nothing to refuse.
 
 ## 3. Live testing
 

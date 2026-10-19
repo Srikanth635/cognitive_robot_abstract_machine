@@ -106,5 +106,13 @@ in degrees, that any stored hypothesis states for a `FlowOnsetThreshold`, and
 `SimulatedPouring` refuses a pour that lands in the opening but is tilted less, stating
 `tilt_reaches_flow_onset` and `flow_onset_tilt_radians` in the outcome so the resolver
 reads what it needs. The last allowed trial is still accepted, and the tilt is left
-unchecked while no stored hypothesis states a threshold in degrees. Not yet measured
-live; the knowledge generated for the milk pour states 60-110 degrees.
+unchecked while no stored hypothesis states a threshold in degrees.
+
+Measured live on `objects_open` (2026-10-19, Sonnet 5.5, two runs of the default arm and
+two with the prediction, the earlier knowledge store reused): no pour landed in any of the
+four runs, so the check had no landing pour to refuse. The default arm tried 1.85, 0.6,
+1.5708 rad (all missing, or a failed motion with the left arm); the prediction arm tried
+2.09 to 3.1 rad, and every pour at 2.8 rad or more failed as a motion. The 0.2 rad landing
+of §5 did not recur. Resolver cost per run: $0.254 and $0.191 (default), $0.310 and
+$0.283 (with the prediction), $1.04 in all. The check is therefore covered by tests only;
+the failed motions of the prediction arm are the second fix of §5, still open.
