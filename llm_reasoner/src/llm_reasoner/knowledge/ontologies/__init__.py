@@ -289,6 +289,13 @@ class ActionPerspectiveFile(ActionPerspectiveModule, StrEnum):
     dimensions it constrains.
     """
 
+    FAILURES = "failures.ttl"
+    """
+    How an action can go wrong and be put right: which slot or relation fails, how it is
+    noticed, which parameter dimension caused it and the change to the dimensions that
+    corrects it.
+    """
+
     @property
     def usable_modules(self) -> set[OntologyModuleFile]:
         """

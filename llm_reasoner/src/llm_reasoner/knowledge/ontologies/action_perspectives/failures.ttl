@@ -1,0 +1,340 @@
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix core: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix failures: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# %% ontology
+
+<http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures> a owl:Ontology ;
+    rdfs:label "Action perspectives: failures"@en ;
+    rdfs:comment "For the frame of an action, a knowledge base can state each Failure: the slots (or parts of slots) it concerns, the observable condition that goes wrong, the Indicator by which it is noticed, the core parameter dimensions it comes from, and a Correction made of ParameterChanges. A ParameterChange names the dimension, the direction, the slot it moves towards, the condition it removes and the condition the new choice must meet. A Correction is marked as applicable during the action or only by retrying."@en ;
+    owl:imports <http://aicor.knowledge/l2-ontology.owl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
+        <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.1.0> ;
+    owl:versionInfo "0.1.0" .
+
+# %% classes
+
+failures:FailureStereotype a owl:Class ;
+    rdfs:label "failure stereotype"@en ;
+    rdfs:comment "The ways an action framed by an action frame normally goes wrong, each with how it is noticed, what causes it and how it is corrected."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty failures:failureStereotypeOf ;
+            owl:someValuesFrom core:ActionFrame ],
+        dul:Description .
+
+failures:Failure a owl:Class ;
+    rdfs:label "failure"@en ;
+    rdfs:comment "A way an action framed by a core:ActionFrame can go wrong, tied to the slots it concerns, the condition that goes wrong, how it is noticed, the parameter dimensions it comes from and how it is corrected."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty failures:causedByDimension ;
+            owl:someValuesFrom core:ParameterDimension ],
+        [ a owl:Restriction ;
+            owl:onProperty failures:hasFailedCondition ;
+            owl:someValuesFrom failures:ObservableCondition ],
+        [ a owl:Restriction ;
+            owl:onProperty failures:hasIndicator ;
+            owl:someValuesFrom failures:Indicator ],
+        [ a owl:Restriction ;
+            owl:onProperty failures:failureConcernsSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        aicor:FailureDescription .
+
+failures:ObservableCondition a owl:Class ;
+    rdfs:label "observable condition"@en ;
+    rdfs:comment "A state of the world that a person or an agent can check, such as a state type holding or not holding of a slot's filler, stated as what the filler has or affords rather than as the class it belongs to."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty failures:failedConditionOnSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        dul:Description .
+
+failures:Indicator a owl:Class ;
+    rdfs:label "indicator"@en ;
+    rdfs:comment "The quantity or occurrence by which a failure is noticed, such as how far one part ends from another, the value at which a process starts, or whether a motion finishes."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty core:hasQuantityKind ;
+            owl:someValuesFrom core:QuantityKind ],
+        [ a owl:Restriction ;
+            owl:onProperty failures:measuredOnSlot ;
+            owl:someValuesFrom core:FrameSlot ],
+        dul:Description .
+
+failures:ParameterChange a owl:Class ;
+    rdfs:label "parameter change"@en ;
+    rdfs:comment "A change to one of the core's parameter dimensions that corrects a failure, in a direction and for the reason that it removes a failed condition."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty failures:correctsCondition ;
+            owl:someValuesFrom failures:ObservableCondition ],
+        [ a owl:Restriction ;
+            owl:onProperty failures:changesDimension ;
+            owl:someValuesFrom core:ParameterDimension ],
+        [ a owl:Restriction ;
+            owl:onProperty failures:hasDirection ;
+            owl:someValuesFrom failures:ParameterChangeDirection ],
+        dul:Description .
+
+failures:Correction a owl:Class ;
+    rdfs:label "correction"@en ;
+    rdfs:comment "How a failure is put right: one or more parameter changes, possibly to several dimensions, together with whether it can be applied during the action or only by trying again."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty failures:correctableWhen ;
+            owl:someValuesFrom failures:CorrectionTiming ],
+        [ a owl:Restriction ;
+            owl:onProperty failures:hasChange ;
+            owl:someValuesFrom failures:ParameterChange ],
+        aicor:Repair .
+
+# %% value partitions
+
+failures:Holds a failures:StatePresence,
+        owl:NamedIndividual ;
+    rdfs:label "holds"@en ;
+    rdfs:comment "The state holds when the failure occurs."@en .
+
+failures:Missing a failures:StatePresence,
+        owl:NamedIndividual ;
+    rdfs:label "missing"@en ;
+    rdfs:comment "The state that should hold does not hold when the failure occurs."@en .
+
+failures:StatePresence a owl:Class ;
+    rdfs:label "state presence"@en ;
+    rdfs:comment "Whether a state holds or is missing."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( failures:Holds failures:Missing ) ] .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( failures:Holds failures:Missing ) .
+
+failures:Happening a failures:IndicatorForm,
+        owl:NamedIndividual ;
+    rdfs:label "happening"@en ;
+    rdfs:comment "Whether something happens or finishes."@en .
+
+failures:MeasuredValue a failures:IndicatorForm,
+        owl:NamedIndividual ;
+    rdfs:label "measured value"@en ;
+    rdfs:comment "A value of a quantity at some time, such as a distance between two parts."@en .
+
+failures:OnsetValue a failures:IndicatorForm,
+        owl:NamedIndividual ;
+    rdfs:label "onset value"@en ;
+    rdfs:comment "The value of a quantity at which a process starts."@en .
+
+failures:IndicatorForm a owl:Class ;
+    rdfs:label "indicator form"@en ;
+    rdfs:comment "The form of the quantity by which a failure is noticed."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( failures:MeasuredValue failures:OnsetValue failures:Happening ) ] .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( failures:MeasuredValue failures:OnsetValue failures:Happening ) .
+
+failures:AgentSensing a failures:Noticer,
+        owl:NamedIndividual ;
+    rdfs:label "agent sensing"@en ;
+    rdfs:comment "The agent performing the action notices it through its own sensing or motion feedback."@en .
+
+failures:Noticer a owl:Class ;
+    rdfs:label "noticer"@en ;
+    rdfs:comment "Who notices a failure."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( failures:PersonObserver failures:AgentSensing ) ] .
+
+failures:PersonObserver a failures:Noticer,
+        owl:NamedIndividual ;
+    rdfs:label "person observer"@en ;
+    rdfs:comment "A person looking at the action notices it."@en .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( failures:PersonObserver failures:AgentSensing ) .
+
+failures:AwayFromTarget a failures:ParameterChangeDirection,
+        owl:NamedIndividual ;
+    rdfs:label "away from target"@en ;
+    rdfs:comment "The chosen position or orientation is moved away from a slot or part of one."@en .
+
+failures:Decrease a failures:ParameterChangeDirection,
+        owl:NamedIndividual ;
+    rdfs:label "decrease"@en ;
+    rdfs:comment "The chosen quantity is made smaller."@en .
+
+failures:Increase a failures:ParameterChangeDirection,
+        owl:NamedIndividual ;
+    rdfs:label "increase"@en ;
+    rdfs:comment "The chosen quantity is made larger."@en .
+
+failures:ToAlternative a failures:ParameterChangeDirection,
+        owl:NamedIndividual ;
+    rdfs:label "to alternative"@en ;
+    rdfs:comment "Another of the available alternatives is chosen."@en .
+
+failures:TowardsTarget a failures:ParameterChangeDirection,
+        owl:NamedIndividual ;
+    rdfs:label "towards target"@en ;
+    rdfs:comment "The chosen position or orientation is moved towards a slot or part of one."@en .
+
+failures:ParameterChangeDirection a owl:Class ;
+    rdfs:label "parameter change direction"@en ;
+    rdfs:comment "The direction in which a correction moves a parameter choice."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( failures:Increase failures:Decrease failures:TowardsTarget failures:AwayFromTarget failures:ToAlternative ) ] .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( failures:Increase failures:Decrease failures:TowardsTarget failures:AwayFromTarget failures:ToAlternative ) .
+
+failures:CorrectionTiming a owl:Class ;
+    rdfs:label "correction timing"@en ;
+    rdfs:comment "When a correction can be applied."@en ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:oneOf ( failures:DuringAction failures:RetryOnly ) ] .
+
+failures:DuringAction a failures:CorrectionTiming,
+        owl:NamedIndividual ;
+    rdfs:label "during action"@en ;
+    rdfs:comment "The correction can be applied while the action goes on."@en .
+
+failures:RetryOnly a failures:CorrectionTiming,
+        owl:NamedIndividual ;
+    rdfs:label "retry only"@en ;
+    rdfs:comment "The correction can only be applied by trying the action again."@en .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( failures:DuringAction failures:RetryOnly ) .
+
+# %% properties
+
+failures:failureStereotypeOf a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "failure stereotype of"@en ;
+    rdfs:comment "The action frame of the action core whose failures the stereotype holds."@en ;
+    rdfs:domain failures:FailureStereotype ;
+    rdfs:range core:ActionFrame ;
+    rdfs:subPropertyOf dul:isRelatedToDescription .
+
+failures:hasFailure a owl:ObjectProperty ;
+    rdfs:label "has failure"@en ;
+    rdfs:comment "A way the action of the frame can go wrong."@en ;
+    rdfs:domain failures:FailureStereotype ;
+    rdfs:range failures:Failure ;
+    rdfs:subPropertyOf dul:isRelatedToDescription .
+
+failures:failureConcernsSlot a owl:ObjectProperty ;
+    rdfs:label "failure concerns slot"@en ;
+    rdfs:comment "A slot, or part of a slot, that the failure concerns; for a failure of a relation between slots, each of the slots related."@en ;
+    rdfs:domain failures:Failure ;
+    rdfs:range core:FrameSlot .
+
+failures:hasFailedCondition a owl:ObjectProperty ;
+    rdfs:label "has failed condition"@en ;
+    rdfs:comment "The observable condition of the world that holds when the failure occurs."@en ;
+    rdfs:domain failures:Failure ;
+    rdfs:range failures:ObservableCondition .
+
+failures:hasIndicator a owl:ObjectProperty ;
+    rdfs:label "has indicator"@en ;
+    rdfs:comment "A quantity or occurrence by which the failure is noticed."@en ;
+    rdfs:domain failures:Failure ;
+    rdfs:range failures:Indicator .
+
+failures:causedByDimension a owl:ObjectProperty ;
+    rdfs:label "caused by dimension"@en ;
+    rdfs:comment "A parameter dimension of the core whose choice the failure comes from."@en ;
+    rdfs:domain failures:Failure ;
+    rdfs:range core:ParameterDimension .
+
+failures:hasCorrection a owl:ObjectProperty ;
+    rdfs:label "has correction"@en ;
+    rdfs:comment "A correction that puts the failure right."@en ;
+    rdfs:domain failures:Failure ;
+    rdfs:range failures:Correction .
+
+failures:failedConditionOnSlot a owl:ObjectProperty ;
+    rdfs:label "failed condition on slot"@en ;
+    rdfs:comment "The slot whose filler the condition is about."@en ;
+    rdfs:domain failures:ObservableCondition ;
+    rdfs:range core:FrameSlot .
+
+failures:failedConditionStateType a owl:ObjectProperty ;
+    rdfs:label "failed condition state type"@en ;
+    rdfs:comment "The state type the condition is about, named by the IRI of a CRAM-AICOR state type such as aicor:FlowingState or aicor:ContainedState."@en ;
+    rdfs:domain failures:ObservableCondition .
+
+failures:failedConditionPresence a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "failed condition presence"@en ;
+    rdfs:comment "Whether the named state holds or is missing in the condition."@en ;
+    rdfs:domain failures:ObservableCondition ;
+    rdfs:range failures:StatePresence .
+
+failures:measuredOnSlot a owl:ObjectProperty ;
+    rdfs:label "measured on slot"@en ;
+    rdfs:comment "A slot, or part of a slot, between or on which the indicator's quantity is measured."@en ;
+    rdfs:domain failures:Indicator ;
+    rdfs:range core:FrameSlot .
+
+failures:hasIndicatorForm a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "has indicator form"@en ;
+    rdfs:comment "Whether the indicator is a measured value, the value at which something starts, or whether something happens."@en ;
+    rdfs:domain failures:Indicator ;
+    rdfs:range failures:IndicatorForm .
+
+failures:notedBy a owl:ObjectProperty ;
+    rdfs:label "noted by"@en ;
+    rdfs:comment "Who can notice the failure through the indicator."@en ;
+    rdfs:domain failures:Indicator ;
+    rdfs:range failures:Noticer .
+
+failures:hasChange a owl:ObjectProperty ;
+    rdfs:label "has change"@en ;
+    rdfs:comment "A parameter change that is part of the correction."@en ;
+    rdfs:domain failures:Correction ;
+    rdfs:range failures:ParameterChange .
+
+failures:correctableWhen a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "correctable when"@en ;
+    rdfs:comment "Whether the correction can be applied during the action or only by trying the action again."@en ;
+    rdfs:domain failures:Correction ;
+    rdfs:range failures:CorrectionTiming .
+
+failures:changesDimension a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "changes dimension"@en ;
+    rdfs:comment "The parameter dimension of the core whose choice the change alters."@en ;
+    rdfs:domain failures:ParameterChange ;
+    rdfs:range core:ParameterDimension .
+
+failures:hasDirection a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:label "has direction"@en ;
+    rdfs:comment "The direction in which the change moves the choice."@en ;
+    rdfs:domain failures:ParameterChange ;
+    rdfs:range failures:ParameterChangeDirection .
+
+failures:changeTowardsSlot a owl:ObjectProperty ;
+    rdfs:label "change towards slot"@en ;
+    rdfs:comment "The slot, or part of a slot, that the change moves the choice towards or away from."@en ;
+    rdfs:domain failures:ParameterChange ;
+    rdfs:range core:FrameSlot .
+
+failures:correctsCondition a owl:ObjectProperty ;
+    rdfs:label "corrects condition"@en ;
+    rdfs:comment "The failed condition whose holding is the reason for the change."@en ;
+    rdfs:domain failures:ParameterChange ;
+    rdfs:range failures:ObservableCondition .
+
+failures:requiresOfChoice a owl:ObjectProperty ;
+    rdfs:label "requires of choice"@en ;
+    rdfs:comment "A condition a world can check that the newly chosen value must meet, such as being reachable by the agent."@en ;
+    rdfs:domain failures:ParameterChange ;
+    rdfs:range failures:ObservableCondition .

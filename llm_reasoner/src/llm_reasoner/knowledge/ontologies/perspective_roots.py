@@ -14,6 +14,7 @@ from typing_extensions import Any
 from llm_reasoner.knowledge.ontologies import ActionPerspectiveFile
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_frame,
+    failures,
     image_schemas,
 )
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
@@ -50,6 +51,9 @@ PERSPECTIVE_ROOTS: dict[ActionPerspectiveFile, PerspectiveRoot] = {
     ),
     ActionPerspectiveFile.IMAGE_SCHEMAS: PerspectiveRoot(
         root=image_schemas.SchemaStereotype, frame_field="schema_stereotype_of"
+    ),
+    ActionPerspectiveFile.FAILURES: PerspectiveRoot(
+        root=failures.FailureStereotype, frame_field="failure_stereotype_of"
     ),
 }
 """
