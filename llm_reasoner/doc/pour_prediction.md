@@ -116,3 +116,21 @@ four runs, so the check had no landing pour to refuse. The default arm tried 1.8
 of §5 did not recur. Resolver cost per run: $0.254 and $0.191 (default), $0.310 and
 $0.283 (with the prediction), $1.04 in all. The check is therefore covered by tests only;
 the failed motions of the prediction arm are the second fix of §5, still open.
+
+## 7. The pour's own motion predicted (2026-10-19)
+
+The second fix of §5. After the simulated pick-up, `HeldSource` also keeps the position of
+every joint (where the base stands, the torso and the arms), and `PourReach` asks the
+semantic digital twin's inverse kinematics, from that state and with the base fixed,
+whether the arm can move the tool through five poses from the pre-pour pose to the pour
+pose, its orientation turning in equal steps. An arm that cannot is predicted as a failed
+motion, as a failed pick-up is (`PourUnreachable`).
+
+Checked against the simulated pour on the right arm and the pitcher, `objects_open`'s
+scene, by tilt (rad): 0.2, 1.85, 1.95, 2.09 and 2.6 finish and are predicted reachable;
+2.8 and 3.0 fail and are predicted unreachable. A single solve from the pick-up's end
+wrongly refused 2.09, which stepping the orientation fixes. 2.2 and 2.4 fail in the
+simulation but are predicted reachable: the joints can get there, so what stops the
+motion there is not the kinematics (collisions are not asked about). A pour predicted
+unreachable is therefore certain to fail; one predicted reachable may still fail. Not yet
+measured live with the resolver.
