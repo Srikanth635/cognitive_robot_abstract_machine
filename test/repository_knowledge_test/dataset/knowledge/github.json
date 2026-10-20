@@ -1,0 +1,134 @@
+{
+  "/repos/fixture-owner/project": {
+    "full_name": "fixture-owner/project",
+    "fork": true
+  },
+  "/repos/fixture-owner/project/pulls/1": {
+    "number": 1,
+    "user": {
+      "login": "proposal-author",
+      "type": "User"
+    },
+    "head": {
+      "sha": "$SOURCE_COMMIT",
+      "repo": {
+        "full_name": "fixture-owner/project"
+      }
+    },
+    "base": {
+      "ref": "main",
+      "repo": {
+        "full_name": "fixture-owner/project"
+      }
+    },
+    "merged": true,
+    "merge_commit_sha": "$SOURCE_COMMIT"
+  },
+  "/repos/fixture-owner/project/commits/$SOURCE_COMMIT": {
+    "commit": {
+      "tree": {
+        "sha": "$SOURCE_TREE"
+      }
+    },
+    "sha": "$SOURCE_COMMIT"
+  },
+  "/repos/fixture-owner/project/pulls/1/reviews?per_page=100&page=1": [
+    {
+      "id": 1,
+      "user": {
+        "login": "independent-owner",
+        "type": "User"
+      },
+      "state": "APPROVED",
+      "commit_id": "$SOURCE_COMMIT"
+    }
+  ],
+  "/repos/fixture-owner/project/collaborators/independent-owner/permission": {
+    "permission": "write"
+  },
+  "/repos/fixture-owner/project/branches/main/protection": {
+    "enforce_admins": {
+      "enabled": true
+    },
+    "required_pull_request_reviews": {
+      "dismiss_stale_reviews": true,
+      "require_code_owner_reviews": true,
+      "require_last_push_approval": true,
+      "required_approving_review_count": 1,
+      "bypass_pull_request_allowances": {
+        "users": [],
+        "teams": [],
+        "apps": []
+      }
+    },
+    "required_status_checks": {
+      "strict": true,
+      "contexts": [
+        "knowledge-admission"
+      ]
+    },
+    "allow_force_pushes": {
+      "enabled": false
+    },
+    "allow_deletions": {
+      "enabled": false
+    }
+  },
+  "/repos/fixture-owner/project/environments/knowledge-publication": {
+    "name": "knowledge-publication",
+    "protection_rules": [
+      {
+        "type": "required_reviewers",
+        "prevent_self_review": true,
+        "reviewers": [
+          {
+            "type": "User",
+            "reviewer": {
+              "login": "independent-owner",
+              "type": "User"
+            }
+          }
+        ]
+      }
+    ],
+    "deployment_branch_policy": {
+      "protected_branches": true,
+      "custom_branch_policies": false
+    }
+  },
+  "/repos/fixture-owner/project/actions/runs/10": {
+    "id": 10,
+    "path": ".github/workflows/knowledge-publish.yml",
+    "head_sha": "$SOURCE_COMMIT",
+    "event": "workflow_dispatch",
+    "conclusion": "success",
+    "status": "completed",
+    "repository": {
+      "full_name": "fixture-owner/project"
+    },
+    "head_repository": {
+      "full_name": "fixture-owner/project"
+    }
+  },
+  "/repos/fixture-owner/project/actions/runs/10/approvals": [
+    {
+      "state": "approved",
+      "user": {
+        "login": "independent-owner",
+        "type": "User"
+      },
+      "environments": [
+        {
+          "name": "knowledge-publication"
+        }
+      ]
+    }
+  ],
+  "/repos/fixture-owner/project/branches/main": {
+    "name": "main",
+    "protected": false
+  },
+  "/repos/fixture-owner/project/compare/$SOURCE_COMMIT...main": {
+    "status": "identical"
+  }
+}

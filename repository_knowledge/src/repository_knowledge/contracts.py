@@ -10,6 +10,14 @@ from dataclasses import dataclass
 from typing_extensions import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from repository_knowledge.publication import (
+        PublicationPolicy,
+        ControlEvidence,
+        ReviewEvidence,
+        ArtifactDownload,
+        SourceIdentity,
+    )
+    from repository_knowledge.concepts import KnowledgeBundle
     from repository_knowledge.assistance import TestCatalog
     from repository_knowledge.model import (
         FileExtraction,
@@ -103,4 +111,90 @@ class IndexWriter(ABC):
     def replace(self, index: IndexData) -> None:
         """
         Atomically replace the current index with the supplied snapshot.
+        """
+
+
+# %% independent publication boundaries
+
+
+@dataclass
+class RecordDigester(ABC):
+    """
+    Bind owned records without coupling operations to their wire encoding.
+    """
+
+    @abstractmethod
+    def digest(self, record: object) -> str:
+        """
+        Return the canonical digest of an owned record.
+        """
+
+    @abstractmethod
+    def digest_records(self, records: list[object]) -> str:
+        """
+        Return an order-sensitive digest of a framed record sequence.
+        """
+
+
+@dataclass
+class KnowledgeReader(ABC):
+    """
+    Derive a bundle only from the selected committed source capture.
+    """
+
+    @abstractmethod
+    def read_bundle(self, index: IndexData, bundle_directory: str) -> KnowledgeBundle:
+        """
+        Decode captured bundle documents without using the working filesystem.
+        """
+
+
+@dataclass
+class ReviewReader(ABC):
+    """
+    Obtain authenticated review and enforcement evidence independently.
+    """
+
+    @abstractmethod
+    def read_controls(self, policy: PublicationPolicy) -> ControlEvidence:
+        """
+        Read current repository and environment enforcement.
+        """
+
+    @abstractmethod
+    def read_review(
+        self, policy: PublicationPolicy, request_number: int
+    ) -> ReviewEvidence:
+        """
+        Read the authenticated review history and merged content identity.
+        """
+
+
+@dataclass
+class ArtifactReader(ABC):
+    """
+    Obtain publications through an authenticated immutable artifact identity.
+    """
+
+    @abstractmethod
+    def read_publication(
+        self, policy: PublicationPolicy, artifact_identifier: int, checker_revision: str
+    ) -> ArtifactDownload:
+        """
+        Verify the provider archive and workflow before decoding its publication.
+        """
+
+
+@dataclass
+class SourceIdentityReader(ABC):
+    """
+    Authenticate committed source independently of wiki declarations.
+    """
+
+    @abstractmethod
+    def read_source(
+        self, policy: PublicationPolicy, source_commit: str
+    ) -> SourceIdentity:
+        """
+        Read the exact provider source commit and tree.
         """

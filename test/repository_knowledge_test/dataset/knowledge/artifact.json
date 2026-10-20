@@ -1,0 +1,7 @@
+{
+  "id": 20,
+  "name": "cram-knowledge",
+  "expired": false,
+  "digest": "sha256:$ARCHIVE_DIGEST",
+  "workflow_run": {"id": 10}
+}

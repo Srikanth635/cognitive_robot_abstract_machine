@@ -2,7 +2,7 @@
 
 Baseline: main at `7b27424de7768798dc561f447e11c2a8eb86c307`.
 
-Implementation branch: `codex/repository-knowledge-phases-0-3`, in an attached managed worktree. The original checkout's staged deletions and untracked replacement files were preserved.
+Implementation branch: `cram_wiki` (phases 0–6 pushed to the fork at `ba38cd3033762774c7c940cf714516a5e6dc0747`), in an attached managed worktree. The original checkout's staged deletions and untracked replacement files were preserved.
 
 | Phase | Delivered |
 | --- | --- |
@@ -55,7 +55,7 @@ Final live working-tree validation passed all eight concepts with zero format, p
 
 ## Next phase
 
-Phase 7 establishes independent review and canonical publication. Phase 6 delivery is recorded below; hosted CI and production deployment are not claimed.
+Phase 7 adds owner-operated machine validation and canonical publication, with independent review optional. See [phase7.md](phase7.md). Phase 6 delivery is recorded below; hosted CI and production deployment are not claimed.
 
 ## Phase 6 validation — 20 October 2026
 
@@ -68,3 +68,17 @@ The complete package suite passed **159 tests**, with **one Windows-only symlink
 The fixed five-seed main pilot returned the required evidence categories and validated every included source citation. World also included spatial guidance. Initial live evaluation exposed weak lexical test candidates displacing useful context; a failing ranking test preceded the correction to prefer resolved consumers and relevant packages. Full graph decoding and repeated test discovery remain material latency limits, recorded in [evaluation.md](evaluation.md). The capability meets local pilot checkpoint C; model task-success, token-use and production trust claims remain unvalidated.
 
 The impact trial additionally exposed a large consumer result for World. Change reports now preserve complete match counts while paging the baseline/current resolved/uncertain lists. A failing output-budget test preceded that correction. The final overlay refresh completed in 148.16 seconds and a subsequent freshness check passed in 4.67 seconds. Its snapshot is `1d194c4b36b3b90641fd5170737e256e8de218a9286700011eece1c0efd9026a`; the selected scope includes current tracked source plus explicitly included untracked tool source and package metadata.
+
+## Phase 7 implementation — 20 October 2026
+
+Added committed-bundle capture, trusted policy and clean checker custody, deterministic extraction fingerprints, admission/lifecycle checks, authenticated source and optional review adapters, immutable artifact validation, publication/consumption commands and fork-only CI workflows. The configured default is automated with zero required reviews. Another person's approval is not required. Source consistency and human review remain separate.
+
+The workflows require owner-selected immutable checker/runtime pins before activation. No remote settings were changed and no hosted publication has been performed. Existing local caches are not canonical evidence. Phase 8 client integration remains separate. After the authorized workflow-test syntax correction, the complete package run passed **206 tests**, with **one Windows-only skip**, in **163.94 seconds** under the 4 GiB job cap. Subsequent focused tests cover publication/source-identity serialization and refusing policy reads before checker custody. The wheel built successfully; Bash syntax validation passed. Black and unused-import checks pass for all valid files.
+
+The workflow assertions now pass. Activation preparation also adds a dedicated Python 3.12 runtime recipe with hash-pinned existing dependencies and a fork-only image-build workflow; its focused checks pass. The existing ROS image does not install the checker dependency closure. Hosted activation results will be recorded separately.
+
+The final activation preparation includes five workflows: admission (PR or manual source/base selection), runtime build, shared activation-pin reading, publication and explicit artifact consumption. The new hosted-consumption workflow and dispatch checks passed all four focused workflow tests. The runtime installs only the existing import closure, with hash-pinned Linux wheels; checker and KRROOD source remain outside the dependency image.
+
+Remote operation uses owner-managed activation pins from `main` plus optional dedicated trigger refs. Source proposals cannot select the executable checker or acquire publisher-ref identity. Registry credentials stay outside the admission container. The newly added activation-file tests reject shell injection.
+
+Final local validation after remote-activation changes passed **211 tests**, with **one Windows-only skip**, in **152.81 seconds** under the 4 GiB cap. Black left all 113 valid Python files unchanged; unused-import and Bash syntax checks passed. The new setup correction selects Git Bash on Windows and keeps the existing assertions unchanged.

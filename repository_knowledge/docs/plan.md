@@ -245,24 +245,24 @@ Purpose: share canonical knowledge without allowing its producer to authenticate
 
 Work:
 
-- Define which claims can be deterministically checked and which require an independent owner.
+- Default to owner-operated, machine-validated publication without another person's approval. Keep optional independent human review distinct from machine checks.
 - Bind verification to exact concept content, relevant source evidence and policy version.
 - Audit actual fork ownership and branch protection; CODEOWNERS contents alone are not proof of enforcement.
 - Add ownership for knowledge, policy, extraction and publication components where absent.
 - Run unprivileged PR checks for source consistency, policy, lifecycle transitions and deterministic extraction.
 - Evaluate proposal data with trusted checker code; proposed policy changes cannot silently weaken their own gate.
-- A separately credentialed publisher obtains authenticated review evidence, validates the merged source/content state and creates the canonical artifact.
+- A separate pinned publisher authenticates the source commit/tree, validates source/content state and creates the canonical artifact. Independent-review mode additionally obtains authenticated review evidence.
 - Do not carry an approval over changed content after merge conflict resolution or later source edits.
 - Define artifact verification for the chosen distribution: authenticated commit/artifact identity and digest are mandatory; portable signing/attestation is added where consumers need it.
-- Publish source identity, bundle digest, validation and review evidence together. Keep artifact hashes outside their own hashed payload.
+- Publish source identity, bundle digest, validation and the explicit publication mode together. Include human review evidence only when required by policy. Keep artifact hashes outside their own hashed payload.
 - Add consumer refusal/fallback behaviour and rollback to a complete known publication.
 - Mock external identity APIs in CI. Live credential-dependent tests require the repository's explicit approval and skip rules.
 
-Deliverables: policy, review adapter, fork-side CI workflow, publisher, consumer checks and rollback procedure.
+Deliverables: automated default policy, source/review adapters, fork-side CI workflows, publisher, consumer checks and rollback procedure. See [phase7.md](phase7.md) for implementation and activation.
 
 Exit gate: forged frontmatter, stale approvals, altered bundles, policy weakening and wrong-revision artifacts fail the relevant trust gate. A rollback restores the associated code/knowledge evidence.
 
-Release checkpoint D: a shared, verifiable knowledge baseline.
+Release checkpoint D: a shared, verifiable knowledge baseline after the owner configures immutable checker/runtime pins and verifies a hosted publication. No external reviewer is required by the default mode.
 
 Suggested change split: admission policy and mocked evidence; trusted CI checks; publication and rollback.
 

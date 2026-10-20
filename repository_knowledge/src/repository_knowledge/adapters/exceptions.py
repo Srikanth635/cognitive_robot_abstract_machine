@@ -27,3 +27,22 @@ class InvalidKnowledgeDocument(DataclassException):
         return (
             "Use a delimited metadata mapping and the documented CRAM evidence schema."
         )
+
+
+# %% independent identity errors
+
+
+@dataclass
+class InvalidIdentityEvidence(DataclassException):
+    """
+    Refuse absent, malformed or inconsistent identity-provider evidence.
+    """
+
+    resource: str
+    """The provider resource or evidence field that failed validation."""
+
+    def error_message(self) -> str:
+        return f"Invalid independent identity evidence: {self.resource}."
+
+    def suggest_correction(self) -> str:
+        return "Provide authenticated repository controls and complete evidence; do not substitute producer metadata."

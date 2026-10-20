@@ -28,3 +28,7 @@ The implementation follows [the phased plan](plan.md), based on main at `7b27424
 24. Task queries pin one resolved graph projection without reusable raw analyses. Working-source freshness is checked around discovery and assembly. Change assessment additionally pins an explicitly selected committed baseline from the same repository history.
 25. Context budgets count text characters and preserve whole evidence items, exact citations, partial-excerpt counts and omissions. Confidence and package relevance precede lexical test ordering. Static collection, proposed test coverage, curated-prose accuracy and authenticated review remain separate claims.
 
+
+26. Publication records and gates depend on explicit source-identity, review, captured-knowledge and digest abstractions. GitHub, HTTPS, archive and policy parsing stay in adapters. The default fork policy requires machine validation without human approval; optional independent review remains distinct.
+27. Canonical admission uses a clean externally pinned checker and its own KRROOD source, two fresh extractions, and captured committed wiki documents. Proposal code, caches and policy cannot supply executable authority. The selected runtime image is separately digest-pinned.
+28. Consumers bind an explicit artifact ID, successful pinned publisher run, archive digest, policy, source and complete bundle. Refusal returns source-only context; historical consumption selects an entire code-evidence/wiki pair. Phase 8 will connect that result to agent clients.

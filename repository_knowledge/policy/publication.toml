@@ -1,0 +1,13 @@
+# Owner-operated publication requires machine validation; human review is optional.
+repository = "Srikanth635/cognitive_robot_abstract_machine"
+branch = "cram_wiki"
+reviewers = []
+minimum_reviews = 0
+version = 1
+required_check = "knowledge-admission"
+environment = "knowledge-publication"
+workflow_path = ".github/workflows/knowledge-publish.yml"
+bundle_directory = "repository_knowledge/wiki"
+artifact_name = "cram-knowledge"
+
+mode = "automated"

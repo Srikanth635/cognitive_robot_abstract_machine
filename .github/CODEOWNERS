@@ -14,3 +14,8 @@
 
 # robokudo
 /robokudo/ @sanic
+
+# Repository knowledge ownership in this fork
+/repository_knowledge/ @Srikanth635
+/test/repository_knowledge_test/ @Srikanth635
+/.github/workflows/knowledge-*.yml @Srikanth635

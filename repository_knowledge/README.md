@@ -97,3 +97,7 @@ The runner checks for at least 8 GiB free memory and attaches pytest and its sub
 
 CI includes a dedicated package matrix entry in the existing CRAM environment. It checks available memory, imposes an address-space limit and runs the same isolated pytest directory. Tests use local disposable Git repositories and the explicitly approved synthetic fixture identity; no credentials, model calls or network services are required.
 
+
+## Validated publication
+
+Phase 7 adds `cram-publication` (also `python -m repository_knowledge publication`) for admission, publication and authenticated artifact consumption. The default fork policy is automated: no other person's approval or pull request is required. Machine validation does not label prose human-reviewed. See [phase7.md](docs/phase7.md) for commands, trust boundaries, workflow activation and rollback. Hosted activation requires explicit immutable checker/runtime pins.

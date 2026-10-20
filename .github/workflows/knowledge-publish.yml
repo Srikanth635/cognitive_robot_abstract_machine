@@ -1,0 +1,73 @@
+name: Publish knowledge
+
+on:
+  push:
+    branches: [codex/knowledge-publisher]
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Full source commit from cram_wiki to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: knowledge-publication
+  cancel-in-progress: false
+
+jobs:
+  trust:
+    uses: ./.github/workflows/knowledge-trust.yml
+  publish:
+    needs: trust
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+    if: github.repository == 'Srikanth635/cognitive_robot_abstract_machine' && github.sha == needs.trust.outputs.checker_revision
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Validate external trust pins
+        env:
+          CHECKER_REVISION: ${{ needs.trust.outputs.checker_revision }}
+          RUNTIME_IMAGE: ${{ needs.trust.outputs.runtime_image }}
+          SOURCE_COMMIT: ${{ inputs.source_commit || needs.trust.outputs.source_commit }}
+        run: |
+          [[ "$CHECKER_REVISION" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$RUNTIME_IMAGE" =~ ^[a-zA-Z0-9./:_-]+@sha256:[0-9a-f]{64}$ ]]
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ needs.trust.outputs.checker_revision }}
+          path: checker
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.source_commit || needs.trust.outputs.source_commit }}
+          path: proposal
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Publish machine-validated evidence
+        env:
+          OPERATION: publish
+          CHECKER_REVISION: ${{ needs.trust.outputs.checker_revision }}
+          RUNTIME_IMAGE: ${{ needs.trust.outputs.runtime_image }}
+          SOURCE_COMMIT: ${{ inputs.source_commit || needs.trust.outputs.source_commit }}
+          KNOWLEDGE_IDENTITY_TOKEN: ${{ github.token }}
+        run: |
+          bash "$GITHUB_WORKSPACE/checker/repository_knowledge/scripts/publication.sh"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cram-knowledge
+          path: ${{ runner.temp }}/knowledge-output/canonical/publication.json
+          if-no-files-found: error
+          retention-days: 90

@@ -1,0 +1,70 @@
+name: Knowledge admission
+
+on:
+  push:
+    branches: [codex/knowledge-admission]
+  pull_request_target:
+    branches: [cram_wiki]
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Full proposal commit to check
+        required: true
+        type: string
+      base_commit:
+        description: Full source baseline commit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: knowledge-admission-${{ github.event.pull_request.number || inputs.source_commit }}
+  cancel-in-progress: true
+
+jobs:
+  trust:
+    uses: ./.github/workflows/knowledge-trust.yml
+  admission:
+    needs: trust
+    permissions:
+      contents: read
+      packages: read
+    name: knowledge-admission
+    if: github.repository == 'Srikanth635/cognitive_robot_abstract_machine' && (github.event_name == 'pull_request_target' || github.sha == needs.trust.outputs.checker_revision)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Validate external trust pins
+        env:
+          CHECKER_REVISION: ${{ needs.trust.outputs.checker_revision }}
+          RUNTIME_IMAGE: ${{ needs.trust.outputs.runtime_image }}
+        run: |
+          [[ "$CHECKER_REVISION" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$RUNTIME_IMAGE" =~ ^[a-zA-Z0-9./:_-]+@sha256:[0-9a-f]{64}$ ]]
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ needs.trust.outputs.checker_revision }}
+          path: checker
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.source_commit || needs.trust.outputs.source_commit }}
+          path: proposal
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Check proposal as data
+        env:
+          OPERATION: check
+          CHECKER_REVISION: ${{ needs.trust.outputs.checker_revision }}
+          RUNTIME_IMAGE: ${{ needs.trust.outputs.runtime_image }}
+          SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || inputs.source_commit || needs.trust.outputs.source_commit }}
+          BASE_COMMIT: ${{ github.event.pull_request.base.sha || inputs.base_commit || needs.trust.outputs.base_commit }}
+        run: |
+          bash "$GITHUB_WORKSPACE/checker/repository_knowledge/scripts/publication.sh"

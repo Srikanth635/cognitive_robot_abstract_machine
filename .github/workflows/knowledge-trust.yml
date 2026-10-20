@@ -1,0 +1,56 @@
+name: Read knowledge activation pins
+
+on:
+  workflow_call:
+    outputs:
+      checker_revision:
+        value: ${{ jobs.pins.outputs.checker_revision }}
+      runtime_image:
+        value: ${{ jobs.pins.outputs.runtime_image }}
+      source_commit:
+        value: ${{ jobs.pins.outputs.source_commit }}
+      base_commit:
+        value: ${{ jobs.pins.outputs.base_commit }}
+      artifact_id:
+        value: ${{ jobs.pins.outputs.artifact_id }}
+
+permissions:
+  contents: read
+
+jobs:
+  pins:
+    if: github.repository == 'Srikanth635/cognitive_robot_abstract_machine'
+    runs-on: ubuntu-latest
+    outputs:
+      checker_revision: ${{ steps.configuration.outputs.checker_revision }}
+      runtime_image: ${{ steps.configuration.outputs.runtime_image }}
+      source_commit: ${{ steps.configuration.outputs.source_commit }}
+      base_commit: ${{ steps.configuration.outputs.base_commit }}
+      artifact_id: ${{ steps.configuration.outputs.artifact_id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: main
+          path: activation
+          persist-credentials: false
+          sparse-checkout: repository_knowledge/policy/activation.env
+          sparse-checkout-cone-mode: false
+      - id: configuration
+        shell: bash
+        run: |
+          declare -A values
+          while IFS='=' read -r key value || [[ -n "$key" ]]; do
+            [[ -z "$key" || "$key" == \#* ]] && continue
+            case "$key" in
+              checker_revision|source_commit|base_commit) [[ "$value" =~ ^[0-9a-f]{40}$ ]] ;;
+              runtime_image) [[ "$value" =~ ^[a-zA-Z0-9./:_-]+@sha256:[0-9a-f]{64}$ ]] ;;
+              artifact_id) [[ "$value" =~ ^[0-9]+$ ]] ;;
+              *) exit 1 ;;
+            esac
+            [[ -z "${values[$key]+present}" ]]
+            values[$key]="$value"
+            echo "$key=$value" >> "$GITHUB_OUTPUT"
+          done < activation/repository_knowledge/policy/activation.env
+          for key in checker_revision runtime_image source_commit base_commit artifact_id; do
+            [[ -n "${values[$key]:-}" ]]
+          done

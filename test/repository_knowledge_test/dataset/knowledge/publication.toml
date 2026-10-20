@@ -1,0 +1,3 @@
+repository = "fixture-owner/project"
+branch = "main"
+reviewers = ["independent-owner"]

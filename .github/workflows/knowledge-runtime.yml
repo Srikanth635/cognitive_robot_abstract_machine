@@ -1,0 +1,59 @@
+name: Build knowledge runtime
+
+on:
+  push:
+    branches: [codex/knowledge-runtime]
+  workflow_dispatch:
+    inputs:
+      checker_revision:
+        description: Full trusted commit containing the runtime recipe
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  runtime:
+    if: github.repository == 'Srikanth635/cognitive_robot_abstract_machine' && (github.event_name == 'push' || github.sha == inputs.checker_revision)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Validate trusted revision
+        env:
+          CHECKER_REVISION: ${{ inputs.checker_revision || github.sha }}
+        run: |
+          [[ "$CHECKER_REVISION" =~ ^[0-9a-f]{40}$ ]]
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.checker_revision || github.sha }}
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - id: image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        with:
+          context: repository_knowledge/runtime
+          file: repository_knowledge/runtime/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/srikanth635/cram-knowledge-runtime:${{ inputs.checker_revision || github.sha }}
+      - name: Verify runtime imports
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          available_kib=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
+          (( available_kib >= 5242880 ))
+          docker run --rm --read-only --network none --memory 4g --memory-swap 4g \
+            --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env PYTHONPATH=/checker/repository_knowledge/src:/checker/krrood/src \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/checker,readonly" \
+            "ghcr.io/srikanth635/cram-knowledge-runtime@$IMAGE_DIGEST" \
+            -m repository_knowledge publication --help
+          echo "Runtime: ghcr.io/srikanth635/cram-knowledge-runtime@$IMAGE_DIGEST" >> "$GITHUB_STEP_SUMMARY"

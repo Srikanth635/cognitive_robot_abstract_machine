@@ -17,6 +17,28 @@ from krrood.adapters.json_serializer import (
 from typing_extensions import TYPE_CHECKING
 
 from repository_knowledge.exceptions import InvalidSerializedType
+from repository_knowledge.publication import (
+    AdmissionResult,
+    ExtractionFingerprint,
+    PublicationMode,
+    SourceIdentity,
+    ArtifactDownload,
+    ArtifactReceipt,
+    ConceptDigest,
+    ConsumptionResult,
+    ConsumptionState,
+    ControlEvidence,
+    IdentityKind,
+    Publication,
+    PublicationPolicy,
+    RepositoryPermission,
+    ReviewDecision,
+    ReviewEvidence,
+    ReviewState,
+    TrustIssue,
+    TrustReport,
+    VerificationBinding,
+)
 from repository_knowledge.assistance import (
     ChangeKind,
     ConsumerCount,
@@ -190,6 +212,26 @@ class EvidenceType(Enum):
     KNOWLEDGE_ISSUE = KnowledgeIssue
     CONCEPT_PAGE = ConceptPage
     CONTENT_COMPARISON = ContentComparison
+    ARTIFACT_DOWNLOAD = ArtifactDownload
+    ADMISSION_RESULT = AdmissionResult
+    EXTRACTION_FINGERPRINT = ExtractionFingerprint
+    ARTIFACT_RECEIPT = ArtifactReceipt
+    CONCEPT_DIGEST = ConceptDigest
+    CONSUMPTION_RESULT = ConsumptionResult
+    CONSUMPTION_STATE = ConsumptionState
+    CONTROL_EVIDENCE = ControlEvidence
+    IDENTITY_KIND = IdentityKind
+    PUBLICATION = Publication
+    PUBLICATION_MODE = PublicationMode
+    SOURCE_IDENTITY = SourceIdentity
+    PUBLICATION_POLICY = PublicationPolicy
+    REPOSITORY_PERMISSION = RepositoryPermission
+    REVIEW_DECISION = ReviewDecision
+    REVIEW_EVIDENCE = ReviewEvidence
+    REVIEW_STATE = ReviewState
+    TRUST_ISSUE = TrustIssue
+    TRUST_REPORT = TrustReport
+    VERIFICATION_BINDING = VerificationBinding
     CHANGE_KIND = ChangeKind
     CONSUMER_COUNT = ConsumerCount
     CHANGE_REPORT = ChangeReport

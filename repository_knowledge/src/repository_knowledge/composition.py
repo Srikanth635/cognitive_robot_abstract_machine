@@ -5,8 +5,37 @@ Construct source, storage and interface adapters for the local CLI.
 from __future__ import annotations
 
 import sys
+import os
+from enum import StrEnum
 
-from repository_knowledge.adapters.git_source import GitSource
+from repository_knowledge.adapters.git_source import GitSource, GitCheckout, GitArgument
+from repository_knowledge.adapters.committed_knowledge import CommittedKnowledge
+from repository_knowledge.adapters.digests import CanonicalDigest
+from repository_knowledge.adapters.github_artifacts import (
+    GitHubArtifacts,
+    PublicationFilename,
+)
+from repository_knowledge.adapters.github_identity import GitHubTransport, GitHubReviews
+from repository_knowledge.adapters.publication_policy import PolicyDocument
+from repository_knowledge.adapters.trusted_proposal import (
+    TrustedChecker,
+    TrustedProposal,
+)
+from repository_knowledge.adapters.exceptions import InvalidIdentityEvidence
+from repository_knowledge.interfaces.publishing import (
+    PublicationParser,
+    PublicationCommand,
+)
+from repository_knowledge.operations.publication import (
+    KnowledgePublication,
+    PublicationConsumer,
+)
+from repository_knowledge.operations.exceptions import PublicationDenied
+from repository_knowledge.publication import (
+    ConsumptionState,
+    TrustIssue,
+    PublicationMode,
+)
 from repository_knowledge.adapters.documents import DocumentSource, SourceCollection
 from repository_knowledge.adapters.python_source import PythonSource
 from repository_knowledge.adapters.serialization import RecordCodec
@@ -41,6 +70,14 @@ from repository_knowledge.model import IndexSelection, SelectionKind
 from repository_knowledge.operations.queries import IndexContents
 
 # %% local application composition
+
+
+class PublicationEnvironment(StrEnum):
+    """
+    The independently provisioned provider credential available to operators.
+    """
+
+    IDENTITY_TOKEN = "KNOWLEDGE_IDENTITY_TOKEN"
 
 
 def main() -> int:
@@ -157,4 +194,75 @@ def wiki_main() -> int:
         for item in validation.concepts
     ):
         return 2
+    return 0
+
+
+# %% independently trusted publication composition
+
+
+def publication_main() -> int:
+    """
+    Evaluate source proposals or authenticate complete canonical publications.
+    """
+    arguments = PublicationParser().parse(sys.argv[1:])
+    checker = TrustedChecker(arguments.trusted_repository, arguments.checker_revision)
+    checker.require_current()
+    if not arguments.policy_path.is_relative_to(arguments.trusted_repository):
+        raise InvalidIdentityEvidence("policy is outside the trusted checkout")
+    policy = PolicyDocument(arguments.policy_path).read()
+    transport = GitHubTransport(
+        os.environ.get(PublicationEnvironment.IDENTITY_TOKEN, "")
+    )
+    reviews = GitHubReviews(transport)
+    digest = CanonicalDigest()
+    codec = RecordCodec()
+    if (
+        arguments.command in (PublicationCommand.PUBLISH, PublicationCommand.CONSUME)
+        and policy.mode == PublicationMode.INDEPENDENT_REVIEW
+        and not policy.reviewers
+    ):
+        raise PublicationDenied([TrustIssue.MISSING_REVIEW])
+    if arguments.command == PublicationCommand.FINGERPRINT:
+        index = IndexBuilder(
+            GitSource(arguments.repository_root),
+            SourceCollection([PythonSource(), DocumentSource()]),
+        ).build(arguments.revision)
+        print(codec.encode(digest.fingerprint(index)))
+        return 0
+    if arguments.command == PublicationCommand.CONSUME:
+        downloaded = GitHubArtifacts(transport).read_publication(
+            policy, arguments.artifact_identifier, arguments.checker_revision
+        )
+        result = PublicationConsumer(
+            policy, reviews, digest, arguments.checker_revision, reviews
+        ).consume(downloaded.publication, downloaded.receipt, arguments.revision)
+        print(codec.encode(result))
+        return 0 if result.state == ConsumptionState.ACCEPTED else 2
+    base_revision = arguments.base_revision
+    if arguments.command == PublicationCommand.PUBLISH:
+        base_revision = (
+            GitCheckout(arguments.repository_root)
+            .run(GitArgument.REVISION, arguments.revision + "^1")
+            .decode("ascii")
+            .strip()
+        )
+    checked = TrustedProposal(arguments.repository_root, checker, policy).verify(
+        arguments.revision, base_revision
+    )
+    if arguments.command == PublicationCommand.CHECK:
+        print(codec.encode(checked.result))
+        return 2 if checked.result.report.issues else 0
+    if checked.result.report.issues:
+        raise PublicationDenied(checked.result.report.issues)
+    publication = KnowledgePublication(
+        policy, CommittedKnowledge(), reviews, digest, reviews
+    ).publish(checked.index, arguments.request_number, arguments.checker_revision)
+    destination = arguments.output_directory
+    if destination is None or destination.exists():
+        raise InvalidIdentityEvidence("publication output must be a new directory")
+    destination.mkdir(parents=True)
+    (destination / PublicationFilename.PAYLOAD).write_text(
+        codec.encode(publication), encoding="utf-8", newline="\n"
+    )
+    print(codec.encode(publication.binding))
     return 0
