@@ -302,7 +302,11 @@ class SimulatedPouring(OutcomeCheck):
     """
     Tries each answer's pouring in the simulation, from the scene's initial world in a
     process of its own, and refuses a pour that misses the target's opening with its
-    outcome, until the last allowed trial, which is accepted whatever it brings about.
+    outcome.
+
+    A pour that was performed and does flow may still be kept as a last resort, the
+    nearer its mouth ends to the opening's centre the better; one whose motion failed,
+    or tilted too little to flow, never is.
     """
 
     bundle: Path
@@ -313,11 +317,6 @@ class SimulatedPouring(OutcomeCheck):
     slots: List[str]
     """
     The slots of the pouring tried, by field name.
-    """
-
-    allowed_trials: int
-    """
-    How many pours are tried before the last one is accepted.
     """
 
     run: Callable[..., Any] = subprocess.run
@@ -357,9 +356,22 @@ class SimulatedPouring(OutcomeCheck):
         self.trials.append(TriedPour(values=values, outcome=outcome))
         if self.pours_into_opening(outcome):
             return
-        if len(self.trials) >= self.allowed_trials:
-            return
-        raise OutcomeFellShort(outcome=outcome)
+        raise OutcomeFellShort(
+            outcome=outcome, fallback_rank=self.last_resort_rank(outcome)
+        )
+
+    @staticmethod
+    def last_resort_rank(outcome: Dict[str, Any]) -> Optional[float]:
+        """
+        :return: How far the mouth ended from the opening's centre, for a pour that was
+            performed, was measured and does flow; ``None`` for any other, which must
+            never be kept.
+        """
+        if OutcomeKey.MOTION_FAILED in outcome:
+            return None
+        if not outcome.get(OutcomeKey.TILT_REACHES_FLOW_ONSET, True):
+            return None
+        return outcome.get(OutcomeKey.DISTANCE_FROM_OPENING_CENTRE)
 
     def with_flow(self, outcome: Dict[str, Any], tilt_angle: float) -> Dict[str, Any]:
         """

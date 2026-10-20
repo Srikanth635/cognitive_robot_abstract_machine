@@ -184,8 +184,8 @@ class TestPourFlows:
     def answer(self, tilt_angle: float) -> PourAnswer:
         return PourAnswer(arm=Arms.RIGHT, tilt_angle=tilt_angle)
 
-    def check_stating(self, allowed_trials: int = 3):
-        check = checking([LANDS] * allowed_trials, allowed_trials=allowed_trials)
+    def check_stating(self):
+        check = checking([LANDS])
         check.flow_onset = knowledge_stating(threshold(STATED_ONSET_DEGREES))
         return check
 
@@ -208,10 +208,11 @@ class TestPourFlows:
         check.check([self.answer(radians(STATED_ONSET_DEGREES))])
         assert len(check.trials) == 1
 
-    def test_a_pour_below_the_onset_is_accepted_as_the_last_allowed_trial(self):
-        check = self.check_stating(allowed_trials=1)
-        check.check([self.answer(SHALLOW_TILT)])
-        assert len(check.trials) == 1
+    def test_a_pour_below_the_onset_is_never_kept_as_a_last_resort(self):
+        check = self.check_stating()
+        with pytest.raises(OutcomeFellShort) as refusal:
+            check.check([self.answer(SHALLOW_TILT)])
+        assert refusal.value.fallback_rank is None
 
     def test_without_a_stated_onset_a_shallow_pour_is_accepted(self):
         check = checking([LANDS])

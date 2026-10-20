@@ -30,7 +30,7 @@ Panels.define('eql', function (root, bus) {
     '    <span class="query-actions-gap"></span>' +
     '    <button id="demo-execute" class="quiet" title="Launch the fixed demo under the live bridge, independent of the designators">Demo</button>' +
     '  </div>' +
-    '  <div id="perspectives" class="perspectives" title="Perspectives on the action core Generate also consults; none by default"></div>' +
+    '  <div id="perspectives" class="perspectives" title="Perspectives on the action core Generate also consults; untick one to leave it out"></div>' +
     '  <div class="query-sources">' +
     '    <div class="source-tabs">' +
     '      <button id="source-designators" title="Underspecified designators as krrood match queries: click one to copy it into the search bar, then Generate">Designators</button>' +
@@ -189,8 +189,9 @@ Panels.define('eql', function (root, bus) {
   }
 
   // ---- perspectives Generate also consults ------------------------------------------
-  // Each perspective on the action core the knowledge component registers, as a box left
-  // unticked: a ticked one is consulted, with the action core, beside the phase structure.
+  // Each perspective on the action core the knowledge component registers, as a box ticked
+  // by default: a ticked one is consulted, with the action core, beside the phase
+  // structure; unticking one leaves it out.
   function buildPerspectives(perspectives) {
     perspectivesEl.innerHTML = '';
     perspectives.forEach(function (perspective) {
@@ -200,7 +201,7 @@ Panels.define('eql', function (root, bus) {
       const box = document.createElement('input');
       box.type = 'checkbox';
       box.value = perspective.name;
-      box.checked = false;
+      box.checked = true;
       const text = document.createElement('span');
       text.textContent = perspective.label;
       choice.appendChild(box);

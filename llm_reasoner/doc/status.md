@@ -547,11 +547,22 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
 
 - cram_viz's Generate can consult the action core and chosen perspectives (2026-10-21): below
   Generate, one box per perspective the knowledge component registers (`PERSPECTIVE_ROOTS`:
-  action frame, image schemas, failures), none ticked by default; a ticked one is sent with the
+  action frame, image schemas, failures), all ticked by default (the user's choice after a
+  run showed only the phase structure with them off); a ticked one is sent with the
   resolve request and consulted, with the core, beside the phase structure, so the Hypothesis and
   Ontology tabs then show it. A request naming an unregistered perspective is refused
   (`UnknownPerspective`). Before this the viewer never consulted them, so the tabs showed only
   the phase structure in normal use. Checked in the browser that the boxes appear; not run live.
+
+- No more accepting a pour the simulation showed failing (2026-10-21): a user's run resolved
+  to the left arm, whose pick-up had failed in both of its trials, because `SimulatedPouring`
+  accepted its last trial whatever it brought about; Execute then failed at the pick-up. Now
+  every pour that does not land is refused, and an `OutcomeFellShort` carries a
+  `fallback_rank` (how far the mouth ended from the opening, for a pour that was performed and
+  flows; none for a failed motion or one tilted too little to flow). When the repair budget
+  runs out (`POUR_REPAIRS`, 3) the resolver keeps the best-ranked answer, with its own reason,
+  and fails only when none was acceptable. In that run it would have kept the right-arm pour
+  that missed by 0.188 m. Tests only, not run live.
 
 ## 3. Live testing
 

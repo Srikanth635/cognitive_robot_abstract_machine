@@ -399,6 +399,37 @@ class TestTrials:
         assert first[OutcomeKey.TILT_REACHES_FLOW_ONSET] is False
         assert second[OutcomeKey.TILT_REACHES_FLOW_ONSET] is True
 
+    def test_when_no_pour_lands_the_one_ending_nearest_the_opening_is_kept(
+        self, pouring_bundle, tmp_path
+    ):
+        misses = [
+            {
+                OutcomeKey.LANDS_IN_OPENING: False,
+                OutcomeKey.DISTANCE_FROM_OPENING_CENTRE: distance,
+            }
+            for distance in (0.188, 0.12, 0.25)
+        ]
+        resolver = resolver_replaying(
+            "objects_given_every_pour_misses",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+            trial_outcomes=[*misses, None],
+        )
+        run = resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        nearest = min(
+            misses, key=lambda outcome: outcome[OutcomeKey.DISTANCE_FROM_OPENING_CENTRE]
+        )
+        (kept,) = [trial for trial in run.resolution.trials if trial.outcome == nearest]
+        (action,) = run.resolution.actions
+        assert {slot.name: slot.serialized for slot in action.slots}[
+            "tilt_angle"
+        ] == kept.values["tilt_angle"]
+        assert len(run.resolution.trials) == 4
+
 
 # %% runs kept apart
 

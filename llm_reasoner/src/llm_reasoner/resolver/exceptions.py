@@ -9,6 +9,11 @@ RESPONSE_REASON = "reason"
 The key under which an unparseable response's reason is shown to the model.
 """
 
+OUTCOME_KEY = "outcome"
+"""
+The key under which an outcome that fell short is shown to the model.
+"""
+
 # %% base
 
 
@@ -221,8 +226,20 @@ class OutcomeFellShort(RetryableModelFailure):
     What trying the answer brought about, as data the model reads to answer again.
     """
 
+    fallback_rank: Optional[float] = None
+    """
+    How good the answer still is as a last resort, lower being better, should no answer
+    succeed; ``None`` when it must never be accepted.
+    """
+
     def __post_init__(self):
         super().__init__(f"trying the answer fell short: {self.outcome}")
+
+    def details(self) -> Dict[str, Any]:
+        """
+        :return: The outcome alone: the model is not told how its answer ranks.
+        """
+        return {OUTCOME_KEY: self.outcome}
 
 
 @dataclass

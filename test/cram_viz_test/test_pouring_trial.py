@@ -69,9 +69,17 @@ class PourAnswer:
     """
 
 
+MISSES_BY_A_HAND = {
+    OutcomeKey.LANDS_IN_OPENING: False,
+    OutcomeKey.DISTANCE_FROM_OPENING_CENTRE: 0.188,
+}
+"""
+An outcome of a pour that ends beside the target's opening, measured.
+"""
+
+
 def checking(
     outcomes: List[Any],
-    allowed_trials: int = 3,
     observer: MemorySink | None = None,
     neems: Optional[NeemRecording] = None,
 ) -> SimulatedPouring:
@@ -84,7 +92,6 @@ def checking(
         neems=neems,
         bundle=Path("pouring"),
         slots=["arm", "tilt_angle"],
-        allowed_trials=allowed_trials,
         run=ScriptedTrials(outcomes=outcomes),
         **settings,
     )
@@ -139,15 +146,28 @@ class TestSimulatedPouring:
             "MotionDidNotFinish: out of reach"
         )
 
-    def test_the_last_allowed_trial_is_accepted_with_its_outcome(self):
-        check = checking([MISSES, MISSES], allowed_trials=2)
-        with pytest.raises(OutcomeFellShort):
+    def test_every_pour_that_misses_is_refused_however_many_were_tried(self):
+        check = checking([MISSES, MISSES, MISSES])
+        for arm in (Arms.RIGHT, Arms.LEFT, Arms.RIGHT):
+            with pytest.raises(OutcomeFellShort):
+                check.check([PourAnswer(arm=arm, tilt_angle=1.85)])
+        assert len(check.trials) == 3
+
+    def test_a_pour_that_misses_may_be_kept_as_a_last_resort_by_how_far_it_misses(
+        self,
+    ):
+        check = checking([MISSES_BY_A_HAND])
+        with pytest.raises(OutcomeFellShort) as refusal:
             check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
-        check.check([PourAnswer(arm=Arms.LEFT, tilt_angle=1.6)])
-        assert [trial.values for trial in check.trials] == [
-            {"arm": Arms.RIGHT.name, "tilt_angle": 1.85},
-            {"arm": Arms.LEFT.name, "tilt_angle": 1.6},
-        ]
+        assert refusal.value.fallback_rank == (
+            MISSES_BY_A_HAND[OutcomeKey.DISTANCE_FROM_OPENING_CENTRE]
+        )
+
+    def test_a_pour_whose_motion_failed_is_never_kept(self):
+        check = checking([None])
+        with pytest.raises(OutcomeFellShort) as refusal:
+            check.check([PourAnswer(arm=Arms.LEFT, tilt_angle=1.85)])
+        assert refusal.value.fallback_rank is None
 
     def test_a_trial_runs_in_a_process_of_its_own_on_the_scene(self):
         check = checking([LANDS])
