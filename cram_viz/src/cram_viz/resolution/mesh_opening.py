@@ -39,6 +39,10 @@ class OpeningDirection(StrEnum):
     UP = "up"
     DOWN = "down"
     SIDEWAYS = "sideways"
+    CLOSED = "closed"
+    """
+    No side of the object is open.
+    """
 
 
 @dataclass(frozen=True)

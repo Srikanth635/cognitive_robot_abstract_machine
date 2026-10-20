@@ -1,0 +1,34 @@
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix code: <http://www.ease-crc.org/ont/llm_reasoner/cram-classes#> .
+@prefix kinds: <http://www.ease-crc.org/ont/llm_reasoner/object-kinds#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/object-kinds> a owl:Ontology ;
+    rdfs:label "Kinds of object"@en ;
+    rdfs:comment "What the ontology says of kinds of object, for the classes of the code: which of them are containers, and that a container has an opening."@en ;
+    owl:imports <http://aicor.knowledge/l2-ontology.owl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/cram-classes> .
+
+# %% the property
+
+kinds:hasOpening a owl:DatatypeProperty ;
+    rdfs:label "has opening"@en ;
+    rdfs:comment "Whether a container has an opening through which something can be put into it. It says that the container has one, not whether the opening is open, nor which way it faces; those are found from the object."@en ;
+    rdfs:domain aicor:Container ;
+    rdfs:range xsd:boolean .
+
+aicor:Container rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty kinds:hasOpening ;
+            owl:hasValue true ] .
+
+# %% the classes of the code that are containers
+
+code:semantic_digital_twin.semantic_annotations.semantic_annotations.Bowl rdfs:subClassOf aicor:Container .
+
+code:semantic_digital_twin.semantic_annotations.semantic_annotations.PouringCup rdfs:subClassOf aicor:Container .
+
+code:semantic_digital_twin.semantic_annotations.semantic_annotations.DrinkingContainer rdfs:subClassOf aicor:Container .
+
+code:semantic_digital_twin.semantic_annotations.semantic_annotations.CookingContainer rdfs:subClassOf aicor:Container .

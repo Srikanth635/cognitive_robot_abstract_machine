@@ -689,8 +689,14 @@ runs, $2.28 for 8 runs; one refusal carries no cost):
   open-ray shares 0.3 to 0.7, the defaults (0.5, 0.5) inside. Below 0.5 the knife's thin blade
   starts to look open. The spoon (21 %) and the whisk (8 %) are not called open at the default;
   the bottle's narrow neck is missed. The prompt of the runs above is unchanged, so they were not
-  repeated. Longer term the knowledge ontology should say that a container has an opening, and
-  the geometry should only locate it.
+  repeated. Which objects have an opening at all now comes from the ontology
+  (`cram_classes/object-kinds.ttl`): it adds one property, `hasOpening`, to CRAM-AICOR's existing
+  `Container` (every container has one), and puts the code's `Bowl`, `PouringCup`,
+  `DrinkingContainer` and `CookingContainer` under `Container`, so their subclasses follow
+  (`ObjectKinds.has_opening`). The scene geometry measures the mesh only for those kinds, states
+  `closed` for one whose mesh shows no open side, and states nothing for any other kind, whatever
+  its mesh shows. CRAM-AICOR's `Bowl` and `Cup` are `Vessel`s and not `Container`s, so the code
+  classes are put under `Container` directly.
 - The trap harness (2026-10-20) no longer names its goal: it first resolves the scene as it is
   with the default resolver, then turns upside down the body that resolution poured into
   (`OverturnedScene.of_body`) and judges each arm by whether it chose that body. The runs above
