@@ -564,6 +564,15 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   and fails only when none was acceptable. In that run it would have kept the right-arm pour
   that missed by 0.188 m. Tests only, not run live.
 
+- The phase structure is a choice too (2026-10-21): `KnowledgeRequester.consults_phase_structure`
+  (and `Reasoner`'s, `DesignatorResolver`'s), on by default; off, no situation is chosen and only
+  the action core and the perspectives are served. cram_viz offers it as a box beside the
+  perspectives ("action phase structure", ticked), sent as `phase_structure: false` when
+  unticked. Without it the tabs show the core first, the phase-hierarchy overlay and the
+  phase-based EQL variables and Designator roles left empty, and the pour's flow-onset check
+  has nothing to read. With every box unticked nothing is consulted and the tabs keep showing
+  the previous hypothesis. Tests and a browser check; not run live.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

@@ -778,7 +778,7 @@ class KB:
         # empty until an instruction has been generated: the pouring variables range
         # over whatever the model produced, and there is nothing before that
         active_hypothesis = hypothesis_knowledge.active()
-        view = active_hypothesis.view if active_hypothesis else None
+        view = active_hypothesis.phase_structure if active_hypothesis else None
         structure = view.root if view else None
         # in the order the phases run, so an answer listing phases reads as the
         # sequence of the action
@@ -1647,7 +1647,7 @@ def _designator_view(kb: KB) -> Dict[str, Any]:
     role.
     """
     active_hypothesis = hypothesis_knowledge.active()
-    view = active_hypothesis.view if active_hypothesis else None
+    view = active_hypothesis.phase_structure if active_hypothesis else None
     resolution = active_hypothesis.resolution if active_hypothesis else None
     knowledge = designator_knowledge.reflect_pouring_action(
         kb.objects, view, resolution

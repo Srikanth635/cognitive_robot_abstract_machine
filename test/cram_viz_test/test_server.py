@@ -567,3 +567,40 @@ class TestChosenPerspectives:
         )
         assert payload["ok"] is False
         assert payload["error"].startswith(UnknownPerspective.__name__)
+
+    def test_the_scene_offers_the_phase_structure_to_choose_too(self, pouring_server):
+        import inspect
+
+        from llm_reasoner.knowledge.access import core
+
+        payload = get_json(pouring_server + "/api/designators?scene=pouring")
+        assert payload["phase_structure"]["summary"] == inspect.getdoc(
+            core.ActionPhaseStructure
+        )
+
+    def test_by_default_the_phase_structure_is_consulted(self, monkeypatch, tmp_path):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "objects_given", HypothesisStore(directory=tmp_path / "store"), tmp_path
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        assert server_module._resolver_for({}).consults_phase_structure is True
+
+    def test_the_request_may_leave_out_the_phase_structure(self, monkeypatch, tmp_path):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "objects_given", HypothesisStore(directory=tmp_path / "store"), tmp_path
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        consulting = server_module._resolver_for({"phase_structure": False})
+        assert consulting.consults_phase_structure is False

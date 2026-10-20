@@ -831,3 +831,77 @@ class TestFrameRule:
     def test_it_is_the_frame_knowledge_rule(self):
         rule = requester_offering(ActionPerspectiveFile.ACTION_FRAME).frame_rule()
         assert rule.name is RuleName.FRAME_KNOWLEDGE
+
+
+# %% consulting the phase structure is a choice too
+
+
+def requester_leaving_out_the_phase_structure(
+    store: HypothesisStore, *perspectives: ActionPerspectiveFile
+) -> KnowledgeRequester:
+    """
+    :return: A requester for the tilting action framed as pouring that consults the
+        perspectives but not the phase structure, whose knowledge component generates
+        the core and the frame in turn.
+    """
+    return KnowledgeRequester(
+        service=KnowledgeService(
+            backend=HypothesisBackend(
+                client=ScriptedClient(
+                    responses=[
+                        (PERSPECTIVE_CASES / "pouring_core.json").read_text(),
+                        (PERSPECTIVE_CASES / "pouring_frame.json").read_text(),
+                    ]
+                ),
+                suite=AcceptanceSuite(rules=[]),
+                store=store,
+            )
+        ),
+        described_actions=DescribedActions(entries=[TILT_FRAMED_AS_POURING]),
+        perspectives=perspectives,
+        consults_phase_structure=False,
+    )
+
+
+class TestLeavingOutThePhaseStructure:
+    def test_by_default_the_phase_structure_is_consulted(self, tmp_path):
+        requester = requester_offering_the_frame(HypothesisStore(directory=tmp_path))
+        assert requester.consults_phase_structure is True
+
+    def test_only_the_core_and_its_perspectives_are_served(self, tmp_path):
+        requester = requester_leaving_out_the_phase_structure(
+            HypothesisStore(directory=tmp_path), ActionPerspectiveFile.ACTION_FRAME
+        )
+        consultation = requester.consult(
+            tilt_of(body_with_geometry()), situation_backend()
+        )
+        assert consultation.record_id is None
+        assert len(consultation.perspective_record_ids) == 2
+
+    def test_no_situation_is_chosen_for_it(self, tmp_path):
+        requester = requester_leaving_out_the_phase_structure(
+            HypothesisStore(directory=tmp_path), ActionPerspectiveFile.ACTION_FRAME
+        )
+        consultation = requester.consult(
+            tilt_of(body_with_geometry()), situation_backend()
+        )
+        assert consultation.situation == {}
+
+    def test_the_tools_read_the_core_and_its_perspectives(self, tmp_path):
+        requester = requester_leaving_out_the_phase_structure(
+            HypothesisStore(directory=tmp_path), ActionPerspectiveFile.ACTION_FRAME
+        )
+        consultation = requester.consult(
+            tilt_of(body_with_geometry()), situation_backend()
+        )
+        assert requester.tools_for(consultation)
+
+    def test_leaving_out_everything_consults_nothing(self, tmp_path):
+        requester = requester_leaving_out_the_phase_structure(
+            HypothesisStore(directory=tmp_path)
+        )
+        consultation = requester.consult(
+            tilt_of(body_with_geometry()), situation_backend()
+        )
+        assert consultation.record_ids == []
+        assert requester.service.backend.client.calls == []

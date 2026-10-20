@@ -26,6 +26,7 @@ from llm_reasoner.knowledge.access import (
     HypothesisGraphProjector,
     HypothesisStore,
     HypothesisView,
+    core,
 )
 from typing_extensions import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
@@ -56,18 +57,20 @@ def build_projection(
     view: HypothesisView, consulted: Sequence[HypothesisView] = ()
 ) -> HypothesisGraph:
     """
-    :param view: The phase structure.
+    :param view: The phase structure, or the action core's frame when the phase
+        structure was not consulted.
     :param consulted: The action core's frame and the perspectives on it consulted
-        beside the phase structure.
-    :return: The phase structure projected with every link drawn directly, then
-        regrouped phase first, with the consulted hypotheses drawn beside it.
+        beside it.
+    :return: The hypothesis projected with every link drawn directly, regrouped phase
+        first when it is a phase structure, with the consulted hypotheses drawn beside
+        it.
     """
     projection = HypothesisGraphProjector().project(
         view, HypothesisGraphPresentation.COMPLETE
     )
-    return ConsultedHypotheses(views=tuple(consulted)).attach(
-        PhaseHierarchyOverlay().apply(projection, view)
-    )
+    if isinstance(view.root, core.ActionPhaseStructure):
+        projection = PhaseHierarchyOverlay().apply(projection, view)
+    return ConsultedHypotheses(views=tuple(consulted)).attach(projection)
 
 
 # %% active knowledge
@@ -144,6 +147,16 @@ class HypothesisKnowledge:
             consulted=list(consulted),
         )
 
+    @property
+    def phase_structure(self) -> Optional[HypothesisView]:
+        """
+        The phase structure shown, ``None`` when the phase structure was not consulted
+        and the action core is shown first instead.
+        """
+        if isinstance(self.view.root, core.ActionPhaseStructure):
+            return self.view
+        return None
+
     def node_identifier_for(self, fragment: Any) -> Optional[str]:
         """
         :return: The rendered node identifier of a fragment, or ``None`` if it is not
@@ -185,22 +198,26 @@ def activate_resolution(
 ) -> Optional[HypothesisKnowledge]:
     """
     Display the hypothesis a designator's resolution consulted, with the action core's
-    frame and the perspectives it consulted beside it, and the resolution; nothing
-    changes when no knowledge described the action.
+    frame and the perspectives it consulted beside it, and the resolution; the core
+    first when the phase structure was left out; nothing changes when no knowledge was
+    consulted.
 
     The caller is responsible for resetting :mod:`cram_viz.kb` afterwards.
     """
-    if resolution.record_id is None:
+    record_ids = [
+        record_id
+        for record_id in (resolution.record_id, *resolution.perspective_record_ids)
+        if record_id is not None
+    ]
+    if not record_ids:
         return _active
+    shown, *consulted = record_ids
     return activate(
         HypothesisKnowledge.from_view(
-            service.view(resolution.record_id),
+            service.view(shown),
             generated=True,
             resolution=resolution,
-            consulted=[
-                service.view(record_id)
-                for record_id in resolution.perspective_record_ids
-            ],
+            consulted=[service.view(record_id) for record_id in consulted],
         )
     )
 

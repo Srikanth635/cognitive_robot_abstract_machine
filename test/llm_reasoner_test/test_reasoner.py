@@ -5,6 +5,8 @@ the knowledge component's symbols, and consulting that component about every act
 
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import replace
 
 from llm_reasoner.clients.base import ScriptedClient
@@ -95,6 +97,19 @@ class TestPerspectives:
         assert reasoner.backend().knowledge.perspectives == (
             ActionPerspectiveFile.ACTION_FRAME,
         )
+
+    def test_by_default_the_phase_structure_is_consulted(self, tmp_path):
+        reasoner = reasoner_storing_in(HypothesisStore(directory=tmp_path))
+        assert reasoner.backend().knowledge.consults_phase_structure is True
+
+    @pytest.mark.parametrize("reported", [False, True])
+    def test_the_phase_structure_can_be_left_out(self, tmp_path, reported):
+        reasoner = replace(
+            reasoner_storing_in(HypothesisStore(directory=tmp_path)),
+            consults_phase_structure=False,
+            sink=MemorySink() if reported else None,
+        )
+        assert reasoner.backend().knowledge.consults_phase_structure is False
 
     def test_the_perspectives_named_are_consulted_when_reported_too(self, tmp_path):
         reasoner = replace(

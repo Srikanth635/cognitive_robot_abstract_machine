@@ -156,6 +156,51 @@ class TestActivatingAResolution:
         finally:
             hypothesis_knowledge.activate(previous)
 
+    def test_without_the_phase_structure_the_core_is_shown_first(self, knowledge):
+        resolution = replace(knowledge.resolution(), record_id=None)
+        previous = hypothesis_knowledge.active()
+        try:
+            shown = hypothesis_knowledge.activate_resolution(
+                resolution, knowledge.service
+            )
+            core_record, *perspective_records = resolution.perspective_record_ids
+            assert shown.view.record.record_id == core_record
+            assert [view.record.record_id for view in shown.consulted] == (
+                perspective_records
+            )
+        finally:
+            hypothesis_knowledge.activate(previous)
+
+    def test_without_the_phase_structure_every_consulted_fragment_has_a_node(
+        self, knowledge
+    ):
+        resolution = replace(knowledge.resolution(), record_id=None)
+        previous = hypothesis_knowledge.active()
+        try:
+            shown = hypothesis_knowledge.activate_resolution(
+                resolution, knowledge.service
+            )
+            identifiers = {node.identifier for node in shown.projection.nodes}
+            for view in (shown.view, *shown.consulted):
+                for fragment in view.fragments:
+                    assert view.citation_of(fragment).iri in identifiers
+        finally:
+            hypothesis_knowledge.activate(previous)
+
+    @pytest.mark.parametrize(
+        "tab", ["hypothesis", "ontology", "designator", "knowledge"]
+    )
+    def test_without_the_phase_structure_every_tab_still_answers(self, knowledge, tab):
+        resolution = replace(knowledge.resolution(), record_id=None)
+        previous = hypothesis_knowledge.active()
+        try:
+            hypothesis_knowledge.activate_resolution(resolution, knowledge.service)
+            kb.reset_kb()
+            assert kb.view_payload(tab)["ok"] is True
+        finally:
+            hypothesis_knowledge.activate(previous)
+            kb.reset_kb()
+
 
 # %% the payload of the tab
 
