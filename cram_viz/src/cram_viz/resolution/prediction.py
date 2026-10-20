@@ -38,6 +38,7 @@ from semantic_digital_twin.world import World
 from typing_extensions import Any, Dict, List, Mapping, Self
 
 from cram_viz.resolution.execution import PouringExecution
+from cram_viz.resolution.pouring_slot import PouringSlot
 from cram_viz.resolution.slot_data import SlotData
 from cram_viz.resolution.trial import (
     OutcomeKey,
@@ -55,11 +56,6 @@ DEFINITION_FILE = (
 )
 """
 The definition of that tool.
-"""
-
-CONTAINER_SLOTS = ("source_container", "target_container")
-"""
-The slots of a pour the tool takes as world handles.
 """
 
 PREDICTION_RULE = PromptRule(
@@ -382,7 +378,7 @@ class PredictPourEnd(Tool):
         values = {
             name: (
                 SlotData.from_value(self.world.individual_of(value))
-                if name in CONTAINER_SLOTS
+                if name in PouringSlot.containers()
                 else value
             )
             for name, value in arguments.items()

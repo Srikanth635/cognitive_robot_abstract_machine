@@ -20,6 +20,7 @@ from pathlib import Path
 from typing_extensions import Any, Callable, Dict, Mapping
 
 from cram_viz import configure_console_logging
+from cram_viz.resolution.pouring_slot import PouringSlot
 from cram_viz.resolution.prediction import HeldSource, Holding, PickUpFailed
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 
@@ -57,7 +58,10 @@ class MeasuredHolding(Holding):
     """
 
     def held(self, values: Mapping[str, Any]) -> HeldSource:
-        key = (json.dumps(values["source_container"]), values["arm"])
+        key = (
+            json.dumps(values[PouringSlot.SOURCE_CONTAINER]),
+            values[PouringSlot.ARM],
+        )
         if key not in self.measured:
             self.measured[key] = self.measure(values)
         return self.measured[key]
