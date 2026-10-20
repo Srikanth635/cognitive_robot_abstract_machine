@@ -16,9 +16,9 @@ live World to draw its extension from, so it is offered illustrative stand-ins i
 the scene's own :class:`~cram_viz.kb.BenchObject`\\ s, which are graspable things but not
 real ``Body``/``Tool`` individuals.
 
-A referent slot that fills a role of the pouring ontology is tagged with the role's
-class, and resolved illustratively to the scene object whose label reads closest to the
-active hypothesis's filler of that role -- still not a live resolver run.
+A referent slot that fills a manipulation role is tagged with the role's class, and
+resolved illustratively to the scene object whose label reads closest to the active
+hypothesis's filler of that role -- still not a live resolver run.
 
 Once the resolver has resolved one of the viewer's predefined designators
 (:mod:`cram_viz.resolution`), each slot it resolved holds the value it chose instead, and
@@ -47,11 +47,11 @@ from llm_reasoner.resolver.reflection import (
 from coraplex.robot_plans.actions.composite.tool_based import PouringAction
 from llm_reasoner.knowledge.access import (
     core,
+    DescribedActions,
     HypothesisView,
-    pouring,
+    SlotRoles,
 )
-
-from cram_viz.resolution.pouring_slot import PouringSlot
+from llm_reasoner.world.classes import identifier_of
 
 if TYPE_CHECKING:
     from cram_viz.kb import BenchObject
@@ -185,11 +185,20 @@ def _lisp_literal(value: Any) -> str:
     return str(value)
 
 
-#: PouringAction's own field names that fill a role of the pouring ontology
-_ROLE_BY_FIELD_NAME = {
-    PouringSlot.SOURCE_CONTAINER: pouring.SourceContainer,
-    PouringSlot.TARGET_CONTAINER: pouring.TargetReceptacle,
-}
+def _roles_by_field_name(
+    designator_type: type,
+) -> Dict[str, Optional[type[core.ManipulationRole]]]:
+    """
+    :param designator_type: The designator class to reflect.
+    :return: The manipulation role each of its fields fills, by field name, as the
+        knowledge describing the designator maps its fields to slots of the action
+        core's frame and the linked ontologies put a role under each slot; none when no
+        knowledge describes it.
+    """
+    described = DescribedActions().describing(identifier_of(designator_type))
+    if described is None:
+        return {}
+    return described.field_roles(SlotRoles.shipped())
 
 
 # %% reflection
@@ -334,13 +343,14 @@ def reflect_pouring_action(
     docstrings = inspect.getdoc(designator_type)
     fields_by_name = {f.name: f for f in dataclasses.fields(designator_type)}
     field_docstrings = _attribute_docstrings(designator_type)
+    roles = _roles_by_field_name(designator_type)
     slots = []
     for name in _direct_field_names(designator_type):
         declared_type = resolved_field_type(designator_type, name)
         alternatives = union_alternatives(declared_type)
         kind = _classify(declared_type, alternatives)
         default, has_default = _default_for(fields_by_name[name])
-        role = _ROLE_BY_FIELD_NAME.get(name)
+        role = roles.get(name)
         candidates = (
             _candidates_for_role(role, view, objects)
             if kind is SlotKind.REFERENT and name not in chosen
