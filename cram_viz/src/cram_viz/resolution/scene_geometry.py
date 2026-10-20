@@ -14,10 +14,27 @@ from krrood.entity_query_language.query.match import Match
 from llm_reasoner.resolver.context import PromptContextProvider
 from semantic_digital_twin.robots.robot_parts import AbstractRobot, AbstractRobotPart
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
+from semantic_digital_twin.semantic_annotations.semantic_annotations import (
+    Bowl,
+    CookingContainer,
+    DrinkingContainer,
+    PouringCup,
+)
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import OmniDrive
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Dict, List, Optional
+
+CONTAINER_KINDS = (Bowl, PouringCup, DrinkingContainer, CookingContainer)
+"""
+The kinds of object that have an opening, which is the top of their own frame.
+"""
+
+OPENING_ALIGNMENT = 0.5 * 2**0.5
+"""
+How far an up axis may lean from the vertical, as the cosine of the angle (45 degrees),
+for an opening to face up or down rather than sideways.
+"""
 
 UP_AXIS = 2
 """
@@ -37,12 +54,37 @@ robot is stated by where its base stands.
 
 GEOMETRY_HEADING = (
     "The geometry of the scene: every object's origin, the box it fills, the centre of "
-    "its top and the direction its own up axis points in, and where each robot base "
-    "stands and faces; metres and radians, in the world frame."
+    "its top, the direction its own up axis points in and, for a container, where its "
+    "opening faces, and where each robot base stands and faces; metres and radians, in "
+    "the world frame."
 )
 """
 The sentence introducing the geometry.
 """
+
+
+class OpeningDirection(StrEnum):
+    """
+    Where a container's opening faces.
+    """
+
+    UP = "up"
+    DOWN = "down"
+    SIDEWAYS = "sideways"
+
+    @classmethod
+    def of(cls, up: List[float]) -> OpeningDirection:
+        """
+        :param up: The world-frame direction of the container's own up axis.
+        :return: Where the opening faces: up or down when the axis is within
+            :data:`OPENING_ALIGNMENT` of the vertical, sideways otherwise.
+        """
+        vertical = float(up[-1])
+        if vertical >= OPENING_ALIGNMENT:
+            return cls.UP
+        if vertical <= -OPENING_ALIGNMENT:
+            return cls.DOWN
+        return cls.SIDEWAYS
 
 
 class GeometryKey(StrEnum):
@@ -60,6 +102,7 @@ class GeometryKey(StrEnum):
     MAXIMUM = "max"
     TOP_CENTRE = "top_centre"
     UP = "up"
+    OPENING_FACES = "opening_faces"
     POSITION = "position"
     YAW = "yaw"
 
@@ -117,7 +160,8 @@ class SceneGeometry(PromptContextProvider):
         box = body.visual.as_bounding_box_collection_in_frame(
             self.world.root
         ).bounding_box()
-        return {
+        up = rounded(body.global_transform.to_np()[:3, UP_AXIS])
+        geometry = {
             GeometryKey.KIND: type(annotation).__name__,
             GeometryKey.NAME: body.name.name,
             GeometryKey.ORIGIN: rounded(body.global_pose.to_position().to_np()[:3]),
@@ -132,8 +176,11 @@ class SceneGeometry(PromptContextProvider):
                     box.max_z,
                 ]
             ),
-            GeometryKey.UP: rounded(body.global_transform.to_np()[:3, UP_AXIS]),
+            GeometryKey.UP: up,
         }
+        if isinstance(annotation, CONTAINER_KINDS):
+            geometry[GeometryKey.OPENING_FACES] = OpeningDirection.of(up)
+        return geometry
 
     @staticmethod
     def base_geometry(base: Body) -> Dict[str, Any]:
