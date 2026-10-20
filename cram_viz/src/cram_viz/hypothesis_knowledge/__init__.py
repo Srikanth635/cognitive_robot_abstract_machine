@@ -27,9 +27,10 @@ from llm_reasoner.knowledge.access import (
     HypothesisStore,
     HypothesisView,
 )
-from typing_extensions import TYPE_CHECKING, Any, Dict, Optional
+from typing_extensions import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from cram_viz import paths
+from cram_viz.hypothesis_knowledge.consulted import ConsultedHypotheses
 from cram_viz.hypothesis_knowledge.phase_hierarchy import PhaseHierarchyOverlay
 
 if TYPE_CHECKING:
@@ -51,15 +52,22 @@ def sample_view() -> HypothesisView:
     )
 
 
-def build_projection(view: HypothesisView) -> HypothesisGraph:
+def build_projection(
+    view: HypothesisView, consulted: Sequence[HypothesisView] = ()
+) -> HypothesisGraph:
     """
-    :return: The hypothesis projected with every link drawn directly, then regrouped
-        phase first.
+    :param view: The phase structure.
+    :param consulted: The action core's frame and the perspectives on it consulted
+        beside the phase structure.
+    :return: The phase structure projected with every link drawn directly, then
+        regrouped phase first, with the consulted hypotheses drawn beside it.
     """
     projection = HypothesisGraphProjector().project(
         view, HypothesisGraphPresentation.COMPLETE
     )
-    return PhaseHierarchyOverlay().apply(projection, view)
+    return ConsultedHypotheses(views=tuple(consulted)).attach(
+        PhaseHierarchyOverlay().apply(projection, view)
+    )
 
 
 # %% active knowledge
@@ -95,6 +103,12 @@ class HypothesisKnowledge:
     did.
     """
 
+    consulted: List[HypothesisView] = field(default_factory=list)
+    """
+    The action core's frame and the perspectives on it the resolution consulted beside
+    this hypothesis, the core first; drawn with it in the projection.
+    """
+
     node_identifier_by_object_id: Dict[int, str] = field(
         default_factory=dict, init=False
     )
@@ -115,16 +129,19 @@ class HypothesisKnowledge:
         view: HypothesisView,
         generated: bool = False,
         resolution: Optional[ResolvedDesignator] = None,
+        consulted: Sequence[HypothesisView] = (),
     ) -> HypothesisKnowledge:
         """
-        :return: The knowledge of a stored hypothesis, projected for display, with the
-            resolution that consulted it when there is one.
+        :return: The knowledge of a stored hypothesis, projected for display with the
+            hypotheses consulted beside it, with the resolution that consulted it when
+            there is one.
         """
         return cls(
             view=view,
-            projection=build_projection(view),
+            projection=build_projection(view, consulted),
             generated=generated,
             resolution=resolution,
+            consulted=list(consulted),
         )
 
     def node_identifier_for(self, fragment: Any) -> Optional[str]:
@@ -167,8 +184,9 @@ def activate_resolution(
     resolution: ResolvedDesignator, service: KnowledgeService
 ) -> Optional[HypothesisKnowledge]:
     """
-    Display the hypothesis a designator's resolution consulted, with the resolution;
-    nothing changes when no knowledge described the action.
+    Display the hypothesis a designator's resolution consulted, with the action core's
+    frame and the perspectives it consulted beside it, and the resolution; nothing
+    changes when no knowledge described the action.
 
     The caller is responsible for resetting :mod:`cram_viz.kb` afterwards.
     """
@@ -176,7 +194,13 @@ def activate_resolution(
         return _active
     return activate(
         HypothesisKnowledge.from_view(
-            service.view(resolution.record_id), generated=True, resolution=resolution
+            service.view(resolution.record_id),
+            generated=True,
+            resolution=resolution,
+            consulted=[
+                service.view(record_id)
+                for record_id in resolution.perspective_record_ids
+            ],
         )
     )
 

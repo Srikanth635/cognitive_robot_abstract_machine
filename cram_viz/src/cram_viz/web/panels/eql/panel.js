@@ -308,6 +308,9 @@ Panels.define('eql', function (root, bus) {
     html += '<p class="hint-txt">knowledge consulted for ' +
       esc(situation.length ? situation.join(', ') : 'an unknown situation') +
       (resolution.record_id ? ' (hypothesis ' + esc(resolution.record_id) + ')' : '') +
+      (resolution.perspective_record_ids && resolution.perspective_record_ids.length
+        ? ' with the action core and perspectives ' + esc(resolution.perspective_record_ids.join(', '))
+        : '') +
       ' · resolver cost $' + resolution.cost.toFixed(3) +
       ' · run ' + esc(resolution.run) +
       (viewer ? ' · <a href="' + attributeText(viewer) + '" target="_blank" rel="noopener">' +

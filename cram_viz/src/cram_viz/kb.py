@@ -1663,11 +1663,14 @@ def _hypothesis_node_lines(node: HypothesisGraphNode) -> List[str]:
     """
     Detail-panel lines for one projected node.
     """
-    return [
+    lines = [
         "kind: " + node.kind.value,
         "type: " + node.type_name,
         "identifier: " + node.identifier,
     ]
+    if node.source is not None and node.source.label:
+        lines.append("says: " + node.source.label)
+    return lines
 
 
 NOTHING_GENERATED = (
@@ -1754,7 +1757,7 @@ def _ontology_graph_view() -> Dict[str, Any]:
             "details": {},
             "empty": NOTHING_GENERATED,
         }
-    graph = OntologyClassGraph.of(active_hypothesis.view)
+    graph = OntologyClassGraph.of(active_hypothesis.view, *active_hypothesis.consulted)
     backing = OntologyBacking()
     return {
         "ok": True,

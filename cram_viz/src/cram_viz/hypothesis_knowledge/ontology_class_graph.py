@@ -1,7 +1,7 @@
 """
-The ontology behind a hypothesis, drawn at the level of classes: the microworld classes
-the hypothesis instantiates, the classes they specialise up to CRAM-AICOR and DUL, the
-concepts the hypothesis cites, and how the hypothesis links one class to another.
+The ontology behind hypotheses, drawn at the level of classes: the classes the hypotheses
+instantiate, the classes they specialise up to CRAM-AICOR and DUL, the concepts they cite,
+and how they link one class to another.
 """
 
 from __future__ import annotations
@@ -14,12 +14,14 @@ from functools import cache
 from operator import attrgetter
 
 from llm_reasoner.knowledge.access import (
+    ActionPerspectiveFile,
     ClosedWorldMembership,
     ConceptReference,
     described,
     DescriptionEntity,
     HypothesisView,
     is_inferred,
+    OBJECT_KINDS_FILE,
     OntologyFiles,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
@@ -242,17 +244,23 @@ class OntologyText:
 
     graph: Graph
     """
-    The microworld modules, with CRAM-AICOR and DUL when the environment names them.
+    The modules of the knowledge and the kinds of object, with CRAM-AICOR and DUL when
+    the environment names them.
     """
 
     @classmethod
     @cache
     def shipped(cls) -> OntologyText:
         """
-        :return: The statements of the microworld modules and of the linked ontologies
-            the environment names.
+        :return: The statements of the modules of the knowledge, of the kinds of object
+            and of the linked ontologies the environment names.
         """
-        paths = [module.path for module in PredictiveManipulationOntologyFile]
+        paths = [
+            module.path
+            for family in (PredictiveManipulationOntologyFile, ActionPerspectiveFile)
+            for module in family
+        ]
+        paths.append(OBJECT_KINDS_FILE)
         linked = OntologyFiles.linked_from_environment()
         if linked is not None:
             paths.extend(linked.paths)
@@ -264,6 +272,23 @@ class OntologyText:
         """
         comment = self.graph.value(URIRef(iri), RDFS.comment)
         return "" if comment is None else str(comment)
+
+    def requirements_of(self, iri: str) -> tuple[str, ...]:
+        """
+        :return: What the ontology requires of the instances of a class through a value
+            a property must have, in words; empty for a class with no such restriction.
+        """
+        restrictions = (
+            restriction
+            for restriction in self.graph.objects(URIRef(iri), RDFS.subClassOf)
+            if (restriction, RDF.type, OWL.Restriction) in self.graph
+        )
+        return tuple(
+            f"{self.graph.value(restricted, RDFS.label) or restricted}: {value}"
+            for restriction in restrictions
+            for restricted in [self.graph.value(restriction, OWL.onProperty)]
+            for value in self.graph.objects(restriction, OWL.hasValue)
+        )
 
     def claim(self, iri: str, backing: OntologyBacking) -> SourceClaim:
         """
@@ -319,23 +344,23 @@ class OntologyClassGraph:
     """
 
     @classmethod
-    def of(cls, view: HypothesisView) -> OntologyClassGraph:
+    def of(cls, *views: HypothesisView) -> OntologyClassGraph:
         """
-        :return: The graph of the classes a hypothesis instantiates, the classes they
-            specialise, the concepts it cites, and its links between them.
+        :return: The graph of the classes the hypotheses instantiate, the classes they
+            specialise, the concepts they cite, and their links between them.
         """
-        return OntologyClassGraphBuilder(view=view).build()
+        return OntologyClassGraphBuilder(views=views).build()
 
 
 @dataclass
 class OntologyClassGraphBuilder:
     """
-    Builds the class graph of one hypothesis.
+    Builds the class graph of hypotheses drawn together.
     """
 
-    view: HypothesisView
+    views: tuple[HypothesisView, ...]
     """
-    The hypothesis drawn.
+    The hypotheses drawn.
     """
 
     text: OntologyText = field(default_factory=OntologyText.shipped)
@@ -353,14 +378,30 @@ class OntologyClassGraphBuilder:
     The generated vocabulary classes are read from.
     """
 
+    @property
+    def fragments(self) -> list[DescriptionEntity]:
+        """
+        Every fragment of every hypothesis drawn.
+        """
+        return [fragment for view in self.views for fragment in view.fragments]
+
+    def fragment_name(self, fragment: DescriptionEntity) -> str:
+        """
+        :return: The label of a fragment, or its name in the hypothesis holding it.
+        """
+        if fragment.label:
+            return fragment.label
+        (view,) = [view for view in self.views if id(fragment) in view.identifiers]
+        return view.citation_of(fragment).fragment_name
+
     def build(self) -> OntologyClassGraph:
         """
-        :return: The class graph of the hypothesis.
+        :return: The class graph of the hypotheses.
         """
         instances: dict[type[DescriptionEntity], list[DescriptionEntity]] = defaultdict(
             list
         )
-        for fragment in self.view.fragments:
+        for fragment in self.fragments:
             instances[type(fragment)].append(fragment)
         classes = self.classes_specialised(instances)
         nodes: dict[str, OntologyClassNode] = {
@@ -418,7 +459,7 @@ class OntologyClassGraphBuilder:
             source=self.backing.source_of(term.iri),
             instance_count=len(instances),
             instances=tuple(
-                instance.label or self.view.citation_of(instance).fragment_name
+                self.fragment_name(instance)
                 for instance in instances[:INSTANCES_LISTED]
             ),
             description=self.text.description(term.iri)
@@ -452,6 +493,7 @@ class OntologyClassGraphBuilder:
             ),
             source=source,
             description=self.text.description(iri),
+            requirements=self.text.requirements_of(iri),
         )
 
     @staticmethod
@@ -485,7 +527,7 @@ class OntologyClassGraphBuilder:
             class of the fragment or the concept it links to, counted.
         """
         counts: Counter[tuple[str, OntologyEdgeKind, str, str]] = Counter()
-        for fragment in self.view.fragments:
+        for fragment in self.fragments:
             components = self.vocabulary.component_fields(type(fragment))
             for declared in fields(fragment):
                 property_term = PropertyTerm.of_field(type(fragment), declared.name)

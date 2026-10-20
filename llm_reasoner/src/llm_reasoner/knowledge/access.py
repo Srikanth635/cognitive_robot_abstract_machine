@@ -38,18 +38,26 @@ from llm_reasoner.knowledge.ontologies import (
     HYPOTHESIS_CONCEPT_NAMESPACE,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     LinkedOntologyVariable,
+    OntologyModuleFile,
     PredictiveManipulationOntologyFile,
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     action_frame,
+    failures,
+    image_schemas,
 )
 from llm_reasoner.knowledge.ontologies.described_actions import (
     DescribedAction,
     DescribedActions,
 )
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms, OntologyFiles
-from llm_reasoner.knowledge.ontologies.object_kinds import ObjectKinds
+from llm_reasoner.knowledge.ontologies.object_kinds import (
+    HAS_OPENING,
+    OBJECT_KINDS_FILE,
+    OBJECT_KINDS_NAMESPACE,
+    ObjectKinds,
+)
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
@@ -89,12 +97,14 @@ __all__ = [
     "core",
     "CRAM_AICOR_NAMESPACE",
     "described",
+    "failures",
     "DescribedAction",
     "DescribedActions",
     "DescriptionEntity",
     "DUL_NAMESPACE",
     "gaze",
     "GraphReader",
+    "HAS_OPENING",
     "HermitCheck",
     "HypothesisBackend",
     "HypothesisGraph",
@@ -107,6 +117,7 @@ __all__ = [
     "HypothesisStore",
     "HypothesisView",
     "HYPOTHESIS_CONCEPT_NAMESPACE",
+    "image_schemas",
     "is_inferred",
     "KNOWLEDGE_ACCESS_VERSION",
     "KnowledgeAccess",
@@ -114,10 +125,13 @@ __all__ = [
     "KnowledgeToolName",
     "KnowledgeService",
     "LinkedOntologyTerms",
+    "OBJECT_KINDS_FILE",
+    "OBJECT_KINDS_NAMESPACE",
     "ObjectKinds",
     "LinkedOntologyVariable",
     "object_dynamics",
     "OntologyFiles",
+    "OntologyModuleFile",
     "PERSPECTIVE_ROOTS",
     "PerspectiveRoot",
     "pouring",
