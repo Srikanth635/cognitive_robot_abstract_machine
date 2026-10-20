@@ -634,7 +634,7 @@ resolver query  the(PouringAction)(…)  [+ optional task]
 | Store key | Root class, fixed values (features included) and ontology module versions; the instruction is no longer part of the key |
 | Generation | On a miss, once per feature combination, then served from the store |
 | Not in the request | The designator's slots and the task text; the resolver keeps them |
-| Action perspectives | When the requester names perspectives (`KnowledgeRequester.perspectives`, none by default), the core's frame of the action (`DescribedAction.frame_query`) and each perspective on it (`PERSPECTIVE_ROOTS`, naming the stored core by its record with `StoredRoot`) are served too; the tools and grounds read every record, and the `frame_knowledge` rule is stated ([`knowledge_perspectives.md`](knowledge_perspectives.md) §11.6) |
+| Action perspectives | When the requester names perspectives (`KnowledgeRequester.perspectives`, none by default), the core's frame of the action (`DescribedAction.frame_query`) and each perspective on it (`PERSPECTIVE_ROOTS`, naming the stored core by its record with `StoredRoot`) are served too; the tools and grounds read every record, and the `frame_knowledge` rule is stated, made of the first paragraph of the description of the core and of each perspective offered (`KnowledgeRequester.frame_rule`) ([`knowledge_perspectives.md`](knowledge_perspectives.md) §11.6) |
 
 **As built.** `KnowledgeRequester.consult(action, situation_backend)` in
 `resolver/knowledge.py`: ① `DescribedActions.describing(identifier_of(action.type))`,

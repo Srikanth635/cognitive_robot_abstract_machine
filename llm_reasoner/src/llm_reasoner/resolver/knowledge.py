@@ -46,21 +46,15 @@ The rule stating how the knowledge about the requested action is read and used, 
 the model is offered the knowledge tools.
 """
 
-FRAME_KNOWLEDGE_RULE = PromptRule(
-    name=RuleName.FRAME_KNOWLEDGE,
-    text=f"the knowledge also holds the action's frame ({KnowledgeToolName.KNOWLEDGE_OVERVIEW} "
-    '"frame"): the slots its participants fill, what it is for, what it brings about '
-    "and the choices it leaves open, and perspectives on it, such as what each slot's "
-    "filler is normally expected to be, have or afford and the defaults that hold "
-    "otherwise, or the relations between slots that its image schemas require and the "
-    f"choices each constrains; {KnowledgeToolName.DESCRIBE_FRAGMENT} on a slot lists "
-    "what is expected of it. An open slot's \"frame\" names the frame's slots or choices it fills: "
-    "describe those first, check what is expected of them against the world, and "
-    "ground your choice on them.",
+FRAME_READING_ADVICE = (
+    f"{KnowledgeToolName.DESCRIBE_FRAGMENT} on a slot lists the fragments linking to it. "
+    "An open slot's \"frame\" names the frame's slots or choices it fills: describe "
+    "those first, check what is expected of them against the world, and ground your "
+    "choice on them."
 )
 """
-The rule stating how the action's frame and the perspectives on it are read and used,
-when they are offered with the knowledge tools.
+How the model is told to use the frame once it has read what the frame and the
+perspectives on it hold.
 """
 
 
@@ -267,7 +261,20 @@ class KnowledgeRequester:
         """
         if not consultation.perspective_record_ids:
             return [KNOWLEDGE_RULE]
-        return [KNOWLEDGE_RULE, FRAME_KNOWLEDGE_RULE]
+        return [KNOWLEDGE_RULE, self.frame_rule()]
+
+    def frame_rule(self) -> PromptRule:
+        """
+        :return: The rule saying what the action's frame and each perspective offered on it
+            hold, in their own words, and how to use them.
+        """
+        modules = (ActionPerspectiveFile.ACTION_CORE, *self.perspectives)
+        held = " ".join(module.summary for module in modules)
+        return PromptRule(
+            name=RuleName.FRAME_KNOWLEDGE,
+            text=f'the knowledge also holds the action\'s frame ({KnowledgeToolName.KNOWLEDGE_OVERVIEW} "frame") '
+            f"and perspectives on it. {held} {FRAME_READING_ADVICE}",
+        )
 
     def situation_of(
         self, described: DescribedAction, situation_backend: GenerativeBackend

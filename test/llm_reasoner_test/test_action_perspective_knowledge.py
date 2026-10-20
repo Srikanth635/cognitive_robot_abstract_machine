@@ -920,3 +920,18 @@ class TestConditionsStated:
             tmp_path, frame_answer_without("source_held", "condition_has_state")
         )
         assert "'source_held'" in problems
+
+
+# %% what a module says of itself
+
+
+class TestSummary:
+    def test_a_summary_is_the_first_paragraph_of_the_description(self):
+        for module in ActionPerspectiveFile:
+            first = module.description.split("\n\n")[0]
+            assert module.summary == " ".join(first.split()), module
+
+    def test_each_module_has_a_summary_of_its_own(self):
+        summaries = [module.summary for module in ActionPerspectiveFile]
+        assert all(summaries)
+        assert len(set(summaries)) == len(summaries)
