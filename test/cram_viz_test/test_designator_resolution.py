@@ -61,6 +61,7 @@ from cram_viz.resolution.runs import (
 )
 from cram_viz.resolution.scene_geometry import SceneGeometry
 from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder, SceneWorlds
+from cram_viz.resolution.trial import OutcomeKey
 
 from .resolutions import LANDS, MISSES, resolver_replaying
 
@@ -379,6 +380,24 @@ class TestTrials:
         assert run.resolution.trials[-1].values == {
             slot.name: slot.serialized for slot in action.slots
         }
+
+    def test_a_pour_tilted_less_than_the_consulted_knowledge_says_it_needs_is_refused(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = resolver_replaying(
+            "objects_given_shallow",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+            trial_outcomes=[LANDS, LANDS],
+        )
+        run = resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        first, second = [trial.outcome for trial in run.resolution.trials]
+        assert first[OutcomeKey.TILT_REACHES_FLOW_ONSET] is False
+        assert second[OutcomeKey.TILT_REACHES_FLOW_ONSET] is True
 
 
 # %% runs kept apart

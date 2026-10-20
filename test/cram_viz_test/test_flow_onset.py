@@ -13,7 +13,7 @@ import pytest
 from coraplex.datastructures.enums import Arms
 from llm_reasoner.knowledge.access import core, pouring
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
-from typing_extensions import List, Optional
+from typing_extensions import Dict, List, Optional, Sequence
 
 from cram_viz.resolution.flow_onset import FlowOnsetKnowledge
 from cram_viz.resolution.trial import OutcomeKey
@@ -42,30 +42,81 @@ def threshold(
 
 
 @dataclass
-class StatedThresholds:
+class StatedHypothesis:
     """
-    The knowledge component, as far as the flow onset reads it: it holds the thresholds
-    its hypotheses state.
+    A stored hypothesis, as far as the flow onset reads it: the flow onset events it
+    states.
     """
 
-    thresholds: List[pouring.FlowOnsetThreshold]
+    events: List[pouring.FlowOnset]
     """
-    The thresholds the stored hypotheses state.
+    The flow onset events the hypothesis states.
     """
 
     def instances_of(self, kind: type) -> list:
         """
-        :return: The stated thresholds when asked for flow onset thresholds.
+        :return: The stated events when asked for flow onset events.
         """
-        assert kind is pouring.FlowOnsetThreshold
-        return self.thresholds
+        assert kind is pouring.FlowOnset
+        return self.events
 
 
-def knowledge_stating(*thresholds: pouring.FlowOnsetThreshold) -> FlowOnsetKnowledge:
+@dataclass
+class StoredHypotheses:
     """
-    :return: Flow onset knowledge over hypotheses stating the thresholds.
+    The knowledge component, as far as the flow onset reads it: hypotheses by record.
     """
-    return FlowOnsetKnowledge(knowledge=StatedThresholds(thresholds=list(thresholds)))
+
+    by_record: Dict[str, StatedHypothesis]
+    """
+    The stored hypotheses, by their record identifier.
+    """
+
+    def views_read_with(self, record_ids: Sequence[str]) -> list:
+        """
+        :return: The hypotheses of the records asked for, and only those.
+        """
+        return [self.by_record[record_id] for record_id in record_ids]
+
+
+CONSULTED = "consulted-record"
+"""
+The record of the hypothesis the resolver consulted.
+"""
+
+ELSEWHERE = "other-record"
+"""
+The record of a stored hypothesis the resolver did not consult.
+"""
+
+
+def events_crossing(*thresholds: pouring.FlowOnsetThreshold) -> StatedHypothesis:
+    """
+    :return: A hypothesis stating one flow onset event crossing each threshold.
+    """
+    return StatedHypothesis(
+        events=[pouring.FlowOnset(crosses_threshold=found) for found in thresholds]
+    )
+
+
+def knowledge_stating(
+    *thresholds: pouring.FlowOnsetThreshold,
+    elsewhere: Sequence[pouring.FlowOnsetThreshold] = (),
+    consulted: Sequence[str] = (CONSULTED,),
+) -> FlowOnsetKnowledge:
+    """
+    :return: Flow onset knowledge over a consulted hypothesis stating the thresholds and
+        another, not consulted, stating the ones given as elsewhere.
+    """
+    return FlowOnsetKnowledge(
+        knowledge=StoredHypotheses(
+            by_record={
+                CONSULTED: events_crossing(*thresholds),
+                ELSEWHERE: events_crossing(*elsewhere),
+            }
+        ),
+        consulted_records=lambda: list(consulted),
+    )
 
 
 SHALLOW_TILT = 0.2
@@ -83,22 +134,43 @@ The lowest tilt the knowledge states in these tests, in degrees.
 
 
 class TestFlowOnsetKnowledge:
-    def test_the_lowest_stated_tilt_is_read_in_radians(self):
+    def test_the_tilt_is_read_in_radians(self):
         flow_onset = knowledge_stating(threshold(STATED_ONSET_DEGREES))
         assert flow_onset.tilt() == radians(STATED_ONSET_DEGREES)
 
-    def test_the_lowest_of_several_stated_tilts_is_read(self):
+    def test_the_lowest_of_several_thresholds_the_consulted_hypothesis_states_is_read(
+        self,
+    ):
         flow_onset = knowledge_stating(threshold(90.0), threshold(STATED_ONSET_DEGREES))
         assert flow_onset.tilt() == radians(STATED_ONSET_DEGREES)
 
-    def test_no_stated_threshold_leaves_the_tilt_unknown(self):
+    def test_a_threshold_of_a_hypothesis_that_was_not_consulted_is_not_read(self):
+        flow_onset = knowledge_stating(threshold(90.0), elsewhere=[threshold(30.0)])
+        assert flow_onset.tilt() == radians(90.0)
+
+    def test_no_consulted_hypothesis_leaves_the_tilt_unknown(self):
+        flow_onset = knowledge_stating(threshold(90.0), consulted=[])
+        assert flow_onset.tilt() is None
+
+    def test_a_consulted_hypothesis_stating_no_threshold_leaves_the_tilt_unknown(self):
         assert knowledge_stating().tilt() is None
+
+    def test_a_flow_onset_crossing_no_threshold_is_ignored(self):
+        flow_onset = FlowOnsetKnowledge(
+            knowledge=StoredHypotheses(
+                by_record={
+                    CONSULTED: StatedHypothesis(events=[pouring.FlowOnset()]),
+                }
+            ),
+            consulted_records=lambda: [CONSULTED],
+        )
+        assert flow_onset.tilt() is None
 
     def test_a_threshold_stating_no_range_is_ignored(self):
         flow_onset = knowledge_stating(threshold(None), threshold(STATED_ONSET_DEGREES))
         assert flow_onset.tilt() == radians(STATED_ONSET_DEGREES)
 
-    def test_a_range_in_another_unit_is_ignored(self):
+    def test_a_range_in_a_unit_that_is_no_angle_is_ignored(self):
         flow_onset = knowledge_stating(
             threshold(1.0, unit=core.MeasurementUnit.DEGREE_PER_SECOND)
         )
