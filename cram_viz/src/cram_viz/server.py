@@ -39,6 +39,8 @@ import socketserver
 import sys
 import threading
 import traceback
+from dataclasses import replace
+from enum import StrEnum
 from functools import cache
 from pathlib import Path
 from typing_extensions import Any, Callable, Dict, List, Optional
@@ -68,6 +70,28 @@ except Exception:  # pragma: no cover - a broken KB should not kill the viewer
 
 #: krrood's SymbolGraph singleton is not threadsafe; queries are serialized
 _EQL_LOCK = threading.Lock()
+
+
+class ResolveRequestKey(StrEnum):
+    """
+    The keys of a request to resolve a designator.
+    """
+
+    QUERY = "query"
+    """
+    The designator's match query, as the search bar holds it.
+    """
+
+    SCENE = "scene"
+    """
+    The scene to resolve it in.
+    """
+
+    PERSPECTIVES = "perspectives"
+    """
+    The perspectives on the action core to consult beside the phase structure, by their
+    modules' file names; none when left out.
+    """
 
 
 def _no_eql_error() -> Dict[str, Any]:
@@ -267,16 +291,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._json(_no_eql_error())
         length = int(self.headers.get("Content-Length") or 0)
         request = json.loads(self.rfile.read(length) or b"{}")
-        selected_scene = request.get("scene")
+        selected_scene = request.get(ResolveRequestKey.SCENE)
         try:
             from cram_viz.query_source import QuerySource
             from cram_viz.resolution.designators import DesignatorQuery
 
             designator = DesignatorQuery(
-                source=QuerySource(text=request.get("query") or "")
+                source=QuerySource(text=request.get(ResolveRequestKey.QUERY) or "")
             )
             with _EQL_LOCK:
-                run = _designator_resolver().resolve(
+                run = _resolver_for(request).resolve(
                     designator,
                     kb_module.scene_name(selected_scene),
                     Path(kb_module.scene_dir(selected_scene)),
@@ -355,6 +379,22 @@ def _scene_worlds():
     return SceneWorlds()
 
 
+def _resolver_for(request: Dict[str, Any]):
+    """
+    :param request: A resolve request, which may name perspectives to consult.
+    :return: The shared designator resolver, consulting the action core and the
+        perspectives the request chooses, none when it chooses none.
+    :raises UnknownPerspective: When the request names a perspective the knowledge
+        component does not register.
+    """
+    from cram_viz.resolution.perspective_choice import OfferedPerspective
+
+    perspectives = OfferedPerspective.named(
+        request.get(ResolveRequestKey.PERSPECTIVES) or []
+    )
+    return replace(_designator_resolver(), perspectives=perspectives)
+
+
 @cache
 def _designator_resolver():
     """
@@ -405,6 +445,7 @@ def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
         PouringDesignator,
         SceneNamespace,
     )
+    from cram_viz.resolution.perspective_choice import OfferedPerspective
 
     name = kb_module.scene_name(selected_scene)
     with _EQL_LOCK:
@@ -417,7 +458,14 @@ def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
             OfferedDesignator.in_scene(identifier, names).payload()
             for identifier in PouringDesignator
         ]
-    return {"ok": True, "scene": name, "designators": offered}
+    return {
+        "ok": True,
+        "scene": name,
+        "designators": offered,
+        "perspectives": [
+            perspective.payload() for perspective in OfferedPerspective.every()
+        ],
+    }
 
 
 @cache

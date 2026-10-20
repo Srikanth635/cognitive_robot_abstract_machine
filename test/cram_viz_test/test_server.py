@@ -501,3 +501,69 @@ class TestDesignators:
         )
         assert payload["ok"] is False
         assert payload["error"].startswith(NotAMatchQuery.__name__)
+
+
+# %% consulting the perspectives the request chooses
+
+
+class TestChosenPerspectives:
+    def test_the_scene_offers_every_perspective_the_knowledge_registers(
+        self, pouring_server
+    ):
+        from llm_reasoner.knowledge.access import PERSPECTIVE_ROOTS
+
+        payload = get_json(pouring_server + "/api/designators?scene=pouring")
+        assert [entry["name"] for entry in payload["perspectives"]] == [
+            module.value for module in PERSPECTIVE_ROOTS
+        ]
+        assert [entry["summary"] for entry in payload["perspectives"]] == [
+            module.summary for module in PERSPECTIVE_ROOTS
+        ]
+
+    def test_by_default_no_perspective_is_consulted(self, monkeypatch, tmp_path):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "objects_given", HypothesisStore(directory=tmp_path / "store"), tmp_path
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        assert server_module._resolver_for({}).perspectives == ()
+
+    def test_the_perspectives_the_request_chooses_are_consulted(
+        self, monkeypatch, tmp_path
+    ):
+        from llm_reasoner.knowledge.access import ActionPerspectiveFile, HypothesisStore
+
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "objects_given", HypothesisStore(directory=tmp_path / "store"), tmp_path
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        chosen = (ActionPerspectiveFile.IMAGE_SCHEMAS, ActionPerspectiveFile.FAILURES)
+        consulting = server_module._resolver_for(
+            {"perspectives": [module.value for module in chosen]}
+        )
+        assert consulting.perspectives == chosen
+
+    def test_a_perspective_the_knowledge_does_not_register_is_refused(
+        self, pouring_server
+    ):
+        from cram_viz.resolution.perspective_choice import UnknownPerspective
+
+        payload = post_json(
+            pouring_server + "/api/designator/resolve",
+            {
+                "query": objects_given_query(),
+                "scene": "pouring",
+                "perspectives": ["action-core.ttl"],
+            },
+        )
+        assert payload["ok"] is False
+        assert payload["error"].startswith(UnknownPerspective.__name__)

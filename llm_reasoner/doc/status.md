@@ -545,6 +545,14 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   Checked in the browser on the recorded scripted core and perspectives of pouring (the machine has
   no stored run with perspectives); the EQL variables still range over the phase structure only.
 
+- cram_viz's Generate can consult the action core and chosen perspectives (2026-10-21): below
+  Generate, one box per perspective the knowledge component registers (`PERSPECTIVE_ROOTS`:
+  action frame, image schemas, failures), none ticked by default; a ticked one is sent with the
+  resolve request and consulted, with the core, beside the phase structure, so the Hypothesis and
+  Ontology tabs then show it. A request naming an unregistered perspective is refused
+  (`UnknownPerspective`). Before this the viewer never consulted them, so the tabs showed only
+  the phase structure in normal use. Checked in the browser that the boxes appear; not run live.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

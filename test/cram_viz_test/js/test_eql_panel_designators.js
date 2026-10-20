@@ -76,6 +76,10 @@ function designatorsPayload() {
         available: false, unbound: [], without_candidates: ['source_container'],
       },
     ],
+    perspectives: [
+      { name: 'action-frame.ttl', label: 'action frame', summary: 'The action frame describes an action.' },
+      { name: 'failures.ttl', label: 'failures', summary: 'The failures describe how an action goes wrong.' },
+    ],
   };
 }
 
@@ -130,7 +134,7 @@ function loadEqlPanel(options) {
   const names = [
     '#kb-status', '#answer', '#query-input', '#query-run', '#presets',
     '#designators', '#query-generate', '#designator-execute', '#demo-execute',
-    '#source-designators', '#source-questions',
+    '#source-designators', '#source-questions', '#perspectives',
   ];
   names.forEach(function (name) { elements[name] = element(); });
 
@@ -585,4 +589,47 @@ test('a page opened with no run asks for none', async function () {
   await settle();
 
   assert.ok(!panel.requests.some(function (request) { return request.url.startsWith('/api/designator/run'); }));
+});
+
+// %% consulting the action core and the perspectives chosen
+function perspectiveChoices(panel) {
+  return panel.elements['#perspectives'].children;
+}
+
+function perspectiveBoxes(panel) {
+  return perspectiveChoices(panel).map(function (choice) { return choice.children[0]; });
+}
+
+test('each perspective the knowledge offers becomes a box, none of them ticked', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  const boxes = perspectiveBoxes(panel);
+  assert.deepStrictEqual(
+    boxes.map(function (box) { return box.value; }),
+    designatorsPayload().perspectives.map(function (p) { return p.name; }),
+  );
+  assert.ok(boxes.every(function (box) { return box.checked === false; }));
+});
+
+test('a perspective box tells what the perspective holds on hover', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  assert.ok(perspectiveChoices(panel)[1].title.includes(designatorsPayload().perspectives[1].summary));
+});
+
+test('Generate asks for the perspectives that are ticked', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  perspectiveBoxes(panel)[1].checked = true;
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  const call = panel.requests.find(function (r) { return r.url === '/api/designator/resolve'; });
+  assert.deepStrictEqual(
+    JSON.parse(call.init.body).perspectives,
+    [designatorsPayload().perspectives[1].name],
+  );
 });
