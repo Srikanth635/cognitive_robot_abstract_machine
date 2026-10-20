@@ -8,17 +8,21 @@ from __future__ import annotations
 
 import json
 import os
+from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
 import pytest
+from coraplex.exceptions import MotionDidNotFinish
 from scipy.spatial.transform import Rotation
 from jsonschema import Draft202012Validator
 from llm_reasoner.resolver.prompt_format import RuleName
 from llm_reasoner.world.view import WorldView
 from semantic_digital_twin.semantic_annotations.semantic_annotations import PouringCup
+
+from typing_extensions import Dict
 
 from cram_viz import paths
 from cram_viz.resolution.execution import PouringExecution
@@ -36,7 +40,7 @@ from cram_viz.resolution.prediction import (
     PredictPourEnd,
 )
 from cram_viz.resolution.scene_world import SceneWorldBuilder
-from cram_viz.resolution.trial import OutcomeKey
+from cram_viz.resolution.trial import OutcomeKey, PouringTrial
 
 from .resolutions import FinishedTrial
 
@@ -71,19 +75,15 @@ A source held with its frame at the gripper's tool frame, the robot facing along
 joint moved.
 """
 
-REACHABLE_TILTS = (1.85, 2.09)
+TILT_GRID_SIZE = 9
 """
-Tilts, in radians, at which the right arm moves the held pitcher to the pour pose: the
-second is one a single inverse kinematics solve from the pick-up's end fails at, though
-the simulated pour finishes.
+How many tilts, spread evenly from upright to upside down, the pours are tried at.
 """
 
-UNREACHABLE_TILT = 3.0
+TILT_GRID = tuple(float(tilt) for tilt in np.linspace(0.0, np.pi, TILT_GRID_SIZE))
 """
-A tilt, in radians, at which the right arm cannot move the held pitcher to the pour
-pose:
-
-the simulated pour fails with a motion that does not finish.
+The tilts, in radians, the pours are tried at: which of them the arm can reach is read
+from the prediction itself, not written here.
 """
 
 # %% helpers
@@ -179,24 +179,65 @@ class TestPrediction:
 # %% reaching the pour pose
 
 
+def reaches(predictor: PourPredictor, tilt_angle: float) -> bool:
+    """
+    :return: Whether the predictor finds the arm able to make the pour at the tilt.
+    """
+    reached = False
+    with suppress(PourUnreachable):
+        predictor.predict({**POURING_VALUES, "tilt_angle": tilt_angle})
+        reached = True
+    return reached
+
+
+@pytest.fixture(scope="module")
+def reach_by_tilt(pouring_kitchen_template, picked_up) -> Dict[float, bool]:
+    """
+    Whether the arm is predicted able to make the pour at each tilt of the grid, with
+    the default tolerances.
+    """
+    predictor = PourPredictor(
+        world=deepcopy(pouring_kitchen_template),
+        holding=HoldingAtOnePose(held_at=picked_up),
+    )
+    return {tilt: reaches(predictor, tilt) for tilt in TILT_GRID}
+
+
+@pytest.fixture
+def unreachable_tilt(reach_by_tilt) -> float:
+    """
+    A tilt of the grid at which the arm is predicted unable to make the pour.
+    """
+    return next(tilt for tilt, reached in reach_by_tilt.items() if not reached)
+
+
 class TestReachingThePourPose:
-    @pytest.mark.parametrize("tilt_angle", REACHABLE_TILTS)
-    def test_a_pour_the_arm_can_make_is_predicted(self, predictor, tilt_angle):
+    def test_the_grid_holds_pours_the_arm_can_make_and_ones_it_cannot(
+        self, reach_by_tilt
+    ):
+        assert set(reach_by_tilt.values()) == {True, False}
+
+    def test_a_pour_the_arm_can_make_is_predicted(self, predictor, reach_by_tilt):
+        tilt_angle, *_ = [tilt for tilt, reached in reach_by_tilt.items() if reached]
         outcome = predictor.predict({**POURING_VALUES, "tilt_angle": tilt_angle})
         assert outcome.mouth.shape == (3,)
 
-    def test_a_pour_the_arm_cannot_make_is_refused_with_why(self, predictor):
+    def test_a_pour_the_arm_cannot_make_is_refused_with_why(
+        self, predictor, unreachable_tilt
+    ):
         with pytest.raises(PourUnreachable) as unreachable:
-            predictor.predict({**POURING_VALUES, "tilt_angle": UNREACHABLE_TILT})
+            predictor.predict({**POURING_VALUES, "tilt_angle": unreachable_tilt})
         assert unreachable.value.reason
 
-    def test_asking_leaves_the_robot_where_it_was(self, predictor):
+    def test_asking_leaves_the_robot_where_it_was(self, predictor, unreachable_tilt):
         before = predictor.world.state.positions.copy()
         with pytest.raises(PourUnreachable):
-            predictor.predict({**POURING_VALUES, "tilt_angle": UNREACHABLE_TILT})
+            predictor.predict({**POURING_VALUES, "tilt_angle": unreachable_tilt})
         assert np.array_equal(predictor.world.state.positions, before)
 
-    def test_the_tool_predicts_such_a_pour_as_a_failed_motion(self, predictor):
+    def test_the_tool_predicts_such_a_pour_as_a_failed_motion(
+        self, predictor, unreachable_tilt
+    ):
         view = WorldView()
         cup = predictor.world.get_semantic_annotations_by_type(PouringCup)[0]
         bowl = predictor.world.get_body_by_name("bowl.stl")
@@ -207,12 +248,12 @@ class TestReachingThePourPose:
                     "source_container": view.handle_of(cup),
                     "target_container": view.handle_of(bowl),
                     "arm": "RIGHT",
-                    "tilt_angle": UNREACHABLE_TILT,
+                    "tilt_angle": unreachable_tilt,
                 }
             ).content
         )
         with pytest.raises(PourUnreachable) as unreachable:
-            predictor.predict({**POURING_VALUES, "tilt_angle": UNREACHABLE_TILT})
+            predictor.predict({**POURING_VALUES, "tilt_angle": unreachable_tilt})
         assert outcome == {
             OutcomeKey.LANDS_IN_OPENING: False,
             OutcomeKey.MOTION_FAILED: unreachable.value.reason,
@@ -288,32 +329,36 @@ way, the default among them.
 
 class TestApproachTolerances:
     @pytest.mark.parametrize("max_rotation_per_step", SWEPT_STEP_SIZES)
-    @pytest.mark.parametrize("tilt_angle", (*REACHABLE_TILTS, 2.6))
-    def test_a_pour_the_arm_can_make_is_predicted_across_the_step_sizes(
-        self, pouring_kitchen, picked_up, tilt_angle, max_rotation_per_step
+    def test_the_same_pours_are_predicted_across_the_step_sizes(
+        self, pouring_kitchen, picked_up, reach_by_tilt, max_rotation_per_step
     ):
         predictor = PourPredictor(
             world=pouring_kitchen,
             holding=HoldingAtOnePose(held_at=picked_up),
             approach=ApproachTolerances(max_rotation_per_step=max_rotation_per_step),
         )
-        predictor.predict({**POURING_VALUES, "tilt_angle": tilt_angle})
-
-    @pytest.mark.parametrize("max_rotation_per_step", SWEPT_STEP_SIZES)
-    @pytest.mark.parametrize("tilt_angle", (UNREACHABLE_TILT, 2.8))
-    def test_a_pour_the_arm_cannot_make_is_refused_across_the_step_sizes(
-        self, pouring_kitchen, picked_up, tilt_angle, max_rotation_per_step
-    ):
-        predictor = PourPredictor(
-            world=pouring_kitchen,
-            holding=HoldingAtOnePose(held_at=picked_up),
-            approach=ApproachTolerances(max_rotation_per_step=max_rotation_per_step),
-        )
-        with pytest.raises(PourUnreachable):
-            predictor.predict({**POURING_VALUES, "tilt_angle": tilt_angle})
+        assert {tilt: reaches(predictor, tilt) for tilt in TILT_GRID} == reach_by_tilt
 
     def test_the_default_step_size_is_one_of_the_swept(self):
         assert ApproachTolerances().max_rotation_per_step in SWEPT_STEP_SIZES
+
+
+# %% against the pour performed in the simulation
+
+
+@pytest.mark.slow
+class TestAgainstThePourPerformed:
+    def test_a_pour_predicted_out_of_reach_fails_in_the_simulation(
+        self, pouring_kitchen, reach_by_tilt
+    ):
+        out_of_reach = [tilt for tilt, reached in reach_by_tilt.items() if not reached]
+        assert out_of_reach
+        for tilt_angle in out_of_reach:
+            with pytest.raises(MotionDidNotFinish):
+                PouringTrial.outcome_in(
+                    deepcopy(pouring_kitchen),
+                    {**POURING_VALUES, "tilt_angle": tilt_angle},
+                )
 
 
 # %% the tool
