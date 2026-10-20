@@ -15,7 +15,8 @@ from __future__ import annotations
 import json
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from dataclasses import dataclass
+import math
+from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
@@ -44,11 +45,6 @@ from cram_viz.resolution.trial import (
     top_centre_in_own_frame,
 )
 
-IK_MAX_ITERATIONS = 1000
-"""
-How many iterations inverse kinematics may take to reach one pose.
-"""
-
 PREDICT_POUR_END = "predict_pour_end"
 """
 The name of the tool predicting where a pour ends.
@@ -76,15 +72,6 @@ PREDICTION_RULE = PromptRule(
 )
 """
 The rule saying how the resolver uses the prediction.
-"""
-
-
-POUR_APPROACH_STEPS = 5
-"""
-How many poses the tool is moved through from the pre-pour pose to the pour pose when
-asking whether the arm can make the motion: the orientation turns in equal steps, as the
-controller turns it, since a single step from the pre-pour pose stops short of poses the
-arm reaches.
 """
 
 
@@ -222,6 +209,22 @@ class Holding(ABC):
 # %% reaching the pour pose
 
 
+@dataclass(frozen=True)
+class ApproachTolerances:
+    """
+    How finely the tool's turn from the pre-pour pose to the pour pose is followed when
+    asking whether the arm can make it. The same pours are predicted the same way across
+    a range of these values; the defaults sit inside it.
+    """
+
+    max_rotation_per_step: float = 0.5
+    """
+    The most the tool's orientation turns, in radians, between two poses inverse
+    kinematics is solved for. A single solve over a larger turn can stop short of poses
+    the arm reaches.
+    """
+
+
 @dataclass
 class PourReach:
     """
@@ -239,6 +242,11 @@ class PourReach:
     Where the pick-up leaves the robot.
     """
 
+    tolerances: ApproachTolerances = field(default_factory=ApproachTolerances)
+    """
+    How finely the turn to the pour pose is followed.
+    """
+
     def check(self, arm: Arms, pre_pour_pose: Pose, pour_pose: Pose) -> None:
         """
         :param arm: The arm holding the source.
@@ -254,12 +262,15 @@ class PourReach:
         robot = world.get_semantic_annotations_by_type(AbstractRobot)[0]
         tool_frame = ViewManager.get_end_effector_view(arm, robot).tool_frame
         try:
-            for pose in self.poses_between(pre_pour_pose, pour_pose):
+            for pose in self.poses_between(
+                pre_pour_pose.to_homogeneous_matrix().to_np(),
+                pour_pose.to_homogeneous_matrix().to_np(),
+                self.tolerances,
+            ):
                 solution = world.compute_inverse_kinematics(
                     robot.root,
                     tool_frame,
                     HomogeneousTransformationMatrix(pose, reference_frame=world.root),
-                    max_iterations=IK_MAX_ITERATIONS,
                 )
                 for dof, position in solution.items():
                     world.state[dof.id].position = position
@@ -270,26 +281,28 @@ class PourReach:
             ) from failed
 
     @staticmethod
-    def poses_between(start: Pose, end: Pose) -> List[np.ndarray]:
+    def poses_between(
+        start: np.ndarray, end: np.ndarray, tolerances: ApproachTolerances
+    ) -> List[np.ndarray]:
         """
-        :return: The :data:`POUR_APPROACH_STEPS` poses from just after the start to the
-            end as 4x4 transforms: the position moving straight, the orientation turning
-            in equal steps.
+        :param start: The 4x4 pose the tool starts from.
+        :param end: The 4x4 pose it ends at.
+        :return: The poses from just after the start to the end, as 4x4 transforms: the
+            position moving straight, the orientation turning in equal steps of at most
+            :attr:`ApproachTolerances.max_rotation_per_step`, one step for a move
+            without a turn.
         """
-        start_matrix = start.to_homogeneous_matrix().to_np()
-        end_matrix = end.to_homogeneous_matrix().to_np()
-        turn = Slerp(
-            [0.0, 1.0],
-            Rotation.from_matrix([start_matrix[:3, :3], end_matrix[:3, :3]]),
+        turn = Slerp([0.0, 1.0], Rotation.from_matrix([start[:3, :3], end[:3, :3]]))
+        angle = np.linalg.norm(
+            Rotation.from_matrix(start[:3, :3].T @ end[:3, :3]).as_rotvec()
         )
+        steps = max(1, math.ceil(angle / tolerances.max_rotation_per_step))
         poses = []
-        for step in range(1, POUR_APPROACH_STEPS + 1):
-            fraction = step / POUR_APPROACH_STEPS
+        for step in range(1, steps + 1):
+            fraction = step / steps
             pose = np.eye(4)
             pose[:3, :3] = turn([fraction]).as_matrix()[0]
-            pose[:3, 3] = (1 - fraction) * start_matrix[:3, 3] + fraction * end_matrix[
-                :3, 3
-            ]
+            pose[:3, 3] = (1 - fraction) * start[:3, 3] + fraction * end[:3, 3]
             poses.append(pose)
         return poses
 
@@ -314,6 +327,12 @@ class PourPredictor:
     Says how the gripper holds the source after the pick-up.
     """
 
+    approach: ApproachTolerances = field(default_factory=ApproachTolerances)
+    """
+    How finely the tool's turn to the pour pose is followed when asking whether the arm
+    can make it.
+    """
+
     def predict(self, values: Mapping[str, Any]) -> PourOutcome:
         """
         :param values: The pour's values as data, by field name.
@@ -325,7 +344,7 @@ class PourPredictor:
         action = execution.action()
         sequential([action], context=execution.context())
         pre_pour_pose, pour_pose = action._pour_poses()
-        PourReach(world=self.world, held=held).check(
+        PourReach(world=self.world, held=held, tolerances=self.approach).check(
             action.arm, pre_pour_pose, pour_pose
         )
         mouth = (

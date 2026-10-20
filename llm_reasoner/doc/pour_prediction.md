@@ -124,9 +124,10 @@ the failed motions of the prediction arm are the second fix of §5, still open.
 The second fix of §5. After the simulated pick-up, `HeldSource` also keeps the position of
 every joint (where the base stands, the torso and the arms), and `PourReach` asks the
 semantic digital twin's inverse kinematics, from that state and with the base fixed,
-whether the arm can move the tool through five poses from the pre-pour pose to the pour
-pose, its orientation turning in equal steps. An arm that cannot is predicted as a failed
-motion, as a failed pick-up is (`PourUnreachable`).
+whether the arm can move the tool through the poses from the pre-pour pose to the pour
+pose, its orientation turning in equal steps of at most `ApproachTolerances.max_rotation_per_step`
+(0.5 rad). An arm that cannot is predicted as a failed motion, as a failed pick-up is
+(`PourUnreachable`).
 
 Checked against the simulated pour on the right arm and the pitcher, `objects_open`'s
 scene, by tilt (rad): 0.2, 1.85, 1.95, 2.09 and 2.6 finish and are predicted reachable;
@@ -136,3 +137,10 @@ simulation but are predicted reachable: the joints can get there, so what stops 
 motion there is not the kinematics (collisions are not asked about). A pour predicted
 unreachable is therefore certain to fail; one predicted reachable may still fail. Not yet
 measured live with the resolver.
+
+The step size and the solver's iteration limit were checked on 11 tilts (0.2 to 3.0 rad) with
+the iteration limit at 200 and at 1000 and one to twenty steps. With three or more steps the
+two limits give the same answers, so the code passes none and the solver's own default
+applies. One or two steps give wrong answers whichever the limit, because a single solve over
+a large turn stops short; a test pins the same predictions for steps of 0.15, 0.5 and 0.7 rad,
+which for a 3 rad pour is 20, 6 and 5 steps. The band comes from this robot, scene and arm.
