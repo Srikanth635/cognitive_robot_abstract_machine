@@ -30,6 +30,7 @@ Panels.define('eql', function (root, bus) {
     '    <span class="query-actions-gap"></span>' +
     '    <button id="demo-execute" class="quiet" title="Launch the fixed demo under the live bridge, independent of the designators">Demo</button>' +
     '  </div>' +
+    '  <div id="perspectives" class="perspectives" title="Perspectives on the action core Generate also consults; none by default"></div>' +
     '  <div class="query-sources">' +
     '    <div class="source-tabs">' +
     '      <button id="source-designators" title="Underspecified designators as krrood match queries: click one to copy it into the search bar, then Generate">Designators</button>' +
@@ -47,6 +48,7 @@ Panels.define('eql', function (root, bus) {
   const runBtn = root.querySelector('#query-run');
   const presetsEl = root.querySelector('#presets');
   const designatorsEl = root.querySelector('#designators');
+  const perspectivesEl = root.querySelector('#perspectives');
   const generateBtn = root.querySelector('#query-generate');
   const designatorExecuteBtn = root.querySelector('#designator-execute');
   const demoExecuteBtn = root.querySelector('#demo-execute');
@@ -173,6 +175,7 @@ Panels.define('eql', function (root, bus) {
       designatorsEl.textContent = 'designators unavailable: ' + (payload.error || 'unknown error');
       return;
     }
+    buildPerspectives(payload.perspectives || []);
     payload.designators.forEach(function (designator) {
       const chip = document.createElement('pre');
       chip.className = 'designator-query' + (designator.available ? '' : ' unavailable');
@@ -183,6 +186,33 @@ Panels.define('eql', function (root, bus) {
       }
       designatorsEl.appendChild(chip);
     });
+  }
+
+  // ---- perspectives Generate also consults ------------------------------------------
+  // Each perspective on the action core the knowledge component registers, as a box left
+  // unticked: a ticked one is consulted, with the action core, beside the phase structure.
+  function buildPerspectives(perspectives) {
+    perspectivesEl.innerHTML = '';
+    perspectives.forEach(function (perspective) {
+      const choice = document.createElement('label');
+      choice.className = 'perspective-choice';
+      choice.title = perspective.label + ': ' + perspective.summary;
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.value = perspective.name;
+      box.checked = false;
+      const text = document.createElement('span');
+      text.textContent = perspective.label;
+      choice.appendChild(box);
+      choice.appendChild(text);
+      perspectivesEl.appendChild(choice);
+    });
+  }
+
+  function chosenPerspectives() {
+    return Array.prototype.map.call(perspectivesEl.children, function (choice) { return choice.children[0]; })
+      .filter(function (box) { return box.checked; })
+      .map(function (box) { return box.value; });
   }
 
   function designatorHint(designator) {
@@ -220,10 +250,7 @@ Panels.define('eql', function (root, bus) {
       const response = await fetch('/api/designator/resolve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: query,
-          scene: SceneSelection.nameFromSearch(window.location.search),
-        }),
+        body: JSON.stringify(resolveRequest(query)),
       });
       const payload = await response.json();
       if (!payload.ok) {
@@ -241,6 +268,13 @@ Panels.define('eql', function (root, bus) {
     answerEl.scrollTop = 0;  // a new answer is read from its top
     generateBtn.textContent = 'Generate';
     resolving = false;
+  }
+
+  function resolveRequest(query) {
+    const request = { query: query, scene: SceneSelection.nameFromSearch(window.location.search) };
+    const perspectives = chosenPerspectives();
+    if (perspectives.length) request.perspectives = perspectives;
+    return request;
   }
 
   generateBtn.addEventListener('click', function () { resolve(input.value); });
