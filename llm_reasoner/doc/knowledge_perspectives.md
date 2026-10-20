@@ -673,8 +673,8 @@ runs, $2.28 for 8 runs; one refusal carries no cost):
   failures arm's refusal said so ("the Milk and Cereal boxes have no stated opening"). Four of
   the five that avoided the bowl poured into the carton, which the scene does not show to be
   open.
-- Two runs per arm and one scene: a first sign, not a rate. This is the first measurement in
-  which the perspectives changed a choice.
+- Two runs per arm and one scene: a first sign, not a rate. In this trial the perspectives
+  changed a choice; the repetition below did not reproduce it.
 - Where the opening comes from (2026-10-20): the runs above took it from a hand-written list
   of container classes and a 45 degree rule for up, down and sideways. Both are gone. It is
   now measured from each object's mesh (`cram_viz.resolution.mesh_opening`): rays are sent in
@@ -697,6 +697,30 @@ runs, $2.28 for 8 runs; one refusal carries no cost):
   `closed` for one whose mesh shows no open side, and states nothing for any other kind, whatever
   its mesh shows. CRAM-AICOR's `Bowl` and `Cup` are `Vessel`s and not `Container`s, so the code
   classes are put under `Container` directly.
+
+Repeated with the final harness (2026-10-20: the opening from the ontology and the mesh, the
+goal the intact scene chose overturned, the frame rule built from the offered perspectives;
+nine runs counting the intact one, $1.77 read from the runs' events):
+
+| | Poured into the overturned bowl | Refused (`NoFittingReferent`) |
+|---|---|---|
+| Default | 0 of 2 | 2 |
+| Image schemas | 0 of 2 | 2 |
+| Failures | 0 of 2 | 2 |
+| Both | 1 of 2 | 1 |
+
+- Seven of eight runs refused, naming the bowl's opening facing down and the milk and cereal
+  as closed packages, so the stated opening is read by every arm. The one run that poured
+  (both perspectives) argued from the lateral error of earlier pours, as the first trap's
+  default arm had.
+- This contradicts the table above, where the default arm poured into the bowl twice and five
+  of six perspective runs left it. Two runs per arm do not separate the arms: the difference
+  between the two trials is as large as any between arms, and the prompts differ in more than
+  the arms (the opening is now stated from the ontology, and the frame-knowledge rule has
+  changed). The earlier statement that the perspectives changed a choice is not supported.
+- A refusal records no cost of its own; the arms' recorded cost is only the one resolved run
+  ($0.37).
+
 - The trap harness (2026-10-20) no longer names its goal: it first resolves the scene as it is
   with the default resolver, then turns upside down the body that resolution poured into
   (`OverturnedScene.of_body`) and judges each arm by whether it chose that body. The runs above
