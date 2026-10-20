@@ -13,6 +13,7 @@ import numpy as np
 from llm_reasoner.resolver.prompt_format import PromptSection
 from semantic_digital_twin.robots.robot_parts import AbstractRobot, AbstractRobotPart
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
+from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 
 from cram_viz.resolution.scene_geometry import (
     COORDINATE_DIGITS,
@@ -96,6 +97,31 @@ class TestObjects:
         assert np.allclose(
             bowl[GeometryKey.TOP_CENTRE],
             [*(0.5 * (lowest[:2] + highest[:2])), highest[2]],
+            atol=TOLERANCE,
+        )
+
+    def test_an_upright_object_states_that_its_up_points_up(self, pouring_kitchen):
+        geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
+        assert np.allclose(
+            object_named(geometry, "bowl.stl")[GeometryKey.UP],
+            [0.0, 0.0, 1.0],
+            atol=TOLERANCE,
+        )
+
+    def test_an_overturned_object_states_that_its_up_points_down(self, pouring_kitchen):
+        bowl = pouring_kitchen.get_body_by_name("bowl.stl")
+        with pouring_kitchen.modify_world():
+            bowl.parent_connection.origin = (
+                HomogeneousTransformationMatrix.from_xyz_rpy(
+                    *bowl.global_pose.to_position().to_np()[:3],
+                    roll=np.pi,
+                    reference_frame=pouring_kitchen.root,
+                )
+            )
+        geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
+        assert np.allclose(
+            object_named(geometry, "bowl.stl")[GeometryKey.UP],
+            [0.0, 0.0, -1.0],
             atol=TOLERANCE,
         )
 
