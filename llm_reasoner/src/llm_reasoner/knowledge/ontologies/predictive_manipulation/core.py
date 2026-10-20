@@ -15,6 +15,7 @@ from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
@@ -75,24 +76,6 @@ class ConditionMode(StrEnum):
     )
     """
     Is brought about by completing the phase.
-    """
-
-
-class ConditionPolarity(StrEnum):
-    """
-    Whether a condition is demanded to hold or to be absent.
-    """
-
-    MUST_HOLD = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MustHold"
-    )
-    """
-    The condition is demanded to be true.
-    """
-
-    MUST_NOT_HOLD = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MustNotHold"
-    """
-    The condition is demanded to be false.
     """
 
 
@@ -1988,7 +1971,7 @@ class ConditionRequirement(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ConditionPolarity"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ConditionPolarity"
                 ),
             ),
         ),
@@ -2009,7 +1992,7 @@ class ConditionRequirement(DescriptionEntity):
     When, relative to the phase, the condition is demanded.
     """
 
-    has_condition_polarity: Optional[ConditionPolarity] = field(
+    has_condition_polarity: Optional[action_core.ConditionPolarity] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
@@ -3462,7 +3445,7 @@ class InvariantRequirement(ConditionRequirement):
                 PropertyRestriction(
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MustHold",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Holds",
                 ),
             )
         ),
@@ -4382,7 +4365,7 @@ class ProhibitionRequirement(ConditionRequirement):
                 PropertyRestriction(
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MustNotHold",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#DoesNotHold",
                 ),
             )
         ),

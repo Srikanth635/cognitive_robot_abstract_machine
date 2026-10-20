@@ -595,6 +595,16 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   Generation and prompts are unchanged; instances in the two families' hypotheses are not yet
   linked to each other.
 
+- One condition polarity for both families (2026-10-20): the action core's `ConditionPolarity`
+  (`Holds`, `DoesNotHold`) replaced the Flanagan core's `ConditionPolarity` (`MustHold`,
+  `MustNotHold`), the action frame's `SlotConditionPolarity` and the failures' `StatePresence`
+  (`Holds`, `Missing`); whether the value is demanded or observed is said by each property. The
+  Flanagan core imports the action core, the only import between the families. Versions moved
+  (action core 0.2.0, action frame 0.3.0, failures 0.2.0, Flanagan core 0.5.0), so every stored
+  hypothesis using them is generated again on its next use (about $0.3–0.5 each); cram_viz's
+  hand-authored sample was rewritten to the new terms. Answers name the members `HOLDS` and
+  `DOES_NOT_HOLD`. Tests and HermiT only, not run live.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

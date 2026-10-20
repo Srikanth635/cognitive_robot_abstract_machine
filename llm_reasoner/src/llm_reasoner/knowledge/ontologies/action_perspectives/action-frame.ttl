@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.2.0> ;
-    owl:versionInfo "0.2.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.3.0> ;
+    owl:versionInfo "0.3.0" .
 
 # %% classes
 
@@ -37,7 +37,7 @@ frame:SlotCondition a owl:Class ;
             owl:someValuesFrom core:FrameSlot ],
         [ a owl:Restriction ;
             owl:onProperty frame:hasPolarity ;
-            owl:someValuesFrom frame:SlotConditionPolarity ],
+            owl:someValuesFrom core:ConditionPolarity ],
         dul:Description .
 
 frame:FeatureCondition a owl:Class ;
@@ -114,26 +114,6 @@ frame:DimensionRationale a owl:Class ;
         dul:Description .
 
 # %% value partitions
-
-frame:SlotConditionPolarity a owl:Class ;
-    rdfs:label "slot condition polarity"@en ;
-    rdfs:comment "Whether a slot condition is required to hold or required not to hold."@en ;
-    rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( frame:Holds frame:DoesNotHold ) ] .
-
-frame:DoesNotHold a frame:SlotConditionPolarity,
-        owl:NamedIndividual ;
-    rdfs:label "does not hold"@en ;
-    rdfs:comment "The condition is required not to hold."@en .
-
-frame:Holds a frame:SlotConditionPolarity,
-        owl:NamedIndividual ;
-    rdfs:label "holds"@en ;
-    rdfs:comment "The condition is required to hold."@en .
-
-[] a owl:AllDifferent ;
-    owl:distinctMembers ( frame:Holds frame:DoesNotHold ) .
 
 frame:ChangeDirection a owl:Class ;
     rdfs:label "change direction"@en ;
@@ -269,7 +249,7 @@ frame:hasPolarity a owl:FunctionalProperty,
     rdfs:label "has polarity"@en ;
     rdfs:comment "Whether the condition is required to hold or required not to hold."@en ;
     rdfs:domain frame:SlotCondition ;
-    rdfs:range frame:SlotConditionPolarity .
+    rdfs:range core:ConditionPolarity .
 
 frame:defaultForSlot a owl:ObjectProperty ;
     rdfs:label "default for slot"@en ;

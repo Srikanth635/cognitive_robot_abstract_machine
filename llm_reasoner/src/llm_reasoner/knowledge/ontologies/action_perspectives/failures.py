@@ -118,26 +118,6 @@ class ParameterChangeDirection(StrEnum):
     """
 
 
-class StatePresence(StrEnum):
-    """
-    Whether a state holds or is missing.
-    """
-
-    HOLDS = (
-        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#Holds"
-    )
-    """
-    The state holds when the failure occurs.
-    """
-
-    MISSING = (
-        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#Missing"
-    )
-    """
-    The state that should hold does not hold when the failure occurs.
-    """
-
-
 # %% classes
 
 
@@ -480,7 +460,7 @@ class ObservableCondition(DescriptionEntity):
     The slot whose filler the condition is about.
     """
 
-    failed_condition_presence: Optional[StatePresence] = field(
+    failed_condition_presence: Optional[action_core.ConditionPolarity] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#failedConditionPresence",
@@ -488,7 +468,7 @@ class ObservableCondition(DescriptionEntity):
         ).as_dict(),
     )
     """
-    Whether the named state holds or is missing in the condition.
+    Whether the named state holds or does not hold when the failure is noticed.
     """
 
     failed_condition_state_type: List[ConceptReference] = field(

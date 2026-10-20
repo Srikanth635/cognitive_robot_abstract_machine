@@ -22,6 +22,7 @@ from rdflib import OWL, RDF, RDFS, XSD, Graph, Namespace, URIRef
 from typing_extensions import Any, Callable
 
 from llm_reasoner.knowledge.ontologies import (
+    ActionPerspectiveFile,
     CRAM_AICOR_NAMESPACE,
     CRAM_AICOR_ONTOLOGY_IRI,
     DUL_NAMESPACE,
@@ -171,9 +172,18 @@ DUL = Namespace(DUL_NAMESPACE)
 The namespace of the DOLCE+DnS Ultralite ontology.
 """
 
-EXTERNAL_ONTOLOGIES = (CRAM_AICOR_ONTOLOGY_IRI, DUL_ONTOLOGY_IRI)
+ACTION_CORE_ONTOLOGY_IRI = ActionPerspectiveFile.ACTION_CORE.namespace.rstrip("#")
 """
-The ontologies the core module imports, whose terms the microworld links to.
+The action core, whose condition polarity the core module uses.
+"""
+
+EXTERNAL_ONTOLOGIES = (
+    CRAM_AICOR_ONTOLOGY_IRI,
+    DUL_ONTOLOGY_IRI,
+    ACTION_CORE_ONTOLOGY_IRI,
+)
+"""
+The ontologies the core module imports, whose terms the microworld links to or uses.
 """
 
 STANDARD_NAMESPACES = (str(RDF), str(RDFS), str(OWL), str(XSD))
@@ -337,8 +347,8 @@ def reason(
     *cases: ReasoningCase,
 ) -> Any:
     """
-    Run HermiT over CRAM-AICOR, DUL, every predictive manipulation module and the given
-    cases.
+    Run HermiT over CRAM-AICOR, DUL, the action core, every predictive manipulation
+    module and the given cases.
 
     The files are merged into one graph without their import statements, so the reasoner
     never fetches an ontology from the web.
@@ -349,6 +359,7 @@ def reason(
     """
     merged = Graph().parse(cram_aicor_path, format="turtle")
     merged.parse(dul_path, format="xml")
+    merged.parse(ActionPerspectiveFile.ACTION_CORE.path, format="turtle")
     for path in [module.path for module in PredictiveManipulationOntologyFile] + [
         case.path for case in cases
     ]:
@@ -395,7 +406,9 @@ class TestModuleFiles:
             }
             assert foreign == set()
 
-    def test_only_microworld_cram_aicor_and_dul_terms_are_used(self, module_graphs):
+    def test_only_microworld_cram_aicor_dul_and_action_core_terms_are_used(
+        self, module_graphs
+    ):
         for graph in module_graphs.values():
             outside = {
                 term
@@ -415,7 +428,7 @@ class TestModuleFiles:
             }
             assert described == set()
 
-    def test_core_imports_cram_aicor_and_dul(self, module_graphs):
+    def test_core_imports_cram_aicor_dul_and_the_action_core(self, module_graphs):
         imported = set(
             module_graphs[PredictiveManipulationOntologyFile.CORE].objects(
                 None, OWL.imports
@@ -471,7 +484,7 @@ class TestModuleFiles:
         }
         assert unattached == set()
 
-    def test_every_property_range_is_a_microworld_class_or_a_datatype(
+    def test_every_property_range_is_a_microworld_or_action_core_class_or_a_datatype(
         self, module_graphs
     ):
         microworld = merged(module_graphs)
@@ -480,7 +493,11 @@ class TestModuleFiles:
             for prop in microworld_properties(microworld)
             for range_ in microworld.objects(prop, RDFS.range)
             if not str(range_).startswith(
-                (PREDICTIVE_MANIPULATION_NAMESPACE_ROOT, str(XSD))
+                (
+                    PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
+                    ACTION_CORE_ONTOLOGY_IRI,
+                    str(XSD),
+                )
             )
         }
         assert outside == set()

@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.1.0> ;
-    owl:versionInfo "0.1.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.2.0> ;
+    owl:versionInfo "0.2.0" .
 
 # %% classes
 
@@ -89,26 +89,6 @@ failures:Correction a owl:Class ;
         aicor:Repair .
 
 # %% value partitions
-
-failures:Holds a failures:StatePresence,
-        owl:NamedIndividual ;
-    rdfs:label "holds"@en ;
-    rdfs:comment "The state holds when the failure occurs."@en .
-
-failures:Missing a failures:StatePresence,
-        owl:NamedIndividual ;
-    rdfs:label "missing"@en ;
-    rdfs:comment "The state that should hold does not hold when the failure occurs."@en .
-
-failures:StatePresence a owl:Class ;
-    rdfs:label "state presence"@en ;
-    rdfs:comment "Whether a state holds or is missing."@en ;
-    rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( failures:Holds failures:Missing ) ] .
-
-[] a owl:AllDifferent ;
-    owl:distinctMembers ( failures:Holds failures:Missing ) .
 
 failures:Happening a failures:IndicatorForm,
         owl:NamedIndividual ;
@@ -271,9 +251,9 @@ failures:failedConditionStateType a owl:ObjectProperty ;
 failures:failedConditionPresence a owl:FunctionalProperty,
         owl:ObjectProperty ;
     rdfs:label "failed condition presence"@en ;
-    rdfs:comment "Whether the named state holds or is missing in the condition."@en ;
+    rdfs:comment "Whether the named state holds or does not hold when the failure is noticed."@en ;
     rdfs:domain failures:ObservableCondition ;
-    rdfs:range failures:StatePresence .
+    rdfs:range core:ConditionPolarity .
 
 failures:measuredOnSlot a owl:ObjectProperty ;
     rdfs:label "measured on slot"@en ;

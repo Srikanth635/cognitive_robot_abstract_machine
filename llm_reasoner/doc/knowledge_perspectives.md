@@ -307,8 +307,8 @@ another perspective is built (phase 4 decides whether to go on).
    than off the core's `ActionFrame`, so the core's Python holds nothing of any
    perspective and a hypothesis can hold any subset of them. Its polarity is
    `SlotConditionPolarity`, since Python names are unique across modules and the Flanagan
-   core already has a `ConditionPolarity` meaning the same; phase 7 merges the two into the
-   core.
+   core already has a `ConditionPolarity` meaning the same; phase 7 merged the two into the
+   core (2026-10-20).
 
 **Phase 2 — knowledge in the new vocabularies (the hypothesis stage, §6).**
 1. A hypothesis about pouring holding the core and the action frame: generated, accepted
@@ -350,8 +350,16 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    CRAM-AICOR and DUL. `SlotRoles` reads it, and a designator's role per field follows from its
    mapping to slots (`DescribedAction.field_roles`), which replaced cram_viz's hand-written
    table. Generation and prompts are unchanged.
-2. Still open: linking the instances of a Flanagan hypothesis to those of a core hypothesis,
-   and merging the duplicated concepts (polarity, direction of change, conditions, quantities).
+2. *One polarity, 2026-10-20.* Whether a condition holds is the action core's
+   `ConditionPolarity` (`Holds`, `DoesNotHold`). It replaced the Flanagan core's
+   `ConditionPolarity` (`MustHold`, `MustNotHold`), the frame's `SlotConditionPolarity` and the
+   failures' `StatePresence` (`Holds`, `Missing`); each property's own definition says
+   whether the value is demanded (a requirement) or observed (a failure). The Flanagan core
+   now imports the action core, the only import between the families, and only in that
+   direction. Versions: action core 0.2.0, action frame 0.3.0, failures 0.2.0, Flanagan core
+   0.5.0, so hypotheses stored under the old versions are generated again.
+3. Still open: linking the instances of a Flanagan hypothesis to those of a core hypothesis,
+   and merging the other duplicated concepts (direction of change, conditions, quantities).
 
 **Phase 8 — more actions (D8):** navigating, picking up and placing in the core, with the
 concepts CRAM-AICOR lacks proposed in our module (§10), and their perspectives.
