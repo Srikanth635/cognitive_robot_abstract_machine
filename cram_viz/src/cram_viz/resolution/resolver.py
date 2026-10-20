@@ -297,6 +297,12 @@ class DesignatorResolver:
     structure; none by default.
     """
 
+    consults_phase_structure: bool = True
+    """
+    Whether the phase structure describing the action is consulted, with the situation
+    it is served for; when not, only the action core and the perspectives are.
+    """
+
     predicts_pours: bool = False
     """
     Whether the resolver may predict where a pour ends before it answers; not by
@@ -438,6 +444,7 @@ class DesignatorResolver:
             sink=sink,
             prices=self.prices,
             perspectives=self.perspectives,
+            consults_phase_structure=self.consults_phase_structure,
         ).backend(
             context_provider=geometry,
             number_of_candidates=1,

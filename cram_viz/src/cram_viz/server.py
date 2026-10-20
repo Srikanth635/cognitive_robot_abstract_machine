@@ -93,6 +93,12 @@ class ResolveRequestKey(StrEnum):
     modules' file names; none when left out.
     """
 
+    PHASE_STRUCTURE = "phase_structure"
+    """
+    Whether to consult the phase structure describing the action; consulted when left
+    out.
+    """
+
 
 def _no_eql_error() -> Dict[str, Any]:
     """
@@ -383,7 +389,8 @@ def _resolver_for(request: Dict[str, Any]):
     """
     :param request: A resolve request, which may name perspectives to consult.
     :return: The shared designator resolver, consulting the action core and the
-        perspectives the request chooses, none when it chooses none.
+        perspectives the request chooses, none when it chooses none, and the phase
+        structure unless the request leaves it out.
     :raises UnknownPerspective: When the request names a perspective the knowledge
         component does not register.
     """
@@ -392,7 +399,13 @@ def _resolver_for(request: Dict[str, Any]):
     perspectives = OfferedPerspective.named(
         request.get(ResolveRequestKey.PERSPECTIVES) or []
     )
-    return replace(_designator_resolver(), perspectives=perspectives)
+    return replace(
+        _designator_resolver(),
+        perspectives=perspectives,
+        consults_phase_structure=bool(
+            request.get(ResolveRequestKey.PHASE_STRUCTURE, True)
+        ),
+    )
 
 
 @cache
@@ -445,7 +458,10 @@ def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
         PouringDesignator,
         SceneNamespace,
     )
-    from cram_viz.resolution.perspective_choice import OfferedPerspective
+    from cram_viz.resolution.perspective_choice import (
+        OfferedPerspective,
+        OfferedPhaseStructure,
+    )
 
     name = kb_module.scene_name(selected_scene)
     with _EQL_LOCK:
@@ -462,6 +478,7 @@ def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
         "ok": True,
         "scene": name,
         "designators": offered,
+        "phase_structure": OfferedPhaseStructure().payload(),
         "perspectives": [
             perspective.payload() for perspective in OfferedPerspective.every()
         ],

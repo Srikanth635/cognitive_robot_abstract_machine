@@ -30,7 +30,10 @@ Panels.define('eql', function (root, bus) {
     '    <span class="query-actions-gap"></span>' +
     '    <button id="demo-execute" class="quiet" title="Launch the fixed demo under the live bridge, independent of the designators">Demo</button>' +
     '  </div>' +
-    '  <div id="perspectives" class="perspectives" title="Perspectives on the action core Generate also consults; untick one to leave it out"></div>' +
+    '  <div class="knowledge-choices">' +
+    '    <div id="knowledge-choices" class="perspectives" title="The phase structure Generate consults; untick it to leave it out"></div>' +
+    '    <div id="perspectives" class="perspectives" title="Perspectives on the action core Generate also consults; untick one to leave it out"></div>' +
+    '  </div>' +
     '  <div class="query-sources">' +
     '    <div class="source-tabs">' +
     '      <button id="source-designators" title="Underspecified designators as krrood match queries: click one to copy it into the search bar, then Generate">Designators</button>' +
@@ -49,6 +52,7 @@ Panels.define('eql', function (root, bus) {
   const presetsEl = root.querySelector('#presets');
   const designatorsEl = root.querySelector('#designators');
   const perspectivesEl = root.querySelector('#perspectives');
+  const phaseStructureEl = root.querySelector('#knowledge-choices');
   const generateBtn = root.querySelector('#query-generate');
   const designatorExecuteBtn = root.querySelector('#designator-execute');
   const demoExecuteBtn = root.querySelector('#demo-execute');
@@ -175,6 +179,7 @@ Panels.define('eql', function (root, bus) {
       designatorsEl.textContent = 'designators unavailable: ' + (payload.error || 'unknown error');
       return;
     }
+    buildPhaseStructure(payload.phase_structure);
     buildPerspectives(payload.perspectives || []);
     payload.designators.forEach(function (designator) {
       const chip = document.createElement('pre');
@@ -195,19 +200,36 @@ Panels.define('eql', function (root, bus) {
   function buildPerspectives(perspectives) {
     perspectivesEl.innerHTML = '';
     perspectives.forEach(function (perspective) {
-      const choice = document.createElement('label');
-      choice.className = 'perspective-choice';
-      choice.title = perspective.label + ': ' + perspective.summary;
-      const box = document.createElement('input');
-      box.type = 'checkbox';
-      box.value = perspective.name;
-      box.checked = true;
-      const text = document.createElement('span');
-      text.textContent = perspective.label;
-      choice.appendChild(box);
-      choice.appendChild(text);
-      perspectivesEl.appendChild(choice);
+      perspectivesEl.appendChild(knowledgeChoice(perspective.label, perspective.summary, perspective.name));
     });
+  }
+
+  // The phase structure is offered the same way, ticked by default; unticked, only the
+  // action core and the ticked perspectives are consulted.
+  function buildPhaseStructure(phaseStructure) {
+    phaseStructureEl.innerHTML = '';
+    if (!phaseStructure) return;
+    phaseStructureEl.appendChild(knowledgeChoice(phaseStructure.label, phaseStructure.summary, ''));
+  }
+
+  function knowledgeChoice(label, summary, value) {
+    const choice = document.createElement('label');
+    choice.className = 'perspective-choice';
+    choice.title = label + ': ' + summary;
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.value = value;
+    box.checked = true;
+    const text = document.createElement('span');
+    text.textContent = label;
+    choice.appendChild(box);
+    choice.appendChild(text);
+    return choice;
+  }
+
+  function phaseStructureLeftOut() {
+    const choice = phaseStructureEl.children[0];
+    return Boolean(choice) && !choice.children[0].checked;
   }
 
   function chosenPerspectives() {
@@ -275,6 +297,7 @@ Panels.define('eql', function (root, bus) {
     const request = { query: query, scene: SceneSelection.nameFromSearch(window.location.search) };
     const perspectives = chosenPerspectives();
     if (perspectives.length) request.perspectives = perspectives;
+    if (phaseStructureLeftOut()) request.phase_structure = false;
     return request;
   }
 

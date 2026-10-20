@@ -6,11 +6,13 @@ none consulted unless chosen.
 
 from __future__ import annotations
 
+import inspect
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
-from llm_reasoner.knowledge.access import PERSPECTIVE_ROOTS, ActionPerspectiveFile
+from llm_reasoner.knowledge.access import PERSPECTIVE_ROOTS, ActionPerspectiveFile, core
 from typing_extensions import Any, Dict, List, Sequence, Tuple
 
 
@@ -79,4 +81,32 @@ class OfferedPerspective:
             PerspectiveKey.NAME: self.module.value,
             PerspectiveKey.LABEL: Path(self.module.value).stem.replace("-", " "),
             PerspectiveKey.SUMMARY: self.module.summary,
+        }
+
+
+WORD_START = re.compile(r"(?<!^)(?=[A-Z])")
+"""
+Where a new word begins in a class name written in capitals.
+"""
+
+
+@dataclass(frozen=True)
+class OfferedPhaseStructure:
+    """
+    The phase structure describing an action, offered for choosing like a perspective.
+    """
+
+    structure: type = core.ActionPhaseStructure
+    """
+    The vocabulary class every phase structure specialises.
+    """
+
+    def payload(self) -> Dict[str, Any]:
+        """
+        :return: The phase structure as the viewer offers it: a label and what its
+            ontology says it is.
+        """
+        return {
+            PerspectiveKey.LABEL: WORD_START.sub(" ", self.structure.__name__).lower(),
+            PerspectiveKey.SUMMARY: inspect.getdoc(self.structure),
         }

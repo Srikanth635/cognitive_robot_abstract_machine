@@ -71,6 +71,12 @@ class Reasoner:
     none by default.
     """
 
+    consults_phase_structure: bool = True
+    """
+    Whether the phase structure describing the action is consulted, with the situation
+    features it is served for.
+    """
+
     def backend(self, **settings: Any) -> LanguageModelBackend:
         """
         :param settings: Further settings of the backend, such as its context provider.
@@ -84,7 +90,9 @@ class Reasoner:
                 client=self.client,
                 world=self.world,
                 knowledge=KnowledgeRequester(
-                    service=self.knowledge, perspectives=self.perspectives
+                    service=self.knowledge,
+                    perspectives=self.perspectives,
+                    consults_phase_structure=self.consults_phase_structure,
                 ),
                 **settings,
             )
@@ -100,6 +108,7 @@ class Reasoner:
             knowledge=KnowledgeRequester(
                 service=ObservedKnowledge(knowledge=self.knowledge, sink=self.sink),
                 perspectives=self.perspectives,
+                consults_phase_structure=self.consults_phase_structure,
             ),
             **{"observer": self.sink, **settings},
         )

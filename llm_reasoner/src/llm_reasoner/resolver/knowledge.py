@@ -167,6 +167,13 @@ class KnowledgeRequester:
     core they describe; none by default, which consults neither.
     """
 
+    consults_phase_structure: bool = True
+    """
+    Whether the phase structure describing the action is consulted, with the situation
+    features it is served for; when not, no situation is chosen and only the core and
+    its perspectives are.
+    """
+
     def consult(
         self, action: Match, situation_backend: GenerativeBackend
     ) -> KnowledgeConsultation:
@@ -181,6 +188,13 @@ class KnowledgeRequester:
         described = self.described_actions.describing(designator)
         if described is None:
             return KnowledgeConsultation(designator=designator)
+        if not self.consults_phase_structure:
+            return KnowledgeConsultation(
+                designator=designator,
+                perspective_record_ids=self.perspective_records_for(
+                    described, designator
+                ),
+            )
         situation = self.situation_of(described, situation_backend)
         return KnowledgeConsultation(
             designator=designator,
