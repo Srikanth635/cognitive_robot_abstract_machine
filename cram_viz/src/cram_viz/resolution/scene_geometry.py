@@ -14,21 +14,12 @@ from krrood.entity_query_language.query.match import Match
 from llm_reasoner.resolver.context import PromptContextProvider
 from semantic_digital_twin.robots.robot_parts import AbstractRobot, AbstractRobotPart
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
-from semantic_digital_twin.semantic_annotations.semantic_annotations import (
-    Bowl,
-    CookingContainer,
-    DrinkingContainer,
-    PouringCup,
-)
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import OmniDrive
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Dict, List, Optional
 
-CONTAINER_KINDS = (Bowl, PouringCup, DrinkingContainer, CookingContainer)
-"""
-The kinds of object that have an opening, which is the top of their own frame.
-"""
+from cram_viz.resolution.mesh_opening import OpeningMeasurement
 
 OPENING_ALIGNMENT = 0.5 * 2**0.5
 """
@@ -160,7 +151,8 @@ class SceneGeometry(PromptContextProvider):
         box = body.visual.as_bounding_box_collection_in_frame(
             self.world.root
         ).bounding_box()
-        up = rounded(body.global_transform.to_np()[:3, UP_AXIS])
+        transform = body.global_transform.to_np()
+        up = rounded(transform[:3, UP_AXIS])
         geometry = {
             GeometryKey.KIND: type(annotation).__name__,
             GeometryKey.NAME: body.name.name,
@@ -178,8 +170,11 @@ class SceneGeometry(PromptContextProvider):
             ),
             GeometryKey.UP: up,
         }
-        if isinstance(annotation, CONTAINER_KINDS):
-            geometry[GeometryKey.OPENING_FACES] = OpeningDirection.of(up)
+        opening = OpeningMeasurement(mesh=body.visual.combined_mesh).direction()
+        if opening is not None:
+            geometry[GeometryKey.OPENING_FACES] = OpeningDirection.of(
+                list(transform[:3, :3] @ opening)
+            )
         return geometry
 
     @staticmethod

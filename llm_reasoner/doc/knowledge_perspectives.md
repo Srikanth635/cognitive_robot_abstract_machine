@@ -675,6 +675,15 @@ runs, $2.28 for 8 runs; one refusal carries no cost):
   open.
 - Two runs per arm and one scene: a first sign, not a rate. This is the first measurement in
   which the perspectives changed a choice.
+- Where the opening comes from (2026-10-20): the runs above took it from a hand-written list
+  of container classes. It is now measured from each object's mesh
+  (`cram_viz.resolution.mesh_opening`): rays are sent in along the six axes, and a direction is
+  an opening when half of them cross three quarters of the object before hitting anything. On
+  the scene's meshes it finds the bowl and the pitcher open upward, and the milk carton and the
+  cereal box closed, which is what the list gave there, so the prompt of the runs above is
+  unchanged and they were not repeated. The two shares are geometric tolerances picked on those
+  meshes. Longer term the knowledge ontology should say that a container has an opening, and
+  the geometry should only locate it.
 
 ## Sources
 

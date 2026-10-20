@@ -157,7 +157,14 @@ class TestObjects:
         geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
         assert object_named(geometry, "bowl.stl")[GeometryKey.OPENING_FACES] == facing
 
-    def test_an_object_that_is_no_container_states_no_opening(self, pouring_kitchen):
+    def test_the_opening_of_the_pitcher_faces_up(self, pouring_kitchen):
+        geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
+        assert (
+            object_named(geometry, "Static_MilkPitcher.stl")[GeometryKey.OPENING_FACES]
+            == OpeningDirection.UP
+        )
+
+    def test_an_object_with_no_opening_states_none(self, pouring_kitchen):
         milk = pouring_kitchen.get_semantic_annotations_by_type(Milk)
         assert milk
         geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
