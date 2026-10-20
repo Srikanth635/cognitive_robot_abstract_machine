@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.3.0> ;
-    owl:versionInfo "0.3.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.4.0> ;
+    owl:versionInfo "0.4.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -194,6 +194,46 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:range :QuantityKind ;
     rdfs:label "has quantity kind"@en ;
     rdfs:comment "What kind of quantity something about an action is about, such as the quantity a choice sets, a condition constrains or a change changes."@en .
+
+# %% conditions on slots
+
+:SlotCondition a owl:Class ;
+    rdfs:subClassOf aicor:dul_Description , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :conditionOnSlot ; owl:someValuesFrom :FrameSlot ] ,
+        [ a owl:Restriction ; owl:onProperty :hasPolarity ; owl:someValuesFrom :ConditionPolarity ] ;
+    rdfs:label "slot condition"@en ;
+    rdfs:comment "A condition a world can check about the filler of a slot, possibly in relation to the filler of another slot, such as having a part, affording something or being in a state, rather than membership of a class. Whether it is required or observed is said by the property relating it to what uses it."@en .
+
+:StateCondition a owl:Class ;
+    rdfs:subClassOf :SlotCondition ,
+        [ a owl:Restriction ; owl:onProperty :conditionHasState ; owl:someValuesFrom owl:Thing ] ;
+    rdfs:label "state condition"@en ;
+    rdfs:comment "A condition that the filler of a slot, possibly in relation to the filler of another slot, is in a given discrete state, such as the agent grasping the source or the substance being contained in the goal; with the polarity that it does not hold, that it is not in that state, such as the source being empty: the substance not contained in it."@en .
+
+:conditionOnSlot a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:subPropertyOf dul:usesConcept ;
+    rdfs:domain :SlotCondition ;
+    rdfs:range :FrameSlot ;
+    rdfs:label "condition on slot"@en ;
+    rdfs:comment "The slot whose filler the condition is about."@en .
+
+:conditionInvolvesSlot a owl:ObjectProperty ;
+    rdfs:subPropertyOf dul:usesConcept ;
+    rdfs:domain :SlotCondition ;
+    rdfs:range :FrameSlot ;
+    rdfs:label "condition involves slot"@en ;
+    rdfs:comment "Another slot whose filler the condition relates the first filler to, such as the agent in the condition that the source is held, or the opening in the condition that the lip is over it."@en .
+
+:conditionHasState a owl:ObjectProperty ;
+    rdfs:domain :StateCondition ;
+    rdfs:label "condition has state"@en ;
+    rdfs:comment "The state the filler is in when the condition holds, as the IRI of a CRAM-AICOR state type, such as aicor:GraspedState or aicor:FlowingState."@en .
+
+:hasPolarity a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :SlotCondition ;
+    rdfs:range :ConditionPolarity ;
+    rdfs:label "has polarity"@en ;
+    rdfs:comment "Whether the condition holds or does not hold."@en .
 
 # %% value partitions
 

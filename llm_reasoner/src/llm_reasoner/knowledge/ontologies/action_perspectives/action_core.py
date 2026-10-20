@@ -676,6 +676,78 @@ class PouringFrame(ManipulationActionFrame):
 
 
 @dataclass(eq=False)
+class SlotCondition(DescriptionEntity):
+    """
+    A condition a world can check about the filler of a slot, possibly in relation to the filler of another slot, such as having a part, affording something or being in a state, rather than membership of a class. Whether it is required or observed is said by the property relating it to what uses it.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
+        linked_terms=(
+            "http://aicor.knowledge/l2-ontology.owl#dul_Description",
+            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+        ),
+        evidence_status="",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPolarity",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ConditionPolarity"
+                ),
+            ),
+        ),
+        definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+    condition_involves_slot: List[FrameSlot] = field(
+        default_factory=list,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+            functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot",
+        ).as_dict(),
+    )
+    """
+    Another slot whose filler the condition relates the first filler to, such as the agent in the condition that the source is held, or the opening in the condition that the lip is over it.
+    """
+
+    condition_on_slot: Optional[FrameSlot] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+            functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot",
+        ).as_dict(),
+    )
+    """
+    The slot whose filler the condition is about.
+    """
+
+    has_polarity: Optional[ConditionPolarity] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPolarity",
+            functional=True,
+        ).as_dict(),
+    )
+    """
+    Whether the condition holds or does not hold.
+    """
+
+
+@dataclass(eq=False)
 class SourceSlot(ParticipantSlot):
     """
     The slot of where something the action moves comes from, such as the container poured from.
@@ -691,6 +763,42 @@ class SourceSlot(ParticipantSlot):
     )
     """
     The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class StateCondition(SlotCondition):
+    """
+    A condition that the filler of a slot, possibly in relation to the filler of another slot, is in a given discrete state, such as the agent grasping the source or the substance being contained in the goal; with the polarity that it does not hold, that it is not in that state, such as the source being empty: the substance not contained in it.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#StateCondition",
+        linked_terms=(),
+        evidence_status="",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionHasState",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(iri="http://www.w3.org/2002/07/owl#Thing"),
+            ),
+        ),
+        definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+    condition_has_state: List[ConceptReference] = field(
+        default_factory=list,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionHasState",
+            functional=False,
+        ).as_dict(),
+    )
+    """
+    The state the filler is in when the condition holds, as the IRI of a CRAM-AICOR state type, such as aicor:GraspedState or aicor:FlowingState.
     """
 
 
@@ -745,6 +853,20 @@ class ConcernsSlot(ObjectPropertyDescriptor):
 
 
 @dataclass
+class ConditionInvolvesSlot(ObjectPropertyDescriptor):
+    """
+    Another slot whose filler the condition relates the first filler to, such as the agent in the condition that the source is held, or the opening in the condition that the lip is over it.
+    """
+
+
+@dataclass
+class ConditionOnSlot(ObjectPropertyDescriptor):
+    """
+    The slot whose filler the condition is about.
+    """
+
+
+@dataclass
 class DefinesSlot(ObjectPropertyDescriptor):
     """
     A slot of the frame, which a participant of the action, or a part of one, fills.
@@ -785,6 +907,10 @@ ParameterDimension.about_slot = AboutSlot(ParameterDimension, "about_slot")
 Consequence.affects_slot = AffectsSlot(Consequence, "affects_slot")
 ActionFrame.brings_about = BringsAbout(ActionFrame, "brings_about")
 Objective.concerns_slot = ConcernsSlot(Objective, "concerns_slot")
+SlotCondition.condition_involves_slot = ConditionInvolvesSlot(
+    SlotCondition, "condition_involves_slot"
+)
+SlotCondition.condition_on_slot = ConditionOnSlot(SlotCondition, "condition_on_slot")
 ActionFrame.defines_slot = DefinesSlot(ActionFrame, "defines_slot")
 PartSlot.is_part_of_slot = IsPartOfSlot(PartSlot, "is_part_of_slot")
 ActionFrame.leaves_open = LeavesOpen(ActionFrame, "leaves_open")

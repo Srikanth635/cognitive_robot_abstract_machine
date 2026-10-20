@@ -368,8 +368,18 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    one individual, so a value read from a stored hypothesis or entailed by a class becomes the
    member of its field's own enumeration (`Vocabulary.held_by_field`). Versions: action core
    0.3.0, action frame 0.4.0, failures 0.3.0, Flanagan core 0.6.0, prehension 0.5.0.
-4. Still open: linking the instances of a Flanagan hypothesis to those of a core hypothesis,
-   and merging the other duplicated concepts (conditions, quantities).
+4. *One condition on a slot, 2026-10-20.* A condition a world can check about a slot's filler
+   is the action core's `SlotCondition` (the slot, another slot it involves, its polarity), with
+   `StateCondition` adding the CRAM-AICOR state type. The frame requires and expects them and
+   keeps feature, affordance and posture conditions as its own kinds under the core's class; the
+   failures observe them instead of their own `ObservableCondition` (its list of slots became a
+   slot and the slots it involves). A perspective may state these core classes itself, because
+   no core hypothesis states them: the decoder now refuses only a type another module's given
+   hypothesis states, such as a slot (`FragmentDecoder.given_types`). The Flanagan
+   `ConditionRequirement` names a phase condition type rather than a slot and stays as it is.
+   Versions: action core 0.4.0, action frame 0.5.0, failures 0.4.0.
+5. Still open: linking the instances of a Flanagan hypothesis to those of a core hypothesis,
+   and merging the quantities (`DecidingQuantity`, `Indicator`).
 
 **Phase 8 — more actions (D8):** navigating, picking up and placing in the core, with the
 concepts CRAM-AICOR lacks proposed in our module (§10), and their perspectives.

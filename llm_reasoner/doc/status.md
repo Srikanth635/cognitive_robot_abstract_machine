@@ -617,6 +617,15 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   0.4.0, failures 0.3.0, Flanagan core 0.6.0, prehension 0.5.0); cram_viz's sample was
   rewritten. Tests and HermiT only, not run live.
 
+- One condition on a slot (2026-10-20): the action core's `SlotCondition` (`conditionOnSlot`,
+  `conditionInvolvesSlot`, `hasPolarity`) and `StateCondition` (`conditionHasState`) replaced
+  the frame's two classes and the failures' `ObservableCondition` with its three properties.
+  The frame keeps its feature, affordance and posture conditions under the core's class. A
+  perspective may state these core classes, so the decoder refuses another module's type only
+  when a given hypothesis states it (`FragmentDecoder.given_types`); restating a core slot is
+  still refused. Versions moved (action core 0.4.0, action frame 0.5.0, failures 0.4.0), so
+  stored frame and failures knowledge is generated again. Tests and HermiT only, not run live.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

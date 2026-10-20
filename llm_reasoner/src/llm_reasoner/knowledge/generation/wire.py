@@ -14,6 +14,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from enum import Enum
+from functools import cached_property
 
 from typing_extensions import Any, Mapping, Optional
 
@@ -120,6 +121,19 @@ class FragmentDecoder:
     state again.
     """
 
+    @cached_property
+    def given_types(self) -> set[type]:
+        """
+        The types the hypotheses of the given fragments state, such as the slots of a
+        core frame; a type of their modules that none of them states, such as a
+        condition the core declares for its perspectives, an answer may state itself.
+        """
+        return {
+            type_schema.python_type
+            for given_type in {type(fragment) for fragment in self.given.fragments}
+            for type_schema in GenerationSchema.for_root(given_type).types.values()
+        }
+
     def decode(self, raw_response: str) -> DecodingResult:
         """
         :return: The hypothesis the answer describes, or the problems preventing one
@@ -205,8 +219,8 @@ class FragmentDecoder:
     def given_problems(self, identifier: str, type_name: Any) -> list[str]:
         """
         :return: Why an entry may not stand beside the given fragments: it is named like
-            one, or it is of a type of the modules they describe, which the answer
-            refers to rather than states again.
+            one, or it is of another module's type that the hypotheses they come from
+            state, which the answer refers to rather than states again.
         """
         if identifier in self.given.named():
             return [
@@ -214,7 +228,7 @@ class FragmentDecoder:
                 "give a new fragment an identifier of its own"
             ]
         type_schema = self.schema.get(type_name) if isinstance(type_name, str) else None
-        if not self.given.fragments or type_schema is None:
+        if type_schema is None or type_schema.python_type not in self.given_types:
             return []
         own_module = self.vocabulary.module_file_of(self.schema.root)
         module_file = self.vocabulary.module_file_of(type_schema.python_type)

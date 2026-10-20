@@ -10,12 +10,12 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures> a owl:Ontology ;
     rdfs:label "Action perspectives: failures"@en ;
-    rdfs:comment "For the frame of an action, a knowledge base can state each Failure: the slots (or parts of slots) it concerns, the observable condition that goes wrong, the Indicator by which it is noticed, the core parameter dimensions it comes from, and a Correction made of ParameterChanges. A ParameterChange names the dimension, the direction, the slot it moves towards, the condition it removes and the condition the new choice must meet. A Correction is marked as applicable during the action or only by retrying."@en ;
+    rdfs:comment "For the frame of an action, a knowledge base can state each Failure: the slots (or parts of slots) it concerns, the condition on a slot that goes wrong, the Indicator by which it is noticed, the core parameter dimensions it comes from, and a Correction made of ParameterChanges. A ParameterChange names the dimension, the direction, the slot it moves towards, the condition it removes and the condition the new choice must meet. A Correction is marked as applicable during the action or only by retrying."@en ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.3.0> ;
-    owl:versionInfo "0.3.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.4.0> ;
+    owl:versionInfo "0.4.0" .
 
 # %% classes
 
@@ -35,7 +35,7 @@ failures:Failure a owl:Class ;
             owl:someValuesFrom core:ParameterDimension ],
         [ a owl:Restriction ;
             owl:onProperty failures:hasFailedCondition ;
-            owl:someValuesFrom failures:ObservableCondition ],
+            owl:someValuesFrom core:SlotCondition ],
         [ a owl:Restriction ;
             owl:onProperty failures:hasIndicator ;
             owl:someValuesFrom failures:Indicator ],
@@ -43,14 +43,6 @@ failures:Failure a owl:Class ;
             owl:onProperty failures:failureConcernsSlot ;
             owl:someValuesFrom core:FrameSlot ],
         aicor:FailureDescription .
-
-failures:ObservableCondition a owl:Class ;
-    rdfs:label "observable condition"@en ;
-    rdfs:comment "A state of the world that a person or an agent can check, such as a state type holding or not holding of a slot's filler, stated as what the filler has or affords rather than as the class it belongs to."@en ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty failures:failedConditionOnSlot ;
-            owl:someValuesFrom core:FrameSlot ],
-        dul:Description .
 
 failures:Indicator a owl:Class ;
     rdfs:label "indicator"@en ;
@@ -68,7 +60,7 @@ failures:ParameterChange a owl:Class ;
     rdfs:comment "A change to one of the core's parameter dimensions that corrects a failure, in a direction and for the reason that it removes a failed condition."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty failures:correctsCondition ;
-            owl:someValuesFrom failures:ObservableCondition ],
+            owl:someValuesFrom core:SlotCondition ],
         [ a owl:Restriction ;
             owl:onProperty failures:changesDimension ;
             owl:someValuesFrom core:ParameterDimension ],
@@ -207,7 +199,7 @@ failures:hasFailedCondition a owl:ObjectProperty ;
     rdfs:label "has failed condition"@en ;
     rdfs:comment "The observable condition of the world that holds when the failure occurs."@en ;
     rdfs:domain failures:Failure ;
-    rdfs:range failures:ObservableCondition .
+    rdfs:range core:SlotCondition .
 
 failures:hasIndicator a owl:ObjectProperty ;
     rdfs:label "has indicator"@en ;
@@ -226,24 +218,6 @@ failures:hasCorrection a owl:ObjectProperty ;
     rdfs:comment "A correction that puts the failure right."@en ;
     rdfs:domain failures:Failure ;
     rdfs:range failures:Correction .
-
-failures:failedConditionOnSlot a owl:ObjectProperty ;
-    rdfs:label "failed condition on slot"@en ;
-    rdfs:comment "The slot whose filler the condition is about."@en ;
-    rdfs:domain failures:ObservableCondition ;
-    rdfs:range core:FrameSlot .
-
-failures:failedConditionStateType a owl:ObjectProperty ;
-    rdfs:label "failed condition state type"@en ;
-    rdfs:comment "The state type the condition is about, named by the IRI of a CRAM-AICOR state type such as aicor:FlowingState or aicor:ContainedState."@en ;
-    rdfs:domain failures:ObservableCondition .
-
-failures:failedConditionPresence a owl:FunctionalProperty,
-        owl:ObjectProperty ;
-    rdfs:label "failed condition presence"@en ;
-    rdfs:comment "Whether the named state holds or does not hold when the failure is noticed."@en ;
-    rdfs:domain failures:ObservableCondition ;
-    rdfs:range core:ConditionPolarity .
 
 failures:measuredOnSlot a owl:ObjectProperty ;
     rdfs:label "measured on slot"@en ;
@@ -301,10 +275,10 @@ failures:correctsCondition a owl:ObjectProperty ;
     rdfs:label "corrects condition"@en ;
     rdfs:comment "The failed condition whose holding is the reason for the change."@en ;
     rdfs:domain failures:ParameterChange ;
-    rdfs:range failures:ObservableCondition .
+    rdfs:range core:SlotCondition .
 
 failures:requiresOfChoice a owl:ObjectProperty ;
     rdfs:label "requires of choice"@en ;
     rdfs:comment "A condition a world can check that the newly chosen value must meet, such as being reachable by the agent."@en ;
     rdfs:domain failures:ParameterChange ;
-    rdfs:range failures:ObservableCondition .
+    rdfs:range core:SlotCondition .

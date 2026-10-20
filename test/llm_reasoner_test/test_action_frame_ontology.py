@@ -25,7 +25,10 @@ from llm_reasoner.knowledge.ontologies import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     ActionPerspectiveFile,
 )
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_frame
+from llm_reasoner.knowledge.ontologies.action_perspectives import (
+    action_core,
+    action_frame,
+)
 from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
 
 from .test_predictive_manipulation_ontology import (
@@ -147,10 +150,10 @@ class TestVocabulary:
         for condition in (
             action_frame.FeatureCondition,
             action_frame.AffordanceCondition,
-            action_frame.StateCondition,
+            action_core.StateCondition,
             action_frame.PostureCondition,
         ):
-            assert issubclass(condition, action_frame.SlotCondition), condition
+            assert issubclass(condition, action_core.SlotCondition), condition
 
     def test_the_postures_are_an_enumeration_of_the_ontologys_members(self, graph):
         members = set(graph.subjects(RDF.type, FRAME.Posture))
