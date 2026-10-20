@@ -513,6 +513,11 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
   resolver's final turn being cut off at cram_viz's 8192 output tokens (open: a cut-off answer
   still fails the run instead of being repaired).
 
+- The first trap case (2026-10-20, `knowledge_perspectives.md` §13.7): the scene's only bowl
+  upside down, its up axis now stated in the scene geometry. All four arms poured into it
+  (7 of 7 runs that finished, $2.24; one run cut off at 8192 output tokens): the model does not
+  read an up direction as an opening facing down, with or without the perspectives.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
