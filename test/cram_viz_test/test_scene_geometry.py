@@ -10,15 +10,18 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 from llm_reasoner.resolver.prompt_format import PromptSection
 from semantic_digital_twin.robots.robot_parts import AbstractRobot, AbstractRobotPart
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Milk
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 
 from cram_viz.resolution.scene_geometry import (
     COORDINATE_DIGITS,
     GEOMETRY_HEADING,
     GeometryKey,
+    OpeningDirection,
     SceneGeometry,
 )
 from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder
@@ -123,6 +126,43 @@ class TestObjects:
             object_named(geometry, "bowl.stl")[GeometryKey.UP],
             [0.0, 0.0, -1.0],
             atol=TOLERANCE,
+        )
+
+    def test_the_opening_of_an_upright_container_faces_up(self, pouring_kitchen):
+        geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
+        assert (
+            object_named(geometry, "bowl.stl")[GeometryKey.OPENING_FACES]
+            == OpeningDirection.UP
+        )
+
+    @pytest.mark.parametrize(
+        ("roll", "facing"),
+        [
+            (np.pi, OpeningDirection.DOWN),
+            (np.pi / 2, OpeningDirection.SIDEWAYS),
+        ],
+    )
+    def test_the_opening_of_a_turned_container_faces_where_it_was_turned(
+        self, pouring_kitchen, roll, facing
+    ):
+        bowl = pouring_kitchen.get_body_by_name("bowl.stl")
+        with pouring_kitchen.modify_world():
+            bowl.parent_connection.origin = (
+                HomogeneousTransformationMatrix.from_xyz_rpy(
+                    *bowl.global_pose.to_position().to_np()[:3],
+                    roll=roll,
+                    reference_frame=pouring_kitchen.root,
+                )
+            )
+        geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
+        assert object_named(geometry, "bowl.stl")[GeometryKey.OPENING_FACES] == facing
+
+    def test_an_object_that_is_no_container_states_no_opening(self, pouring_kitchen):
+        milk = pouring_kitchen.get_semantic_annotations_by_type(Milk)
+        assert milk
+        geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
+        assert GeometryKey.OPENING_FACES not in object_named(
+            geometry, milk[0].root.name.name
         )
 
     def test_the_robot_and_its_parts_are_not_objects(self, pouring_kitchen):
