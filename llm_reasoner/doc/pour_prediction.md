@@ -144,3 +144,9 @@ two limits give the same answers, so the code passes none and the solver's own d
 applies. One or two steps give wrong answers whichever the limit, because a single solve over
 a large turn stops short; a test pins the same predictions for steps of 0.15, 0.5 and 0.7 rad,
 which for a 3 rad pour is 20, 6 and 5 steps. The band comes from this robot, scene and arm.
+
+The tests no longer write which tilts the arm reaches: they try nine tilts spread evenly from
+upright to upside down, read the labels from the prediction, and check that every pour
+predicted out of reach fails in the simulation (a slow test), that the labels are the same
+across step sizes, and that the grid holds both kinds. The converse is not claimed, since
+the simulation also fails where only a collision stops it.
