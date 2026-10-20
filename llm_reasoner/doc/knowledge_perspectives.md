@@ -653,7 +653,28 @@ says the lip must be above the opening, did not use it either. So on this case t
 perspectives are not what is missing: the models do not read an up direction as an opening
 facing down, and no check in the loop (the simulated pour measures the top of the bounding
 box) can tell them. Two runs per arm is small, and a bare vector may be too indirect a fact;
-a stated opening direction, or an instruction to check the goal's orientation, are untried.
+a stated opening direction was tried next:
+
+With the opening stated (2026-10-20, `"opening_faces": "down"` for the bowl, otherwise the same
+runs, $2.28 for 8 runs; one refusal carries no cost):
+
+| | Poured into the overturned bowl | Chose the milk carton | Refused |
+|---|---|---|---|
+| Default | 2 of 2 | 0 | 0 |
+| Image schemas | 0 | 2 | 0 |
+| Failures | 0 | 1 | 1 (`NoFittingReferent`) |
+| Both | 1 | 1 | 0 |
+
+- Stating the opening is what made the difference, and only with a perspective: the default arm
+  still poured into the bowl twice, reasoning only about the lateral error, while five of the
+  six perspective runs read "the bowl's opening faces down" and left it. The one that went back
+  to the bowl (both perspectives) did so after two attempts at the carton failed to reach.
+- The right answer is arguably a refusal: the carton has no stated opening either, and the
+  failures arm's refusal said so ("the Milk and Cereal boxes have no stated opening"). Four of
+  the five that avoided the bowl poured into the carton, which the scene does not show to be
+  open.
+- Two runs per arm and one scene: a first sign, not a rate. This is the first measurement in
+  which the perspectives changed a choice.
 
 ## Sources
 
