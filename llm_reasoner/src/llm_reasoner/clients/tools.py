@@ -428,3 +428,26 @@ class ToolTurnsExhausted(LLMReasonerError):
 
     def __post_init__(self):
         super().__init__(f"The model was still calling tools after {self.turns} turns")
+
+
+@dataclass
+class ResponseTruncated(LLMReasonerError, RuntimeError):
+    """
+    The model's answer was cut off at the token limit of the request.
+    """
+
+    output_tokens: int
+    """
+    How many tokens the answer used.
+    """
+
+    token_limit: int
+    """
+    The most tokens the request allowed the answer.
+    """
+
+    def __post_init__(self):
+        super().__init__(
+            f"The model's answer was truncated at the limit of {self.token_limit} "
+            f"output tokens ({self.output_tokens} used)"
+        )

@@ -265,8 +265,8 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
   `RESOLVER_MAX_TOKENS` was then raised from 2048 to 8192 (a per-turn ceiling, paid for only as
   far as the model writes; the SDK accepts it without streaming). The cut-off is intermittent, so
   this is not proven until a few live runs pass. Still open in cram_viz: a cut-off answer fails the
-  run rather than being repaired (the error is a plain `RuntimeError`, its message talks of a
-  structured budget this path does not use), and a failed call carries no usage or cost.
+  run rather than being repaired (it is now a `ResponseTruncated` naming the limit it was cut
+  at, 2026-10-20), and a failed call carries no usage or cost.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -509,8 +509,9 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
   and `failures.ttl`, with generated Python, scripted-knowledge tests and HermiT checks, offered
   opt-in through `KnowledgeRequester.perspectives` and as comparison arms. Measured live
   ($3.34, `knowledge_perspectives.md` §13.6): they change what the answers rest on, not what
-  they choose, for 20–70 % more resolver cost; the failures hypothesis was cut off at the
-  8192-token structured output limit in 2 of 5 runs, which is open.
+  they choose, for 20–70 % more resolver cost; the failures arm lost 2 of 5 runs to the
+  resolver's final turn being cut off at cram_viz's 8192 output tokens (open: a cut-off answer
+  still fails the run instead of being repaired).
 
 ## 3. Live testing
 
@@ -898,9 +899,6 @@ beyond the Flanagan microworld* (several perspectives); see §4.
 ## 7. Known issues
 
 **In `llm_reasoner`:**
-- `clients/anthropic_client.py` reads `stop_reason` with `getattr` in one place, which
-  the code rules forbid.
-
 - cram_viz's `kb.build_symbol_graph` still rebuilds krrood's symbol graph and gives
   the knowledge vocabulary as its reason, which no longer holds since I1; whether
   cram_viz's own symbols still need the rebuild is unchecked.
