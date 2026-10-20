@@ -1,0 +1,85 @@
+# Source selectors used when drafting the phase-5 pilot.
+source_revision = "7b27424de7768798dc561f447e11c2a8eb86c307"
+
+[[concepts]]
+path = "packages/coraplex.md"
+type = "Package"
+title = "CoraPlex: plan to motion execution"
+description = "Plan entry points, action expansion and motion execution dispatch."
+evidence = [
+  {id = "plan", path = "coraplex/src/coraplex/plans/plan.py", symbol = "coraplex.plans.plan.Plan.perform"},
+  {id = "action-node", path = "coraplex/src/coraplex/plans/plan_node.py", symbol = "coraplex.plans.plan_node.ActionNode"},
+  {id = "executable", path = "coraplex/src/coraplex/plans/executables.py", symbol = "coraplex.plans.executables.GiskardExecutable.execute"},
+]
+
+[[concepts]]
+path = "workflows/execution-environments.md"
+type = "Workflow"
+title = "Execution environments"
+description = "Execution modes, nested settings and simulation context."
+evidence = [
+  {id = "environment", path = "coraplex/src/coraplex/execution_environment.py"},
+  {id = "executable", path = "coraplex/src/coraplex/plans/executables.py", symbol = "coraplex.plans.executables.GiskardExecutable.execute"},
+]
+
+[[concepts]]
+path = "workflows/adding-an-action.md"
+type = "Workflow"
+title = "Adding an action"
+description = "The action contract, navigation example and condition tests."
+depends_on = ["workflows/world-fixtures.md"]
+evidence = [
+  {id = "action-base", path = "coraplex/src/coraplex/robot_plans/actions/base.py", symbol = "coraplex.robot_plans.actions.base.ActionDescription"},
+  {id = "navigation", path = "coraplex/src/coraplex/robot_plans/actions/core/navigation.py", symbol = "coraplex.robot_plans.actions.core.navigation.NavigateAction"},
+  {id = "condition-tests", path = "test/coraplex_test/test_designator/test_action_conditions.py"},
+]
+
+[[concepts]]
+path = "workflows/world-fixtures.md"
+type = "Workflow"
+title = "World fixtures"
+description = "Shared context fixtures and world model/state restoration."
+evidence = [
+  {id = "fixtures", path = "test/coraplex_test/conftest.py", start_line = 94, end_line = 134},
+  {id = "snapshot", path = "test/coraplex_test/world_snapshot.py"},
+]
+
+[[concepts]]
+path = "workflows/orm-generation.md"
+type = "Workflow"
+title = "ORM generation"
+description = "Generator entry point, registry and generated-file requirements."
+evidence = [
+  {id = "entry", path = "scripts/regenerate_all_orm.py"},
+  {id = "registry", path = "cognitive_robot_abstract_machine/orm_interfaces.py"},
+  {id = "rules", path = "AGENTS.md"},
+]
+
+[[concepts]]
+path = "conventions/spatial-types.md"
+type = "Convention"
+title = "Spatial notation"
+description = "Frame names, homogeneous coordinates and transformation composition."
+evidence = [
+  {id = "spatial", path = "semantic_digital_twin/doc/style_guide.md"},
+]
+
+[[concepts]]
+path = "conventions/generic-dataclasses.md"
+type = "Convention"
+title = "Generic dataclasses"
+description = "Generic parameter binding and dataclass field narrowing."
+evidence = [
+  {id = "generic", path = "krrood/src/krrood/patterns/subclass_safe_generic.py", symbol = "krrood.patterns.subclass_safe_generic.SubClassSafeGeneric"},
+  {id = "rules", path = "AGENTS.md"},
+]
+
+[[concepts]]
+path = "conventions/roles.md"
+type = "Convention"
+title = "Roles and role takers"
+description = "Composition, role identity and delegated attribute access."
+evidence = [
+  {id = "role", path = "krrood/src/krrood/patterns/role.py", symbol = "krrood.patterns.role.Role"},
+  {id = "guide", path = "krrood/doc/patterns/role.md"},
+]

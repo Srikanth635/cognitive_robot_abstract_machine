@@ -204,3 +204,7 @@ basstler/.venv/
 # The uv such a start installs for itself, where it finds neither uv nor a supported
 # interpreter (see install_uv in the same file).
 basstler/.uv/
+
+# Rebuildable repository knowledge state.
+repository_knowledge/.cache/
+repository_knowledge/.venv/

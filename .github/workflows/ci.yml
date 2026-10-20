@@ -48,6 +48,7 @@ jobs:
           - lib: cramera
           - lib: version
           - lib: cognitive_robot_abstract_machine
+          - lib: repository_knowledge
     uses: ./.github/workflows/ci_reusable.yml
     with:
       lib: ${{ matrix.lib }}

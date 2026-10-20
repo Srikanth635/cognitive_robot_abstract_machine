@@ -52,6 +52,13 @@ jobs:
           source /opt/ros/cram-env/bin/activate
           uv pip install drake
 
+      - name: Install repository knowledge
+        if: ${{ inputs.lib == 'repository_knowledge' }}
+        run: |
+          cd cognitive_robot_abstract_machine
+          source /opt/ros/cram-env/bin/activate
+          python -m pip install --no-deps --editable ./repository_knowledge
+
       - name: Install robokudo optional requirements
         if: ${{ inputs.lib == 'robokudo' }}
         env:
@@ -103,7 +110,22 @@ jobs:
           if [[ "${{ inputs.lib }}" == "semantic_digital_twin" ]]; then
             export MUJOCO_GL=egl
           fi
-          if [[ "${{ inputs.lib }}" == "cramera" ]]; then
+          if [[ "${{ inputs.lib }}" == "repository_knowledge" ]]; then
+            cd cognitive_robot_abstract_machine
+            export OPENBLAS_NUM_THREADS=1
+            export OMP_NUM_THREADS=1
+            available_kib=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
+            if (( available_kib < 2097152 )); then
+              echo "Repository knowledge tests require at least 2 GiB available memory."
+              exit 1
+            fi
+            memory_limit_kib=$(( available_kib / 2 ))
+            if (( memory_limit_kib > 4194304 )); then
+              memory_limit_kib=4194304
+            fi
+            ulimit -v "$memory_limit_kib"
+            python -m pytest -o addopts= --confcutdir=test/repository_knowledge_test --orm-build never test/repository_knowledge_test
+          elif [[ "${{ inputs.lib }}" == "cramera" ]]; then
             python -m pytest -n auto --cov=cramera --cov-fail-under=85 cognitive_robot_abstract_machine/test/cramera_test
           else
             python -m pytest -n auto cognitive_robot_abstract_machine/test/${{ inputs.lib }}_test

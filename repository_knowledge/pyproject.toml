@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "repository-knowledge"
+version = "0.1.0"
+description = "Revision-aware source navigation for the CRAM workspace."
+requires-python = ">=3.12,<3.13"
+dependencies = ["krrood", "typing-extensions>=4.12.2", "PyYAML>=6"]
+
+[project.scripts]
+cram-knowledge = "repository_knowledge.composition:main"
+cram-wiki = "repository_knowledge.composition:wiki_main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["repository_knowledge*"]
+
+[tool.setuptools.package-data]
+repository_knowledge = ["adapters/sql/*.sql"]
+

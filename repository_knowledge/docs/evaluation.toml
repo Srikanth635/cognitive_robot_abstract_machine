@@ -1,0 +1,59 @@
+revision = "7b27424de7768798dc561f447e11c2a8eb86c307"
+
+[[navigation]]
+symbol = "coraplex.plans.executables.GiskardExecutable"
+source_path = "coraplex/src/coraplex/plans/executables.py"
+start_line = 193
+
+[[navigation]]
+symbol = "coraplex.robot_plans.actions.base.ActionDescription"
+source_path = "coraplex/src/coraplex/robot_plans/actions/base.py"
+start_line = 36
+
+[[navigation]]
+symbol = "coraplex.execution_environment.ExecutionEnvironment"
+source_path = "coraplex/src/coraplex/execution_environment.py"
+start_line = 18
+
+[[navigation]]
+symbol = "coraplex.robot_plans.motions.navigation.MoveMotion"
+source_path = "coraplex/src/coraplex/robot_plans/motions/navigation.py"
+start_line = 24
+
+[[navigation]]
+symbol = "semantic_digital_twin.world.World"
+source_path = "semantic_digital_twin/src/semantic_digital_twin/world.py"
+start_line = 544
+
+[[navigation]]
+symbol = "cramera.knowledge.entity.NamedEntity"
+source_path = "cramera/src/cramera/knowledge/entity.py"
+start_line = 14
+
+[[context_tasks]]
+task = "Extend navigation motion"
+phase = 6
+seed_symbols = ["coraplex.robot_plans.motions.navigation.MoveMotion", "coraplex.plans.executables.GiskardExecutable"]
+required_evidence = ["current signatures", "an existing motion implementation", "applicable AGENTS instructions", "relevant tests and fixtures"]
+
+[[context_tasks]]
+task = "Extend action execution"
+phase = 6
+seed_symbols = ["coraplex.robot_plans.actions.base.ActionDescription", "coraplex.execution_environment.ExecutionEnvironment"]
+required_evidence = ["action contract", "execution-environment boundary", "an existing action example", "relevant tests and fixtures"]
+
+[[context_tasks]]
+task = "Assess world API change"
+phase = 6
+seed_symbols = ["semantic_digital_twin.world.World"]
+required_evidence = ["resolved source consumers", "unresolved-dispatch limitations", "spatial conventions", "test fixture dependencies"]
+
+[[freshness_tasks]]
+task = "Committed revision changes"
+phase = 3
+expected_behavior = "Query rejects the previous index for the new requested commit."
+
+[[freshness_tasks]]
+task = "Uncommitted source changes"
+phase = 4
+expected_behavior = "Committed mode remains explicitly historical; an overlay captures current contents separately."
