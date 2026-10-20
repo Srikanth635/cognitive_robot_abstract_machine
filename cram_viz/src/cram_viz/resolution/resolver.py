@@ -349,7 +349,9 @@ class DesignatorResolver:
     ) -> ResolutionRun:
         """
         Resolve a designator in a run of its own: the scene's world built anew, the
-        knowledge consulted over a copy of the baseline's store.
+        knowledge consulted over a copy of the baseline's store, and what the run
+        admitted added to the baseline's store afterwards, however the resolution
+        ended, so later runs are served it.
 
         :param designator: The designator to resolve.
         :param scene: The name of the scene to resolve it in.
@@ -369,15 +371,18 @@ class DesignatorResolver:
         sink = run.events
         with reporting_run(sink, run.name, designator.source.text, scene):
             knowledge = self.knowledge_for(run, sink)
-            resolution = self.resolution_in(
-                run,
-                designator,
-                designator.query_in(names),
-                knowledge,
-                SceneGeometry(world=world),
-                bundle,
-                sink,
-            )
+            try:
+                resolution = self.resolution_in(
+                    run,
+                    designator,
+                    designator.query_in(names),
+                    knowledge,
+                    SceneGeometry(world=world),
+                    bundle,
+                    sink,
+                )
+            finally:
+                self.baseline.backend.store.adopt_new_records(run.knowledge_store)
             run.keep(resolution)
         return ResolutionRun(resolution=resolution, knowledge=knowledge)
 
