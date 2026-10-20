@@ -114,6 +114,11 @@ class LinkedOntologyVariable(StrEnum):
     """
 
 
+PARAGRAPH_SEPARATOR = "\n\n"
+"""
+What separates the paragraphs of a description.
+"""
+
 DESCRIPTIONS_DIRECTORY_NAME = "descriptions"
 """
 The directory, within the action perspectives' directory, holding the description of
@@ -261,6 +266,13 @@ class ActionPerspectiveModule(OntologyModuleFile):
             .read_text()
             .strip()
         )
+
+    @property
+    def summary(self) -> str:
+        """
+        What the module says of itself in its first paragraph, on one line.
+        """
+        return " ".join(self.description.split(PARAGRAPH_SEPARATOR)[0].split())
 
 
 class ActionPerspectiveFile(ActionPerspectiveModule, StrEnum):

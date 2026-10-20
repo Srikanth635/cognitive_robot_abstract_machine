@@ -40,11 +40,10 @@ from llm_reasoner.knowledge.ontologies.frame_fields import DimensionDescription
 from llm_reasoner.observation.events import KnowledgeConsulted
 from llm_reasoner.observation.sinks import MemorySink
 from llm_reasoner.resolver.knowledge import (
-    FRAME_KNOWLEDGE_RULE,
     KNOWLEDGE_RULE,
     KnowledgeRequester,
 )
-from llm_reasoner.resolver.prompt_format import PromptSection, SlotKey
+from llm_reasoner.resolver.prompt_format import PromptSection, RuleName, SlotKey
 from llm_reasoner.resolver.prompts import (
     ESTABLISHED_VALUES_RULE,
     INPUT_MEANINGS,
@@ -683,7 +682,9 @@ class TestConsultingPerspectives:
         requester, consultation = consulted_with_the_frame(
             HypothesisStore(directory=tmp_path / "with_frame")
         )
-        assert FRAME_KNOWLEDGE_RULE in requester.rules_for(consultation)
+        assert RuleName.FRAME_KNOWLEDGE in {
+            rule.name for rule in requester.rules_for(consultation)
+        }
         plain = requester_generating(
             HypothesisStore(directory=tmp_path / "plain"),
             GenerationCase.GRANULAR_POURING,
@@ -705,7 +706,8 @@ class TestConsultingPerspectives:
             knowledge=requester_offering_the_frame(HypothesisStore(directory=tmp_path)),
         )
         list(tilt_of(body_with_geometry()).evaluate(backend=backend))
-        assert {KNOWLEDGE_RULE, FRAME_KNOWLEDGE_RULE} <= set(backend.rules)
+        assert KNOWLEDGE_RULE in backend.rules
+        assert RuleName.FRAME_KNOWLEDGE in {rule.name for rule in backend.rules}
 
     def test_the_consultation_reports_the_core_and_the_perspectives_served(
         self, tmp_path
@@ -787,3 +789,45 @@ class TestSlotsNamingTheFrame:
         )
         list(tilt_of(body_with_geometry()).evaluate(backend=backend))
         assert SlotKey.FRAME not in slot_entries_of_request(backend)["angle"]
+
+
+# %% the rule about the frame is made from the perspectives offered
+
+
+def requester_offering(*perspectives: ActionPerspectiveFile) -> KnowledgeRequester:
+    """
+    :return: A requester that consults the perspectives, which asks nothing yet.
+    """
+    return KnowledgeRequester(
+        service=KnowledgeService(
+            backend=HypothesisBackend(
+                client=ScriptedClient(responses=[]),
+                store=HypothesisStore(directory=Path("unused")),
+            )
+        ),
+        perspectives=perspectives,
+    )
+
+
+class TestFrameRule:
+    def test_it_states_what_the_core_and_each_offered_perspective_say_of_themselves(
+        self,
+    ):
+        rule = requester_offering(
+            ActionPerspectiveFile.ACTION_FRAME, ActionPerspectiveFile.FAILURES
+        ).frame_rule()
+        for module in (
+            ActionPerspectiveFile.ACTION_CORE,
+            ActionPerspectiveFile.ACTION_FRAME,
+            ActionPerspectiveFile.FAILURES,
+        ):
+            assert module.summary in rule.text, module
+
+    def test_it_states_nothing_of_a_perspective_that_is_not_offered(self):
+        rule = requester_offering(ActionPerspectiveFile.ACTION_FRAME).frame_rule()
+        assert ActionPerspectiveFile.IMAGE_SCHEMAS.summary not in rule.text
+        assert ActionPerspectiveFile.FAILURES.summary not in rule.text
+
+    def test_it_is_the_frame_knowledge_rule(self):
+        rule = requester_offering(ActionPerspectiveFile.ACTION_FRAME).frame_rule()
+        assert rule.name is RuleName.FRAME_KNOWLEDGE

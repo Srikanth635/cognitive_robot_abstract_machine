@@ -521,6 +521,12 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
   first time: 5 of 6 perspective runs left the bowl (4 poured into the milk carton, 1 refused),
   the default arm still poured into it twice ($2.28).
 
+- The frame-knowledge rule is no longer hand-written (2026-10-20): `KnowledgeRequester.frame_rule`
+  builds it from the first paragraph (`ActionPerspectiveModule.summary`) of the description of
+  the core and of each perspective offered, so it states only what is offered; it used to name
+  the action frame's expectations and the image schemas whichever were offered. Earlier
+  comparison runs saw the old wording.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
