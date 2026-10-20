@@ -516,7 +516,10 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
 - The first trap case (2026-10-20, `knowledge_perspectives.md` §13.7): the scene's only bowl
   upside down, its up axis now stated in the scene geometry. All four arms poured into it
   (7 of 7 runs that finished, $2.24; one run cut off at 8192 output tokens): the model does not
-  read an up direction as an opening facing down, with or without the perspectives.
+  read an up direction as an opening facing down, with or without the perspectives. With the
+  opening direction stated (`opening_faces`, §13.7) the perspectives changed the choice for the
+  first time: 5 of 6 perspective runs left the bowl (4 poured into the milk carton, 1 refused),
+  the default arm still poured into it twice ($2.28).
 
 ## 3. Live testing
 
