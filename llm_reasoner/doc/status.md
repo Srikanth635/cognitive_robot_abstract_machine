@@ -605,6 +605,18 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   hand-authored sample was rewritten to the new terms. Answers name the members `HOLDS` and
   `DOES_NOT_HOLD`. Tests and HermiT only, not run live.
 
+- One direction of change (2026-10-20): the action core's `ChangeDirection` (`Increases`,
+  `Decreases`) replaced the frame's, and the failures' `ParameterChangeDirection` and the
+  Flanagan core's `CorrectionDirection` and `EstimateUpdateDirection` list its two members in
+  place of their own up and down (`Increase`/`Decrease`, `RaiseSetpoint`/`LowerSetpoint`,
+  `RaiseEstimate`/`LowerEstimate`), keeping their other values. The Flanagan two became DUL
+  concepts, as a shared member cannot be both a region and a concept. Since several
+  enumerations now list one individual, reading a hypothesis and filling entailed values give
+  the member of the field's own enumeration (`Vocabulary.held_by_field`). Answers name the
+  shared members `INCREASES` and `DECREASES`. Versions moved (action core 0.3.0, action frame
+  0.4.0, failures 0.3.0, Flanagan core 0.6.0, prehension 0.5.0); cram_viz's sample was
+  rewritten. Tests and HermiT only, not run live.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

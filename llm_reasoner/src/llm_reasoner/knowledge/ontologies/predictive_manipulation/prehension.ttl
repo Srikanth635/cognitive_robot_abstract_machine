@@ -1,6 +1,7 @@
 @prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
 @prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
 @prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
 @prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
@@ -9,8 +10,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.4.0> ;
-    owl:versionInfo "0.4.1" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.5.0> ;
+    owl:versionInfo "0.5.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> ;
     rdfs:label "Predictive manipulation: prehension"@en ;
     rdfs:comment """Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes."""@en .
@@ -442,7 +443,7 @@
 :LoadRateReduction a owl:Class ;
     rdfs:subClassOf core:CorrectiveAction ,
         [ a owl:Restriction ; owl:onProperty core:targetsSetpoint ; owl:allValuesFrom :LoadForceRateSetpoint ] ,
-        [ a owl:Restriction ; owl:onProperty core:hasCorrectionDirection ; owl:hasValue core:LowerSetpoint ] ;
+        [ a owl:Restriction ; owl:onProperty core:hasCorrectionDirection ; owl:hasValue ac:Decreases ] ;
     rdfs:label "load rate reduction"@en ;
     rdfs:comment "A correction that slows the load-force increase after a slip during loading."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
@@ -452,7 +453,7 @@
     rdfs:subClassOf core:CorrectiveAction ,
         [ a owl:Restriction ; owl:onProperty core:triggeredByError ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasErrorKind ; owl:hasValue core:AbsentEvent ] ] ,
         [ a owl:Restriction ; owl:onProperty core:targetsSetpoint ; owl:someValuesFrom :LoadForceSetpoint ] ,
-        [ a owl:Restriction ; owl:onProperty core:hasCorrectionDirection ; owl:hasValue core:RaiseSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty core:hasCorrectionDirection ; owl:hasValue ac:Increases ] ,
         [ a owl:Restriction ; owl:onProperty core:correctionTerminatedBy ; owl:someValuesFrom :Liftoff ] ;
     rdfs:label "probing force increase"@en ;
     rdfs:comment "For an object heavier than predicted: forces increase slowly until the missing lift-off is sensed."@en ;

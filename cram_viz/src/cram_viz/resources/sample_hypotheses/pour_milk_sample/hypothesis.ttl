@@ -454,7 +454,7 @@
         owl:NamedIndividual ;
     ns3:adjustmentActiveIn <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt> ;
     ns3:adjustsGripForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
-    ns3:hasAdjustmentDirection ns1:RaiseSetpoint ;
+    ns3:hasAdjustmentDirection ac:Increases ;
     ns3:triggeredByPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_load_prediction> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_to_load_ratio_range> a ns1:MagnitudeRange,
@@ -907,7 +907,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_lowering> a ns1:CorrectiveAction,
         owl:NamedIndividual ;
     ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> ;
-    ns1:hasCorrectionDirection ns1:LowerSetpoint ;
+    ns1:hasCorrectionDirection ac:Decreases ;
     ns1:hasRecoveryMode ns1:ContinuePhase ;
     ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
     ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again> ;
@@ -917,7 +917,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_unloading> a ns1:CorrectiveAction,
         owl:NamedIndividual ;
     ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> ;
-    ns1:hasCorrectionDirection ns1:LowerSetpoint ;
+    ns1:hasCorrectionDirection ac:Decreases ;
     ns1:hasRecoveryMode ns1:ContinuePhase ;
     ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
     ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again> ;
@@ -1098,7 +1098,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lower_mass_estimate> a ns4:RetainedModelUpdate,
         owl:NamedIndividual ;
-    ns1:hasUpdateDirection ns1:LowerEstimate ;
+    ns1:hasUpdateDirection ac:Decreases ;
     ns1:hasUpdateTimescale ns1:SingleTrial ;
     ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_error> ;
     ns1:updatesEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_mass> ;
@@ -1121,7 +1121,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#open_further> a ns1:CorrectiveAction,
         owl:NamedIndividual ;
     ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> ;
-    ns1:hasCorrectionDirection ns1:LowerSetpoint ;
+    ns1:hasCorrectionDirection ac:Decreases ;
     ns1:hasRecoveryMode ns1:ContinuePhase ;
     ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
     ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_open> ;
@@ -1134,7 +1134,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#raise_mass_estimate> a ns4:RetainedModelUpdate,
         owl:NamedIndividual ;
-    ns1:hasUpdateDirection ns1:RaiseEstimate ;
+    ns1:hasUpdateDirection ac:Increases ;
     ns1:hasUpdateTimescale ns1:SingleTrial ;
     ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_liftoff_error> ;
     ns1:updatesEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_mass> ;
@@ -1143,7 +1143,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#raise_remaining_milk_estimate> a ns4:RetainedModelUpdate,
         owl:NamedIndividual ;
-    ns1:hasUpdateDirection ns1:RaiseEstimate ;
+    ns1:hasUpdateDirection ac:Increases ;
     ns1:hasUpdateTimescale ns1:SingleTrial ;
     ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_flow_error> ;
     ns1:updatesEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#remaining_milk> ;
@@ -1236,7 +1236,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_load_rate_reduction> a ns3:LoadRateReduction,
         owl:NamedIndividual ;
-    ns1:hasCorrectionDirection ns1:LowerSetpoint ;
+    ns1:hasCorrectionDirection ac:Decreases ;
     ns1:hasRecoveryMode ns1:ContinuePhase ;
     ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
     ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
@@ -1335,7 +1335,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_back_further> a ns1:CorrectiveAction,
         owl:NamedIndividual ;
     ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> ;
-    ns1:hasCorrectionDirection ns1:LowerSetpoint ;
+    ns1:hasCorrectionDirection ac:Decreases ;
     ns1:hasRecoveryMode ns1:ContinuePhase ;
     ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#visual_latency> ;
     ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_carton> ;
@@ -1560,7 +1560,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_correction> a ns3:EarlyLiftoffCorrection,
         owl:NamedIndividual ;
-    ns1:hasCorrectionDirection ns1:LowerSetpoint ;
+    ns1:hasCorrectionDirection ac:Decreases ;
     ns1:hasRecoveryMode ns1:AbortAndCorrect ;
     ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
     ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
@@ -1684,7 +1684,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#probing_increase> a ns3:ProbingForceIncrease,
         owl:NamedIndividual ;
     ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
-    ns1:hasCorrectionDirection ns1:RaiseSetpoint ;
+    ns1:hasCorrectionDirection ac:Increases ;
     ns1:hasRecoveryMode ns1:ContinuePhase ;
     ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
     ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter> ;
@@ -2172,7 +2172,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_grip_increase> a ns3:CorrectiveGripResponse,
         owl:NamedIndividual ;
-    ns1:hasCorrectionDirection ns1:RaiseSetpoint ;
+    ns1:hasCorrectionDirection ac:Increases ;
     ns1:hasRecoveryMode ns1:ContinuePhase ;
     ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
     ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;

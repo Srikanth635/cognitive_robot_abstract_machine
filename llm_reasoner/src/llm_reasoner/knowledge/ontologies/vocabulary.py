@@ -7,7 +7,7 @@ from __future__ import annotations
 import inspect
 from dataclasses import dataclass, field, fields
 from enum import StrEnum
-from functools import cached_property
+from functools import cache, cached_property
 from operator import attrgetter
 from types import ModuleType
 
@@ -39,6 +39,18 @@ VOCABULARY_MODULES: dict[OntologyModuleFile, ModuleType] = {
 """
 The generated vocabulary module of every ontology module.
 """
+
+
+@cache
+def declared_value_types(owner: type[DescriptionEntity]) -> dict[str, type]:
+    """
+    :return: The type each field of a generated class is declared to hold, by field
+        name.
+    """
+    return {
+        wrapped.field.name: wrapped.type_endpoint
+        for wrapped in WrappedClass(owner).fields
+    }
 
 
 @dataclass
@@ -102,6 +114,25 @@ class Vocabulary:
             return annotated
         return self.definition_named(term.range)
 
+    def held_by_field(
+        self, owner: type[DescriptionEntity], name: str, value: Any
+    ) -> Any:
+        """
+        :return: The value as the field holds it: an enumeration member becomes the
+            member of the field's own enumeration standing for the same individual, since
+            several enumerations may list one individual; any other value is unchanged.
+        """
+        enumeration = declared_value_types(owner).get(name)
+        if not (
+            isinstance(value, StrEnum)
+            and isinstance(enumeration, type)
+            and issubclass(enumeration, StrEnum)
+        ):
+            return value
+        return next(
+            (member for member in enumeration if member.value == value.value), value
+        )
+
     def component_fields(
         self, structure_type: type[DescriptionEntity]
     ) -> dict[str, type[DescriptionEntity]]:
@@ -160,7 +191,8 @@ class Vocabulary:
             wrapped.field.name: wrapped
             for wrapped in WrappedClass(type(instance)).fields
         }
-        for name, value in self.entailed_values(type(instance)).items():
+        for name, entailed in self.entailed_values(type(instance)).items():
+            value = self.held_by_field(type(instance), name, entailed)
             value_type = self.value_type_of(
                 type(instance), name, wrapped_fields[name].type_endpoint
             )

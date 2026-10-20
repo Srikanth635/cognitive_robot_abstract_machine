@@ -85,21 +85,17 @@ class Noticer(StrEnum):
 
 class ParameterChangeDirection(StrEnum):
     """
-    The direction in which a correction moves a parameter choice.
+    The direction in which a correction moves a parameter choice: larger or smaller, as the action core's change direction says, or towards, away from or to another alternative.
     """
 
-    INCREASE = (
-        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#Increase"
-    )
+    INCREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Increases"
     """
-    The chosen quantity is made larger.
+    Becomes larger.
     """
 
-    DECREASE = (
-        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#Decrease"
-    )
+    DECREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Decreases"
     """
-    The chosen quantity is made smaller.
+    Becomes smaller, or grows more slowly.
     """
 
     TOWARDS_TARGET = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#TowardsTarget"

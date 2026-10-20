@@ -33,6 +33,22 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
+class ChangeDirection(StrEnum):
+    """
+    Whether something becomes larger or smaller, such as a quantity an action changes, a choice a correction moves or an estimate evidence revises. A direction that can also take values of its own lists these two among its members.
+    """
+
+    INCREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Increases"
+    """
+    Becomes larger.
+    """
+
+    DECREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Decreases"
+    """
+    Becomes smaller, or grows more slowly.
+    """
+
+
 class ConditionPolarity(StrEnum):
     """
     Whether a condition holds or does not hold. The property relating a condition to its polarity says whether that is demanded, such as a requirement of a phase or a frame, or observed, such as the condition a failure is noticed by.

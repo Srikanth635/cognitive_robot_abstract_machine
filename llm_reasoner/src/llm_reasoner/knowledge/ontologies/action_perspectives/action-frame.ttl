@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.3.0> ;
-    owl:versionInfo "0.3.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.4.0> ;
+    owl:versionInfo "0.4.0" .
 
 # %% classes
 
@@ -114,26 +114,6 @@ frame:DimensionRationale a owl:Class ;
         dul:Description .
 
 # %% value partitions
-
-frame:ChangeDirection a owl:Class ;
-    rdfs:label "change direction"@en ;
-    rdfs:comment "The direction in which a quantity changes."@en ;
-    rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( frame:Increases frame:Decreases ) ] .
-
-frame:Decreases a frame:ChangeDirection,
-        owl:NamedIndividual ;
-    rdfs:label "decreases"@en ;
-    rdfs:comment "The quantity becomes smaller."@en .
-
-frame:Increases a frame:ChangeDirection,
-        owl:NamedIndividual ;
-    rdfs:label "increases"@en ;
-    rdfs:comment "The quantity becomes larger."@en .
-
-[] a owl:AllDifferent ;
-    owl:distinctMembers ( frame:Increases frame:Decreases ) .
 
 frame:Inverted a frame:Posture,
         owl:NamedIndividual ;
@@ -282,7 +262,7 @@ frame:changesInDirection a owl:FunctionalProperty,
     rdfs:label "changes in direction"@en ;
     rdfs:comment "Whether the changed quantity rises or falls."@en ;
     rdfs:domain frame:AdditionalConsequence ;
-    rdfs:range frame:ChangeDirection .
+    rdfs:range core:ChangeDirection .
 
 frame:explainsDimension a owl:FunctionalProperty,
         owl:ObjectProperty ;

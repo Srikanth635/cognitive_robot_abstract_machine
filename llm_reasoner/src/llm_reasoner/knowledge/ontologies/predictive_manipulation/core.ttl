@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.5.0> ;
-    owl:versionInfo "0.5.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.6.0> ;
+    owl:versionInfo "0.6.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -717,22 +717,18 @@ Classes classify description-level individuals, the knowledge a language model g
 [ a owl:AllDifferent ; owl:distinctMembers ( :AbsentEvent :UnexpectedEvent :EarlyEvent :LateEvent :MagnitudeMismatch :DirectionMismatch :SpatialMismatch ) ] .
 
 :CorrectionDirection a owl:Class ;
-    rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :RaiseSetpoint :LowerSetpoint :HoldSetpoint :ReverseChange :StopChange ) ] ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( ac:Increases ac:Decreases :HoldSetpoint :ReverseChange :StopChange ) ] ;
     rdfs:label "correction direction"@en ;
     rdfs:comment "How a corrective response changes its target setpoint."@en ;
     :evidenceStatus :EmpiricalFinding .
-:RaiseSetpoint a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "raise setpoint"@en ;
-    rdfs:comment "Raise the target setpoint."@en .
-:LowerSetpoint a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "lower setpoint"@en ;
-    rdfs:comment "Lower the target setpoint, or slow its rate of increase."@en .
 :HoldSetpoint a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "hold setpoint"@en ;
     rdfs:comment "Keep the target at its present value."@en .
 :ReverseChange a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "reverse change"@en ;
     rdfs:comment "Command a change opposite to the current direction."@en .
 :StopChange a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "stop change"@en ;
     rdfs:comment "Bring the commanded change to rest."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :RaiseSetpoint :LowerSetpoint :HoldSetpoint :ReverseChange :StopChange ) ] .
+[ a owl:AllDifferent ; owl:distinctMembers ( ac:Increases ac:Decreases :HoldSetpoint :ReverseChange :StopChange ) ] .
 
 :RecoveryMode a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
@@ -753,19 +749,15 @@ Classes classify description-level individuals, the knowledge a language model g
 [ a owl:AllDifferent ; owl:distinctMembers ( :ContinuePhase :AbortAndCorrect :RepeatPhase :Replan :Abort ) ] .
 
 :EstimateUpdateDirection a owl:Class ;
-    rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :RaiseEstimate :LowerEstimate :ReplaceEstimate ) ] ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( ac:Increases ac:Decreases :ReplaceEstimate ) ] ;
     rdfs:label "estimate update direction"@en ;
     rdfs:comment "How evidence changes a represented estimate."@en ;
     :evidenceStatus :EmpiricalFinding ;
     :representsClaim :FJ-010 .
-:RaiseEstimate a owl:NamedIndividual , :EstimateUpdateDirection ; rdfs:label "raise estimate"@en ;
-    rdfs:comment "Revise the estimate upward."@en .
-:LowerEstimate a owl:NamedIndividual , :EstimateUpdateDirection ; rdfs:label "lower estimate"@en ;
-    rdfs:comment "Revise the estimate downward."@en .
 :ReplaceEstimate a owl:NamedIndividual , :EstimateUpdateDirection ; rdfs:label "replace estimate"@en ;
     rdfs:comment "Change an unordered estimate or replace its current value."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :RaiseEstimate :LowerEstimate :ReplaceEstimate ) ] .
+[ a owl:AllDifferent ; owl:distinctMembers ( ac:Increases ac:Decreases :ReplaceEstimate ) ] .
 
 :UpdateTimescale a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;

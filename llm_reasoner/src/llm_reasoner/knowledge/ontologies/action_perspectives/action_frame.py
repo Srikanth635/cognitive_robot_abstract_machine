@@ -30,22 +30,6 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
-class ChangeDirection(StrEnum):
-    """
-    The direction in which a quantity changes.
-    """
-
-    INCREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#Increases"
-    """
-    The quantity becomes larger.
-    """
-
-    DECREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#Decreases"
-    """
-    The quantity becomes smaller.
-    """
-
-
 class Posture(StrEnum):
     """
     How a thing stands relative to the vertical, as a qualitative value of its orientation.
@@ -191,7 +175,7 @@ class AdditionalConsequence(action_core.Consequence):
     What kind of quantity something about an action is about, such as the quantity a choice sets, a condition constrains or a change changes.
     """
 
-    changes_in_direction: Optional[ChangeDirection] = field(
+    changes_in_direction: Optional[action_core.ChangeDirection] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#changesInDirection",

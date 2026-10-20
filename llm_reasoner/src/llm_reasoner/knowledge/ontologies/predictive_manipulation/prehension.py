@@ -1308,7 +1308,7 @@ class LoadRateReduction(core.CorrectiveAction):
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCorrectionDirection",
                 quantifier=Quantifier.VALUE,
-                value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#LowerSetpoint",
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Decreases",
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#targetsSetpoint",
@@ -1555,7 +1555,7 @@ class ProbingForceIncrease(core.CorrectiveAction):
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCorrectionDirection",
                 quantifier=Quantifier.VALUE,
-                value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#RaiseSetpoint",
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Increases",
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#targetsSetpoint",

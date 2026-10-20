@@ -12,10 +12,10 @@
   "warnings": [],
   "consistency": "not_checked",
   "module_versions": {
-    "action-core.ttl": "0.2.0",
-    "core.ttl": "0.5.0",
+    "action-core.ttl": "0.3.0",
+    "core.ttl": "0.6.0",
     "object-dynamics.ttl": "0.3.0",
-    "prehension.ttl": "0.4.1",
+    "prehension.ttl": "0.5.0",
     "gaze.ttl": "0.2.1",
     "pouring.ttl": "0.6.0"
   }

@@ -365,6 +365,10 @@ class GraphReader:
             values.setdefault(str(predicate), []).append(self.value(value, instances))
         for property_iri, read_values in values.items():
             name, functional = fields_by_property[property_iri]
+            read_values = [
+                self.vocabulary.held_by_field(type(instance), name, read)
+                for read in read_values
+            ]
             if functional and len(read_values) > 1:
                 raise SeveralValuesOfFunctionalProperty(
                     individual=str(subject), property_iri=property_iri

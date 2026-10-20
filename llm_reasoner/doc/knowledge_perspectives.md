@@ -358,8 +358,18 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    now imports the action core, the only import between the families, and only in that
    direction. Versions: action core 0.2.0, action frame 0.3.0, failures 0.2.0, Flanagan core
    0.5.0, so hypotheses stored under the old versions are generated again.
-3. Still open: linking the instances of a Flanagan hypothesis to those of a core hypothesis,
-   and merging the other duplicated concepts (direction of change, conditions, quantities).
+3. *One direction of change, 2026-10-20.* Larger or smaller is the action core's
+   `ChangeDirection` (`Increases`, `Decreases`), which the frame uses as it is. The failures'
+   `ParameterChangeDirection` and the Flanagan core's `CorrectionDirection` and
+   `EstimateUpdateDirection` list those two among their members in place of their own
+   increase/raise and decrease/lower, and keep the values only they have (towards, away from or
+   to another alternative; hold, reverse or stop a setpoint; replace an estimate). All four are
+   DUL concepts now, since DUL keeps regions and concepts apart. Several enumerations thus list
+   one individual, so a value read from a stored hypothesis or entailed by a class becomes the
+   member of its field's own enumeration (`Vocabulary.held_by_field`). Versions: action core
+   0.3.0, action frame 0.4.0, failures 0.3.0, Flanagan core 0.6.0, prehension 0.5.0.
+4. Still open: linking the instances of a Flanagan hypothesis to those of a core hypothesis,
+   and merging the other duplicated concepts (conditions, quantities).
 
 **Phase 8 — more actions (D8):** navigating, picking up and placing in the core, with the
 concepts CRAM-AICOR lacks proposed in our module (§10), and their perspectives.
