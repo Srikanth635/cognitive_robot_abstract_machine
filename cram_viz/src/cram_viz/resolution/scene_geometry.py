@@ -7,6 +7,8 @@ where each robot's base stands and faces, in the world frame.
 from __future__ import annotations
 
 import json
+
+import numpy as np
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -19,13 +21,7 @@ from semantic_digital_twin.world_description.connections import OmniDrive
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Dict, List, Optional
 
-from cram_viz.resolution.mesh_opening import OpeningMeasurement
-
-OPENING_ALIGNMENT = 0.5 * 2**0.5
-"""
-How far an up axis may lean from the vertical, as the cosine of the angle (45 degrees),
-for an opening to face up or down rather than sideways.
-"""
+from cram_viz.resolution.mesh_opening import OpeningDirection, OpeningMeasurement
 
 UP_AXIS = 2
 """
@@ -52,30 +48,6 @@ GEOMETRY_HEADING = (
 """
 The sentence introducing the geometry.
 """
-
-
-class OpeningDirection(StrEnum):
-    """
-    Where a container's opening faces.
-    """
-
-    UP = "up"
-    DOWN = "down"
-    SIDEWAYS = "sideways"
-
-    @classmethod
-    def of(cls, up: List[float]) -> OpeningDirection:
-        """
-        :param up: The world-frame direction of the container's own up axis.
-        :return: Where the opening faces: up or down when the axis is within
-            :data:`OPENING_ALIGNMENT` of the vertical, sideways otherwise.
-        """
-        vertical = float(up[-1])
-        if vertical >= OPENING_ALIGNMENT:
-            return cls.UP
-        if vertical <= -OPENING_ALIGNMENT:
-            return cls.DOWN
-        return cls.SIDEWAYS
 
 
 class GeometryKey(StrEnum):
@@ -170,12 +142,22 @@ class SceneGeometry(PromptContextProvider):
             ),
             GeometryKey.UP: up,
         }
-        opening = OpeningMeasurement(mesh=body.visual.combined_mesh).direction()
+        placed = body.visual.combined_mesh.copy()
+        placed.apply_transform(self.orientation_of(transform))
+        opening = OpeningMeasurement(mesh=placed).faces()
         if opening is not None:
-            geometry[GeometryKey.OPENING_FACES] = OpeningDirection.of(
-                list(transform[:3, :3] @ opening)
-            )
+            geometry[GeometryKey.OPENING_FACES] = opening
         return geometry
+
+    @staticmethod
+    def orientation_of(transform: np.ndarray) -> np.ndarray:
+        """
+        :return: The transform with its position left out: it turns a body's mesh as the
+            body is placed, about the mesh's own origin.
+        """
+        orientation = np.eye(4)
+        orientation[:3, :3] = transform[:3, :3]
+        return orientation
 
     @staticmethod
     def base_geometry(base: Body) -> Dict[str, Any]:
