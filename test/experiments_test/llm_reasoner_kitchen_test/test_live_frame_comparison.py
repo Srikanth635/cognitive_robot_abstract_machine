@@ -10,18 +10,21 @@ the records afterwards.
 
 from __future__ import annotations
 
+import json
 import os
-from dataclasses import replace
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 import pytest
 from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.clients.usage import SONNET_5_5_PRICES
 from llm_reasoner.knowledge.access import HypothesisStore
+from llm_reasoner.resolver.exceptions import AmbiguousReferent, NoFittingReferent
 
 from cram_viz import paths
 from cram_viz.resolution.designators import DesignatorQuery, PouringDesignator
 from cram_viz.resolution.resolver import RESOLVER_MAX_TOKENS, DesignatorResolver
+from cram_viz.resolution.overturned_scene import OverturnedScene
 from cram_viz.resolution.runs import ResolutionRuns, RunFile
 from experiments.frame_comparison.output import (
     KITCHEN_RUNS_PER_ARM,
@@ -175,3 +178,107 @@ def test_a_kitchen_case_is_resolved(arm, case, run, kitchen, output, store):
     )
     output.add(record)
     print(record.to_json())
+
+
+# %% a goal that cannot receive the pour
+
+OVERTURNED_GOAL = "bowl"
+"""
+The identifier of the object turned upside down in the scene the trap is run in: the
+only bowl, so that every container left is a poor goal.
+"""
+
+TRAP_RECORDS = "overturned_goal.jsonl"
+"""
+The file, beside the comparison's records, that the trap's outcomes are kept in.
+"""
+
+TRAP_RUNS_PER_ARM = 2
+"""
+How many times each arm is asked to pour with the goal turned upside down.
+"""
+
+
+@dataclass
+class TrapOutcome:
+    """
+    What a resolver did when the only bowl stood upside down.
+    """
+
+    arm: str
+    """
+    The arm that resolved.
+    """
+
+    run: int
+    """
+    Which run of the arm it was.
+    """
+
+    refused: str
+    """
+    The refusal the resolver answered with, as the name of its kind; empty when it
+    resolved.
+    """
+
+    target_container: str
+    """
+    The goal it chose, as the resolved slot writes it; empty when it refused.
+    """
+
+    why: str
+    """
+    The reason it gave.
+    """
+
+    cost: float
+    """
+    What its conversations cost, in dollars, when it resolved.
+    """
+
+
+@pytest.mark.parametrize("run", range(TRAP_RUNS_PER_ARM))
+@pytest.mark.parametrize("arm", list(ComparisonArm))
+def test_the_pour_is_not_made_into_an_overturned_goal(
+    arm, run, output, store, tmp_path_factory
+):
+    bundle = paths.scenes_dir() / POURING_SCENE
+    if not bundle.is_dir():
+        pytest.skip(f"the {POURING_SCENE} scene is not available")
+    trap = OverturnedScene(bundle=bundle, identifier=OVERTURNED_GOAL).write_to(
+        tmp_path_factory.mktemp("overturned") / POURING_SCENE
+    )
+    resolver = DesignatorResolver(
+        client=AnthropicClient(model=LIVE_MODEL, max_tokens=RESOLVER_MAX_TOKENS),
+        baseline=LIVE.reasoner(store).knowledge,
+        runs=ResolutionRuns(directory=output.directory / "runs"),
+        perspectives=arm.perspectives,
+        predicts_pours=arm.predicts_pours,
+    )
+    query = DesignatorQuery.shipped(PouringDesignator.OBJECTS_OPEN)
+    try:
+        resolved = resolver.resolve(query, POURING_SCENE, trap).resolution
+    except (NoFittingReferent, AmbiguousReferent) as refusal:
+        outcome = TrapOutcome(
+            arm=arm.value,
+            run=run,
+            refused=type(refusal).__name__,
+            target_container="",
+            why=refusal.reason,
+            cost=0.0,
+        )
+    else:
+        (action,) = resolved.actions[:1]
+        outcome = TrapOutcome(
+            arm=arm.value,
+            run=run,
+            refused="",
+            target_container=next(
+                slot.value for slot in action.slots if slot.name == "target_container"
+            ),
+            why=action.why,
+            cost=resolved.cost,
+        )
+    with (output.directory / TRAP_RECORDS).open("a") as records:
+        records.write(json.dumps(asdict(outcome)) + "\n")
+    print(outcome)
