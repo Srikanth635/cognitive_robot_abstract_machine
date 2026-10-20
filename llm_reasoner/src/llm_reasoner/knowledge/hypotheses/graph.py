@@ -10,7 +10,7 @@ from enum import StrEnum
 from operator import attrgetter
 
 import rustworkx as rx
-from typing_extensions import Any, Optional
+from typing_extensions import Any, Optional, Sequence
 
 from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.knowledge.ontologies.terms import is_inferred
@@ -218,30 +218,52 @@ class HypothesisGraphProjector:
             value a fragment states of an ontology property, leaving out properties the
             ontology infers from sub-properties.
         """
+        return self.project_together([view], presentation)
+
+    def project_together(
+        self,
+        views: Sequence[HypothesisView],
+        presentation: HypothesisGraphPresentation = HypothesisGraphPresentation.GROUPED,
+    ) -> HypothesisGraph:
+        """
+        :param views: The hypotheses drawn in one graph, the first giving the
+            instruction; a fragment one states of another's fragment, such as a
+            perspective of the core's slot, links the node of that fragment itself.
+        :return: The graph of every fragment of every hypothesis, the instruction
+            describing the root of each, with a link for every value a fragment states
+            of an ontology property, leaving out properties the ontology infers from
+            sub-properties.
+        """
+        primary = views[0]
         graph = rx.PyDiGraph(multigraph=True)
         instruction_index = graph.add_node(
             HypothesisGraphNode(
-                identifier=Citation.namespace_of(view.record.record_id),
-                label=view.record.instruction,
+                identifier=Citation.namespace_of(primary.record.record_id),
+                label=primary.record.instruction,
                 type_name=HypothesisGraphNodeKind.INSTRUCTION.value,
                 kind=HypothesisGraphNodeKind.INSTRUCTION,
             )
         )
         indices = {
             id(fragment): graph.add_node(self.fragment_node(view, fragment))
+            for view in views
             for fragment in view.fragments
         }
-        root_index = indices[id(view.root)]
-        self.link(
-            graph, instruction_index, SyntheticHypothesisRelation.DESCRIBES, root_index
-        )
-        for fragment in view.fragments:
+        for view in views:
+            self.link(
+                graph,
+                instruction_index,
+                SyntheticHypothesisRelation.DESCRIBES,
+                indices[id(view.root)],
+            )
+        roots = {id(view.root) for view in views}
+        for fragment in (fragment for view in views for fragment in view.fragments):
             links = self.links_of(fragment, indices)
             if (
-                fragment is view.root
+                id(fragment) in roots
                 and presentation is HypothesisGraphPresentation.GROUPED
             ):
-                self.link_through_groups(graph, root_index, links)
+                self.link_through_groups(graph, indices[id(fragment)], links)
                 continue
             for name, targets in links.items():
                 for target_index in targets:
@@ -253,7 +275,9 @@ class HypothesisGraphProjector:
                         PropertyTerm.of_field(type(fragment), name).iri,
                     )
         return HypothesisGraph(
-            graph=graph, instruction_index=instruction_index, root_index=root_index
+            graph=graph,
+            instruction_index=instruction_index,
+            root_index=indices[id(primary.root)],
         )
 
     @staticmethod

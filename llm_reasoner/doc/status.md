@@ -5,7 +5,7 @@ decided, and what is proposed next. Read it with [`architecture.md`](architectur
 which describes how the package is built. Update both in the same change whenever the
 work moves on.
 
-Last updated: 2026-10-19; code at commit `a1dc8de3d`.
+Last updated: 2026-10-20; code at commit `a1dc8de3d`.
 
 ## 1. State at a glance
 
@@ -527,6 +527,21 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
   the core and of each perspective offered, so it states only what is offered; it used to name
   the action frame's expectations and the image schemas whichever were offered. Earlier
   comparison runs saw the old wording.
+
+- The viewer shows all the knowledge a resolution consulted (2026-10-20): when perspectives are
+  offered, `activate_resolution` draws the action core's frame and each perspective on it beside the
+  Flanagan phase structure in the Hypothesis Graph tab, each root titled by its module (Action Core,
+  Action Frame, Image Schemas, Failures) and hanging off the instruction, a perspective's fragments
+  linking the core's own slot and dimension nodes. `HypothesisGraphProjector.project_together` draws
+  several hypotheses in one graph (`project` is the one-hypothesis case); cram_viz's
+  `ConsultedHypotheses` attaches them after the phase overlay, which is untouched, so the `pouring_*`
+  EQL variables, highlighting and the Designator tab behave as before. The Ontology Graph tab draws
+  the classes of all of them (`OntologyClassGraph.of(*views)`), reading descriptions from the action
+  perspective modules and `object-kinds.ttl`, attributing terms to `TermSource.ACTION_PERSPECTIVE` and
+  `OBJECT_KINDS`; CRAM-AICOR's container carries the requirement "has opening: true". A ground citing
+  a core or perspective fragment is named by its fragment and is a node of the Hypothesis Graph.
+  Checked in the browser on the recorded scripted core and perspectives of pouring (the machine has
+  no stored run with perspectives); the EQL variables still range over the phase structure only.
 
 ## 3. Live testing
 

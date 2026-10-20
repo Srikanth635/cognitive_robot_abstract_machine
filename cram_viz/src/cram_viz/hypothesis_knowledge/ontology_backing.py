@@ -10,11 +10,14 @@ from enum import StrEnum
 from pathlib import Path
 
 from llm_reasoner.knowledge.access import (
+    ActionPerspectiveFile,
     CONCEPT_PREFIXES,
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,
-    PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
+    OBJECT_KINDS_FILE,
+    OBJECT_KINDS_NAMESPACE,
+    OntologyModuleFile,
     PredictiveManipulationOntologyFile,
 )
 from typing_extensions import Optional
@@ -30,6 +33,16 @@ class TermSource(StrEnum):
     PREDICTIVE_MANIPULATION = "predictive manipulation"
     """
     One of the predictive manipulation modules.
+    """
+
+    ACTION_PERSPECTIVE = "action perspective"
+    """
+    One of the action perspective modules: the action core or a perspective on it.
+    """
+
+    OBJECT_KINDS = "object kinds"
+    """
+    What the ontology says of kinds of object, such as that a container has an opening.
     """
 
     CRAM_AICOR = "CRAM-AICOR"
@@ -74,25 +87,39 @@ class TermNamespace:
     The ontology the namespace belongs to.
     """
 
+    @property
+    def title(self) -> str:
+        """
+        The prefix written as words, such as ``Image Schemas`` for ``image-schemas``.
+        """
+        return self.prefix.replace("-", " ").title()
+
 
 def known_namespaces() -> tuple[TermNamespace, ...]:
     """
-    :return: The namespace of every predictive manipulation module, prefixed with the
-        module's name, and of every ontology a hypothesis may cite a concept from.
+    :return: The namespace of every module of the knowledge, prefixed with the module's
+        name, the kinds of object, and every ontology a hypothesis may cite a concept
+        from.
     """
     source_of_concept_namespace = {
         CRAM_AICOR_NAMESPACE: TermSource.CRAM_AICOR,
         DUL_NAMESPACE: TermSource.DUL,
         HYPOTHESIS_CONCEPT_NAMESPACE: TermSource.HYPOTHESIS,
     }
+    modules: tuple[tuple[type[OntologyModuleFile], TermSource], ...] = (
+        (PredictiveManipulationOntologyFile, TermSource.PREDICTIVE_MANIPULATION),
+        (ActionPerspectiveFile, TermSource.ACTION_PERSPECTIVE),
+    )
     return (
         *(
-            TermNamespace(
-                prefix=Path(module).stem,
-                iri=PREDICTIVE_MANIPULATION_NAMESPACE_ROOT + Path(module).stem + "#",
-                source=TermSource.PREDICTIVE_MANIPULATION,
-            )
-            for module in PredictiveManipulationOntologyFile
+            TermNamespace(prefix=Path(module).stem, iri=module.namespace, source=source)
+            for family, source in modules
+            for module in family
+        ),
+        TermNamespace(
+            prefix=Path(OBJECT_KINDS_FILE).stem,
+            iri=OBJECT_KINDS_NAMESPACE,
+            source=TermSource.OBJECT_KINDS,
         ),
         *(
             TermNamespace(
