@@ -10,12 +10,13 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import pytest
 from krrood.entity_query_language.factories import the, variable
 
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.clients.tools import ScriptedToolRequest, Tool
 from llm_reasoner.resolver.backend import LanguageModelBackend
-from llm_reasoner.resolver.exceptions import OutcomeFellShort
+from llm_reasoner.resolver.exceptions import OutcomeFellShort, RepairBudgetExhausted
 from llm_reasoner.resolver.outcomes import OutcomeCheck, OutcomePrediction
 from llm_reasoner.resolver.prompt_format import PromptRule, PromptSection, RuleName
 from llm_reasoner.world.view import WorldView
@@ -123,6 +124,103 @@ class TestOutcomeCheck:
         body_with_geometry()
         backend = checked_backend(MinimumAngleCheck(required=REQUIRED_ANGLE))
         assert backend.situation_backend_for(tilt_query()).outcome_check is None
+
+
+# %% falling back to the best answer that fell short
+
+
+@dataclass
+class RankedAngleCheck(OutcomeCheck):
+    """
+    Accepts a tilting action only when it reaches a required angle; one that falls short
+    but reaches a lesser angle may still be accepted as a last resort, the closer to the
+    required angle the better.
+    """
+
+    required: float
+    """
+    The angle an action must reach.
+    """
+
+    acceptable: float
+    """
+    The least angle an action falling short may still be accepted at.
+    """
+
+    def check(self, instances: Sequence[Any]) -> None:
+        (action,) = instances
+        if action.angle >= self.required:
+            return
+        raise OutcomeFellShort(
+            outcome={"angle_reached": action.angle, "angle_required": self.required},
+            fallback_rank=(
+                self.required - action.angle
+                if action.angle >= self.acceptable
+                else None
+            ),
+        )
+
+
+def ranked_backend(check: OutcomeCheck, *answers: str) -> LanguageModelBackend:
+    """
+    :return: A backend answering with the scripted answers in turn, one repair per
+        answer after the first, each tried by the check.
+    """
+    return LanguageModelBackend(
+        client=ScriptedClient(responses=[answer(name) for name in answers]),
+        outcome_check=check,
+        max_repairs=len(answers) - 1,
+    )
+
+
+MODERATE_ANSWER = "body_and_angle_chosen_with_why.json"
+"""
+An answer tilting short of the required angle, but closer to it than the small one.
+"""
+
+SMALL_ANSWER = "body_and_small_angle_chosen.json"
+"""
+An answer tilting far short of the required angle.
+"""
+
+
+@pytest.fixture
+def body():
+    """
+    A body of the world, kept alive for the test, for the query to choose.
+    """
+    return body_with_geometry()
+
+
+class TestFallingBack:
+    def test_when_every_answer_falls_short_the_best_acceptable_one_is_kept(self, body):
+        check = RankedAngleCheck(required=REQUIRED_ANGLE, acceptable=0.0)
+        backend = ranked_backend(check, MODERATE_ANSWER, SMALL_ANSWER)
+        (action,) = tilt_query().evaluate(backend=backend)
+        (moderate,) = json.loads(answer(MODERATE_ANSWER))
+        assert action.source is body
+        assert action.angle == moderate["ActionWithBodyAndValueSlots.angle"]
+
+    def test_the_answer_kept_keeps_its_own_reason(self, body):
+        check = RankedAngleCheck(required=REQUIRED_ANGLE, acceptable=0.0)
+        backend = ranked_backend(check, MODERATE_ANSWER, SMALL_ANSWER)
+        list(tilt_query().evaluate(backend=backend))
+        (justification,) = backend.justifications
+        (moderate,) = json.loads(answer(MODERATE_ANSWER))
+        assert justification.why == moderate["why"]
+
+    def test_an_answer_never_acceptable_is_never_kept(self, body):
+        check = RankedAngleCheck(required=REQUIRED_ANGLE, acceptable=REQUIRED_ANGLE)
+        backend = ranked_backend(check, MODERATE_ANSWER, SMALL_ANSWER)
+        with pytest.raises(RepairBudgetExhausted):
+            list(tilt_query().evaluate(backend=backend))
+
+    def test_the_model_is_not_told_how_its_answer_ranks(self, body):
+        check = RankedAngleCheck(required=REQUIRED_ANGLE, acceptable=0.0)
+        backend = ranked_backend(check, MODERATE_ANSWER, SMALL_ANSWER)
+        list(tilt_query().evaluate(backend=backend))
+        (rejection,) = bodies(backend.log[1].user, PromptSection.REJECTION)
+        assert set(json.loads(rejection)) == {"outcome"}
 
 
 # %% predicting what an answer brings about

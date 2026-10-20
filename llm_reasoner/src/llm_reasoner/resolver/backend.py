@@ -60,6 +60,7 @@ from llm_reasoner.resolver.exceptions import (
     MissingSlotInResponse,
     ModelResponseUnparseable,
     NoCandidateReferents,
+    OutcomeFellShort,
     NoValidCandidates,
     ReferentSlotHasNoDomain,
     RepairBudgetExhausted,
@@ -116,6 +117,28 @@ class DecodedElement:
     grounds: List[Ground]
     """
     What the element's choices rest on, each checked against its source.
+    """
+
+
+@dataclass(frozen=True)
+class FallbackAnswer:
+    """
+    An answer whose outcome fell short but which may still be accepted as a last resort.
+    """
+
+    rank: float
+    """
+    How good it is as a last resort, lower being better.
+    """
+
+    instances: List[Any]
+    """
+    The instances it constructed.
+    """
+
+    justifications: List[Justification]
+    """
+    Why each was chosen and what that rests on.
     """
 
 
@@ -515,6 +538,7 @@ class LanguageModelBackend(GenerativeBackend):
 
         completion = self.request_completion
         last_error: Optional[Exception] = None
+        fallback: Optional[FallbackAnswer] = None
         for attempt in range(self.max_repairs + 1):
             self.observer.emit(AttemptStarted(resolution=resolution, attempt=attempt))
             try:
@@ -546,25 +570,86 @@ class LanguageModelBackend(GenerativeBackend):
             )
             try:
                 accepted = self._accept(expression, raw_response, open_slots)
+                self._try_outcome(accepted)
+            except OutcomeFellShort as error:
+                last_error = error
+                fallback = self._better_fallback(fallback, error, accepted)
+                prompt = self._rejected(
+                    resolution, attempt, prompt, raw_response, error
+                )
+                continue
             except RetryableModelFailure as error:
                 last_error = error
-                self.observer.emit(
-                    AttemptRejected(
-                        resolution=resolution,
-                        attempt=attempt,
-                        kind=type(error).__name__,
-                        details=error.details(),
-                        answer=raw_response,
-                    )
+                prompt = self._rejected(
+                    resolution, attempt, prompt, raw_response, error
                 )
-                prompt = PromptBuilder.build_repair(prompt, raw_response, error)
                 continue
             self._finished(resolution, attempt + 1, accepted)
             return accepted
 
+        if fallback is not None:
+            self.justifications = fallback.justifications
+            self._finished(resolution, self.max_repairs + 1, fallback.instances)
+            return fallback.instances
         raise RepairBudgetExhausted(
             attempts=self.max_repairs + 1, last_error=last_error
         )
+
+    def _try_outcome(self, accepted: Sequence[T]) -> None:
+        """
+        Try what an answer constructs, when there is an outcome check.
+
+        :raises OutcomeFellShort: When what it does falls short.
+        """
+        if self.outcome_check is not None:
+            self.outcome_check.check(accepted)
+
+    def _better_fallback(
+        self,
+        current: Optional[FallbackAnswer],
+        error: OutcomeFellShort,
+        accepted: List[T],
+    ) -> Optional[FallbackAnswer]:
+        """
+        :param current: The best answer kept as a last resort so far, if any.
+        :param error: How the latest answer fell short.
+        :param accepted: What the latest answer constructed.
+        :return: The latest answer when it may be accepted as a last resort and ranks
+            better than the current one; the current one otherwise.
+        """
+        if error.fallback_rank is None:
+            return current
+        if current is not None and current.rank <= error.fallback_rank:
+            return current
+        return FallbackAnswer(
+            rank=error.fallback_rank,
+            instances=list(accepted),
+            justifications=list(self.justifications),
+        )
+
+    def _rejected(
+        self,
+        resolution: str,
+        attempt: int,
+        prompt: str,
+        raw_response: str,
+        error: RetryableModelFailure,
+    ) -> str:
+        """
+        Report an answer as rejected.
+
+        :return: The prompt asking again, with the rejected answer and why.
+        """
+        self.observer.emit(
+            AttemptRejected(
+                resolution=resolution,
+                attempt=attempt,
+                kind=type(error).__name__,
+                details=error.details(),
+                answer=raw_response,
+            )
+        )
+        return PromptBuilder.build_repair(prompt, raw_response, error)
 
     def _sent_back_unfinished(
         self,
@@ -593,16 +678,7 @@ class LanguageModelBackend(GenerativeBackend):
                 attempt=attempt,
             )
         )
-        self.observer.emit(
-            AttemptRejected(
-                resolution=resolution,
-                attempt=attempt,
-                kind=type(error).__name__,
-                details=error.details(),
-                answer=partial_answer,
-            )
-        )
-        return PromptBuilder.build_repair(prompt, partial_answer, error)
+        return self._rejected(resolution, attempt, prompt, partial_answer, error)
 
     def _consult(self, expression: Match[T], resolution: str) -> None:
         """
@@ -670,15 +746,12 @@ class LanguageModelBackend(GenerativeBackend):
         :return: The instances built from the response that meet the where-conditions,
             each kept with its justification.
         :raises NoValidCandidates: When none of them does.
-        :raises OutcomeFellShort: When trying them falls short.
         """
         decoded = self._decode(raw_response, open_slots)
         constructed = [
             self._construct(expression, element.assignment) for element in decoded
         ]
         accepted = self._validate(expression, constructed)
-        if self.outcome_check is not None:
-            self.outcome_check.check(accepted)
         self.justifications = [
             Justification(instance=instance, why=element.why, grounds=element.grounds)
             for instance, element in zip(constructed, decoded)

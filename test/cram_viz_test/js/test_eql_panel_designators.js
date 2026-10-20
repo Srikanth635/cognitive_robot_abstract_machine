@@ -335,6 +335,7 @@ test('Generate resolves the query in the search bar in the scene', async functio
   assert.ok(call);
   assert.deepStrictEqual(JSON.parse(call.init.body), {
     query: designatorsPayload().designators[0].query, scene: 'simple_pouring',
+    perspectives: designatorsPayload().perspectives.map(function (p) { return p.name; }),
   });
 });
 
@@ -600,7 +601,7 @@ function perspectiveBoxes(panel) {
   return perspectiveChoices(panel).map(function (choice) { return choice.children[0]; });
 }
 
-test('each perspective the knowledge offers becomes a box, none of them ticked', async function () {
+test('each perspective the knowledge offers becomes a box, every one ticked', async function () {
   const panel = loadEqlPanel();
   await settle();
 
@@ -609,7 +610,7 @@ test('each perspective the knowledge offers becomes a box, none of them ticked',
     boxes.map(function (box) { return box.value; }),
     designatorsPayload().perspectives.map(function (p) { return p.name; }),
   );
-  assert.ok(boxes.every(function (box) { return box.checked === false; }));
+  assert.ok(boxes.every(function (box) { return box.checked === true; }));
 });
 
 test('a perspective box tells what the perspective holds on hover', async function () {
@@ -619,11 +620,11 @@ test('a perspective box tells what the perspective holds on hover', async functi
   assert.ok(perspectiveChoices(panel)[1].title.includes(designatorsPayload().perspectives[1].summary));
 });
 
-test('Generate asks for the perspectives that are ticked', async function () {
+test('Generate asks only for the perspectives left ticked', async function () {
   const panel = loadEqlPanel();
   await settle();
 
-  perspectiveBoxes(panel)[1].checked = true;
+  perspectiveBoxes(panel)[0].checked = false;
   generate(panel, designatorsPayload().designators[0].query);
   await settle();
 
@@ -632,4 +633,16 @@ test('Generate asks for the perspectives that are ticked', async function () {
     JSON.parse(call.init.body).perspectives,
     [designatorsPayload().perspectives[1].name],
   );
+});
+
+test('Generate asks for no perspective when every box is unticked', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  perspectiveBoxes(panel).forEach(function (box) { box.checked = false; });
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  const call = panel.requests.find(function (r) { return r.url === '/api/designator/resolve'; });
+  assert.strictEqual(JSON.parse(call.init.body).perspectives, undefined);
 });

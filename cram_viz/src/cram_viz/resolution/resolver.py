@@ -73,10 +73,11 @@ The modules of the semantic_digital_twin world model whose functions the resolve
 model may ask about; nothing else in the viewer loads them.
 """
 
-POUR_TRIALS = 3
+POUR_REPAIRS = 3
 """
-How many pours a resolution tries in the simulation; the last is accepted whatever it
-brings about.
+How many times a resolution may answer again after its first answer, each answer's pour
+tried in the simulation; when none lands, the one performed and flowing that ended
+nearest the opening is kept.
 """
 
 # %% what a resolution shows
@@ -443,7 +444,7 @@ class DesignatorResolver:
             source_detail=SourceDetail.FULL,
             outcome_check=trials,
             outcome_prediction=prediction,
-            max_repairs=POUR_TRIALS,
+            max_repairs=POUR_REPAIRS,
         )
         if trials is not None:
             trials.flow_onset = FlowOnsetKnowledge(
@@ -533,7 +534,6 @@ class DesignatorResolver:
         return SimulatedPouring(
             bundle=bundle,
             slots=slots.names,
-            allowed_trials=POUR_TRIALS,
             run=self.simulate,
             observer=sink,
             neems=neems,
