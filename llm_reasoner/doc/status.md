@@ -573,6 +573,16 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   has nothing to read. With every box unticked nothing is consulted and the tabs keep showing
   the previous hypothesis. Tests and a browser check; not run live.
 
+- Knowledge is reused across cram_viz runs (2026-10-21): every run consults a copy of the
+  baseline store as before, and when it ends, however its resolution ended, the hypotheses it
+  admitted are added to the baseline (`HypothesisStore.adopt_new_records`, each record copied
+  under a hidden name and renamed when complete), so the next run is served them instead of
+  generating again. Found in an audit: the last six runs had all generated their knowledge
+  afresh (`from_store: false`) and the baseline had not been written since 12 October, so every
+  Generate paid for a phase-structure generation (about 3 minutes, $0.3–0.5). A run's own copy is
+  unchanged, so reopening and Execute use what it consulted; records under older module versions
+  are still never served. Tests only, not run live.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
@@ -815,6 +825,7 @@ material came from the task alone, unless the scene geometry and world reads est
 | 2026-10-14 | A viewer for the system at work is a package of its own (`llm_reasoner_viz`, port 8721), read-only at first; it reads a log of events per run that every process working on the run appends to, so it can follow a run live and replay a finished one; the components report through wrappers and optional hooks and do not know the viewer; past runs have no events; prompts are shown in full |
 | 2026-10-14 | The untracked `knowledge_updated` prototype (a typed-Python rewrite of the knowledge domain, `ontological/` and `microworlds/flanagan/`, with 47 passing test files) is kept off the main line on the local branch `archive/knowledge-updated` (`d6fec2059`) and was removed from the working tree: nothing in the product imports it, and `llm_reasoner.knowledge` is the knowledge component. Bytecode-only folders left under `knowledge/` by an older layout (`hypothesis`, `microworlds`, `ontological`) were removed |
 | 2026-10-14 | The simulations keep what they perform as NEEMs (the executed plan, saved through coraplex's ORM) in one shared database: every pour tried and the performed run, failed motions included; the viewer links to them by showing which plan is which and how to read it |
+| 2026-10-21 | Runs keep their own copy of the knowledge, but what a run admitted is added to the baseline store when it ends, so knowledge is generated once per situation and then served (replaces "no run reads what another generated", 2026-10-12) |
 | 2026-10-14 | `.env` files are ignored by the repository (`.gitignore`), so that a blanket `git add` cannot commit the model API key. The untracked notebooks of `llm_reasoner/notebooks/` (written against a layout of the knowledge package that no longer exists) and the earlier `README (1).md`, which no committed README matches, are kept off the main line on the local branch `archive/llm-reasoner-notebooks-and-readme` (`946a60c53`, 12 MB, never to be pushed) and are out of the working tree |
 
 ## 5. In progress

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.clients.anthropic_client import AnthropicClient
-from llm_reasoner.clients.base import ScriptedClient
+from llm_reasoner.clients.base import ScriptedClient, ScriptExhausted
 from llm_reasoner.knowledge.access import (
     ActionPerspectiveFile,
     Citation,
@@ -447,12 +447,54 @@ class TestRuns:
             run.knowledge_store.directory / "record" / "content"
         ).read_text() == "stored"
 
-    def test_what_a_run_generates_stays_out_of_the_baseline_store(
+    def test_what_a_run_admits_is_added_to_the_baseline_store(
         self, pouring_bundle, tmp_path
     ):
         (run,) = resolve_objects_given(pouring_bundle, tmp_path)
-        assert HypothesisStore(directory=tmp_path / "store").records() == []
-        assert len(run.knowledge.backend.store.records()) == 1
+        assert [
+            record.record_id
+            for record in HypothesisStore(directory=tmp_path / "store").records()
+        ] == [run.resolution.record_id]
+
+    def test_the_next_run_is_served_what_an_earlier_run_admitted(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = resolver_replaying(
+            PouringDesignator.OBJECTS_GIVEN,
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+            times=2,
+        )
+        designator = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN)
+        first = resolver.resolve(designator, "pouring", pouring_bundle)
+        second = resolver.resolve(designator, "pouring", pouring_bundle)
+        assert second.resolution.record_id == first.resolution.record_id
+        assert len(resolver.baseline.backend.client.calls) == 1
+
+    def test_an_earlier_runs_own_knowledge_is_left_as_it_was(
+        self, pouring_bundle, tmp_path
+    ):
+        first, second = resolve_objects_given(pouring_bundle, tmp_path, times=2)
+        assert [
+            record.record_id for record in first.knowledge.backend.store.records()
+        ] == [first.resolution.record_id]
+
+    def test_a_run_that_fails_still_adds_what_it_admitted(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = resolver_replaying(
+            PouringDesignator.OBJECTS_GIVEN,
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        resolver.client.tool_turns = resolver.client.tool_turns[:1]
+        with pytest.raises(ScriptExhausted):
+            resolver.resolve(
+                DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+                "pouring",
+                pouring_bundle,
+            )
+        assert len(HypothesisStore(directory=tmp_path / "store").records()) == 1
 
     def test_every_run_starts_from_the_same_baseline_store(
         self, pouring_bundle, tmp_path

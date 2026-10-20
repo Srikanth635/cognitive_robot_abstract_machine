@@ -6,19 +6,26 @@ as JSON and the hypothesis as Turtle.
 from __future__ import annotations
 
 import json
+import shutil
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
 from krrood.utils import resolve_class_from_full_name
 from rdflib import Graph
-from typing_extensions import Callable, Iterable, Mapping, Optional
+from typing_extensions import Callable, Iterable, List, Mapping, Optional
 
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
 from llm_reasoner.knowledge.representation.rdf import GraphReader, ReadHypothesis
 from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.knowledge.storage.record import HypothesisRecord
+
+INCOMING_PREFIX = "."
+"""
+What a stored hypothesis being copied in is named with until it is complete; a hidden
+name, so the records listed never include it.
+"""
 
 
 class StoredFile(StrEnum):
@@ -75,6 +82,34 @@ class HypothesisStore:
             json.dumps(record.to_json(), indent=2)
         )
         graph.serialize(location / StoredFile.HYPOTHESIS, format="turtle")
+
+    def adopt_new_records(self, source: HypothesisStore) -> List[str]:
+        """
+        Copy into this store every hypothesis the source holds and this store lacks,
+        each whole, so it is never seen half copied.
+
+        :param source: The store to adopt from.
+        :return: The record identifiers adopted, oldest first.
+        """
+        held = {record.record_id for record in self.records()}
+        adopted = [
+            record.record_id
+            for record in source.records()
+            if record.record_id not in held
+        ]
+        for record_id in adopted:
+            self.copy_from(source, record_id)
+        return adopted
+
+    def copy_from(self, source: HypothesisStore, record_id: str) -> None:
+        """
+        Copy one stored hypothesis of the source here, under a temporary name first and
+        renamed once complete.
+        """
+        self.directory.mkdir(parents=True, exist_ok=True)
+        incoming = self.directory / (INCOMING_PREFIX + record_id)
+        shutil.copytree(source.directory / record_id, incoming)
+        incoming.rename(self.directory / record_id)
 
     def get(self, record_id: str) -> StoredHypothesis:
         """
@@ -134,13 +169,15 @@ class HypothesisStore:
 
     def records(self) -> list[HypothesisRecord]:
         """
-        :return: Every stored record, oldest first.
+        :return: Every stored record, oldest first, leaving out any still being
+            copied in.
         """
         if not self.directory.is_dir():
             return []
         records = [
             HypothesisRecord.from_json(json.loads(path.read_text()))
             for path in self.directory.glob(f"*/{StoredFile.RECORD}")
+            if not path.parent.name.startswith(INCOMING_PREFIX)
         ]
         return sorted(records, key=lambda record: record.created_at)
 

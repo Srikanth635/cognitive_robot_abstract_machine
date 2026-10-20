@@ -179,7 +179,8 @@ class ResolutionRuns:
         self, baseline: HypothesisStore, environment: RunEnvironment
     ) -> RunDirectory:
         """
-        :param baseline: The store every run starts from, which no run writes.
+        :param baseline: The store every run starts from; a run never writes it while
+            it runs, only adds what it admitted once it ends.
         :param environment: The environment the run starts from.
         :return: A new run, its knowledge store a copy of the baseline, keeping the
             environment it started from.
