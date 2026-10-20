@@ -10,6 +10,7 @@ from typing_extensions import Any, Dict, List, Mapping, Optional, Sequence
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.clients.usage import LatestUsage, TokenUsage, UsageReporting
 from llm_reasoner.clients.tools import (
+    ResponseTruncated,
     Tool,
     ToolBox,
     ToolCall,
@@ -29,6 +30,11 @@ class StopReason(StrEnum):
     TOOL_USE = "tool_use"
     """
     It is waiting for the results of the tools it called.
+    """
+
+    MAX_TOKENS = "max_tokens"
+    """
+    It was cut off at the token limit of the request.
     """
 
 
@@ -179,9 +185,10 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient, UsageReporting):
         the shape of what this method returns: the accumulated message is
         identical in structure to what ``messages.create`` would give.
         """
+        request_limit = self._structured_token_budget(json_schema)
         with self._client.messages.stream(
             model=self.model,
-            max_tokens=self._structured_token_budget(json_schema),
+            max_tokens=request_limit,
             system=[
                 {
                     "type": "text",
@@ -202,7 +209,7 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient, UsageReporting):
         ) as stream:
             response = stream.get_final_message()
         self._latest.usage = self._usage_of(response)
-        self._check_truncation(response)
+        self._check_truncation(response, request_limit)
         return self._extract_tool_input(response)
 
     @property
@@ -266,23 +273,17 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient, UsageReporting):
     # -- response handling ------------------------------------------------
 
     @staticmethod
-    def _check_truncation(response: Any) -> None:
+    def _check_truncation(response: Any, token_limit: int) -> None:
         """
-        Fail loudly and specifically when the response was cut off.
+        Fail specifically when the response was cut off at the request's token limit.
 
-        Without this, a truncated tool call surfaces several layers away as a
-        generic JSON decode error with no indication of the actual cause, which
-        is what made the original failure look like a formatting problem rather
-        than a token-budget one.
+        :param response: The model's response.
+        :param token_limit: The most output tokens the request allowed.
+        :raises ResponseTruncated: When the model was cut off.
         """
-        if getattr(response, "stop_reason", None) == "max_tokens":
-            raise RuntimeError(
-                "Anthropic response was truncated at the token limit "
-                f"({response.usage.output_tokens} output tokens used). "
-                "The structured token budget was too low for this schema; "
-                "this should not happen with the derived budget in "
-                "_structured_token_budget -- if it does, the schema is larger "
-                "than estimated and the budgeting heuristic needs revisiting."
+        if response.stop_reason == StopReason.MAX_TOKENS:
+            raise ResponseTruncated(
+                output_tokens=response.usage.output_tokens, token_limit=token_limit
             )
 
     @property
@@ -374,7 +375,7 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient, UsageReporting):
                 if block.type == ContentBlockType.TOOL_USE
             ]
             if response.stop_reason != StopReason.TOOL_USE or not requested:
-                self._check_truncation(response)
+                self._check_truncation(response, self.max_tokens)
                 return ToolConversation(
                     answer=self._extract_text(response), calls=calls, usage=usage
                 )

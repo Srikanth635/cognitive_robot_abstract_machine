@@ -15,6 +15,7 @@ from llm_reasoner.clients.tools import (
     Tool,
     ToolDefinition,
     ToolOutcome,
+    ResponseTruncated,
     ToolTurnsExhausted,
 )
 from llm_reasoner.clients.usage import TokenUsage
@@ -448,6 +449,25 @@ class TestAnthropicStructuredCompletionContract:
         with pytest.raises(RuntimeError, match="truncated"):
             harness.client.complete_structured("system", "user", {})
 
+    def test_a_truncated_structured_response_names_the_limit_it_was_cut_at(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        harness = build_client_harness(
+            monkeypatch,
+            AnthropicResponseMimic(
+                [ToolUseBlockMimic("emit_hypothesis", {})],
+                stop_reason="max_tokens",
+                usage=UsageMimic(output_tokens=64_000),
+            ),
+        )
+
+        with pytest.raises(ResponseTruncated) as truncated:
+            harness.client.complete_structured("system", "user", {})
+
+        (request,) = harness.service.messages.requests
+        assert truncated.value.token_limit == request["max_tokens"]
+        assert truncated.value.output_tokens == 64_000
+
 
 # %% Tool loop contract
 
@@ -567,6 +587,28 @@ class TestAnthropicToolLoop:
         with pytest.raises(ToolTurnsExhausted):
             client.complete_with_tools("system", "user", [EchoTool()])
         assert len(endpoint.requests) == budget
+
+    def test_an_answer_cut_off_at_the_clients_limit_is_reported_with_that_limit(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        limit = 1_000
+        client, _ = build_tool_loop_client(
+            monkeypatch,
+            [
+                AnthropicResponseMimic(
+                    [TextBlockMimic("[{")],
+                    stop_reason="max_tokens",
+                    usage=UsageMimic(output_tokens=limit),
+                )
+            ],
+            max_tokens=limit,
+        )
+
+        with pytest.raises(ResponseTruncated) as truncated:
+            client.complete_with_tools("system", "user", [EchoTool()])
+
+        assert truncated.value.token_limit == limit
+        assert truncated.value.output_tokens == limit
 
     def test_the_tokens_of_every_turn_are_added_up(
         self, monkeypatch: pytest.MonkeyPatch

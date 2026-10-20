@@ -621,9 +621,10 @@ perspectives generated into the store on first use, their cost not recorded):
   pour in any arm.
 - The new knowledge costs 20–70 % more per run, the failures most (it was read through up to
   15 tool calls).
-- The failures arm failed in 2 of its 5 runs (one of each case): a call was cut off at the
-  structured output limit (8192 tokens), so the generator cannot yet complete this
-  vocabulary reliably. Which call it was, the hypothesis or a repair, is not recorded.
+- The failures arm failed in 2 of its 5 runs (one of each case): the resolver's own final
+  turn, after many knowledge and world tool calls, was cut off at cram_viz's 8192 output
+  tokens (`RESOLVER_MAX_TOKENS`); it was not the hypothesis generation. The run failed rather
+  than being repaired. What the model wrote in that turn is not recorded.
 - The tilt and reach failures (`pour_prediction.md` §5–§7) were not recovered by the
   resolver: `objects_open` tried tilts down to 1.0 and up to 2.7 rad and none landed.
 
