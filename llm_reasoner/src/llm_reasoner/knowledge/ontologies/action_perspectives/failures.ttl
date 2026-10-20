@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.2.0> ;
-    owl:versionInfo "0.2.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.3.0> ;
+    owl:versionInfo "0.3.0" .
 
 # %% classes
 
@@ -140,16 +140,6 @@ failures:AwayFromTarget a failures:ParameterChangeDirection,
     rdfs:label "away from target"@en ;
     rdfs:comment "The chosen position or orientation is moved away from a slot or part of one."@en .
 
-failures:Decrease a failures:ParameterChangeDirection,
-        owl:NamedIndividual ;
-    rdfs:label "decrease"@en ;
-    rdfs:comment "The chosen quantity is made smaller."@en .
-
-failures:Increase a failures:ParameterChangeDirection,
-        owl:NamedIndividual ;
-    rdfs:label "increase"@en ;
-    rdfs:comment "The chosen quantity is made larger."@en .
-
 failures:ToAlternative a failures:ParameterChangeDirection,
         owl:NamedIndividual ;
     rdfs:label "to alternative"@en ;
@@ -162,13 +152,13 @@ failures:TowardsTarget a failures:ParameterChangeDirection,
 
 failures:ParameterChangeDirection a owl:Class ;
     rdfs:label "parameter change direction"@en ;
-    rdfs:comment "The direction in which a correction moves a parameter choice."@en ;
+    rdfs:comment "The direction in which a correction moves a parameter choice: larger or smaller, as the action core's change direction says, or towards, away from or to another alternative."@en ;
     rdfs:subClassOf dul:Concept ;
     owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( failures:Increase failures:Decrease failures:TowardsTarget failures:AwayFromTarget failures:ToAlternative ) ] .
+            owl:oneOf ( core:Increases core:Decreases failures:TowardsTarget failures:AwayFromTarget failures:ToAlternative ) ] .
 
 [] a owl:AllDifferent ;
-    owl:distinctMembers ( failures:Increase failures:Decrease failures:TowardsTarget failures:AwayFromTarget failures:ToAlternative ) .
+    owl:distinctMembers ( core:Increases core:Decreases failures:TowardsTarget failures:AwayFromTarget failures:ToAlternative ) .
 
 failures:CorrectionTiming a owl:Class ;
     rdfs:label "correction timing"@en ;

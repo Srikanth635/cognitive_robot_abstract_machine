@@ -84,14 +84,14 @@ class CorrectionDirection(StrEnum):
     How a corrective response changes its target setpoint.
     """
 
-    RAISE_SETPOINT = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#RaiseSetpoint"
+    INCREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Increases"
     """
-    Raise the target setpoint.
+    Becomes larger.
     """
 
-    LOWER_SETPOINT = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#LowerSetpoint"
+    DECREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Decreases"
     """
-    Lower the target setpoint, or slow its rate of increase.
+    Becomes smaller, or grows more slowly.
     """
 
     HOLD_SETPOINT = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#HoldSetpoint"
@@ -138,14 +138,14 @@ class EstimateUpdateDirection(StrEnum):
     How evidence changes a represented estimate.
     """
 
-    RAISE_ESTIMATE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#RaiseEstimate"
+    INCREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Increases"
     """
-    Revise the estimate upward.
+    Becomes larger.
     """
 
-    LOWER_ESTIMATE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#LowerEstimate"
+    DECREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Decreases"
     """
-    Revise the estimate downward.
+    Becomes smaller, or grows more slowly.
     """
 
     REPLACE_ESTIMATE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ReplaceEstimate"

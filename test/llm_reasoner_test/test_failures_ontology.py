@@ -16,6 +16,7 @@ from types import ModuleType
 
 import pytest
 from rdflib import OWL, RDF, RDFS, Graph, Namespace, URIRef
+from rdflib.collection import Collection
 
 from llm_reasoner.knowledge.ontologies import (
     ACTION_PERSPECTIVES_NAMESPACE_ROOT,
@@ -158,7 +159,10 @@ class TestVocabulary:
     def test_the_parameter_change_directions_are_an_enumeration_of_the_ontologys_members(
         self, graph
     ):
-        members = set(graph.subjects(RDF.type, FAILURES.ParameterChangeDirection))
+        (enumeration,) = graph.objects(
+            FAILURES.ParameterChangeDirection, OWL.equivalentClass
+        )
+        members = Collection(graph, graph.value(enumeration, OWL.oneOf))
         assert {member.value for member in failures.ParameterChangeDirection} == {
             str(member) for member in members
         }
