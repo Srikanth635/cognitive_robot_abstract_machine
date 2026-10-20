@@ -101,12 +101,14 @@ for flow onset.
 
 ## 6. The check requires the tilt for flow (2026-10-19)
 
-The third of those is done. cram_viz's `FlowOnsetKnowledge` reads the lowest lower bound,
-in degrees, that any stored hypothesis states for a `FlowOnsetThreshold`, and
+The third of those is done. cram_viz's `FlowOnsetKnowledge` reads, from the hypotheses the
+resolver consulted (not every stored one), the lower bound of the threshold each flow onset
+event crosses, converted to radians from whatever angle unit the range states (the lowest if
+several), and
 `SimulatedPouring` refuses a pour that lands in the opening but is tilted less, stating
 `tilt_reaches_flow_onset` and `flow_onset_tilt_radians` in the outcome so the resolver
 reads what it needs. The last allowed trial is still accepted, and the tilt is left
-unchecked while no stored hypothesis states a threshold in degrees.
+unchecked while no consulted hypothesis states a flow onset threshold as an angle.
 
 Measured live on `objects_open` (2026-10-19, Sonnet 5.5, two runs of the default arm and
 two with the prediction, the earlier knowledge store reused): no pour landed in any of the

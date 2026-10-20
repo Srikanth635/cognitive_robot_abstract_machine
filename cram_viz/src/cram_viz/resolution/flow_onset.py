@@ -9,54 +9,81 @@ from dataclasses import dataclass
 from math import radians
 
 from llm_reasoner.knowledge.access import core, pouring
-from typing_extensions import List, Optional, Protocol
+from typing_extensions import Callable, List, Optional, Protocol, Sequence
+
+ANGLE_UNIT_IN_RADIANS = {core.MeasurementUnit.DEGREE: radians(1.0)}
+"""
+How many radians one unit of each angle unit the ontology has stands for.
+"""
 
 
-class StatesFlowOnsetThresholds(Protocol):
+class StatesFlowOnset(Protocol):
     """
-    A knowledge component holding hypotheses that may state flow onset thresholds.
+    A hypothesis that may state flow onset events.
     """
 
     def instances_of(self, kind: type) -> list:
         """
-        :return: The fragments of every stored hypothesis that are instances of the
-            vocabulary class.
+        :return: The fragments of the hypothesis that are instances of the vocabulary
+            class.
+        """
+
+
+class ReadsHypotheses(Protocol):
+    """
+    A knowledge component that gives the hypotheses of stored records.
+    """
+
+    def views_read_with(self, record_ids: Sequence[str]) -> List[StatesFlowOnset]:
+        """
+        :return: The hypotheses of the records and of the hypotheses they build on.
         """
 
 
 @dataclass
 class FlowOnsetKnowledge:
     """
-    The tilt, stated by the stored hypotheses, below which a pour pours nothing.
+    The tilt, stated by the hypotheses the resolver consulted, below which a pour pours
+    nothing.
     """
 
-    knowledge: StatesFlowOnsetThresholds
+    knowledge: ReadsHypotheses
     """
-    The knowledge component whose hypotheses state the thresholds.
+    The knowledge component holding the hypotheses.
+    """
+
+    consulted_records: Callable[[], Sequence[str]]
+    """
+    The records of the hypotheses the resolver consulted, asked for when the tilt is.
     """
 
     def tilt(self) -> Optional[float]:
         """
-        :return: The lowest tilt in radians any stored hypothesis states for the
-            substance to start flowing, or ``None`` when none states one in degrees.
+        :return: The lowest tilt in radians that a consulted hypothesis states for the
+            substance to start flowing, as the lower bound of the threshold its flow
+            onset crosses; ``None`` when none states one as an angle.
         """
-        lower_bounds: List[float] = [
-            threshold.has_parameter_range.lower_bound
-            for threshold in self.knowledge.instances_of(pouring.FlowOnsetThreshold)
-            if self.states_degrees(threshold)
+        lower_bounds = [
+            lower_bound
+            for hypothesis in self.knowledge.views_read_with(self.consulted_records())
+            for event in hypothesis.instances_of(pouring.FlowOnset)
+            if (lower_bound := self.lower_bound_in_radians(event.crosses_threshold))
+            is not None
         ]
-        if not lower_bounds:
-            return None
-        return radians(min(lower_bounds))
+        return min(lower_bounds, default=None)
 
     @staticmethod
-    def states_degrees(threshold: pouring.FlowOnsetThreshold) -> bool:
+    def lower_bound_in_radians(
+        threshold: Optional[core.MechanicalThreshold],
+    ) -> Optional[float]:
         """
-        :return: Whether the threshold states a lower bound in degrees.
+        :return: The lower bound of the threshold's range in radians; ``None`` when it
+            states no range, no lower bound, or one that is no angle.
         """
-        parameter_range = threshold.has_parameter_range
-        return (
-            parameter_range is not None
-            and parameter_range.lower_bound is not None
-            and parameter_range.has_unit is core.MeasurementUnit.DEGREE
-        )
+        parameter_range = None if threshold is None else threshold.has_parameter_range
+        if parameter_range is None or parameter_range.lower_bound is None:
+            return None
+        radians_per_unit = ANGLE_UNIT_IN_RADIANS.get(parameter_range.has_unit)
+        if radians_per_unit is None:
+            return None
+        return parameter_range.lower_bound * radians_per_unit
