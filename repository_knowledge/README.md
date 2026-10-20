@@ -8,6 +8,7 @@ This directory contains the source-navigation tool, task assistance, development
 | `docs/` | Saved design, phased plan, decisions and validation | Yes |
 | `wiki/` | OKF bundle: package, workflow and convention concepts | Yes |
 | `scripts/` | Memory-capped Windows test runner | Yes |
+| `config/` | Optional MCP host configuration examples | Yes |
 | `.cache/` | Rebuildable SQLite indexes | No |
 | `.venv/` | Local Python 3.12 environment | No |
 | `../test/repository_knowledge_test/` | Tests and source datasets | Yes |
@@ -101,3 +102,7 @@ CI includes a dedicated package matrix entry in the existing CRAM environment. I
 ## Validated publication
 
 Phase 7 adds `cram-publication` (also `python -m repository_knowledge publication`) for admission, publication and authenticated artifact consumption. The default fork policy is automated: no other person's approval or pull request is required. Machine validation does not label prose human-reviewed. See [phase7.md](docs/phase7.md) for commands, trust boundaries, workflow activation and rollback. Hosted activation requires explicit immutable checker/runtime pins.
+
+## Agent clients
+
+Phase 8 adds the optional `cram-knowledge-mcp` stdio server, bounded basstler startup inspection, canonical context through the independently pinned consumer, and CRAMERA's shared architecture adapter. See [phase8.md](docs/phase8.md) for setup, query bounds, source-only fallback, opt-in queueing and validation. MCP and CRAMERA integration dependencies are optional; basstler does not import the robotics stack. Configuration examples are templates and are not installed automatically.

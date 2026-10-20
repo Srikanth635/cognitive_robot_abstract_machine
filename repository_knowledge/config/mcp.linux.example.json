@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "cram-knowledge": {
+      "command": "/path/to/configured/cram-env/bin/python",
+      "args": [
+        "-m", "repository_knowledge.interfaces.mcp",
+        "--repository", "/path/to/CRAM",
+        "--database", "/path/to/CRAM/repository_knowledge/.cache/index.sqlite3"
+      ]
+    }
+  }
+}

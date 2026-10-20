@@ -16,6 +16,7 @@ if TYPE_CHECKING:
         ReviewEvidence,
         ArtifactDownload,
         SourceIdentity,
+        ConsumptionResult,
     )
     from repository_knowledge.concepts import KnowledgeBundle
     from repository_knowledge.assistance import TestCatalog
@@ -115,6 +116,19 @@ class IndexWriter(ABC):
 
 
 # %% independent publication boundaries
+
+
+@dataclass
+class CanonicalReader(ABC):
+    """
+    Consume canonical evidence through an independently trusted boundary.
+    """
+
+    @abstractmethod
+    def read(self, revision: str) -> ConsumptionResult:
+        """
+        Revalidate the selected artifact against the exact source commit.
+        """
 
 
 @dataclass

@@ -16,45 +16,10 @@ from typing_extensions import Any, ClassVar, Dict, List, Optional, Set, Tuple
 from cramera import paths
 from cramera.knowledge.architecture_entities import Package, PythonClass
 from cramera.generated_json import GeneratedJson
+from cramera.knowledge.architecture_model import ArchitectureScan, PackageDependency
+from cramera.knowledge.architecture_source import ArchitectureSelection
 
-
-@dataclass
-class PackageDependency:
-    """
-    One import edge between two top-level packages.
-    """
-
-    source: str
-    """
-    Package doing the importing.
-    """
-
-    target: str
-    """
-    Package being imported.
-    """
-
-
-@dataclass
-class ArchitectureScan:
-    """
-    The CRAM repository's static architecture graph.
-    """
-
-    packages: List[Package]
-    """
-    Every top-level package found.
-    """
-
-    classes: List[PythonClass]
-    """
-    Every class found across all packages.
-    """
-
-    dependency_edges: List[PackageDependency]
-    """
-    Cross-package import edges.
-    """
+# %% standalone architecture cache
 
 
 @dataclass
@@ -161,12 +126,10 @@ class ArchitectureScanner:
         return self._typed(self._scan_raw())
 
     def load(self) -> ArchitectureScan:
-        """
-        :meth:`scan` behind a JSON disk cache.
-
-        A full scan takes seconds, so results are cached in the data directory, keyed by
-        the scanned root; a cache from another root is rescanned.
-        """
+        """Return the selected shared architecture or the standalone cached scan."""
+        shared = ArchitectureSelection.of_configured_root(self.root)
+        if shared is not None:
+            return shared.load()
         return self._typed(self._load_raw())
 
     def _architecture_cache(self) -> str:

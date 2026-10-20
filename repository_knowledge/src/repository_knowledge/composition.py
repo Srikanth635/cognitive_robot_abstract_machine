@@ -6,7 +6,13 @@ from __future__ import annotations
 
 import sys
 import os
+from pathlib import Path
 from enum import StrEnum
+from dataclasses import dataclass, replace
+
+from repository_knowledge.interfaces.agents import RequestApplication, ApplicationResult
+from repository_knowledge.interfaces.clients import ClientConfiguration, ClientParser
+from repository_knowledge.adapters.canonical_process import PublicationProcess
 
 from repository_knowledge.adapters.git_source import GitSource, GitCheckout, GitArgument
 from repository_knowledge.adapters.committed_knowledge import CommittedKnowledge
@@ -41,11 +47,13 @@ from repository_knowledge.adapters.python_source import PythonSource
 from repository_knowledge.adapters.serialization import RecordCodec
 from repository_knowledge.adapters.sqlite_index import SQLiteIndex
 from repository_knowledge.adapters.working_tree import WorkingTreeSource
-from repository_knowledge.contracts import SnapshotReader
+from repository_knowledge.contracts import SnapshotReader, CanonicalReader
+from repository_knowledge.clients import ContextKnowledge
+from repository_knowledge.operations.canonical_context import CanonicalContext
 from repository_knowledge.interfaces.cli import (
     Command,
     CommandLine,
-    CommandParser,
+    CommandArguments,
     LayoutPath,
 )
 from repository_knowledge.interfaces.context import ContextApplication
@@ -80,60 +88,124 @@ class PublicationEnvironment(StrEnum):
     IDENTITY_TOKEN = "KNOWLEDGE_IDENTITY_TOKEN"
 
 
+@dataclass
+class LocalApplication(RequestApplication):
+    """
+    Compose local source adapters for one coherent application request.
+    """
+
+    canonical_reader: CanonicalReader | None = None
+    """
+    An explicitly selected authenticated publication boundary.
+    """
+
+    def execute(self, arguments: CommandArguments) -> ApplicationResult:
+        source_reader: SnapshotReader = GitSource(arguments.repository_root)
+        if arguments.source_scope == SourceScope.WORKING_TREE:
+            source_reader = WorkingTreeSource(
+                arguments.repository_root, arguments.included_untracked_paths
+            )
+        storage = SQLiteIndex(arguments.database_path)
+        if arguments.command in (
+            Command.FIND_EXAMPLES,
+            Command.FIND_TESTS,
+            Command.PREPARE_CONTEXT,
+            Command.ASSESS_CHANGE,
+        ):
+            knowledge = self._read_knowledge(arguments, source_reader)
+            if knowledge.canonical_status is not None:
+                arguments = replace(
+                    arguments, revision=knowledge.canonical_status.source_commit
+                )
+            baseline_reader = (
+                SQLiteIndex(arguments.baseline_database.resolve())
+                if arguments.baseline_database is not None
+                else None
+            )
+            result = ContextApplication(
+                storage,
+                source_reader,
+                PytestSource(),
+                baseline_reader,
+                GitSource(arguments.repository_root),
+            ).execute(arguments, knowledge.bundle)
+            if arguments.command == Command.PREPARE_CONTEXT:
+                result = replace(result, canonical_status=knowledge.canonical_status)
+            return result
+        application = CommandLine(
+            IndexBuilder(
+                source_reader, SourceCollection([PythonSource(), DocumentSource()])
+            ),
+            storage,
+            Navigation(storage),
+            FreshnessCheck(storage, source_reader),
+        )
+        result = application.execute(arguments)
+        return result
+
+    def _read_knowledge(
+        self, arguments: CommandArguments, source_reader: SnapshotReader
+    ) -> ContextKnowledge:
+        """
+        Select local drafts or independently admitted canonical context.
+        """
+        if arguments.command != Command.PREPARE_CONTEXT:
+            return ContextKnowledge(KnowledgeBundle([]))
+        if self.canonical_reader is not None:
+            return CanonicalContext(self.canonical_reader).read(
+                source_reader.resolve_revision(arguments.revision),
+                arguments.source_scope,
+            )
+        bundle_path = (
+            arguments.bundle_path
+            or arguments.repository_root / LayoutPath.PACKAGE / "wiki"
+        )
+        if arguments.bundle_path is not None or bundle_path.is_dir():
+            return ContextKnowledge(OkfDirectory(bundle_path).read_bundle())
+        return ContextKnowledge(KnowledgeBundle([]))
+
+
 def main() -> int:
     """
     Execute one source-navigation request using the configured adapters.
     """
-    arguments = CommandParser().parse(sys.argv[1:])
-    source_reader: SnapshotReader = GitSource(arguments.repository_root)
-    if arguments.source_scope == SourceScope.WORKING_TREE:
-        source_reader = WorkingTreeSource(
-            arguments.repository_root, arguments.included_untracked_paths
-        )
-    storage = SQLiteIndex(arguments.database_path)
-    if arguments.command in (
-        Command.FIND_EXAMPLES,
-        Command.FIND_TESTS,
-        Command.PREPARE_CONTEXT,
-        Command.ASSESS_CHANGE,
-    ):
-        bundle = KnowledgeBundle([])
-        if arguments.command == Command.PREPARE_CONTEXT:
-            bundle_path = (
-                arguments.bundle_path
-                or arguments.repository_root / LayoutPath.PACKAGE / "wiki"
-            )
-            if arguments.bundle_path is not None or bundle_path.is_dir():
-                bundle = OkfDirectory(bundle_path).read_bundle()
-        baseline_reader = (
-            SQLiteIndex(arguments.baseline_database.resolve())
-            if arguments.baseline_database is not None
-            else None
-        )
-        result = ContextApplication(
-            storage,
-            source_reader,
-            PytestSource(),
-            baseline_reader,
-            GitSource(arguments.repository_root),
-        ).execute(arguments, bundle)
-        print(RecordCodec().encode(result))
-        return 0
-    application = CommandLine(
-        IndexBuilder(
-            source_reader, SourceCollection([PythonSource(), DocumentSource()])
-        ),
-        storage,
-        Navigation(storage),
-        FreshnessCheck(storage, source_reader),
-    )
-    result = application.execute(arguments)
+    configuration = ClientParser().parse(sys.argv[1:])
+    result = ClientApplication(configuration).compose().execute(configuration.arguments)
     print(RecordCodec().encode(result))
     if isinstance(result, FreshnessReport) and (
         not result.matches_requested_revision or not result.matches_requested_source
     ):
         return 2
     return 0
+
+
+@dataclass
+class ClientApplication:
+    """
+    Compose optional canonical authority independently of query arguments.
+    """
+
+    configuration: ClientConfiguration
+    """
+    The source and authority choices made by the operator.
+    """
+
+    def compose(self) -> LocalApplication:
+        """
+        Keep artifact authentication in its clean separately pinned checkout.
+        """
+        canonical = self.configuration.canonical
+        if canonical is None:
+            return LocalApplication()
+        return LocalApplication(
+            PublicationProcess(
+                self.configuration.arguments.repository_root,
+                canonical.trusted_repository,
+                canonical.checker_revision,
+                canonical.artifact_identifier,
+                Path(sys.executable),
+            )
+        )
 
 
 def wiki_main() -> int:

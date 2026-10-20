@@ -15,6 +15,7 @@ from typing_extensions import Any, ClassVar, Dict, List, Optional, Tuple
 
 from cramera.knowledge.architecture_entities import PythonClass
 from cramera.knowledge.architecture_scan import ArchitectureScanner
+from cramera.knowledge.architecture_source import ArchitectureSelection
 
 SOURCE_DIRECTORY_SEGMENT = "src"
 """
@@ -181,11 +182,11 @@ class WorkspaceClassIndex:
 
     @classmethod
     def of_repository(cls) -> WorkspaceClassIndex:
-        """
-        An index over the classes of the repository cramera was started from, built on
-        first use and cached per repository root.
-        """
+        """Resolve classes from the current shared graph or the standalone scan."""
         scanner = ArchitectureScanner.of_configured_root()
+        shared = ArchitectureSelection.of_configured_root(scanner.root)
+        if shared is not None:
+            return cls.of_scanned_classes(shared.load().classes)
         if scanner.root not in cls._of_root:
             cls._of_root[scanner.root] = cls.of_scanned_classes(scanner.load().classes)
         return cls._of_root[scanner.root]

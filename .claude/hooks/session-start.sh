@@ -167,6 +167,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/resolve-personal-notes-config.sh"
 source "${SCRIPT_DIR}/session-start-messages.sh"
 
+# %% optional source knowledge
+if [ -n "${CRAM_KNOWLEDGE_PYTHON:-}" ]; then
+  "${BASSTLER_PYTHON}" -m basstler.knowledge_startup --repository "${PROJECT_ROOT}" \
+    || printf '%s\n' 'repository knowledge: unavailable; use source navigation.'
+fi
+
 fetch_personal_notes_branch || exit 0
 
 # FETCH_HEAD, not "${ACTIVE_NOTES_REMOTE}/${NOTES_BRANCH}": a URL-form remote

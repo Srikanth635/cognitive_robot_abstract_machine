@@ -1,2 +1,5 @@
 # Preserve verified upstream browser assets byte-for-byte.
 cramera/src/cramera/web/vendor/** -whitespace
+
+# Keep the optional refresh helper readable by Bash on Windows.
+repository_knowledge/scripts/request-refresh.sh text eol=lf

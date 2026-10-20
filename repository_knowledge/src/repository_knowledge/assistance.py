@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from repository_knowledge.clients import CanonicalStatus
+
 from repository_knowledge.model import (
     IndexManifest,
     ReferenceRecord,
@@ -215,6 +217,8 @@ class TaskContext:
     """Proposed checks without a claim of complete coverage."""
     limitations: list[str]
     """Static-analysis and authority restrictions."""
+    canonical_status: CanonicalStatus | None = None
+    """The authenticated publication decision, when explicitly requested."""
 
 
 # %% change evidence

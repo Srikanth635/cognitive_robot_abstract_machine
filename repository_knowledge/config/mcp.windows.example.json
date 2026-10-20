@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "cram-knowledge": {
+      "command": "C:/path/to/CRAM/repository_knowledge/.venv/Scripts/python.exe",
+      "args": [
+        "-m", "repository_knowledge.interfaces.mcp",
+        "--repository", "C:/path/to/CRAM",
+        "--database", "C:/path/to/CRAM/repository_knowledge/.cache/index.sqlite3"
+      ]
+    }
+  }
+}

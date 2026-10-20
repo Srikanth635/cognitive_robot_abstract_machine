@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "cram-knowledge-history": {
+      "command": "C:/path/to/CRAM/repository_knowledge/.venv/Scripts/python.exe",
+      "args": [
+        "-m", "repository_knowledge.interfaces.mcp",
+        "--repository", "C:/path/to/CRAM",
+        "--database", "C:/path/to/CRAM/repository_knowledge/.cache/canonical-source.sqlite3",
+        "--revision", "e1c656e9fadba852a21800b7662d1ea62d76c338",
+        "--trusted-repository", "C:/path/to/clean-phase7-checker",
+        "--checker-revision", "08b0d94cc33ed8b16cc6a1c2404874cb496805a4",
+        "--artifact-id", "12292892050"
+      ]
+    }
+  }
+}

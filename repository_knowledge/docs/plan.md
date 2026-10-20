@@ -281,7 +281,7 @@ Work:
 - Remove duplicate extraction/cache ownership once consumers have migrated and required API permissions are settled.
 - Keep clients operational when an optional transport, viewer or generator is unavailable.
 
-Deliverables: agent adapter, session integration, optional hooks and CRAMERA consumer integration.
+Deliverables: agent adapter, session integration, optional hooks and CRAMERA consumer integration. See [phase8.md](phase8.md) for the implementation contract, configuration and validation.
 
 Exit gate: client contract tests agree; startup does not import or install the full robotics stack into basstler; tools cannot write canonical publication state; CRAMERA migration tests preserve existing supported views.
 

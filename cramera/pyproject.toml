@@ -45,6 +45,7 @@ cramera = ["web/**/*"]
 version = { attr = "cramera._version.__version__" }
 
 [project.optional-dependencies]
+repository-knowledge = ["repository-knowledge"]
 dev = [
     "pytest>=7.0.0,<8.0.0",
 ]

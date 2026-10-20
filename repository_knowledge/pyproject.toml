@@ -9,10 +9,14 @@ description = "Revision-aware source navigation for the CRAM workspace."
 requires-python = ">=3.12,<3.13"
 dependencies = ["krrood", "typing-extensions>=4.12.2", "PyYAML>=6"]
 
+[project.optional-dependencies]
+mcp = ["mcp>=2,<3"]
+
 [project.scripts]
 cram-knowledge = "repository_knowledge.composition:main"
 cram-wiki = "repository_knowledge.composition:wiki_main"
 cram-publication = "repository_knowledge.composition:publication_main"
+cram-knowledge-mcp = "repository_knowledge.interfaces.mcp:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

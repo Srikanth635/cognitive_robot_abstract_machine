@@ -12,6 +12,9 @@ Implementation branch: `cram_wiki` (phases 0–6 pushed to the fork at `ba38cd30
 | 3 | Atomic SQLite publication; selective evidence reads; bounded symbol/reference/relationship queries; coherent freshness checks; typed JSON CLI; CI package entry |
 | 4 | Content-bound working-tree capture; explicit untracked inclusion; checkout/index identity; reusable file analysis; conservative target invalidation; stale-query refusal; refresh/reconciliation commands; mutation-equivalence tests |
 | 5 | Curated OKF import/export; eight source-backed pilot concepts; separate format, policy and evidence checks; reverse invalidation; lifecycle/tombstone proposals; bounded wiki CLI; explicit LF/CRLF equivalence policy |
+| 6 | Bounded task context, examples, tests and change assessment with source citations and explicit uncertainty |
+| 7 | Automated trusted publication, authenticated artifact consumption and verified historical restoration on the fork |
+| 8 | Optional MCP client, source-bound canonical context, bounded basstler startup, shared CRAMERA architecture and opt-in refresh requests |
 
 Phases 0–3 validation: 40 focused pytest cases passed under the 4 GiB Windows job cap; the requested rerun also passed all 40 cases in 23.92 seconds. The required formatting script was applied to the new Python files. Black and unused-import checks passed, and the package built as a wheel. Main-branch indexing and six independently checked navigation tasks passed; measurements are in [evaluation.md](evaluation.md).
 
@@ -86,3 +89,16 @@ Final local validation after remote-activation changes passed **211 tests**, wit
 ## Hosted phase 7 checkpoint
 
 The runtime build, real-source admission, first publication and first artifact-consumption check passed on the fork. The first canonical artifact is `12292221849`, bound to source/checker `08b0d94cc33ed8b16cc6a1c2404874cb496805a4`. See [phase7-deployment.md](phase7-deployment.md) for immutable identities and run links. The final pair and historical-restoration result are retained in the owner-managed verification report on `main`.
+
+
+## Phase 8 validation — 20 October 2026
+
+The optional MCP stdio adapter and existing CLI share one application dispatcher. The tool surface contains bounded read-only queries, with source/cache/baseline/authority fixed at startup. Canonical context delegates to the independently pinned checker process, refuses working-source or wrong-revision prose and never replaces a refused artifact with local drafts. Context assembly pins the verified source even if HEAD and the cache advance during provider verification.
+
+Basstler startup uses a standard-library-only client and the explicitly selected CRAM interpreter, with a five-second deadline and 16 KiB response allowance. It neither imports the robotics stack nor installs/rebuilds anything. CRAMERA translates the shared snapshot into its existing entities and bypasses its old class memoization on that path. The original scanner remains an optional fallback; migrated reads create no second disk cache. The optional commit helper only records the latest refresh request; it is not installed automatically and performs no LLM call or commit.
+
+Final local validation passed **247 package tests**, with **one Windows-only skip**, in **181.37 seconds** under the 4 GiB cap. A separate six-check run covered basstler, the session-process round trip and the unchanged legacy generated-file exclusion check with the approved view-registration fixture. All 32 modified Python files passed formatting; unused-import and Bash syntax checks passed. The three affected packages built as wheels with their new modules and optional dependency metadata.
+
+Real committed-cache inspection had a 1.461-second median across three interpreter launches and correctly reported the old cache as stale without writing it. The complete basstler path returned in 1.469 seconds. The optional queue helper's median was 0.171 seconds. These are startup/request costs, not full graph maintenance or model-task results.
+
+See [phase8.md](phase8.md) and the configuration templates for setup and limits. Host configuration, viewer opt-in, commit-hook installation and a background queue worker were not enabled automatically. The phase-7 checker/runtime/source/artifact selection on main remains unchanged; new protected code needs a separately validated trust-root update before newer canonical publication. No phase-8 hosted run or full ROS/EQL test suite is claimed. Phase 9 evaluates the release and operating costs across real tasks.

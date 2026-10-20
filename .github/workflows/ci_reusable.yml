@@ -57,7 +57,8 @@ jobs:
         run: |
           cd cognitive_robot_abstract_machine
           source /opt/ros/cram-env/bin/activate
-          python -m pip install --no-deps --editable ./repository_knowledge
+          python -m pip install --editable './repository_knowledge[mcp]'
+          python -m pip install --no-deps --editable ./basstler --editable ./cramera
 
       - name: Install robokudo optional requirements
         if: ${{ inputs.lib == 'robokudo' }}

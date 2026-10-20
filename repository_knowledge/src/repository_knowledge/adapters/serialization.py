@@ -17,6 +17,7 @@ from krrood.adapters.json_serializer import (
 from typing_extensions import TYPE_CHECKING
 
 from repository_knowledge.exceptions import InvalidSerializedType
+from repository_knowledge.clients import CanonicalStatus, SessionReport, SessionState
 from repository_knowledge.publication import (
     AdmissionResult,
     ExtractionFingerprint,
@@ -247,6 +248,9 @@ class EvidenceType(Enum):
     TASK_PROFILE = TaskProfile
     TEST_CATALOG = TestCatalog
     TEST_RECORD = TestRecord
+    SESSION_REPORT = SessionReport
+    SESSION_STATE = SessionState
+    CANONICAL_STATUS = CanonicalStatus
 
     @classmethod
     def resolve(cls, serialized_type: str) -> type:
