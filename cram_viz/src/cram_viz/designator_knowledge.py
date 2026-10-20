@@ -51,6 +51,8 @@ from llm_reasoner.knowledge.access import (
     pouring,
 )
 
+from cram_viz.resolution.pouring_slot import PouringSlot
+
 if TYPE_CHECKING:
     from cram_viz.kb import BenchObject
     from cram_viz.resolution.resolver import ResolvedDesignator
@@ -185,8 +187,8 @@ def _lisp_literal(value: Any) -> str:
 
 #: PouringAction's own field names that fill a role of the pouring ontology
 _ROLE_BY_FIELD_NAME = {
-    "source_container": pouring.SourceContainer,
-    "target_container": pouring.TargetReceptacle,
+    PouringSlot.SOURCE_CONTAINER: pouring.SourceContainer,
+    PouringSlot.TARGET_CONTAINER: pouring.TargetReceptacle,
 }
 
 

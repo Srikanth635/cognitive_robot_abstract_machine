@@ -691,6 +691,11 @@ runs, $2.28 for 8 runs; one refusal carries no cost):
   the bottle's narrow neck is missed. The prompt of the runs above is unchanged, so they were not
   repeated. Longer term the knowledge ontology should say that a container has an opening, and
   the geometry should only locate it.
+- The trap harness (2026-10-20) no longer names its goal: it first resolves the scene as it is
+  with the default resolver, then turns upside down the body that resolution poured into
+  (`OverturnedScene.of_body`) and judges each arm by whether it chose that body. The runs above
+  turned the bowl over by name and were not repeated with this harness. The slots it reads are
+  `PouringSlot` members, checked against the fields of `PouringAction`.
 
 ## Sources
 

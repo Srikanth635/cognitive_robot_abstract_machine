@@ -12,6 +12,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Bowl
+
 from cram_viz.resolution.overturned_scene import ObjectNotInScene, OverturnedScene
 from cram_viz.resolution.scene_geometry import GeometryKey, SceneGeometry
 from cram_viz.resolution.scene_world import SCENE_FILE, SceneWorldBuilder
@@ -82,3 +84,25 @@ class TestOverturnedScene:
             OverturnedScene(bundle=pouring_bundle, identifier="spoon").write_to(
                 tmp_path / "overturned"
             )
+
+
+# %% finding the object by its body
+
+
+class TestFindingTheObject:
+    def test_the_body_of_an_object_is_the_one_the_world_annotates_as_it(
+        self, pouring_bundle
+    ):
+        scene = OverturnedScene(bundle=pouring_bundle, identifier=BOWL)
+        world = SceneWorldBuilder().build(pouring_bundle)
+        (bowl,) = world.get_semantic_annotations_by_type(Bowl)
+        assert scene.body_name == bowl.root.name.name
+
+    def test_an_object_is_found_by_the_name_of_its_body(self, pouring_bundle):
+        scene = OverturnedScene(bundle=pouring_bundle, identifier=BOWL)
+        found = OverturnedScene.of_body(pouring_bundle, scene.body_name)
+        assert found == scene
+
+    def test_a_body_the_scene_lacks_is_refused(self, pouring_bundle):
+        with pytest.raises(ObjectNotInScene):
+            OverturnedScene.of_body(pouring_bundle, "no_such_body.stl")

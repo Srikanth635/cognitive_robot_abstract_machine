@@ -25,6 +25,7 @@ from cram_viz import paths
 from cram_viz.resolution.designators import DesignatorQuery, PouringDesignator
 from cram_viz.resolution.resolver import RESOLVER_MAX_TOKENS, DesignatorResolver
 from cram_viz.resolution.overturned_scene import OverturnedScene
+from cram_viz.resolution.pouring_slot import PouringSlot
 from cram_viz.resolution.runs import ResolutionRuns, RunFile
 from experiments.frame_comparison.output import (
     KITCHEN_RUNS_PER_ARM,
@@ -182,10 +183,9 @@ def test_a_kitchen_case_is_resolved(arm, case, run, kitchen, output, store):
 
 # %% a goal that cannot receive the pour
 
-OVERTURNED_GOAL = "bowl"
+TRAP_DESIGNATOR = PouringDesignator.OBJECTS_OPEN
 """
-The identifier of the object turned upside down in the scene the trap is run in: the
-only bowl, so that every container left is a poor goal.
+The designator the trap resolves: every slot open, the goal included.
 """
 
 TRAP_RECORDS = "overturned_goal.jsonl"
@@ -215,6 +215,11 @@ class TrapOutcome:
     Which run of the arm it was.
     """
 
+    overturned_body: str
+    """
+    The body of the object that was turned upside down: the goal the intact scene chose.
+    """
+
     refused: str
     """
     The refusal the resolver answered with, as the name of its kind; empty when it
@@ -237,31 +242,62 @@ class TrapOutcome:
     """
 
 
-@pytest.mark.parametrize("run", range(TRAP_RUNS_PER_ARM))
-@pytest.mark.parametrize("arm", list(ComparisonArm))
-def test_the_pour_is_not_made_into_an_overturned_goal(
-    arm, run, output, store, tmp_path_factory
-):
-    bundle = paths.scenes_dir() / POURING_SCENE
-    if not bundle.is_dir():
-        pytest.skip(f"the {POURING_SCENE} scene is not available")
-    trap = OverturnedScene(bundle=bundle, identifier=OVERTURNED_GOAL).write_to(
-        tmp_path_factory.mktemp("overturned") / POURING_SCENE
-    )
-    resolver = DesignatorResolver(
+def resolver_for(
+    arm: ComparisonArm, output: ComparisonOutput, store: HypothesisStore
+) -> DesignatorResolver:
+    """
+    :return: A resolver running the arm, keeping its runs beside the comparison's.
+    """
+    return DesignatorResolver(
         client=AnthropicClient(model=LIVE_MODEL, max_tokens=RESOLVER_MAX_TOKENS),
         baseline=LIVE.reasoner(store).knowledge,
         runs=ResolutionRuns(directory=output.directory / "runs"),
         perspectives=arm.perspectives,
         predicts_pours=arm.predicts_pours,
     )
-    query = DesignatorQuery.shipped(PouringDesignator.OBJECTS_OPEN)
+
+
+@pytest.fixture(scope="module")
+def intact_goal(output, store) -> str:
+    """
+    The body the default resolver pours into when the scene is left as it is: the goal
+    the trap turns upside down.
+    """
+    bundle = paths.scenes_dir() / POURING_SCENE
+    if not bundle.is_dir():
+        pytest.skip(f"the {POURING_SCENE} scene is not available")
+    resolved = (
+        resolver_for(ComparisonArm.WITHOUT_FRAME, output, store)
+        .resolve(DesignatorQuery.shipped(TRAP_DESIGNATOR), POURING_SCENE, bundle)
+        .resolution
+    )
+    (action,) = resolved.actions[:1]
+    return next(
+        slot.value for slot in action.slots if slot.name == PouringSlot.TARGET_CONTAINER
+    )
+
+
+@pytest.mark.parametrize("run", range(TRAP_RUNS_PER_ARM))
+@pytest.mark.parametrize("arm", list(ComparisonArm))
+def test_the_pour_is_not_made_into_an_overturned_goal(
+    arm, run, output, store, intact_goal, tmp_path_factory
+):
+    bundle = paths.scenes_dir() / POURING_SCENE
+    trap = OverturnedScene.of_body(bundle, intact_goal)
+    overturned = trap.write_to(tmp_path_factory.mktemp("overturned") / POURING_SCENE)
     try:
-        resolved = resolver.resolve(query, POURING_SCENE, trap).resolution
+        resolved = (
+            resolver_for(arm, output, store)
+            .resolve(
+                DesignatorQuery.shipped(TRAP_DESIGNATOR), POURING_SCENE, overturned
+            )
+            .resolution
+        )
     except (NoFittingReferent, AmbiguousReferent) as refusal:
         outcome = TrapOutcome(
             arm=arm.value,
             run=run,
+            overturned_body=trap.body_name,
             refused=type(refusal).__name__,
             target_container="",
             why=refusal.reason,
@@ -272,9 +308,12 @@ def test_the_pour_is_not_made_into_an_overturned_goal(
         outcome = TrapOutcome(
             arm=arm.value,
             run=run,
+            overturned_body=trap.body_name,
             refused="",
             target_container=next(
-                slot.value for slot in action.slots if slot.name == "target_container"
+                slot.value
+                for slot in action.slots
+                if slot.name == PouringSlot.TARGET_CONTAINER
             ),
             why=action.why,
             cost=resolved.cost,

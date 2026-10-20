@@ -62,6 +62,28 @@ class OverturnedScene:
     The identifier of the object to turn over.
     """
 
+    @classmethod
+    def of_body(cls, bundle: Path, body_name: str) -> OverturnedScene:
+        """
+        :param bundle: The scene's bundle.
+        :param body_name: The name of the body of the object to turn over.
+        :return: The variant turning that object over.
+        :raises ObjectNotInScene: When no object of the scene has that body.
+        """
+        scene = json.loads((bundle / SCENE_FILE).read_text())
+        for entry in scene.get(SceneKey.OBJECTS) or []:
+            if Path(entry[SceneKey.MESH]).name == body_name:
+                return cls(bundle=bundle, identifier=entry[SceneKey.IDENTIFIER])
+        raise ObjectNotInScene(identifier=body_name)
+
+    @property
+    def body_name(self) -> str:
+        """
+        :return: The name of the body the object has in the scene's world.
+        """
+        scene = json.loads((self.bundle / SCENE_FILE).read_text())
+        return Path(self.entry_in(scene)[SceneKey.MESH]).name
+
     def write_to(self, destination: Path) -> Path:
         """
         Write the variant as a bundle that shares every file of the original but the
