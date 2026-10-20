@@ -676,13 +676,20 @@ runs, $2.28 for 8 runs; one refusal carries no cost):
 - Two runs per arm and one scene: a first sign, not a rate. This is the first measurement in
   which the perspectives changed a choice.
 - Where the opening comes from (2026-10-20): the runs above took it from a hand-written list
-  of container classes. It is now measured from each object's mesh
-  (`cram_viz.resolution.mesh_opening`): rays are sent in along the six axes, and a direction is
-  an opening when half of them cross three quarters of the object before hitting anything. On
-  the scene's meshes it finds the bowl and the pitcher open upward, and the milk carton and the
-  cereal box closed, which is what the list gave there, so the prompt of the runs above is
-  unchanged and they were not repeated. The two shares are geometric tolerances picked on those
-  meshes. Longer term the knowledge ontology should say that a container has an opening, and
+  of container classes and a 45 degree rule for up, down and sideways. Both are gone. It is
+  now measured from each object's mesh (`cram_viz.resolution.mesh_opening`): rays are sent in
+  through each side, and a side is open when at least half of the rays that meet the object
+  hit the mesh after crossing at least half of the stretch they spend inside its convex hull,
+  so a ray that hits nothing has found no floor and does not count. The opening faces up when
+  the rays a pour follows, falling straight down in the world frame, get in, down when rising
+  rays do, sideways when only horizontal ones do. On the repository's meshes the bowl, the
+  apartment bowl, the cup and the pitcher are open upward (the pitcher on 72 % of its rays) and
+  the milk carton, the cereal box, the bread and the knife are not; the two shares are tolerances
+  (`RayTolerances`) and a test pins that these are told apart for crossing shares 0.5 to 0.6 and
+  open-ray shares 0.3 to 0.7, the defaults (0.5, 0.5) inside. Below 0.5 the knife's thin blade
+  starts to look open. The spoon (21 %) and the whisk (8 %) are not called open at the default;
+  the bottle's narrow neck is missed. The prompt of the runs above is unchanged, so they were not
+  repeated. Longer term the knowledge ontology should say that a container has an opening, and
   the geometry should only locate it.
 
 ## Sources

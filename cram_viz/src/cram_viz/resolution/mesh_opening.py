@@ -1,12 +1,14 @@
 """
-Measuring from an object's mesh whether it has an opening and which way it faces: rays
-are sent into the object along each of its axes, and a direction is an opening when most
-of the rays cross the whole object before they hit anything.
+Measuring from an object's mesh whether it has an opening and where it faces, by sending
+rays into it: a side is open when most of the rays sent in through it cross the object
+before they hit anything. Facing up means the rays a pour follows, falling straight down,
+get in.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import StrEnum
 from itertools import product
 
 import numpy as np
@@ -15,7 +17,12 @@ from typing_extensions import List, Optional
 
 AXES = (0, 1, 2)
 """
-The axes of the mesh's own frame a ray is sent along.
+The axes of the mesh's frame a ray is sent along; the last is the vertical.
+"""
+
+VERTICAL_AXIS = 2
+"""
+The axis rays fall along: the world's up.
 """
 
 SIGNS = (1.0, -1.0)
@@ -23,34 +30,53 @@ SIGNS = (1.0, -1.0)
 The two sides of an axis a ray enters from.
 """
 
-RAYS_PER_SIDE = 5
-"""
-How many rays are sent along each of the two other axes, so how many in all is the
-square of it.
-"""
 
-CENTRAL_SHARE = 0.5
-"""
-The share of the object's width the rays are spread over, around its centre, leaving out
-the rim and the walls.
-"""
+class OpeningDirection(StrEnum):
+    """
+    Where a container's opening faces.
+    """
 
-ENTRY_MARGIN = 0.05
-"""
-How far outside the object a ray starts, as a share of the object's extent along it.
-"""
+    UP = "up"
+    DOWN = "down"
+    SIDEWAYS = "sideways"
 
-CROSSING_SHARE = 0.75
-"""
-How much of the object's extent along its direction a ray must travel before hitting
-anything to count as having gone in through an opening.
-"""
 
-OPEN_RAY_SHARE = 0.5
-"""
-The share of the rays along a direction that must cross for the direction to be an
-opening.
-"""
+@dataclass(frozen=True)
+class RayTolerances:
+    """
+    How rays are sent into an object and when they count as having gone in through an
+    opening. The objects the repository has are told apart the same way across a range
+    of these values; the defaults sit inside it.
+    """
+
+    rays_per_side: int = 5
+    """
+    How many rays are sent along each of the two other axes, so how many in all is the
+    square of it.
+    """
+
+    central_share: float = 0.5
+    """
+    The share of the object's width the rays are spread over, around its centre, leaving
+    out the rim and the walls.
+    """
+
+    entry_margin: float = 0.05
+    """
+    How far outside the object a ray starts, as a share of the object's extent along it.
+    """
+
+    crossing_share: float = 0.5
+    """
+    How much of the object's extent along its direction a ray must travel before hitting
+    anything to count as having gone in through an opening.
+    """
+
+    open_ray_share: float = 0.5
+    """
+    The share of the rays sent in through a side that must cross for the side to be an
+    opening.
+    """
 
 
 @dataclass
@@ -61,47 +87,76 @@ class OpeningMeasurement:
 
     mesh: trimesh.Trimesh
     """
-    The object's mesh, in the object's own frame.
+    The object's mesh, with the world's axes: turned as the object is placed, so that its
+    vertical is the world's.
     """
 
-    def direction(self) -> Optional[np.ndarray]:
+    tolerances: RayTolerances = field(default_factory=RayTolerances)
+    """
+    How the rays are sent and judged.
+    """
+
+    def faces(self) -> Optional[OpeningDirection]:
         """
-        :return: The unit vector, in the mesh's frame, pointing out of the object's
-            opening; the best one when several directions are open; ``None`` when the
-            object has no opening.
+        :return: Where the opening faces: up when the rays falling straight down get in,
+            down when the ones rising do, sideways when only horizontal rays do; the
+            best of up and down when both get in; ``None`` when no side is open.
         """
-        shares = {
-            (axis, sign): self.crossing_share(axis, sign)
-            for axis, sign in product(AXES, SIGNS)
-        }
-        (axis, sign), best = max(shares.items(), key=lambda item: item[1])
-        if best < OPEN_RAY_SHARE:
-            return None
-        outward = np.zeros(3)
-        outward[axis] = sign
-        return outward
+        up = self.crossing_share(VERTICAL_AXIS, 1.0)
+        down = self.crossing_share(VERTICAL_AXIS, -1.0)
+        if max(up, down) >= self.tolerances.open_ray_share:
+            return OpeningDirection.UP if up >= down else OpeningDirection.DOWN
+        if any(
+            self.crossing_share(axis, sign) >= self.tolerances.open_ray_share
+            for axis, sign in product(AXES[:VERTICAL_AXIS], SIGNS)
+        ):
+            return OpeningDirection.SIDEWAYS
+        return None
 
     def crossing_share(self, axis: int, sign: float) -> float:
         """
         :param axis: The axis of the mesh's frame the rays run along.
         :param sign: The side of the object on that axis the rays come in from.
-        :return: The share of the rays sent in through that side that cross the object
-            before hitting anything.
+        :return: Of the rays sent in through that side that meet the object, the share
+            that travel on, before hitting the mesh, through at least
+            :attr:`RayTolerances.crossing_share` of the object's extent along the ray,
+            which is the stretch the ray spends inside the object's convex hull; a ray
+            that hits nothing has found no floor and does not count.
         """
         lowest, highest = self.mesh.bounds
-        extent = highest[axis] - lowest[axis]
-        origins = self.origins(axis, sign, extent)
+        origins = self.origins(axis, sign, highest[axis] - lowest[axis])
         inward = np.zeros(3)
         inward[axis] = -sign
-        travelled = np.full(len(origins), np.inf)
+        directions = np.tile(inward, (len(origins), 1))
+        entered, left = self.hull_chords(origins, directions)
+        met = ~np.isnan(entered)
+        if not met.any():
+            return 0.0
+        hit = np.full(len(origins), np.inf)
         locations, ray_indices, _ = self.mesh.ray.intersects_location(
-            origins, np.tile(inward, (len(origins), 1)), multiple_hits=False
+            origins, directions, multiple_hits=False
         )
-        travelled[ray_indices] = np.linalg.norm(
-            locations - origins[ray_indices], axis=1
+        hit[ray_indices] = np.linalg.norm(locations - origins[ray_indices], axis=1)
+        extent = left - entered
+        crossed = (hit - entered) >= self.tolerances.crossing_share * extent
+        return float(np.mean(crossed[met] & np.isfinite(hit[met])))
+
+    def hull_chords(self, origins: np.ndarray, directions: np.ndarray):
+        """
+        :return: For each ray, how far along it the object's convex hull is entered and
+            left; not a number for a ray that misses the hull.
+        """
+        entered = np.full(len(origins), np.nan)
+        left = np.full(len(origins), np.nan)
+        locations, ray_indices, _ = self.mesh.convex_hull.ray.intersects_location(
+            origins, directions, multiple_hits=True
         )
-        needed = CROSSING_SHARE * extent
-        return float(np.mean(travelled >= needed))
+        for ray in np.unique(ray_indices):
+            distances = np.linalg.norm(
+                locations[ray_indices == ray] - origins[ray], axis=1
+            )
+            entered[ray], left[ray] = distances.min(), distances.max()
+        return entered, left
 
     def origins(self, axis: int, sign: float, extent: float) -> np.ndarray:
         """
@@ -112,12 +167,15 @@ class OpeningMeasurement:
         centre = 0.5 * (lowest + highest)
         width = highest - lowest
         others: List[int] = [other for other in AXES if other != axis]
-        offsets = np.linspace(-0.5, 0.5, RAYS_PER_SIDE) * CENTRAL_SHARE
+        offsets = (
+            np.linspace(-0.5, 0.5, self.tolerances.rays_per_side)
+            * self.tolerances.central_share
+        )
         origins = []
         for first, second in product(offsets, offsets):
             origin = centre.copy()
             origin[axis] = (highest[axis] if sign > 0 else lowest[axis]) + sign * (
-                ENTRY_MARGIN * extent
+                self.tolerances.entry_margin * extent
             )
             origin[others[0]] += first * width[others[0]]
             origin[others[1]] += second * width[others[1]]
