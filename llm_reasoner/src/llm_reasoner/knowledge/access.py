@@ -49,6 +49,7 @@ from llm_reasoner.knowledge.ontologies.described_actions import (
     DescribedActions,
 )
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms, OntologyFiles
+from llm_reasoner.knowledge.ontologies.object_kinds import ObjectKinds
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
@@ -113,6 +114,7 @@ __all__ = [
     "KnowledgeToolName",
     "KnowledgeService",
     "LinkedOntologyTerms",
+    "ObjectKinds",
     "LinkedOntologyVariable",
     "object_dynamics",
     "OntologyFiles",

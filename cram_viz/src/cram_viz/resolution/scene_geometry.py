@@ -13,7 +13,9 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from krrood.entity_query_language.query.match import Match
+from llm_reasoner.knowledge.access import ObjectKinds
 from llm_reasoner.resolver.context import PromptContextProvider
+from llm_reasoner.world.classes import identifier_of
 from semantic_digital_twin.robots.robot_parts import AbstractRobot, AbstractRobotPart
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world import World
@@ -142,12 +144,20 @@ class SceneGeometry(PromptContextProvider):
             ),
             GeometryKey.UP: up,
         }
+        if ObjectKinds.shipped().has_opening(identifier_of(type(annotation))):
+            geometry[GeometryKey.OPENING_FACES] = self.opening_of(body, transform)
+        return geometry
+
+    def opening_of(self, body: Body, transform: np.ndarray) -> OpeningDirection:
+        """
+        :param body: The body of an object the ontology says has an opening.
+        :param transform: The body's pose in the world.
+        :return: Where the opening faces as the object is placed, found from its mesh;
+            closed when no side of it is open.
+        """
         placed = body.visual.combined_mesh.copy()
         placed.apply_transform(self.orientation_of(transform))
-        opening = OpeningMeasurement(mesh=placed).faces()
-        if opening is not None:
-            geometry[GeometryKey.OPENING_FACES] = opening
-        return geometry
+        return OpeningMeasurement(mesh=placed).faces() or OpeningDirection.CLOSED
 
     @staticmethod
     def orientation_of(transform: np.ndarray) -> np.ndarray:

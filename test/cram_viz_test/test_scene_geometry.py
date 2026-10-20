@@ -14,7 +14,8 @@ import pytest
 from llm_reasoner.resolver.prompt_format import PromptSection
 from semantic_digital_twin.robots.robot_parts import AbstractRobot, AbstractRobotPart
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
-from semantic_digital_twin.semantic_annotations.semantic_annotations import Milk
+from semantic_digital_twin.adapters.mesh import STLParser
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Bowl, Milk
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 
 from cram_viz.resolution.scene_geometry import (
@@ -26,6 +27,7 @@ from cram_viz.resolution.scene_geometry import (
 )
 from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder
 
+from .conftest import OBJECT_MESHES
 from .test_scene_world import recorded_start
 
 TOLERANCE = 10.0**-COORDINATE_DIGITS
@@ -34,6 +36,30 @@ How far a stated coordinate may lie from the exact one: its rounding.
 """
 
 # %% helpers
+
+OPEN_MESH = "apartment_bowl.stl"
+"""
+A mesh of an object that has an open side.
+"""
+
+CLOSED_MESH = "bread.stl"
+"""
+A mesh of an object with no open side.
+"""
+
+
+def add_object(world, mesh: str, kind: type) -> None:
+    """
+    Add the mesh to the world as an object of the kind.
+    """
+    world.merge_world_at_pose(
+        STLParser(str(OBJECT_MESHES / mesh)).parse(),
+        HomogeneousTransformationMatrix.from_xyz_rpy(
+            0.0, 0.0, 0.0, reference_frame=world.root
+        ),
+    )
+    with world.modify_world():
+        world.add_semantic_annotations([kind(root=world.get_body_by_name(mesh))])
 
 
 def described(bundle: Path) -> dict:
@@ -164,12 +190,29 @@ class TestObjects:
             == OpeningDirection.UP
         )
 
-    def test_an_object_with_no_opening_states_none(self, pouring_kitchen):
+    def test_an_object_of_a_kind_that_is_no_container_states_no_opening(
+        self, pouring_kitchen
+    ):
         milk = pouring_kitchen.get_semantic_annotations_by_type(Milk)
         assert milk
         geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
         assert GeometryKey.OPENING_FACES not in object_named(
             geometry, milk[0].root.name.name
+        )
+
+    def test_the_kind_decides_not_the_mesh(self, pouring_kitchen):
+        add_object(pouring_kitchen, OPEN_MESH, Milk)
+        geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
+        assert GeometryKey.OPENING_FACES not in object_named(geometry, OPEN_MESH)
+
+    def test_a_container_whose_mesh_has_no_open_side_is_stated_closed(
+        self, pouring_kitchen
+    ):
+        add_object(pouring_kitchen, CLOSED_MESH, Bowl)
+        geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
+        assert (
+            object_named(geometry, CLOSED_MESH)[GeometryKey.OPENING_FACES]
+            == OpeningDirection.CLOSED
         )
 
     def test_the_robot_and_its_parts_are_not_objects(self, pouring_kitchen):
