@@ -1,5 +1,5 @@
 """
-For the frame of an action, a knowledge base can state each Failure: the slots (or parts of slots) it concerns, the observable condition that goes wrong, the Indicator by which it is noticed, the core parameter dimensions it comes from, and a Correction made of ParameterChanges. A ParameterChange names the dimension, the direction, the slot it moves towards, the condition it removes and the condition the new choice must meet. A Correction is marked as applicable during the action or only by retrying.
+For the frame of an action, a knowledge base can state each Failure: the slots (or parts of slots) it concerns, the condition on a slot that goes wrong, the Indicator by which it is noticed, the core parameter dimensions it comes from, and a Correction made of ParameterChanges. A ParameterChange names the dimension, the direction, the slot it moves towards, the condition it removes and the condition the new choice must meet. A Correction is marked as applicable during the action or only by retrying.
 
 Generated from ``failures.ttl`` by ``python -m llm_reasoner.knowledge.ontology_translation``. Regenerate rather than edit.
 """
@@ -204,7 +204,7 @@ class Failure(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#hasFailedCondition",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#ObservableCondition"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition"
                 ),
             ),
             PropertyRestriction(
@@ -257,12 +257,12 @@ class Failure(DescriptionEntity):
     A correction that puts the failure right.
     """
 
-    has_failed_condition: List[ObservableCondition] = field(
+    has_failed_condition: List[action_core.SlotCondition] = field(
         default_factory=list,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#hasFailedCondition",
             functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#ObservableCondition",
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
         ).as_dict(),
     )
     """
@@ -417,69 +417,6 @@ class Indicator(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class ObservableCondition(DescriptionEntity):
-    """
-    A state of the world that a person or an agent can check, such as a state type holding or not holding of a slot's filler, stated as what the filler has or affords rather than as the class it belongs to.
-    """
-
-    term: ClassVar[ClassTerm] = ClassTerm(
-        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#ObservableCondition",
-        linked_terms=(
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
-        ),
-        evidence_status="",
-        claims=(),
-        restrictions=(
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#failedConditionOnSlot",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot"
-                ),
-            ),
-        ),
-        definition=None,
-    )
-    """
-    The ontology class this class stands for.
-    """
-
-    failed_condition_on_slot: List[action_core.FrameSlot] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#failedConditionOnSlot",
-            functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot",
-        ).as_dict(),
-    )
-    """
-    The slot whose filler the condition is about.
-    """
-
-    failed_condition_presence: Optional[action_core.ConditionPolarity] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#failedConditionPresence",
-            functional=True,
-        ).as_dict(),
-    )
-    """
-    Whether the named state holds or does not hold when the failure is noticed.
-    """
-
-    failed_condition_state_type: List[ConceptReference] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#failedConditionStateType",
-            functional=False,
-        ).as_dict(),
-    )
-    """
-    The state type the condition is about, named by the IRI of a CRAM-AICOR state type such as aicor:FlowingState or aicor:ContainedState.
-    """
-
-
-@dataclass(eq=False)
 class ParameterChange(DescriptionEntity):
     """
     A change to one of the core's parameter dimensions that corrects a failure, in a direction and for the reason that it removes a failed condition.
@@ -504,7 +441,7 @@ class ParameterChange(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#correctsCondition",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#ObservableCondition"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition"
                 ),
             ),
             PropertyRestriction(
@@ -545,12 +482,12 @@ class ParameterChange(DescriptionEntity):
     The parameter dimension of the core whose choice the change alters.
     """
 
-    corrects_condition: List[ObservableCondition] = field(
+    corrects_condition: List[action_core.SlotCondition] = field(
         default_factory=list,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#correctsCondition",
             functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#ObservableCondition",
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
         ).as_dict(),
     )
     """
@@ -568,12 +505,12 @@ class ParameterChange(DescriptionEntity):
     The direction in which the change moves the choice.
     """
 
-    requires_of_choice: List[ObservableCondition] = field(
+    requires_of_choice: List[action_core.SlotCondition] = field(
         default_factory=list,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#requiresOfChoice",
             functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#ObservableCondition",
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
         ).as_dict(),
     )
     """
@@ -609,13 +546,6 @@ class ChangesDimension(ObjectPropertyDescriptor):
 class CorrectsCondition(ObjectPropertyDescriptor):
     """
     The failed condition whose holding is the reason for the change.
-    """
-
-
-@dataclass
-class FailedConditionOnSlot(ObjectPropertyDescriptor):
-    """
-    The slot whose filler the condition is about.
     """
 
 
@@ -693,9 +623,6 @@ ParameterChange.changes_dimension = ChangesDimension(
 )
 ParameterChange.corrects_condition = CorrectsCondition(
     ParameterChange, "corrects_condition"
-)
-ObservableCondition.failed_condition_on_slot = FailedConditionOnSlot(
-    ObservableCondition, "failed_condition_on_slot"
 )
 Failure.failure_concerns_slot = FailureConcernsSlot(Failure, "failure_concerns_slot")
 FailureStereotype.failure_stereotype_of = FailureStereotypeOf(

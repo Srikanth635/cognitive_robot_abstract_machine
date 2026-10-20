@@ -72,7 +72,7 @@ class ActionDefault(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#defaultCondition",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#SlotCondition"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition"
                 ),
             ),
         ),
@@ -82,12 +82,12 @@ class ActionDefault(DescriptionEntity):
     The ontology class this class stands for.
     """
 
-    default_condition: List[SlotCondition] = field(
+    default_condition: List[action_core.SlotCondition] = field(
         default_factory=list,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#defaultCondition",
             functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#SlotCondition",
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
         ).as_dict(),
     )
     """
@@ -106,12 +106,12 @@ class ActionDefault(DescriptionEntity):
     The slot whose filler the default is about.
     """
 
-    default_instead_of: List[SlotCondition] = field(
+    default_instead_of: List[action_core.SlotCondition] = field(
         default_factory=list,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#defaultInsteadOf",
             functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#SlotCondition",
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
         ).as_dict(),
     )
     """
@@ -188,101 +188,7 @@ class AdditionalConsequence(action_core.Consequence):
 
 
 @dataclass(eq=False)
-class SlotCondition(DescriptionEntity):
-    """
-    A condition a world can check about the filler of a slot of an action frame, such as having a part, affording something or being in a state, rather than membership of a class.
-    """
-
-    term: ClassVar[ClassTerm] = ClassTerm(
-        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#SlotCondition",
-        linked_terms=(
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
-        ),
-        evidence_status="",
-        claims=(),
-        restrictions=(
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionOnSlot",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#hasPolarity",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ConditionPolarity"
-                ),
-            ),
-        ),
-        definition=None,
-    )
-    """
-    The ontology class this class stands for.
-    """
-
-    condition_has_state: List[ConceptReference] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionHasState",
-            functional=False,
-        ).as_dict(),
-    )
-    """
-    The state the filler must be in for the condition to hold, as the IRI of a CRAM-AICOR state type, such as aicor:GraspedState.
-    """
-
-    condition_involves_slot: List[action_core.FrameSlot] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionInvolvesSlot",
-            functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot",
-        ).as_dict(),
-    )
-    """
-    Another slot whose filler the condition relates the first filler to, such as the agent in the condition that the source is held.
-    """
-
-    condition_on_slot: Optional[action_core.FrameSlot] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionOnSlot",
-            functional=True,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot",
-        ).as_dict(),
-    )
-    """
-    The slot whose filler the condition is about.
-    """
-
-    condition_requires_part: List[action_core.PartSlot] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionRequiresPart",
-            functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PartSlot",
-        ).as_dict(),
-    )
-    """
-    The part slot that a part of the filler must fill for the condition to hold.
-    """
-
-    has_polarity: Optional[action_core.ConditionPolarity] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#hasPolarity",
-            functional=True,
-        ).as_dict(),
-    )
-    """
-    Whether the condition is required to hold or required not to hold.
-    """
-
-
-@dataclass(eq=False)
-class AffordanceCondition(SlotCondition):
+class AffordanceCondition(action_core.SlotCondition):
     """
     A condition that the filler of a slot affords an action, such as the source being graspable or tiltable, or can be brought into a state, possibly with the filler of another slot, such as the goal being able to contain the substance.
     """
@@ -357,12 +263,12 @@ class DimensionRationale(DescriptionEntity):
     The ontology class this class stands for.
     """
 
-    decides_whether: List[SlotCondition] = field(
+    decides_whether: List[action_core.SlotCondition] = field(
         default_factory=list,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#decidesWhether",
             functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#SlotCondition",
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
         ).as_dict(),
     )
     """
@@ -395,7 +301,7 @@ class DimensionRationale(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class FeatureCondition(SlotCondition):
+class FeatureCondition(action_core.SlotCondition):
     """
     A condition that the filler of a slot has a part that fills a part slot of the frame, such as the source having a lip or the goal having an opening.
     """
@@ -418,6 +324,18 @@ class FeatureCondition(SlotCondition):
     )
     """
     The ontology class this class stands for.
+    """
+
+    condition_requires_part: List[action_core.PartSlot] = field(
+        default_factory=list,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionRequiresPart",
+            functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PartSlot",
+        ).as_dict(),
+    )
+    """
+    The part slot that a part of the filler must fill for the condition to hold.
     """
 
 
@@ -485,12 +403,12 @@ class FrameStereotype(DescriptionEntity):
     An expectation the frame holds of one of its slots.
     """
 
-    requires_before_start: List[SlotCondition] = field(
+    requires_before_start: List[action_core.SlotCondition] = field(
         default_factory=list,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#requiresBeforeStart",
             functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#SlotCondition",
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
         ).as_dict(),
     )
     """
@@ -511,7 +429,7 @@ class FrameStereotype(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class PostureCondition(SlotCondition):
+class PostureCondition(action_core.SlotCondition):
     """
     A condition that the filler of a slot stands in a given posture, such as the source standing upright before pouring.
     """
@@ -592,12 +510,12 @@ class SlotExpectation(DescriptionEntity):
     The ontology class this class stands for.
     """
 
-    expects_filler_to_satisfy: List[SlotCondition] = field(
+    expects_filler_to_satisfy: List[action_core.SlotCondition] = field(
         default_factory=list,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#expectsFillerToSatisfy",
             functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#SlotCondition",
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
         ).as_dict(),
     )
     """
@@ -628,46 +546,7 @@ class SlotExpectation(DescriptionEntity):
     """
 
 
-@dataclass(eq=False)
-class StateCondition(SlotCondition):
-    """
-    A condition that the filler of a slot, possibly in relation to the filler of another slot, is in a given discrete state, such as the agent grasping the source or the substance being contained in the goal; with the polarity that it does not hold, that it is not in that state, such as the source being empty: the substance not contained in it.
-    """
-
-    term: ClassVar[ClassTerm] = ClassTerm(
-        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#StateCondition",
-        linked_terms=(),
-        evidence_status="",
-        claims=(),
-        restrictions=(
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionHasState",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(iri="http://www.w3.org/2002/07/owl#Thing"),
-            ),
-        ),
-        definition=None,
-    )
-    """
-    The ontology class this class stands for.
-    """
-
-
 # %% property descriptors
-
-
-@dataclass
-class ConditionInvolvesSlot(ObjectPropertyDescriptor):
-    """
-    Another slot whose filler the condition relates the first filler to, such as the agent in the condition that the source is held.
-    """
-
-
-@dataclass
-class ConditionOnSlot(ObjectPropertyDescriptor):
-    """
-    The slot whose filler the condition is about.
-    """
 
 
 @dataclass
@@ -777,12 +656,8 @@ class StereotypeOf(ObjectPropertyDescriptor):
 
 # %% descriptor attachments
 
-SlotCondition.condition_involves_slot = ConditionInvolvesSlot(
-    SlotCondition, "condition_involves_slot"
-)
-SlotCondition.condition_on_slot = ConditionOnSlot(SlotCondition, "condition_on_slot")
-SlotCondition.condition_requires_part = ConditionRequiresPart(
-    SlotCondition, "condition_requires_part"
+FeatureCondition.condition_requires_part = ConditionRequiresPart(
+    FeatureCondition, "condition_requires_part"
 )
 DimensionRationale.decides_whether = DecidesWhether(
     DimensionRationale, "decides_whether"

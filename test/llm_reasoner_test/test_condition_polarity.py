@@ -31,11 +31,11 @@ The action core's class of whether a condition holds.
 
 POLARITY_FIELDS = [
     (core.ConditionRequirement, "has_condition_polarity"),
-    (action_frame.SlotCondition, "has_polarity"),
-    (failures.ObservableCondition, "failed_condition_presence"),
+    (action_core.SlotCondition, "has_polarity"),
 ]
 """
-The field of each module saying whether a condition holds.
+The field of each family saying whether a condition holds; the action core's serves
+every perspective.
 """
 
 # %% fixtures
