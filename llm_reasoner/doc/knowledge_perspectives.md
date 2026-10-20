@@ -630,6 +630,31 @@ perspectives generated into the store on first use, their cost not recorded):
 
 Decided: both stay opt-in, like the frame.
 
+### 13.7 A goal that cannot receive the pour (2026-10-20)
+
+The first trap case: the scene's only bowl stands upside down
+(`cram_viz.resolution.overturned_scene`), and the scene geometry in the prompt now states
+which way each object's own up axis points (`"up": [0, 0, -1]` for the bowl), since an
+upside-down bowl has the same bounding box as an upright one. `objects_open` leaves the goal
+to the resolver, so the other bodies, among them a milk carton and a cereal box, are the
+alternatives. Two runs of each arm (default, image schemas, failures, both), Sonnet 5.5,
+$2.24 for the 7 runs that finished.
+
+| | Poured into the overturned bowl | Refused or chose another goal | Cut off |
+|---|---|---|---|
+| Default | 2 of 2 | 0 | 0 |
+| Image schemas | 1 of 2 | 0 | 1 (8192 output tokens) |
+| Failures | 2 of 2 | 0 | 0 |
+| Both | 2 of 2 | 0 | 0 |
+
+No arm noticed. The prompt did state the bowl's up axis pointing down, and no answer mentions
+it; the reasons are about the pour's lateral error. The image-schemas arm, whose vocabulary
+says the lip must be above the opening, did not use it either. So on this case the
+perspectives are not what is missing: the models do not read an up direction as an opening
+facing down, and no check in the loop (the simulated pour measures the top of the bounding
+box) can tell them. Two runs per arm is small, and a bare vector may be too indirect a fact;
+a stated opening direction, or an instruction to check the goal's orientation, are untried.
+
 ## Sources
 
 - M. Beetz, M. Kümpel. *From Frames to Pouring: The CRAM Cognitive Architecture for
