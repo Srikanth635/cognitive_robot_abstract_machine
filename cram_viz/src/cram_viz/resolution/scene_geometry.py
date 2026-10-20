@@ -19,6 +19,11 @@ from semantic_digital_twin.world_description.connections import OmniDrive
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Dict, List, Optional
 
+UP_AXIS = 2
+"""
+The column of a body's transform that is its own up axis.
+"""
+
 COORDINATE_DIGITS = 3
 """
 The decimals a coordinate is stated with: millimetres.
@@ -31,9 +36,9 @@ robot is stated by where its base stands.
 """
 
 GEOMETRY_HEADING = (
-    "The geometry of the scene: every object's origin, the box it fills and the centre "
-    "of its top, and where each robot base stands and faces; metres and radians, in the "
-    "world frame."
+    "The geometry of the scene: every object's origin, the box it fills, the centre of "
+    "its top and the direction its own up axis points in, and where each robot base "
+    "stands and faces; metres and radians, in the world frame."
 )
 """
 The sentence introducing the geometry.
@@ -54,6 +59,7 @@ class GeometryKey(StrEnum):
     MINIMUM = "min"
     MAXIMUM = "max"
     TOP_CENTRE = "top_centre"
+    UP = "up"
     POSITION = "position"
     YAW = "yaw"
 
@@ -104,8 +110,8 @@ class SceneGeometry(PromptContextProvider):
 
     def object_geometry(self, annotation: HasRootBody) -> Dict[str, Any]:
         """
-        :return: An annotated object's kind, body name, origin, world-frame bounding box
-            and the centre of the box's top.
+        :return: An annotated object's kind, body name, origin, world-frame bounding box,
+            the centre of the box's top and the direction its up axis points in.
         """
         body = annotation.root
         box = body.visual.as_bounding_box_collection_in_frame(
@@ -126,6 +132,7 @@ class SceneGeometry(PromptContextProvider):
                     box.max_z,
                 ]
             ),
+            GeometryKey.UP: rounded(body.global_transform.to_np()[:3, UP_AXIS]),
         }
 
     @staticmethod
