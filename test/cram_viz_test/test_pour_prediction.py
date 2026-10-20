@@ -14,6 +14,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from scipy.spatial.transform import Rotation
 from jsonschema import Draft202012Validator
 from llm_reasoner.resolver.prompt_format import RuleName
 from llm_reasoner.world.view import WorldView
@@ -24,12 +25,14 @@ from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.hold_measurement import MeasuredHolding
 from cram_viz.resolution.prediction import (
     PREDICT_POUR_END,
+    ApproachTolerances,
     HeldSource,
     Holding,
     PickUpFailed,
     PourPrediction,
     PourUnreachable,
     PourPredictor,
+    PourReach,
     PredictPourEnd,
 )
 from cram_viz.resolution.scene_world import SceneWorldBuilder
@@ -215,6 +218,102 @@ class TestReachingThePourPose:
             OutcomeKey.MOTION_FAILED: unreachable.value.reason,
         }
         Draft202012Validator(tool.definition.output_schema).validate(outcome)
+
+
+# %% the steps of the approach
+
+TURN = 1.0
+"""
+How far, in radians, the tool turns between the poses of these tests.
+"""
+
+
+def pose_turned(angle: float, lifted: float = 0.0) -> np.ndarray:
+    """
+    :return: A pose turned about the y axis by the angle and lifted by the height.
+    """
+    pose = np.eye(4)
+    pose[:3, :3] = Rotation.from_euler("y", angle).as_matrix()
+    pose[2, 3] = lifted
+    return pose
+
+
+def turn_between(first: np.ndarray, second: np.ndarray) -> float:
+    """
+    :return: The angle, in radians, that turns one pose's orientation into the other's.
+    """
+    return float(
+        np.linalg.norm(
+            Rotation.from_matrix(first[:3, :3].T @ second[:3, :3]).as_rotvec()
+        )
+    )
+
+
+class TestApproachSteps:
+    def test_a_turn_is_taken_in_steps_no_larger_than_the_tolerance(self):
+        tolerance = ApproachTolerances(max_rotation_per_step=0.3)
+        steps = PourReach.poses_between(pose_turned(0.0), pose_turned(TURN), tolerance)
+        before = [pose_turned(0.0), *steps]
+        assert (
+            max(turn_between(first, second) for first, second in zip(before, steps))
+            <= tolerance.max_rotation_per_step + 1e-9
+        )
+
+    def test_the_last_step_is_the_pose_asked_for(self):
+        goal = pose_turned(TURN, lifted=0.2)
+        steps = PourReach.poses_between(
+            pose_turned(0.0), goal, ApproachTolerances(max_rotation_per_step=0.3)
+        )
+        assert np.allclose(steps[-1], goal)
+
+    def test_a_larger_turn_takes_more_steps(self):
+        tolerance = ApproachTolerances(max_rotation_per_step=0.3)
+        small = PourReach.poses_between(pose_turned(0.0), pose_turned(0.5), tolerance)
+        large = PourReach.poses_between(pose_turned(0.0), pose_turned(2.0), tolerance)
+        assert len(large) > len(small)
+
+    def test_a_move_without_a_turn_is_one_step(self):
+        steps = PourReach.poses_between(
+            pose_turned(0.0), pose_turned(0.0, lifted=0.3), ApproachTolerances()
+        )
+        assert len(steps) == 1
+
+
+SWEPT_STEP_SIZES = (0.15, 0.5, 0.7)
+"""
+Largest turns per step, in radians, across which the same pours are predicted the same
+way, the default among them.
+"""
+
+
+class TestApproachTolerances:
+    @pytest.mark.parametrize("max_rotation_per_step", SWEPT_STEP_SIZES)
+    @pytest.mark.parametrize("tilt_angle", (*REACHABLE_TILTS, 2.6))
+    def test_a_pour_the_arm_can_make_is_predicted_across_the_step_sizes(
+        self, pouring_kitchen, picked_up, tilt_angle, max_rotation_per_step
+    ):
+        predictor = PourPredictor(
+            world=pouring_kitchen,
+            holding=HoldingAtOnePose(held_at=picked_up),
+            approach=ApproachTolerances(max_rotation_per_step=max_rotation_per_step),
+        )
+        predictor.predict({**POURING_VALUES, "tilt_angle": tilt_angle})
+
+    @pytest.mark.parametrize("max_rotation_per_step", SWEPT_STEP_SIZES)
+    @pytest.mark.parametrize("tilt_angle", (UNREACHABLE_TILT, 2.8))
+    def test_a_pour_the_arm_cannot_make_is_refused_across_the_step_sizes(
+        self, pouring_kitchen, picked_up, tilt_angle, max_rotation_per_step
+    ):
+        predictor = PourPredictor(
+            world=pouring_kitchen,
+            holding=HoldingAtOnePose(held_at=picked_up),
+            approach=ApproachTolerances(max_rotation_per_step=max_rotation_per_step),
+        )
+        with pytest.raises(PourUnreachable):
+            predictor.predict({**POURING_VALUES, "tilt_angle": tilt_angle})
+
+    def test_the_default_step_size_is_one_of_the_swept(self):
+        assert ApproachTolerances().max_rotation_per_step in SWEPT_STEP_SIZES
 
 
 # %% the tool
