@@ -1,0 +1,33 @@
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/slot-roles> a owl:Ontology ;
+    owl:imports <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ,
+        <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> ,
+        <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ,
+        <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> ;
+    rdfs:label "Slot roles"@en ;
+    rdfs:comment "Which manipulation role of the predictive manipulation microworld fills which slot of the action core's frame. Each role is put under the slot whose CRAM-AICOR role it already specialises; neither family is changed."@en .
+
+# %% roles of any manipulation
+
+core:Actor rdfs:subClassOf ac:AgentSlot .
+
+core:Manipulandum rdfs:subClassOf ac:PatientSlot .
+
+pre:GraspingEffector rdfs:subClassOf ac:InstrumentSlot .
+
+# %% roles of pouring
+
+pour:SourceContainer rdfs:subClassOf ac:SourceSlot .
+
+pour:TargetReceptacle rdfs:subClassOf ac:GoalSlot .
+
+pour:PouredSubstance rdfs:subClassOf ac:SubstanceSlot .
+
+pour:PouringLip rdfs:subClassOf ac:PartSlot ,
+        [ a owl:Restriction ; owl:onProperty ac:isPartOfSlot ; owl:someValuesFrom ac:SourceSlot ] .

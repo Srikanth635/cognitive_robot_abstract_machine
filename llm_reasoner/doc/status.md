@@ -583,6 +583,18 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   unchanged, so reopening and Execute use what it consulted; records under older module versions
   are still never served. Tests only, not run live.
 
+- The two families are linked at the level of classes (2026-10-20): `ontologies/slot-roles.ttl`
+  puts each Flanagan role under the action core's slot whose CRAM-AICOR role it already
+  specialises (`Actor` ⊑ `AgentSlot`, `Manipulandum` ⊑ `PatientSlot`, `GraspingEffector` ⊑
+  `InstrumentSlot`, `SourceContainer` ⊑ `SourceSlot`, `TargetReceptacle` ⊑ `GoalSlot`,
+  `PouredSubstance` ⊑ `SubstanceSlot`, `PouringLip` ⊑ `PartSlot` of the source). Neither family
+  is edited, the file declares no term, and HermiT finds both families, the file, CRAM-AICOR and
+  DUL consistent with every class satisfiable. `SlotRoles` reads it and
+  `DescribedAction.field_roles` gives the role each designator field mapped to a slot fills, so
+  cram_viz's Designator tab derives its roles instead of keeping a hand-written table.
+  Generation and prompts are unchanged; instances in the two families' hypotheses are not yet
+  linked to each other.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

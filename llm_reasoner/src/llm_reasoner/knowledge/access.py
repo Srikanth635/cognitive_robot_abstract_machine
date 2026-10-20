@@ -69,6 +69,7 @@ from llm_reasoner.knowledge.ontologies.perspective_roots import (
     PERSPECTIVE_ROOTS,
     PerspectiveRoot,
 )
+from llm_reasoner.knowledge.ontologies.slot_roles import SlotRoles
 from llm_reasoner.knowledge.ontologies.situation import (
     SituationFeature,
     SituationFeatures,
@@ -143,6 +144,7 @@ __all__ = [
     "Severity",
     "SituationFeature",
     "SituationFeatures",
+    "SlotRoles",
     "StoredRoot",
     "SyntheticHypothesisRelation",
     "Vocabulary",

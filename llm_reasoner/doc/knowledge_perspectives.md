@@ -1,6 +1,6 @@
 # Knowledge perspectives: design note
 
-Status (2026-10-19): **phases 0–4 are built and measured; phases 5 and 6 are built, tested and measured (§13.6); phases 7–8 are not started.**
+Status (2026-10-20): **phases 0–4 are built and measured; phases 5 and 6 are built, tested and measured (§13.6); phase 7 has begun (the two families linked at the level of classes); phase 8 is not started.**
 The action core, the action frame, knowledge in both vocabularies, the roles-to-slots
 mapping and the phase 4 comparison are done (§9, §11–§13); the action frame stays opt-in
 (§13.4). It refines [`architecture.md`](architecture.md) §2.3 and answers the item
@@ -225,7 +225,9 @@ means the lip was not over the opening, so change where relative to the goal. To
 
 The Flanagan modules stay as they are, with their roles (`SourceContainer`, `PouringLip`,
 `TargetReceptacle`) declared as the core's roles, so all perspectives talk about the same
-participants.
+participants. Since 2026-10-20 `slot-roles.ttl` states this for the classes: each role is put
+under the core slot whose CRAM-AICOR role it already specialises, and `PouringLip` under a part
+slot of the source (§9, phase 7).
 
 ### 5.6 Later
 
@@ -342,6 +344,14 @@ choice must satisfy. Measured in §13.6 (arms `with_image_schemas`, `with_failur
 **Phase 7 — the Flanagan modules on the core's slots (§5.5)**, so every perspective talks
 about the same participants; the Flanagan core's `ConditionPolarity` and the frame's
 `SlotConditionPolarity` become one term of the action core.
+1. *Classes linked, 2026-10-20.* `ontologies/slot-roles.ttl` imports the action core and the
+   Flanagan core, prehension and pouring modules and puts each role under its slot; it declares
+   no term and changes neither family. HermiT finds it consistent with both families,
+   CRAM-AICOR and DUL. `SlotRoles` reads it, and a designator's role per field follows from its
+   mapping to slots (`DescribedAction.field_roles`), which replaced cram_viz's hand-written
+   table. Generation and prompts are unchanged.
+2. Still open: linking the instances of a Flanagan hypothesis to those of a core hypothesis,
+   and merging the duplicated concepts (polarity, direction of change, conditions, quantities).
 
 **Phase 8 — more actions (D8):** navigating, picking up and placing in the core, with the
 concepts CRAM-AICOR lacks proposed in our module (§10), and their perspectives.

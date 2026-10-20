@@ -22,8 +22,10 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.frame_fields import (
     FramePartDescription,
+    SlotDescription,
     frame_part_from_json,
 )
+from llm_reasoner.knowledge.ontologies.slot_roles import SlotRoles
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 
@@ -113,6 +115,20 @@ class DescribedAction:
         :return: A query for the action core's one frame framing this action's concept.
         """
         return the(self.frame)(frames_action=self.concept)
+
+    def field_roles(
+        self, slot_roles: SlotRoles
+    ) -> dict[str, Optional[type[core.ManipulationRole]]]:
+        """
+        :param slot_roles: Which manipulation role fills which slot of the frame.
+        :return: The manipulation role each field filling a slot of the frame fills, by
+            field name; ``None`` for a slot no role is put under.
+        """
+        return {
+            field_name: slot_roles.role_filling(part.slot)
+            for field_name, part in self.frame_fields.items()
+            if isinstance(part, SlotDescription)
+        }
 
     @classmethod
     def from_json(
