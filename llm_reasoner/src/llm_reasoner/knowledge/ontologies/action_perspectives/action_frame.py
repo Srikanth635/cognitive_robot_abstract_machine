@@ -67,22 +67,6 @@ class Posture(StrEnum):
     """
 
 
-class SlotConditionPolarity(StrEnum):
-    """
-    Whether a slot condition is required to hold or required not to hold.
-    """
-
-    HOLDS = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#Holds"
-    """
-    The condition is required to hold.
-    """
-
-    DOES_NOT_HOLD = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#DoesNotHold"
-    """
-    The condition is required not to hold.
-    """
-
-
 # %% classes
 
 
@@ -244,7 +228,7 @@ class SlotCondition(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#hasPolarity",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#SlotConditionPolarity"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ConditionPolarity"
                 ),
             ),
         ),
@@ -301,7 +285,7 @@ class SlotCondition(DescriptionEntity):
     The part slot that a part of the filler must fill for the condition to hold.
     """
 
-    has_polarity: Optional[SlotConditionPolarity] = field(
+    has_polarity: Optional[action_core.ConditionPolarity] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#hasPolarity",

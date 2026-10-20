@@ -33,6 +33,24 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
+class ConditionPolarity(StrEnum):
+    """
+    Whether a condition holds or does not hold. The property relating a condition to its polarity says whether that is demanded, such as a requirement of a phase or a frame, or observed, such as the condition a failure is noticed by.
+    """
+
+    HOLDS = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Holds"
+    )
+    """
+    The condition holds.
+    """
+
+    DOES_NOT_HOLD = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#DoesNotHold"
+    """
+    The condition does not hold.
+    """
+
+
 class QuantityKind(StrEnum):
     """
     The kind of quantity a choice an action leaves open sets.

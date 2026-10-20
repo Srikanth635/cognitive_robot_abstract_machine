@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.1.0> ;
-    owl:versionInfo "0.1.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.2.0> ;
+    owl:versionInfo "0.2.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -217,3 +217,14 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 :Selection a owl:NamedIndividual , :QuantityKind ; rdfs:label "selection"@en ;
     rdfs:comment "Which of several alternatives is taken, such as the hand that holds the source."@en .
 [ a owl:AllDifferent ; owl:distinctMembers ( :Amount :Rate :Position :Orientation :Distance :Duration :Selection ) ] .
+
+:ConditionPolarity a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Holds :DoesNotHold ) ] ;
+    rdfs:label "condition polarity"@en ;
+    rdfs:comment "Whether a condition holds or does not hold. The property relating a condition to its polarity says whether that is demanded, such as a requirement of a phase or a frame, or observed, such as the condition a failure is noticed by."@en .
+:Holds a owl:NamedIndividual , :ConditionPolarity ; rdfs:label "holds"@en ;
+    rdfs:comment "The condition holds."@en .
+:DoesNotHold a owl:NamedIndividual , :ConditionPolarity ; rdfs:label "does not hold"@en ;
+    rdfs:comment "The condition does not hold."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Holds :DoesNotHold ) ] .

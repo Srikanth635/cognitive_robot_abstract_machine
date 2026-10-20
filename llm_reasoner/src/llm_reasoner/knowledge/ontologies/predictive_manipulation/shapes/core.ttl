@@ -11,10 +11,11 @@
 # reported beside it.
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> a owl:Ontology ;
-    owl:versionInfo "0.2.0" ;
+    owl:versionInfo "0.3.0" ;
     rdfs:comment "Closed-world structural rules of the core predictive manipulation module."@en ;
     sh:declare
         [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
+        [ sh:prefix "ac" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#"^^xsd:anyURI ] ,
         [ sh:prefix "aicor" ; sh:namespace "http://aicor.knowledge/l2-ontology.owl#"^^xsd:anyURI ] ,
         [ sh:prefix "rdf" ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ] ,
         [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] .
@@ -242,7 +243,7 @@
                 $this core:definesPhase ?requiring .
                 ?requiring core:hasConditionRequirement ?value .
                 ?value core:hasConditionMode ?mode ;
-                    core:hasConditionPolarity core:MustHold .
+                    core:hasConditionPolarity ac:Holds .
                 FILTER (?mode IN (core:AtEntry, core:Throughout))
                 FILTER NOT EXISTS { ?value core:isWorldAssumption true }
                 FILTER NOT EXISTS {
@@ -256,7 +257,7 @@
                     } UNION {
                         ?establishing core:hasConditionRequirement ?exit .
                         ?exit core:hasConditionMode core:AtExit ;
-                            core:hasConditionPolarity core:MustHold ;
+                            core:hasConditionPolarity ac:Holds ;
                             aicor:hasConditionType ?condition .
                     }
                 }

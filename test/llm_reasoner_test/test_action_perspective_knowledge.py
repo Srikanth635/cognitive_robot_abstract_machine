@@ -125,9 +125,11 @@ class TestModulesUsed:
             ActionPerspectiveFile.ACTION_FRAME,
         }
 
-    def test_a_phase_structure_uses_no_action_perspective(self):
+    def test_a_phase_structure_uses_no_action_perspective_beyond_the_core(self):
         used = GenerationSchema.for_root(pouring.PouringPhaseStructure).module_files()
-        assert used and used <= set(PredictiveManipulationOntologyFile)
+        assert used - set(PredictiveManipulationOntologyFile) == {
+            ActionPerspectiveFile.ACTION_CORE
+        }
 
     def test_a_core_hypothesis_is_offered_no_specialisation_a_perspective_declares(
         self,
@@ -146,12 +148,13 @@ class TestModulesUsed:
             not in frame.field_named("brings_about").accepted_types
         )
 
-    def test_a_general_phase_structure_still_uses_every_predictive_manipulation_module(
+    def test_a_general_phase_structure_uses_every_predictive_manipulation_module_and_the_core(
         self,
     ):
-        assert GenerationSchema.for_root(
-            core.ActionPhaseStructure
-        ).module_files() == set(PredictiveManipulationOntologyFile)
+        assert GenerationSchema.for_root(core.ActionPhaseStructure).module_files() == {
+            *PredictiveManipulationOntologyFile,
+            ActionPerspectiveFile.ACTION_CORE,
+        }
 
 
 class TestUsableModules:

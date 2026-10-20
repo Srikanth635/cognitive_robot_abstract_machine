@@ -1,4 +1,5 @@
 @prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
 @prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
@@ -7,9 +8,10 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.4.0> ;
-    owl:versionInfo "0.4.6" ;
-    owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.5.0> ;
+    owl:versionInfo "0.5.0" ;
+    owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
+        <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
     rdfs:comment """The action-neutral core of a microworld for predictive object manipulation, drawn from "Control strategies in object manipulation tasks" (2006), "Coding and use of tactile signals from the fingertips in object manipulation tasks" (2009), "Sensory control of object manipulation" (2009) and "Motor prediction" (2001).
 
@@ -434,7 +436,7 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:subClassOf aicor:dul_Relation , dul:Relation ,
         [ a owl:Restriction ; owl:onProperty aicor:hasConditionType ; owl:someValuesFrom :PhaseConditionType ] ,
         [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:someValuesFrom :ConditionMode ] ,
-        [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:someValuesFrom :ConditionPolarity ] ;
+        [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:someValuesFrom ac:ConditionPolarity ] ;
     rdfs:label "condition requirement"@en ;
     rdfs:comment "A phase's demand on a condition: when it applies, whether it must hold or be absent, and whether it is presupposed."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -454,7 +456,7 @@ Classes classify description-level individuals, the knowledge a language model g
 :InvariantRequirement a owl:Class ;
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement
         [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :Throughout ]
-        [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:hasValue :MustHold ] ) ] ;
+        [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:hasValue ac:Holds ] ) ] ;
     rdfs:subClassOf aicor:MaintenanceGoal , dul:Goal ,
         [ a owl:Restriction ; owl:onProperty :violationSignalledBy ; owl:someValuesFrom :FailureEventType ] ;
     rdfs:label "invariant requirement"@en ;
@@ -464,7 +466,7 @@ Classes classify description-level individuals, the knowledge a language model g
 :ProhibitionRequirement a owl:Class ;
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement
         [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :Throughout ]
-        [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:hasValue :MustNotHold ] ) ] ;
+        [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:hasValue ac:DoesNotHold ] ) ] ;
     rdfs:subClassOf aicor:PreventionGoal , dul:Goal ;
     rdfs:label "prohibition requirement"@en ;
     rdfs:comment "A condition that must be absent throughout the phase."@en ;
@@ -486,7 +488,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :hasConditionMode a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ConditionMode ;
     rdfs:label "has condition mode"@en ; rdfs:comment "When, relative to the phase, the condition is demanded."@en .
-:hasConditionPolarity a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ConditionPolarity ;
+:hasConditionPolarity a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range ac:ConditionPolarity ;
     rdfs:label "has condition polarity"@en ; rdfs:comment "Whether the condition is demanded to hold or to be absent."@en .
 :isWorldAssumption a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:domain :ConditionRequirement ; rdfs:range xsd:boolean ;
     rdfs:label "is world assumption"@en ; rdfs:comment "Whether no phase establishes the condition, so that it is presupposed of the world."@en .
@@ -646,17 +648,6 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:comment "Is brought about by completing the phase."@en .
 [ a owl:AllDifferent ; owl:distinctMembers ( :AtEntry :Throughout :AtExit ) ] .
 
-:ConditionPolarity a owl:Class ;
-    rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :MustHold :MustNotHold ) ] ;
-    rdfs:label "condition polarity"@en ;
-    rdfs:comment "Whether a condition is demanded to hold or to be absent."@en ;
-    :evidenceStatus :EngineeringExtension .
-:MustHold a owl:NamedIndividual , :ConditionPolarity ; rdfs:label "must hold"@en ;
-    rdfs:comment "The condition is demanded to be true."@en .
-:MustNotHold a owl:NamedIndividual , :ConditionPolarity ; rdfs:label "must not hold"@en ;
-    rdfs:comment "The condition is demanded to be false."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :MustHold :MustNotHold ) ] .
 
 :SensoryModality a owl:Class ;
     rdfs:subClassOf aicor:Modality , dul:Concept ;
