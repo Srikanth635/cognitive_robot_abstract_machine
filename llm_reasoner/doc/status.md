@@ -517,9 +517,10 @@ Last updated: 2026-10-19; code at commit `a1dc8de3d`.
   upside down, its up axis now stated in the scene geometry. All four arms poured into it
   (7 of 7 runs that finished, $2.24; one run cut off at 8192 output tokens): the model does not
   read an up direction as an opening facing down, with or without the perspectives. With the
-  opening direction stated (`opening_faces`, §13.7) the perspectives changed the choice for the
-  first time: 5 of 6 perspective runs left the bowl (4 poured into the milk carton, 1 refused),
-  the default arm still poured into it twice ($2.28).
+  opening direction stated (`opening_faces`, §13.7) 5 of 6 perspective runs left the bowl and
+  the default arm poured into it twice ($2.28), but a repetition with the final harness
+  (ontology-based opening, $1.77) had 7 of 8 runs refuse, the default arm included: two runs per
+  arm do not show the perspectives changing the choice.
 
 - The frame-knowledge rule is no longer hand-written (2026-10-20): `KnowledgeRequester.frame_rule`
   builds it from the first paragraph (`ActionPerspectiveModule.summary`) of the description of
