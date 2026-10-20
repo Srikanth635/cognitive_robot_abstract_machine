@@ -264,9 +264,11 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   the failure chain, the cards of the attempts, the plan of a real pour and the tokens.
   `RESOLVER_MAX_TOKENS` was then raised from 2048 to 8192 (a per-turn ceiling, paid for only as
   far as the model writes; the SDK accepts it without streaming). The cut-off is intermittent, so
-  this is not proven until a few live runs pass. Still open in cram_viz: a cut-off answer fails the
-  run rather than being repaired (it is now a `ResponseTruncated` naming the limit it was cut
-  at, 2026-10-20), and a failed call carries no usage or cost.
+  this is not proven until a few live runs pass. A cut-off answer is a `ResponseTruncated`
+  naming the limit and holding what the model had written (2026-10-20), and the resolver now
+  sends it back for repair as an `AnswerTruncated` rejection (2026-10-21, after a run in cram_viz
+  failed on one); still open: a failed call carries no usage or cost, and what the model writes
+  in a turn that runs to 8192 tokens has not been looked at.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -510,8 +512,8 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   opt-in through `KnowledgeRequester.perspectives` and as comparison arms. Measured live
   ($3.34, `knowledge_perspectives.md` §13.6): they change what the answers rest on, not what
   they choose, for 20–70 % more resolver cost; the failures arm lost 2 of 5 runs to the
-  resolver's final turn being cut off at cram_viz's 8192 output tokens (open: a cut-off answer
-  still fails the run instead of being repaired).
+  resolver's final turn being cut off at cram_viz's 8192 output tokens (a cut-off answer is now
+  sent back for repair instead of failing the run).
 
 - The first trap case (2026-10-20, `knowledge_perspectives.md` §13.7): the scene's only bowl
   upside down, its up axis now stated in the scene geometry. All four arms poured into it

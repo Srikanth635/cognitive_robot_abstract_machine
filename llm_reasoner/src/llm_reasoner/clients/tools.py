@@ -446,6 +446,11 @@ class ResponseTruncated(LLMReasonerError, RuntimeError):
     The most tokens the request allowed the answer.
     """
 
+    partial_answer: str
+    """
+    The text the model had written when it was cut off.
+    """
+
     def __post_init__(self):
         super().__init__(
             f"The model's answer was truncated at the limit of {self.token_limit} "

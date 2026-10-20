@@ -23,7 +23,12 @@ from typing_extensions import (
 )
 
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
-from llm_reasoner.clients.tools import Tool, ToolConversation, ToolUsingClient
+from llm_reasoner.clients.tools import (
+    ResponseTruncated,
+    Tool,
+    ToolConversation,
+    ToolUsingClient,
+)
 from llm_reasoner.observation.events import (
     AttemptRejected,
     AttemptStarted,
@@ -49,6 +54,7 @@ from llm_reasoner.resolver.context import (
     context_sections,
 )
 from llm_reasoner.resolver.exceptions import (
+    AnswerTruncated,
     ClientCannotUseTools,
     UnknownGround,
     MissingSlotInResponse,
@@ -511,7 +517,22 @@ class LanguageModelBackend(GenerativeBackend):
         last_error: Optional[Exception] = None
         for attempt in range(self.max_repairs + 1):
             self.observer.emit(AttemptStarted(resolution=resolution, attempt=attempt))
-            conversation = completion.complete(self.system_prompt, prompt)
+            try:
+                conversation = completion.complete(self.system_prompt, prompt)
+            except ResponseTruncated as truncated:
+                last_error = AnswerTruncated(
+                    output_tokens=truncated.output_tokens,
+                    token_limit=truncated.token_limit,
+                )
+                prompt = self._sent_back_unfinished(
+                    resolution,
+                    attempt,
+                    prompt,
+                    truncated.partial_answer,
+                    last_error,
+                    completion,
+                )
+                continue
             raw_response = conversation.answer
             self.conversations.append(conversation)
             self.log.append(
@@ -544,6 +565,44 @@ class LanguageModelBackend(GenerativeBackend):
         raise RepairBudgetExhausted(
             attempts=self.max_repairs + 1, last_error=last_error
         )
+
+    def _sent_back_unfinished(
+        self,
+        resolution: str,
+        attempt: int,
+        prompt: str,
+        partial_answer: str,
+        error: AnswerTruncated,
+        completion: Completion,
+    ) -> str:
+        """
+        Report an answer the model was cut off in as rejected and keep it in the log.
+
+        :param prompt: The prompt that was asked.
+        :param partial_answer: What the model had written when it was cut off.
+        :param error: That it was cut off, and where.
+        :return: The prompt asking again, showing the model the answer it did not
+            finish.
+        """
+        self.log.append(
+            Exchange(
+                system=self.system_prompt,
+                user=prompt,
+                raw_response=partial_answer,
+                client_identity=completion.identity,
+                attempt=attempt,
+            )
+        )
+        self.observer.emit(
+            AttemptRejected(
+                resolution=resolution,
+                attempt=attempt,
+                kind=type(error).__name__,
+                details=error.details(),
+                answer=partial_answer,
+            )
+        )
+        return PromptBuilder.build_repair(prompt, partial_answer, error)
 
     def _consult(self, expression: Match[T], resolution: str) -> None:
         """

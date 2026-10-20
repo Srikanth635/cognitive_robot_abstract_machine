@@ -283,7 +283,9 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient, UsageReporting):
         """
         if response.stop_reason == StopReason.MAX_TOKENS:
             raise ResponseTruncated(
-                output_tokens=response.usage.output_tokens, token_limit=token_limit
+                output_tokens=response.usage.output_tokens,
+                token_limit=token_limit,
+                partial_answer=AnthropicClient._extract_text(response),
             )
 
     @property

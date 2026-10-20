@@ -225,6 +225,28 @@ class OutcomeFellShort(RetryableModelFailure):
         super().__init__(f"trying the answer fell short: {self.outcome}")
 
 
+@dataclass
+class AnswerTruncated(RetryableModelFailure):
+    """
+    The model was cut off at the token limit before it finished its answer.
+    """
+
+    output_tokens: int
+    """
+    How many tokens the answer used.
+    """
+
+    token_limit: int
+    """
+    The most tokens the request allowed the answer.
+    """
+
+    def __post_init__(self):
+        super().__init__(
+            f"the answer was cut off at the limit of {self.token_limit} output tokens"
+        )
+
+
 # %% verdicts
 
 
