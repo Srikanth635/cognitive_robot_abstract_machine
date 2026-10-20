@@ -262,7 +262,7 @@ Deliverables: automated default policy, source/review adapters, fork-side CI wor
 
 Exit gate: forged frontmatter, stale approvals, altered bundles, policy weakening and wrong-revision artifacts fail the relevant trust gate. A rollback restores the associated code/knowledge evidence.
 
-Release checkpoint D: a shared, verifiable knowledge baseline after the owner configures immutable checker/runtime pins and verifies a hosted publication. No external reviewer is required by the default mode.
+Release checkpoint D: a shared, verifiable knowledge baseline after immutable checker/runtime pins and hosted publication/consumption checks pass. See [the deployment checkpoint](phase7-deployment.md). No external reviewer is required by the default mode.
 
 Suggested change split: admission policy and mocked evidence; trusted CI checks; publication and rollback.
 
