@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cramera_resolution"
+description = "Adds the resolution of underspecified actions, the knowledge views and their execution to the cramera viewer, without changing cramera."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+version = "0.1.0"
+dependencies = ["cramera"]
+license = "LGPL-3.0-only"
+
+[project.scripts]
+cramera-resolution = "cramera_resolution.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+# the panels the add-on mounts into the viewer's page
+cramera_resolution = ["web/**/*"]

@@ -735,6 +735,31 @@ Checked on the merged tree: `llm_reasoner_test`, `llm_reasoner_viz_test` and
 `cram_viz_test` (1849 passed, 2 skipped, 1 expected failure, as before), our experiments'
 tests, and upstream's `cramera_test` (1066 passed).
 
+## 2b. Moving cram_viz's features onto cramera (spike, 2026-10-21)
+
+Goal: every feature of `cram_viz` available in `cramera`, with neither package edited.
+`cramera` has no place to add a route or a graph tab (its handler and tab list are fixed),
+so the features come as an add-on package, `cramera_resolution`, on the branch
+`feature/cramera_resolution`. It subclasses `cramera`'s handler and server, serves its own
+panels under `/addon/`, and inserts their scripts into `cramera`'s own `index.html` as it is
+served. What is `cram_viz`'s alone and to be moved: `resolution/`, `hypothesis_knowledge/`,
+the designator and NEEM code, five API routes and the designator, hypothesis and ontology
+views.
+
+The spike shows:
+- **The mechanism works.** A test panel defined by the add-on mounts beside `cramera`'s EQL
+  and graph panels in a real browser, and `cramera`'s own routes and files are answered
+  exactly as `cramera` alone answers them (12 tests, comparing against `cramera`'s own
+  server).
+- **`cramera` reads `cram_viz`'s scene bundles** (same `<name>/scene.json` layout; either
+  `CRAMERA_SCENES` or `CRAM_VIZ_SCENES` can name them) with two data differences: a bundle's
+  `placeTarget` holds `pos` where `cramera` reads `position` (the knowledge views fail on
+  `KeyError: 'position'`), and the PR2 URDFs hold a `<transmission>` without `type`, which
+  `urdf_parser_py` refuses (the kinematics tab fails on the two PR2 scenes). With both
+  adapted, every graph tab works on all three scenes.
+- Not checked: the 3D scene, as the browser used lacks WebGL.
+- Both viewers default to port 8711.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
