@@ -826,8 +826,14 @@ cup into the bowl." to the resolver's context (not part of the code).
   tilt range from the knowledge.
 - No pour could land: the first pour misses 0.188 m to the side, as in every liquid run
   (§13.6), and `objects_given` leaves no geometry slot to correct it with; changing the arm or
-  the tilt does not move the mouth over the opening. A granular `pour_geometry_open` run would
-  test landing.
+  the tilt does not move the mouth over the opening.
+- With the geometry open (`pour_geometry_open`, same task and perspectives, run 2's granular
+  knowledge served from the store) it lands: the first pour missed by 0.188 m, the second set
+  `pour_side_offset` to -0.188 m and lowered `pour_height` from 0.13 to 0.10 m, keeping the right
+  arm and 1.85 rad, and ended 5 mm from the opening's centre. Three resolver calls, $0.14, under
+  a minute; it read the knowledge once (`knowledge_overview`) and cited 3 grounds. The
+  correction is the same geometric one the liquid runs made (§13.6); the granular knowledge
+  did not change it.
 - Run 1 showed a prompt defect from the quantity merge: a type's entry lists only its own
   fields and points to its bases, and `SlotQuantity` is no field's range, so it had no entry
   and the model was never told the fields and requirements every `ParameterDimension`,
