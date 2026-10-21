@@ -19,4 +19,10 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 # the panels the add-on mounts into the viewer's page
-cramera_resolution = ["web/**/*"]
+cramera_resolution = [
+  "web/**/*",
+  "resources/**/*",
+  "resolution/*.json",
+  "resolution/tool_definitions/*.json",
+  "resolution/designator_queries/*.py",
+]

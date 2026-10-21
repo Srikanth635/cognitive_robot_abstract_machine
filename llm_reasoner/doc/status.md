@@ -760,6 +760,22 @@ The spike shows:
 - Not checked: the 3D scene, as the browser used lacks WebGL.
 - Both viewers default to port 8711.
 
+Phase 1 (2026-10-21) moved the backend. The add-on now holds copies of `resolution/`,
+`hypothesis_knowledge/` and the designator, NEEM and event code (imports renamed, otherwise
+as `cram_viz` has them, so they stay comparable with it), and serves six routes under
+`/api/resolution/` (see its README). Its own code follows the current `AGENTS.md`: the hypothesis,
+ontology and designator payloads are built in `views.py` instead of inside `kb.py`; the state
+the routes share is held by one `ResolutionService` instead of module-level caches; Execute
+starts `python -m cramera_resolution.live --run <run>`, which performs the run and serves the
+world and plan through `cramera`'s own live bridge.
+
+Checked: 421 add-on tests (ported from `cram_viz` where the code is shared, plus the route and
+launcher tests), the routes against `cram_viz/scenes/simple_pouring` itself (all three designators
+available, the designator and hypothesis views answer), and a kept run performed through the
+live module (the pour performed in 7 s; the bridge reported the PR2 and its four objects and
+published a 45-node plan). Not moved: the panels, plan-step events in a run's log, EQL access to
+the knowledge, the hardcoded demo.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

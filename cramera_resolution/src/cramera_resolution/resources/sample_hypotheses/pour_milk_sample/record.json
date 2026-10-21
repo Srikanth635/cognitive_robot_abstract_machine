@@ -1,0 +1,22 @@
+{
+  "__json_type__": "llm_reasoner.knowledge.storage.record.HypothesisRecord",
+  "record_id": "pour_milk_sample",
+  "created_at": "2026-10-06T00:00:00+00:00",
+  "instruction": "pour milk from the carton into the bowl",
+  "root_type": "llm_reasoner.knowledge.ontologies.predictive_manipulation.pouring.PouringPhaseStructure",
+  "fixed_values": {
+    "decomposes_task": "aicor:Pouring"
+  },
+  "client_identity": "hand-authored",
+  "exchanges": [],
+  "warnings": [],
+  "consistency": "not_checked",
+  "module_versions": {
+    "action-core.ttl": "0.6.0",
+    "core.ttl": "0.6.0",
+    "object-dynamics.ttl": "0.3.0",
+    "prehension.ttl": "0.5.0",
+    "gaze.ttl": "0.2.1",
+    "pouring.ttl": "0.7.0"
+  }
+}

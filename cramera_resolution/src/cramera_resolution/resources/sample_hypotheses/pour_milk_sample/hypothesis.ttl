@@ -1,0 +1,2457 @@
+@prefix ac: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix ns1: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix ns2: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix ns3: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix ns4: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
+@prefix ns5: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
+@prefix ns6: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#pour_milk_structure> a ns6:PouringPhaseStructure,
+        owl:NamedIndividual ;
+    rdfs:label "pour milk from the carton into the bowl" ;
+    ns1:decomposesTask ns2:Pouring ;
+    ns1:definesComparison <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_match>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_point_match>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_continues>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_early>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_match>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_early>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_match>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_match>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_match>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_point_match> ;
+    ns1:definesConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_above_counter>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_at_clearance>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_near_bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_upright>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_clear>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_on_carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_open>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_positioned>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_flowing>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl> ;
+    ns1:definesContinuousPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#falling_load_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_prediction> ;
+    ns1:definesControlPoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_point>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_point>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_point>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_point>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_point>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_point>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_point> ;
+    ns1:definesController <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_controller>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdraw_controller> ;
+    ns1:definesCorrection <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_approach>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_lowering>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_unloading>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_correction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#open_further>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#probing_increase>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_grip_increase>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_load_rate_reduction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_correction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_back_further> ;
+    ns1:definesEventType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_reached>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_reached>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_done>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_restored>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_done> ;
+    ns1:definesForceOpposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush_opposition>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_opposition>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_opposition>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_opposition>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_opposition>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_opposition> ;
+    ns1:definesInitialStateEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_fill_at_load>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_start_state> ;
+    ns1:definesInternalModel <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#inverse_model> ;
+    ns1:definesModelUpdate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lower_mass_estimate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#raise_mass_estimate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#raise_remaining_milk_estimate> ;
+    ns1:definesObservationType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_look>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_sound_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_stream_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_load_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_observation>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_observation> ;
+    ns1:definesParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_pose>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_pose>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush_threshold>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_center_of_mass>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_friction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_load>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_mass>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_shape>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_rate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_to_load_ratio>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_clearance>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_threshold>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_rate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_viscosity>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#onset_angle>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_pose>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#remaining_milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#safety_margin>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slosh_behaviour>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_threshold>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#target_volume>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_rate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_threshold>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_angle>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_distance> ;
+    ns1:definesPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_back>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdraw> ;
+    ns1:definesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_load_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_sound_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_stream_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_prediction> ;
+    ns1:definesPredictionError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_cessation_error>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_contact_error>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_liftoff_error>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_release_error>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_touchdown_error>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_unload_error>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_flow_error>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_error>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#overflow_error>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_while_holding>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_while_loading> ;
+    ns1:definesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#actor>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:definesSensoryFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl_fill_level>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_appearance>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_load>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_stream>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_flow_sound>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_position> ;
+    ns1:definesSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#aligned_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clear_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#near_bowl_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#on_counter_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#positioned_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#released_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#stop_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unloaded_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_goal>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawn_goal> ;
+    ns1:definesTransition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align_to_tilt>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_to_load>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_to_transport>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_to_lift>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_to_contact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate_to_terminate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_to_withdraw>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace_to_unload>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate_to_upright>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_to_regulate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_back_to_replace>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_to_align>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_to_release>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_to_transport_back> ;
+    ns5:definesGazeFixation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#look_at_bowl_rim>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#look_at_grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#look_at_put_down_spot>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#watch_bowl_fill> ;
+    ns4:definesDesiredState <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_lifted_state> ;
+    ns4:definesEfferenceCopy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_command_copy> ;
+    ns4:definesInternalModelComposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction_pathway> ;
+    ns4:definesMotorCommand <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_command> ;
+    ns4:definesSensorimotorMemory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_memory> ;
+    ac:hasMaterialRegime ac:Liquid ;
+    ac:hasTerminationReason ac:TargetQuantityAttained ;
+    ns3:definesAnticipatoryGripAdjustment <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_raise_before_flow> ;
+    ns3:definesForceCoupling <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_load_coupling> ;
+    ns3:definesGripForceCorridor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_corridor> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_value> a ns1:CategoricalValue,
+        owl:NamedIndividual ;
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#SpoutBesideBowlRim> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 6e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 1.2e+03 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_value> a ns1:CategoricalValue,
+        owl:NamedIndividual ;
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#AboveOriginalSpot> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align_to_tilt> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl_containment> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:exertedByRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl> ;
+    ns1:hasForceKind ns1:Containment .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_fill_at_load> a ns1:InitialStateEstimate,
+        owl:NamedIndividual ;
+    ns1:basedOnObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_look> ;
+    ns1:estimatesCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_carton> ;
+    ns1:forPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_holds_milk> a ns1:ConditionRequirement,
+        owl:NamedIndividual ;
+    ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_carton> ;
+    ns1:hasConditionMode ns1:AtEntry ;
+    ns1:hasConditionPolarity ac:Holds ;
+    ns1:isWorldAssumption true .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_strength> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:hasForceKind ns1:MaterialStrength .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_weight> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:hasForceKind ns1:Weight .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#center_of_mass_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Metre ;
+    ns1:lowerBound 6e-02 ;
+    ns1:upperBound 1e-01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 2e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 5e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_before_loading> a ns1:ConditionRequirement,
+        owl:NamedIndividual ;
+    ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_on_carton> ;
+    ns1:hasConditionMode ns1:AtEntry ;
+    ns1:hasConditionPolarity ac:Holds .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_point> a ns1:SensorimotorControlPoint,
+        owl:NamedIndividual ;
+    ns1:atEventType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> ;
+    ns1:hasComparison <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_match> ;
+    ns1:hasPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_to_load> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> ;
+    ns1:permittedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_match> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#coupling_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 0e+00 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 5e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush_threshold_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 2e+01 ;
+    ns1:upperBound 3e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#end_support> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:exertedByRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> ;
+    ns1:hasForceKind ns1:SupportReaction .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_friction_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Ratio ;
+    ns1:lowerBound 4e-01 ;
+    ns1:upperBound 7e-01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_load_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 6.9e+00 ;
+    ns1:upperBound 9.3e+00 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_mass_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Kilogram ;
+    ns1:lowerBound 7e-01 ;
+    ns1:upperBound 9.5e-01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_tolerance> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Millilitre ;
+    ns1:lowerBound 0e+00 ;
+    ns1:upperBound 1.5e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_trajectory> a ns1:SignalTrajectory,
+        owl:NamedIndividual ;
+    ns1:hasExpectedRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#target_volume_range> ;
+    ns1:hasSignalFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl_fill_level> ;
+    ns1:hasTrend ns1:Increasing .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_point> a ns1:SensorimotorControlPoint,
+        owl:NamedIndividual ;
+    ns1:atEventType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> ;
+    ns1:hasComparison <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_point_match>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_continues> ;
+    ns1:hasPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_point> a ns1:SensorimotorControlPoint,
+        owl:NamedIndividual ;
+    ns1:atEventType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> ;
+    ns1:hasComparison <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_early>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_match> ;
+    ns1:hasPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_load_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_sound_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_stream_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_rate_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:MillilitrePerSecond ;
+    ns1:lowerBound 3e+01 ;
+    ns1:upperBound 8e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_friction> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:exertedByRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasForceKind ns1:Friction .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable_after_loading> a ns1:ConditionRequirement,
+        owl:NamedIndividual ;
+    ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
+    ns1:hasConditionMode ns1:AtExit ;
+    ns1:hasConditionPolarity ac:Holds .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_corridor> a ns3:GripForceCorridor,
+        owl:NamedIndividual ;
+    ns2:lowerEdge <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip> ;
+    ns2:upperEdge <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush> ;
+    ns3:boundsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 8e+00 ;
+    ns1:upperBound 1.4e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_load_coupling> a ns3:GripLoadCoupling,
+        owl:NamedIndividual ;
+    ns3:couplingActiveIn <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_back>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright> ;
+    ns3:followsLoadPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#falling_load_prediction> ;
+    ns3:frictionEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_friction> ;
+    ns3:gripForceResponse <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
+    ns3:hasLoadOrigin ns3:SelfGeneratedLoad ;
+    ns3:hasSafetyMargin <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#safety_margin> ;
+    ns3:predictedLoad <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_load> ;
+    ns3:temporalCoupling <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#coupling_window> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_raise_before_flow> a ns3:AnticipatoryGripAdjustment,
+        owl:NamedIndividual ;
+    ns3:adjustmentActiveIn <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt> ;
+    ns3:adjustsGripForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
+    ns3:hasAdjustmentDirection ac:Increases ;
+    ns3:triggeredByPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_load_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_to_load_ratio_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Ratio ;
+    ns1:lowerBound 1.3e+00 ;
+    ns1:upperBound 1.8e+00 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_clearance_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Metre ;
+    ns1:lowerBound 5e-02 ;
+    ns1:upperBound 1e-01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_to_transport> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_point> a ns1:SensorimotorControlPoint,
+        owl:NamedIndividual ;
+    ns1:atEventType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
+    ns1:hasComparison <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_early>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_match> ;
+    ns1:hasPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction_pathway> a ns4:InternalModelComposition,
+        owl:NamedIndividual ;
+    ns4:predictsMechanicalConsequence <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
+    ns4:predictsSensoryConsequence <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction> ;
+    ns4:usesDynamicsModel <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model> ;
+    ns4:usesEfferenceCopy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_command_copy> ;
+    ns4:usesForwardModel <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_threshold_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 6.9e+00 ;
+    ns1:upperBound 9.3e+00 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_during_pour_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 6e+00 ;
+    ns1:upperBound 8.6e+00 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 6.9e+00 ;
+    ns1:upperBound 9.3e+00 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_rate_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:NewtonPerSecond ;
+    ns1:lowerBound 2e+01 ;
+    ns1:upperBound 4e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_to_lift> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
+    ns1:permittedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_match> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_tolerance> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 0e+00 ;
+    ns1:upperBound 5e-01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_trajectory> a ns1:SignalTrajectory,
+        owl:NamedIndividual ;
+    ns1:hasExpectedRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_during_pour_range> ;
+    ns1:hasSignalFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_load> ;
+    ns1:hasTrend ns1:Decreasing .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#look_at_bowl_rim> a ns5:GazeFixation,
+        owl:NamedIndividual ;
+    ns5:fixatesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl> ;
+    ns5:hasGazeMode ns5:Proactive ;
+    ns5:hasLandmarkPurpose ns5:ContactLandmark ;
+    ns5:maintainedUntil <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned> ;
+    ns5:servesPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#look_at_grasp_site> a ns5:GazeFixation,
+        owl:NamedIndividual ;
+    ns5:fixatesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site> ;
+    ns5:hasGazeMode ns5:Proactive ;
+    ns5:hasLandmarkPurpose ns5:ContactLandmark ;
+    ns5:maintainedUntil <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> ;
+    ns5:servesPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#look_at_put_down_spot> a ns5:GazeFixation,
+        owl:NamedIndividual ;
+    ns5:fixatesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> ;
+    ns5:hasGazeMode ns5:Proactive ;
+    ns5:hasLandmarkPurpose ns5:ContactLandmark ;
+    ns5:maintainedUntil <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> ;
+    ns5:servesPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#look_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 0e+00 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 3e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_viscosity_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Centipoise ;
+    ns1:lowerBound 2e+00 ;
+    ns1:upperBound 3e+00 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#onset_angle_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Degree ;
+    ns1:lowerBound 3.5e+01 ;
+    ns1:upperBound 5.5e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_to_contact> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_done> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 5e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 9e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate_to_terminate> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_point> a ns1:SensorimotorControlPoint,
+        owl:NamedIndividual ;
+    ns1:atEventType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> ;
+    ns1:hasComparison <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_match> ;
+    ns1:hasPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_to_withdraw> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> ;
+    ns1:permittedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_match> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdraw> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#remaining_milk_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Millilitre ;
+    ns1:lowerBound 6e+02 ;
+    ns1:upperBound 9e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace_to_unload> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> ;
+    ns1:permittedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_match> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#safety_margin_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Ratio ;
+    ns1:lowerBound 2e-01 ;
+    ns1:upperBound 4e-01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#shape_value> a ns1:CategoricalValue,
+        owl:NamedIndividual ;
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#RectangularPrismWithGableTop> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#side_grasp_value> a ns1:CategoricalValue,
+        owl:NamedIndividual ;
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#SideGraspAtMidHeight> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 5.5e+00 ;
+    ns1:upperBound 1e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slosh_value> a ns1:CategoricalValue,
+        owl:NamedIndividual ;
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#ModerateSloshWhenPartlyFull> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill> a ns6:SpillEvent,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:crossesThreshold <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_threshold> ;
+    ns1:resolvesOpposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_opposition> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_threshold_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:MillilitrePerSecond ;
+    ns1:lowerBound 1.2e+02 ;
+    ns1:upperBound 1.5e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_tolerance> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Degree ;
+    ns1:lowerBound 0e+00 ;
+    ns1:upperBound 3e+00 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_trajectory> a ns1:SignalTrajectory,
+        owl:NamedIndividual ;
+    ns1:hasExpectedRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_range> ;
+    ns1:hasSignalFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_position> ;
+    ns1:hasTrend ns1:Decreasing .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl_before_tilting> a ns1:ConditionRequirement,
+        owl:NamedIndividual ;
+    ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl> ;
+    ns1:hasConditionMode ns1:AtEntry ;
+    ns1:hasConditionPolarity ac:Holds .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#start_support> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:exertedByRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> ;
+    ns1:hasForceKind ns1:SupportReaction .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#stream_inertia> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:hasForceKind ns1:Inertia .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate_to_upright> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Degree ;
+    ns1:lowerBound 4.5e+01 ;
+    ns1:upperBound 1e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_rate_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:DegreePerSecond ;
+    ns1:lowerBound 1e+01 ;
+    ns1:upperBound 3e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_to_regulate> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> ;
+    ns1:permittedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_match> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_point> a ns1:SensorimotorControlPoint,
+        owl:NamedIndividual ;
+    ns1:atEventType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> ;
+    ns1:hasComparison <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_match> ;
+    ns1:hasPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_threshold_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 1e+00 ;
+    ns1:upperBound 3e+00 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_back_to_replace> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_back> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_reached> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_to_align> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_reached> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_force_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Newton ;
+    ns1:lowerBound 0e+00 ;
+    ns1:upperBound 5e-01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_point> a ns1:SensorimotorControlPoint,
+        owl:NamedIndividual ;
+    ns1:atEventType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> ;
+    ns1:hasComparison <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_absent>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_point_match> ;
+    ns1:hasPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_to_release> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_angle_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Degree ;
+    ns1:lowerBound 0e+00 ;
+    ns1:upperBound 5e+00 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_to_transport_back> a ns1:PhaseTransition,
+        owl:NamedIndividual ;
+    ns1:fromPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright> ;
+    ns1:gatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_restored> ;
+    ns1:toPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_back> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 3e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 9e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#watch_bowl_fill> a ns5:GazeFixation,
+        owl:NamedIndividual ;
+    ns5:fixatesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl> ;
+    ns5:hasGazeMode ns5:Proactive ;
+    ns5:hasLandmarkPurpose ns5:ContactLandmark ;
+    ns5:maintainedUntil <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached> ;
+    ns5:servesPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_distance_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Metre ;
+    ns1:lowerBound 1e-01 ;
+    ns1:upperBound 1.5e-01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 3e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 8e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_reached> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_window> ;
+    ns1:hasModality ns1:Visual ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_reached> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#near_bowl_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_reached> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_above_counter> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#actor> a ns1:Actor,
+        owl:NamedIndividual ;
+    rdfs:label "the robot" .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align_controller> a ns1:FeedbackRegulatedController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasContinuousPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_prediction> ;
+    ns1:hasRegulationMode ns1:Hybrid ;
+    ns1:monitorsModality ns1:Visual ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#alignment_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 3e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 9e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_appearance> a ns1:SensoryFeature,
+        owl:NamedIndividual .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_containment> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:exertedByRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:hasForceKind ns1:Containment .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_lifted_state> a ns4:DesiredState,
+        owl:NamedIndividual ;
+    ns4:desiredCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_look> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Visual ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#look_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:observesFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_appearance> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter> a ns3:ObjectSupportContact,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#cessation_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 2e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 6e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_window> ;
+    ns1:hasModality ns1:Proprioceptive ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_absent> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_prediction> ;
+    ns1:hasComparisonOutcome ns1:Mismatch ;
+    ns1:hasPredictionError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_contact_error> ;
+    ns1:invokesCorrection <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_approach> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:observesEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 3e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 7e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_approach> a ns1:CorrectiveAction,
+        owl:NamedIndividual ;
+    ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> ;
+    ns1:hasCorrectionDirection ns1:HoldSetpoint ;
+    ns1:hasRecoveryMode ns1:RepeatPhase ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_on_carton> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_pose> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_contact_error> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_lowering> a ns1:CorrectiveAction,
+        owl:NamedIndividual ;
+    ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> ;
+    ns1:hasCorrectionDirection ac:Decreases ;
+    ns1:hasRecoveryMode ns1:ContinuePhase ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_pose> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_touchdown_error> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_unloading> a ns1:CorrectiveAction,
+        owl:NamedIndividual ;
+    ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> ;
+    ns1:hasCorrectionDirection ac:Decreases ;
+    ns1:hasRecoveryMode ns1:ContinuePhase ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_force> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_unload_error> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush_opposition> a ns1:ForceOpposition,
+        owl:NamedIndividual ;
+    ns1:hasDrivingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#squeeze> ;
+    ns1:hasResistingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_strength> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush_threshold> a ns3:CrushThreshold,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush_threshold_range> ;
+    ns1:hasPhysicalDimension ns1:Force ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_center_of_mass> a ns3:ExpectedCenterOfMassPosition,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#center_of_mass_range> ;
+    ns1:hasPhysicalDimension ns1:Length ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:predictedFrom ns1:ObjectSpecificMemory,
+        ns1:VisualGeometricCue .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_shape> a ns3:ExpectedShape,
+        owl:NamedIndividual ;
+    ns1:hasCategoricalValue <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#shape_value> ;
+    ns1:hasValueForm ns1:Categorical ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:predictedFrom ns1:VisualGeometricCue .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Visual ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl> ;
+    ns1:observesFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl_fill_level> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_prediction> a ns1:ContinuousSignalPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:comparedWith <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_observation> ;
+    ns1:controlsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_rate> ;
+    ns1:hasModality ns1:Visual ;
+    ns1:hasTolerance <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_tolerance> ;
+    ns1:predictsTrajectory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_trajectory> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Visual ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#cessation_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:observesEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_opposition> a ns1:ForceOpposition,
+        owl:NamedIndividual ;
+    ns1:hasDrivingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_containment> ;
+    ns1:hasResistingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_weight> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_point_match> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_observation> ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_prediction> ;
+    ns1:confirmsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#stop_goal> ;
+    ns1:hasComparisonOutcome ns1:Match .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_continues> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_prediction> ;
+    ns1:hasComparisonOutcome ns1:Mismatch ;
+    ns1:hasPredictionError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_cessation_error> ;
+    ns1:invokesCorrection <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_back_further> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_early> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_stream_observation> ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_stream_prediction> ;
+    ns1:hasComparisonOutcome ns1:Mismatch ;
+    ns1:hasPredictionError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_flow_error> ;
+    ns1:producesModelUpdate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#raise_remaining_milk_estimate> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_opposition> a ns1:ForceOpposition,
+        owl:NamedIndividual ;
+    ns1:hasDrivingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_weight> ;
+    ns1:hasResistingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_containment> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_sound_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Auditory ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:observesFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_flow_sound> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_stream_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Visual ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:observesFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_stream> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_load_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:observesFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_load> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_to_load_ratio> a ns3:GripToLoadRatioSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_to_load_ratio_range> ;
+    ns1:hasPhysicalDimension ns1:Dimensionless ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_command> a ns4:MotorCommand,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#inverse_model> ;
+    ns4:commandsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force> ;
+    ns4:pursuesState <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_lifted_state> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasCorrectiveProgram <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_grip_increase> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_start_state> a ns1:InitialStateEstimate,
+        owl:NamedIndividual ;
+    ns1:basedOnObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_observation> ;
+    ns1:estimatesCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter> ;
+    ns1:forPhase <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_absent> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction> ;
+    ns1:hasComparisonOutcome ns1:Mismatch ;
+    ns1:hasPredictionError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_liftoff_error> ;
+    ns1:invokesCorrection <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#probing_increase> ;
+    ns1:producesModelUpdate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#raise_mass_estimate> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_early> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_observation> ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction> ;
+    ns1:hasComparisonOutcome ns1:Mismatch ;
+    ns1:hasPredictionError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_error> ;
+    ns1:invokesCorrection <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_correction> ;
+    ns1:producesModelUpdate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lower_mass_estimate> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_opposition> a ns1:ForceOpposition,
+        owl:NamedIndividual ;
+    ns1:hasDrivingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lifting_load> ;
+    ns1:hasResistingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_weight> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 1.5e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 4e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasCorrectiveProgram <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_correction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#probing_increase>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_load_rate_reduction> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lower_mass_estimate> a ns4:RetainedModelUpdate,
+        owl:NamedIndividual ;
+    ns1:hasUpdateDirection ac:Decreases ;
+    ns1:hasUpdateTimescale ns1:SingleTrial ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_error> ;
+    ns1:updatesEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_mass> ;
+    ns1:updatesRepresentation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model> ;
+    ns4:persistsIn <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_memory> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_viscosity> a ns6:DynamicViscosityEstimate,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_viscosity_range> ;
+    ns1:hasPhysicalDimension ns1:DynamicViscosity ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:predictedFrom ns1:VisualIdentityCue .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_weight> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:hasForceKind ns1:Weight .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#open_further> a ns1:CorrectiveAction,
+        owl:NamedIndividual ;
+    ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> ;
+    ns1:hasCorrectionDirection ac:Decreases ;
+    ns1:hasRecoveryMode ns1:ContinuePhase ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_open> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_release_error> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#overflow_error> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:MagnitudeMismatch .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#raise_mass_estimate> a ns4:RetainedModelUpdate,
+        owl:NamedIndividual ;
+    ns1:hasUpdateDirection ac:Increases ;
+    ns1:hasUpdateTimescale ns1:SingleTrial ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_liftoff_error> ;
+    ns1:updatesEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_mass> ;
+    ns1:updatesRepresentation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model> ;
+    ns4:persistsIn <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_memory> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#raise_remaining_milk_estimate> a ns4:RetainedModelUpdate,
+        owl:NamedIndividual ;
+    ns1:hasUpdateDirection ac:Increases ;
+    ns1:hasUpdateTimescale ns1:SingleTrial ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_flow_error> ;
+    ns1:updatesEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#remaining_milk> ;
+    ns1:updatesRepresentation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model> ;
+    ns4:persistsIn <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_memory> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach> a ns3:ReachPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#positioned_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_pose> ;
+    ns1:hasCouplingRegime ns1:Uncoupled ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#actor>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:realizesActionCategory ns2:Reaching ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_done> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#inverse_model> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_done> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_window> ;
+    ns1:hasModality ns1:Visual ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_done> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#positioned_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate_controller> a ns1:FeedbackRegulatedController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasContinuousPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#falling_load_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_level_prediction> ;
+    ns1:hasCorrectiveProgram <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_grip_increase>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_correction> ;
+    ns1:hasRegulationMode ns1:ContinuousFeedback ;
+    ns1:monitorsModality ns1:Visual ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_absent> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_prediction> ;
+    ns1:hasComparisonOutcome ns1:Mismatch ;
+    ns1:hasPredictionError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_release_error> ;
+    ns1:invokesCorrection <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#open_further> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:observesEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 1e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 3e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#safety_margin> a ns1:SafetyMargin,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#safety_margin_range> ;
+    ns1:hasPhysicalDimension ns1:Dimensionless ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:marginOn <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
+    ns1:marginOver <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold> ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_load_rate_reduction> a ns3:LoadRateReduction,
+        owl:NamedIndividual ;
+    ns1:hasCorrectionDirection ac:Decreases ;
+    ns1:hasRecoveryMode ns1:ContinuePhase ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_rate> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_while_loading> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_opposition> a ns1:ForceOpposition,
+        owl:NamedIndividual ;
+    ns1:hasDrivingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lifting_load> ;
+    ns1:hasResistingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_friction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_while_holding> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:UnexpectedEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_while_loading> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:UnexpectedEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slosh_behaviour> a ns6:SloshDynamicsEstimate,
+        owl:NamedIndividual ;
+    ns1:hasCategoricalValue <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slosh_value> ;
+    ns1:hasValueForm ns1:Categorical ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:predictedFrom ns1:VisualIdentityCue .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_correction> a ns6:SpillCorrection,
+        owl:NamedIndividual ;
+    ns1:hasCorrectionDirection ns1:ReverseChange ;
+    ns1:hasRecoveryMode ns1:ContinuePhase ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#visual_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_bowl> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#overflow_error> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_opposition> a ns1:ForceOpposition,
+        owl:NamedIndividual ;
+    ns1:hasDrivingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#stream_inertia> ;
+    ns1:hasResistingForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl_containment> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_threshold> a ns6:SpillThreshold,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill_threshold_range> ;
+    ns1:hasPhysicalDimension ns1:VolumetricFlowRate ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#alignment_window> ;
+    ns1:hasModality ns1:Visual ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#aligned_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Visual ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#alignment_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:observesFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_position> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_prediction> a ns1:ContinuousSignalPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:comparedWith <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_observation> ;
+    ns1:controlsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment> ;
+    ns1:hasModality ns1:Visual ;
+    ns1:hasTolerance <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_tolerance> ;
+    ns1:predictsTrajectory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_trajectory> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Degree ;
+    ns1:lowerBound 0e+00 ;
+    ns1:upperBound 1e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#target_volume_range> a ns1:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns1:hasUnit ns1:Millilitre ;
+    ns1:lowerBound 2e+02 ;
+    ns1:upperBound 2.5e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_back_further> a ns1:CorrectiveAction,
+        owl:NamedIndividual ;
+    ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> ;
+    ns1:hasCorrectionDirection ac:Decreases ;
+    ns1:hasRecoveryMode ns1:ContinuePhase ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#visual_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_carton> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_cessation_error> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasCorrectiveProgram <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_grip_increase> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_load_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_sound_prediction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_stream_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_rate> a ns6:TiltRateSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_rate_range> ;
+    ns1:hasPhysicalDimension ns1:AngularRate ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_absent> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_prediction> ;
+    ns1:hasComparisonOutcome ns1:Mismatch ;
+    ns1:hasPredictionError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_touchdown_error> ;
+    ns1:invokesCorrection <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_lowering> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:observesEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 2e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 6e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_absent> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_prediction> ;
+    ns1:hasComparisonOutcome ns1:Mismatch ;
+    ns1:hasPredictionError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_unload_error> ;
+    ns1:invokesCorrection <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#continue_unloading> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_observation> a ns1:TactileObservation,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:observesEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_point_match> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_observation> ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_prediction> ;
+    ns1:confirmsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unloaded_goal> ;
+    ns1:hasComparisonOutcome ns1:Match .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 1e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 4e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_restored> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_window> ;
+    ns1:hasModality ns1:Proprioceptive ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_restored> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#visual_latency> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 2e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 3e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_window> ;
+    ns1:hasModality ns1:Visual ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdraw> a ns3:WithdrawPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawn_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdraw_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_distance> ;
+    ns1:hasCouplingRegime ns1:Uncoupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:isOptional true ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_done> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdraw_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#inverse_model> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_done> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_window> ;
+    ns1:hasModality ns1:Proprioceptive ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_done> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawn_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_pose> a ns3:TransportPoseSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasCategoricalValue <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_value> ;
+    ns1:hasValueForm ns1:Categorical ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_cessation_error> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:AbsentEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_contact_error> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:AbsentEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_release_error> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:AbsentEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_touchdown_error> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:AbsentEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_unload_error> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:AbsentEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#aligned_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl_fill_level> a ns1:SensoryFeature,
+        owl:NamedIndividual .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_above_counter> a ns1:PhaseConditionType,
+        owl:NamedIndividual ;
+    rdfs:label "carton held above its put-down spot" ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_at_clearance> a ns1:PhaseConditionType,
+        owl:NamedIndividual ;
+    rdfs:label "carton raised to a safe height" ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_intact> a ns3:ObjectIntact,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_near_bowl> a ns1:PhaseConditionType,
+        owl:NamedIndividual ;
+    rdfs:label "carton held just above the bowl" ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_upright> a ns6:SourceUpright,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_at_clearance> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_match> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_observation> ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_prediction> ;
+    ns1:confirmsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_goal> ;
+    ns1:hasComparisonOutcome ns1:Match .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush> a ns3:ObjectCrush,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:crossesThreshold <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush_threshold> ;
+    ns1:resolvesOpposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush_opposition> ;
+    ns1:terminatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_intact> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_flow_error> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:EarlyEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_correction> a ns3:EarlyLiftoffCorrection,
+        owl:NamedIndividual ;
+    ns1:hasCorrectionDirection ac:Decreases ;
+    ns1:hasRecoveryMode ns1:AbortAndCorrect ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_rate> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_error> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_friction> a ns3:ExpectedFrictionCoefficient,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_friction_range> ;
+    ns1:hasPhysicalDimension ns1:Dimensionless ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:predictedFrom ns1:RecentHapticExperience .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_load> a ns4:LoadForceEstimate,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_load_range> ;
+    ns1:hasPhysicalDimension ns1:Force ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:predictedFrom ns1:CategorySizeWeightAssociation,
+        ns1:ObjectSpecificMemory .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#falling_load_prediction> a ns1:ContinuousSignalPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:comparedWith <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_load_observation> ;
+    ns1:controlsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:hasTolerance <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_tolerance> ;
+    ns1:predictsTrajectory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_trajectory> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#fill_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 0e+00 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 6e+03 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_match> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_sound_observation> ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_sound_prediction> ;
+    ns1:confirmsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_goal> ;
+    ns1:hasComparisonOutcome ns1:Match .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_rate> a ns6:FlowRateSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_rate_range> ;
+    ns1:hasPhysicalDimension ns1:VolumetricFlowRate ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_load> a ns1:SensoryFeature,
+        owl:NamedIndividual .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_clear> a ns1:PhaseConditionType,
+        owl:NamedIndividual ;
+    rdfs:label "hand withdrawn clear of the carton" ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_positioned> a ns3:EffectorPositioned,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_clearance> a ns3:LiftClearanceSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_clearance_range> ;
+    ns1:hasPhysicalDimension ns1:Length ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_command_copy> a ns4:EfferenceCopy,
+        owl:NamedIndividual ;
+    ns4:copiesCommand <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_command> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lifting_load> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:exertedByRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasForceKind ns1:LoadForce .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_match> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_observation> ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction> ;
+    ns1:confirmsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clear_goal> ;
+    ns1:hasComparisonOutcome ns1:Match ;
+    ns1:suppliesStateEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_start_state> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_threshold> a ns3:LiftoffThreshold,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_threshold_range> ;
+    ns1:hasPhysicalDimension ns1:Force ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_stream> a ns1:SensoryFeature,
+        owl:NamedIndividual .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#near_bowl_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_reached> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_near_bowl> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#onset_angle> a ns6:FlowOnsetThreshold,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#onset_angle_range> ;
+    ns1:hasPhysicalDimension ns1:Angle ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#positioned_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_done> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_positioned> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#probing_increase> a ns3:ProbingForceIncrease,
+        owl:NamedIndividual ;
+    ns1:correctionTerminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
+    ns1:hasCorrectionDirection ac:Increases ;
+    ns1:hasRecoveryMode ns1:ContinuePhase ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_liftoff_error> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release> a ns3:ContactReleasePhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#released_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_controller> ;
+    ns1:hasCouplingRegime ns1:Uncoupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:isOptional true ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_match> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_observation> ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_prediction> ;
+    ns1:confirmsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#released_goal> ;
+    ns1:hasComparisonOutcome ns1:Match .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#remaining_milk> a ns6:RemainingSourceQuantityEstimate,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#remaining_milk_range> ;
+    ns1:hasPhysicalDimension ns1:Volume ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:predictedFrom ns1:ObjectSpecificMemory .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip> a ns3:SlipEvent,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:crossesThreshold <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold> ;
+    ns1:resolvesOpposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_opposition> ;
+    ns1:terminatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold> a ns3:SlipThreshold,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold_range> ;
+    ns1:hasPhysicalDimension ns1:Force ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_flow_sound> a ns1:SensoryFeature,
+        owl:NamedIndividual .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_position> a ns1:SensoryFeature,
+        owl:NamedIndividual ;
+    rdfs:label "position of the spout relative to the bowl" .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#squeeze> a ns1:ForceComponent,
+        owl:NamedIndividual ;
+    ns1:actsOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:exertedByRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasForceKind ns1:GripForce .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#target_volume> a ns6:TransferredQuantitySetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#target_volume_range> ;
+    ns1:hasPhysicalDimension ns1:Volume ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_match> a ns1:PredictionComparison,
+        owl:NamedIndividual ;
+    ns1:comparesObservation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_observation> ;
+    ns1:comparesPrediction <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_prediction> ;
+    ns1:confirmsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#on_counter_goal> ;
+    ns1:hasComparisonOutcome ns1:Match .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_threshold> a ns3:TouchdownThreshold,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_threshold_range> ;
+    ns1:hasPhysicalDimension ns1:Force ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_controller> a ns1:ActionPhaseController,
+        owl:NamedIndividual ;
+    ns1:governedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:hasCorrectiveProgram <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_grip_increase> ;
+    ns1:hasRegulationMode ns1:Feedforward ;
+    ns1:predictsSensoryEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_prediction> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload> a ns3:UnloadPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unloaded_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_force> ;
+    ns1:hasCouplingRegime ns1:Transitional ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:isOptional true ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_angle> a ns6:UprightAngleSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_angle_range> ;
+    ns1:hasPhysicalDimension ns1:Angle ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_restored> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_upright> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_bowl> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_distance> a ns3:WithdrawalDistanceSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_distance_range> ;
+    ns1:hasPhysicalDimension ns1:Length ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawn_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_done> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_clear> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_pose> a ns3:TransportPoseSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasCategoricalValue <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_value> ;
+    ns1:hasValueForm ns1:Categorical ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#absent_liftoff_error> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:AbsentEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_memory> a ns4:SensorimotorMemory,
+        owl:NamedIndividual ;
+    ns4:hasMemoryPersistence ns4:AfterRelease ;
+    ns4:storesRepresentation <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clear_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact> a ns3:ContactEstablishmentPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_controller> ;
+    ns1:hasCouplingRegime ns1:Uncoupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_done> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:realizesActionCategory ns2:Grasping ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_on_carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#early_liftoff_error> a ns1:PredictionError,
+        owl:NamedIndividual ;
+    ns1:hasErrorKind ns1:EarlyEvent .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_mass> a ns3:ExpectedMass,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_mass_range> ;
+    ns1:hasPhysicalDimension ns1:Mass ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:predictedFrom ns1:CategorySizeWeightAssociation,
+        ns1:ObjectSpecificMemory ;
+    ns1:scalesSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_rate> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_load_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_window> ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_sound_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_window> ;
+    ns1:hasModality ns1:Auditory ;
+    ns1:predictsFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_flow_sound> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_stream_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_window> ;
+    ns1:hasModality ns1:Visual ;
+    ns1:predictsFeature <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_stream> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_open> a ns1:PhaseConditionType,
+        owl:NamedIndividual ;
+    rdfs:label "hand open, no longer touching the carton" ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#inverse_model> a ns1:InverseModel,
+        owl:NamedIndividual .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_observation> a ns1:SensoryObservationType,
+        owl:NamedIndividual ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:observedAt <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_window> ;
+    ns1:observedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:observesEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_flowing> a ns6:SubstanceFlowing,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_bowl> a ns6:SubstanceAccumulatedInTarget,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_carton> a ns6:SubstanceContainedInSource,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#on_counter_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_pose> a ns3:ReachPoseSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasCategoricalValue <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#side_grasp_value> ;
+    ns1:hasValueForm ns1:Categorical ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#released_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_open> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment> a ns6:LipAlignmentSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment_range> ;
+    ns1:hasPhysicalDimension ns1:Angle ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl> a ns6:LipOverReceptacle,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#stop_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_bowl> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate> a ns6:FlowTerminationPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#stop_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
+    ns1:hasCouplingRegime ns1:Coupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport> a ns3:TransportPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#near_bowl_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_pose>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
+    ns1:hasCouplingRegime ns1:Coupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:realizesActionCategory ns2:Transporting ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_reached> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_back> a ns3:TransportPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_pose>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
+    ns1:hasCouplingRegime ns1:Coupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_restored> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:isOptional true ;
+    ns1:realizesActionCategory ns2:Transporting ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_reached> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_force> a ns3:LoadForceSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_force_range> ;
+    ns1:hasPhysicalDimension ns1:Force ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unloaded_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright> a ns6:ReturnUprightPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_angle> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
+    ns1:hasCouplingRegime ns1:Coupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_restored> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_reached> a ns3:TransportTargetReached,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_above_counter> ;
+    ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_pose> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align> a ns6:AlignmentPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#aligned_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
+    ns1:hasCouplingRegime ns1:Coupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_reached> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_window> ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#cessation_window> ;
+    ns1:hasModality ns1:Visual ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#stop_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_window> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 8e+02 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 2e+03 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift> a ns3:LiftPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_clearance> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
+    ns1:hasCouplingRegime ns1:Coupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:realizesActionCategory ns2:Lifting ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load> a ns3:ForceLoadingPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clear_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_to_load_ratio>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_threshold>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_rate> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_before_loading>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable_after_loading> ;
+    ns1:hasCouplingRegime ns1:Transitional ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:realizesActionCategory ns2:Grasping ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_rate> a ns3:LoadForceRateSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_rate_range> ;
+    ns1:hasPhysicalDimension ns1:ForceRate ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:rateOf <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate> a ns6:FlowRegulationPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#regulate_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_rate>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#target_volume>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
+    ns1:hasCouplingRegime ns1:Coupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#release_window> ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#released_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace> a ns3:ReplacePhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#on_counter_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_threshold> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
+    ns1:hasCouplingRegime ns1:Coupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_reached> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> ;
+    ns1:isOptional true ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_grip_increase> a ns3:CorrectiveGripResponse,
+        owl:NamedIndividual ;
+    ns1:hasCorrectionDirection ac:Increases ;
+    ns1:hasRecoveryMode ns1:ContinuePhase ;
+    ns1:hasResponseLatency <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> ;
+    ns1:intendedEffect <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
+    ns1:targetsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
+    ns1:triggeredByError <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_while_holding> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt> a ns6:TiltToFlowPhase,
+        owl:NamedIndividual ;
+    ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_goal> ;
+    ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_controller> ;
+    ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#onset_angle>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_rate> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_holds_milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl_before_tilting> ;
+    ns1:hasCouplingRegime ns1:Coupled ;
+    ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned> ;
+    ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:realizesActionCategory ns2:Tilting ;
+    ns1:terminatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_window> ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#on_counter_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_window> ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unloaded_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_done> a ns3:WithdrawalComplete,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_clear> ;
+    ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#withdrawal_distance> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact> a ns1:ConditionRequirement,
+        owl:NamedIndividual ;
+    ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_intact> ;
+    ns1:hasConditionMode ns1:Throughout ;
+    ns1:hasConditionPolarity ac:Holds ;
+    ns1:isWorldAssumption true ;
+    ns1:violationSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again> a ns3:ObjectSupportContact,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> a ns3:InitialSupport,
+        owl:NamedIndividual ;
+    rdfs:label "the surface the carton stands on" .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_goal> a ns1:Subgoal,
+        owl:NamedIndividual ;
+    ns1:attainmentSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> ;
+    ns1:targetsCondition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_flowing> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_on_carton> a ns3:EffectorObjectContact,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force> a ns3:LoadForceSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_range> ;
+    ns1:hasPhysicalDimension ns1:Force ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle> a ns6:TiltAngleSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle_range> ;
+    ns1:hasPhysicalDimension ns1:Angle ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_reached> a ns3:TransportTargetReached,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_near_bowl> ;
+    ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_pose> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter> a ns3:ObjectClearOfSupport,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached> a ns3:LiftClearanceReached,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_at_clearance> ;
+    ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_clearance> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> a ns3:GraspStability,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction> a ns1:SensoryEventPrediction,
+        owl:NamedIndividual ;
+    ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
+    ns1:causedByEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
+    ns1:expectedOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:hasExpectedTiming <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_window> ;
+    ns1:hasModality ns1:Tactile ;
+    ns1:predictsEvent <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
+    ns1:signalsSubgoal <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clear_goal> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_done> a ns3:ReachTargetReached,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_positioned> ;
+    ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#reach_pose> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_restored> a ns6:UprightRestored,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_upright> ;
+    ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_angle> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned> a ns6:LipAligned,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl> ;
+    ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tactile_latency> a ns1:TemporalWindow,
+        owl:NamedIndividual ;
+    ns1:earliestOffset 6e+01 ;
+    ns1:hasUnit ns1:Millisecond ;
+    ns1:latestOffset 1e+02 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached> a ns6:TargetQuantityReached,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#target_volume> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> a ns1:ConditionRequirement,
+        owl:NamedIndividual ;
+    ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
+    ns1:hasConditionMode ns1:Throughout ;
+    ns1:hasConditionPolarity ac:Holds ;
+    ns1:violationSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> a ns6:FlowCessation,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns1:resolvesOpposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation_opposition> ;
+    ns1:terminatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_flowing> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> a ns6:FlowOnset,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_flowing> ;
+    ns1:crossesThreshold <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#onset_angle> ;
+    ns1:resolvesOpposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset_opposition> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forces_unloaded> a ns3:ForcesUnloaded,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> ;
+    ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#unload_force> ;
+    ns1:endsForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lifting_load> ;
+    ns3:weightSupportedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_release> a ns3:GraspRelease,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_open> ;
+    ns1:endsForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#squeeze> ;
+    ns1:terminatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_on_carton> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> a ns3:GraspContact,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_on_carton> ;
+    ns1:startsForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#squeeze> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> a ns3:Liftoff,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter> ;
+    ns1:crossesThreshold <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_threshold> ;
+    ns1:endsForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#start_support> ;
+    ns1:resolvesOpposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_opposition> ;
+    ns1:terminatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown> a ns3:Touchdown,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> ;
+    ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again> ;
+    ns1:crossesThreshold <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_threshold> ;
+    ns1:startsForce <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#end_support> ;
+    ns1:terminatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_dynamics_model> a ns4:ObjectDynamicsModel,
+        owl:NamedIndividual ;
+    ns1:holdsEstimate <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_center_of_mass>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_friction>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_load>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_mass>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#expected_shape>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_viscosity>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#remaining_milk>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slosh_behaviour> ;
+    ns4:hasCoordinateFrame ns4:ObjectCentered ;
+    ns4:hasPurpose ns4:SensorimotorControl ;
+    ns4:representsRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
+    ns4:usesEfferenceCopy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_command_copy> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site> a ns3:GraspSite,
+        owl:NamedIndividual ;
+    rdfs:label "the carton's side panels" ;
+    ns3:graspSiteSuitedFor ns2:Pouring .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> a ns3:FinalSupport,
+        owl:NamedIndividual ;
+    rdfs:label "the surface the carton is put back on" .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> a ns3:GripForceSetpoint,
+        owl:NamedIndividual ;
+    ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force_range> ;
+    ns1:hasPhysicalDimension ns1:Force ;
+    ns1:hasValueForm ns1:Quantitative ;
+    ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> a ns6:PouringLip,
+        owl:NamedIndividual ;
+    rdfs:label "the carton's spout" .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl> a ns6:TargetReceptacle,
+        owl:NamedIndividual ;
+    rdfs:label "the bowl" .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> a ns6:PouredSubstance,
+        owl:NamedIndividual ;
+    rdfs:label "the milk" .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> a ns1:ForwardModel,
+        owl:NamedIndividual .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> a ns3:GraspingEffector,
+        owl:NamedIndividual ;
+    rdfs:label "the grasping hand" .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> a ns6:SourceContainer,
+        owl:NamedIndividual ;
+    rdfs:label "the milk carton" .
+

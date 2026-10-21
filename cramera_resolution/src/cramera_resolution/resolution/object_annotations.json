@@ -1,0 +1,7 @@
+{
+  "bowl": "semantic_digital_twin.semantic_annotations.semantic_annotations.Bowl",
+  "milk": "semantic_digital_twin.semantic_annotations.semantic_annotations.Milk",
+  "breakfast_cereal": "semantic_digital_twin.semantic_annotations.semantic_annotations.Cereal",
+  "spoon": "semantic_digital_twin.semantic_annotations.semantic_annotations.Spoon",
+  "Static_MilkPitcher": "semantic_digital_twin.semantic_annotations.semantic_annotations.PouringCup"
+}
