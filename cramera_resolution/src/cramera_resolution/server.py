@@ -108,6 +108,21 @@ class AddOnScript(StrEnum):
     order they run.
     """
 
+    HYPOTHESIS_GRAPH = "addon/hypothesis_graph.js"
+    """
+    Draws the hypothesis as a graph that opens branch by branch.
+    """
+
+    ONTOLOGY_GRAPH = "addon/ontology_graph.js"
+    """
+    Draws the classes behind the hypothesis.
+    """
+
+    DESIGNATOR_VIEW = "addon/designator_view.js"
+    """
+    Draws the designator as collapsible Lisp or JSON.
+    """
+
     RESOLUTION_VIEW = "addon/resolution_view.js"
     """
     Writes a resolution and the runs kept as markup.
@@ -116,6 +131,11 @@ class AddOnScript(StrEnum):
     DESIGNATOR_PANEL = "addon/designator_panel.js"
     """
     The panel that resolves designators, chooses what to consult and performs runs.
+    """
+
+    KNOWLEDGE_PANEL = "addon/knowledge_panel.js"
+    """
+    The panel that shows the hypothesis graph, the ontology graph and the designator.
     """
 
 
@@ -127,6 +147,11 @@ class AddOnStylesheet(StrEnum):
     DESIGNATOR_PANEL = "addon/designator.css"
     """
     The look of the designator panel.
+    """
+
+    KNOWLEDGE_PANEL = "addon/knowledge.css"
+    """
+    The look of the knowledge panel and the views it draws.
     """
 
 

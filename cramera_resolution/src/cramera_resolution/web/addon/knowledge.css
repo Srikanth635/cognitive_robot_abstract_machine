@@ -1,0 +1,110 @@
+/* ============================================================================
+ * addon/knowledge.css — the look of the knowledge panel: its tabs, the canvas the
+ * three views are drawn into, and the rules of the views themselves (the hypothesis
+ * graph, the ontology graph and the designator as Lisp or JSON). cramera's own
+ * stylesheet gives the colours and the panel head.
+ * ==========================================================================*/
+.panel-resolution-knowledge{display:flex;flex-direction:column;min-height:380px}
+.panel-resolution-knowledge .resolution-knowledge-wrap{position:relative;flex:1;min-height:320px}
+.panel-resolution-knowledge .knowledge-tabs{
+  display:flex;gap:2px;border-bottom:1px solid var(--line2);height:34px;align-items:flex-end
+}
+.panel-resolution-knowledge .knowledge-tabs button{
+  background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+  color:var(--muted);font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer
+}
+.panel-resolution-knowledge .knowledge-tabs button:hover{color:var(--ink)}
+.panel-resolution-knowledge .knowledge-tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel-resolution-knowledge .knowledge-empty{
+  position:absolute;inset:34px 0 0;display:flex;align-items:center;justify-content:center;
+  padding:24px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.5;
+  pointer-events:none
+}
+.panel-resolution-knowledge .hypothesis-toolbar{
+  position:absolute;left:52px;top:46px;z-index:6;display:flex;align-items:center;gap:6px;
+  background:rgba(20,24,33,.82);border:1px solid #37404f;border-radius:4px;
+  padding:4px 8px;backdrop-filter:blur(4px);
+}
+.panel-resolution-knowledge .hypothesis-toolbar button{
+  background:none;border:1px solid #37404f;border-radius:3px;color:#c8d1e0;
+  font:inherit;font-size:11.5px;line-height:1;padding:4px 8px;cursor:pointer;transition:.15s;
+}
+.panel-resolution-knowledge .hypothesis-toolbar button:hover{color:#fff;border-color:var(--accent)}
+.panel-resolution-knowledge .legend{
+  position:absolute;right:12px;top:46px;z-index:5;display:flex;flex-direction:column;gap:5px;
+  background:rgba(10,17,32,.72);border:1px solid var(--line2);border-radius:4px;padding:9px 11px;
+  backdrop-filter:blur(4px)
+}
+.panel-resolution-knowledge .legend .li{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.panel-resolution-knowledge .legend .dot{width:11px;height:11px;border-radius:50%}
+
+#resolution-hypothesis-graph{position:absolute;inset:34px 0 0;background:#ffffff}
+/* the Ontology Graph tab: a class graph laid out like the L2 ontology graph */
+#resolution-ontology-graph{position:absolute;inset:34px 0 0;container-type:size;background:#f7f8fa;color:#1f2933;font-family:system-ui,sans-serif}
+#resolution-ontology-graph .og-layout{display:grid;grid-template-columns:1fr 300px;width:100%;height:100%}
+/* a narrow panel puts the class details under the graph instead of beside it */
+@container (max-width: 760px){
+  #resolution-ontology-graph .og-layout{grid-template-columns:1fr;grid-template-rows:1fr 42%}
+  #resolution-ontology-graph .og-side{border-left:0;border-top:1px solid #d9dee7}
+}
+#resolution-ontology-graph .og-canvas{width:100%;height:100%;background:#f7f8fa;cursor:grab}
+#resolution-ontology-graph .og-side{border-left:1px solid #d9dee7;padding:12px;overflow:auto;background:#fff}
+#resolution-ontology-graph h1{font-size:1rem;margin:0 0 2px}
+#resolution-ontology-graph h2{font-size:.95rem;margin:6px 0}
+#resolution-ontology-graph .sub{color:#52606d;font-size:.78rem;margin:0 0 8px}
+#resolution-ontology-graph .og-search{width:100%;box-sizing:border-box;padding:6px;border:1px solid #b9c1d0;border-radius:4px;margin-bottom:6px}
+#resolution-ontology-graph .og-hits{color:#155ea8}
+#resolution-ontology-graph .reveal{display:flex;gap:4px;margin-bottom:10px}
+#resolution-ontology-graph .reveal button{flex:1;font-size:.72rem;padding:5px 4px;border:1px solid #b9c1d0;border-radius:4px;background:#fff;color:#1f2933;cursor:pointer}
+#resolution-ontology-graph .reveal button.on{background:#155ea8;color:#fff;border-color:#155ea8}
+#resolution-ontology-graph .og-legend div{font-size:.78rem;margin:2px 0;cursor:pointer;user-select:none}
+#resolution-ontology-graph .og-legend .lg-title{font-weight:600;margin-top:6px;cursor:default}
+#resolution-ontology-graph .swatch{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:middle}
+#resolution-ontology-graph .off{opacity:.35}
+#resolution-ontology-graph .og-node text{font-size:10px;pointer-events:none;fill:#1f2933}
+#resolution-ontology-graph .og-node circle{cursor:pointer;stroke-width:2px}
+#resolution-ontology-graph .og-edge{stroke-width:1.3px;fill:none}
+#resolution-ontology-graph .og-elabel{font-size:8px;fill:#5b6472;pointer-events:none}
+#resolution-ontology-graph .og-panel code{background:#eef2f7;padding:1px 4px;border-radius:3px}
+#resolution-ontology-graph .og-panel .desc{font-size:.82rem;margin:4px 0 6px;line-height:1.35}
+#resolution-ontology-graph .og-panel .rel{font-size:.8rem;margin:3px 0;line-height:1.3}
+#resolution-ontology-graph .og-panel .grp{font-weight:700;font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:#52606d;margin:9px 0 2px;border-bottom:1px solid #eef2f7}
+#resolution-ontology-graph .og-panel .muted{color:#8a94a6}
+#resolution-ontology-graph .og-panel a{color:#155ea8}
+#resolution-ontology-graph .dim{opacity:.12}
+#resolution-ontology-graph .og-node.match circle{stroke:#f59e0b;stroke-width:3px}
+#resolution-ontology-graph .og-node.match text{font-weight:700}
+#resolution-ontology-graph .og-matches{display:flex;flex-direction:column;gap:2px;margin:4px 0 8px;max-height:180px;overflow:auto}
+#resolution-ontology-graph .og-matches a{color:#155ea8;font-size:.78rem;text-decoration:none}
+#resolution-ontology-graph .og-matches a:hover{text-decoration:underline}
+#resolution-ontology-graph .og-matches .muted{color:#8a94a6;font-size:.75rem}
+#resolution-ontology-graph .hi text{font-weight:700}
+
+/* ---- Designator tab: the action designator as collapsible Lisp or JSON --------- */
+#resolution-designator-view{
+  position:absolute;inset:34px 0 0;display:flex;flex-direction:column;
+  background:#f7f8fa;color:#1f2933;font-family:system-ui,sans-serif
+}
+#resolution-designator-view .dz-toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px 8px 56px;border-bottom:1px solid #dde2ea}
+#resolution-designator-view .dz-toolbar button{
+  font:inherit;font-size:.78rem;padding:4px 10px;border:1px solid #c9d1dd;border-radius:4px;background:#fff;color:#1f2933;cursor:pointer
+}
+#resolution-designator-view .dz-toolbar button:hover{border-color:#155ea8}
+#resolution-designator-view .dz-toolbar button.on{background:#155ea8;border-color:#155ea8;color:#fff}
+#resolution-designator-view .dz-gap{flex:1}
+#resolution-designator-view .dz-tree{flex:1;min-height:0;overflow:auto;padding:12px 16px 24px;font-family:var(--mono);font-size:12.5px;line-height:1.75}
+#resolution-designator-view .dz-row{white-space:pre;border-radius:3px;transition:background .6s}
+#resolution-designator-view .dz-row.dz-flash{background:#fde68a;transition:none}
+#resolution-designator-view .dz-toggle{display:inline-block;width:1.4ch;margin-left:-1.4ch;color:#8a94a6;cursor:pointer;user-select:none}
+#resolution-designator-view .dz-toggle:hover{color:#155ea8}
+#resolution-designator-view .dz-punct{color:#5b6573}
+#resolution-designator-view .dz-kind{color:#7c3aed;font-weight:600}
+#resolution-designator-view .dz-type{color:#155ea8;font-weight:600}
+#resolution-designator-view .dz-key{color:#b45309}
+#resolution-designator-view .dz-literal{color:#047857}
+#resolution-designator-view .dz-variable{color:#be185d;font-style:italic}
+#resolution-designator-view .dz-object{color:#0e7490;font-weight:600}
+#resolution-designator-view .dz-term{color:#1d4ed8}
+#resolution-designator-view .dz-reference{color:#155ea8;text-decoration:underline dotted;cursor:pointer}
+#resolution-designator-view [data-ref]{cursor:pointer}
+#resolution-designator-view .dz-comment{color:#8a94a6;font-style:italic}

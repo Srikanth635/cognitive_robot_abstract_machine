@@ -776,12 +776,25 @@ designators: the chips, the choices of knowledge, Resolve, the answer with its t
 runs, `?run=` and Execute. Page assets are inserted into `cramera`'s own `index.html` as it
 is served. 61 node tests cover the panel and its markup, and run in the suite.
 
+Phase 3 (2026-10-21) added the Knowledge panel (`web/addon/knowledge_panel.js`): tabs for the
+hypothesis graph, the ontology graph and the designator description, fetched from
+`GET /api/resolution/view` for the open scene and drawn once per payload. The three view
+modules (`hypothesis_graph.js`, `ontology_graph.js`, `designator_view.js`) and their styles are
+copies of `cram_viz`'s, changed only so the hypothesis graph draws into the container it is
+given (so no element id clashes with `cramera`'s). The panel listens for `hypothesis:generated`
+(the Designators panel publishes it) and redraws from the payload it brings; clicking a node
+emits `entity:select`, and `entity:highlight` reveals or spotlights nodes. 73 more node tests
+cover the panel and the three modules. Checked in the browser against the add-on server: the
+three tabs, the designator description, the empty prompts, and a hypothesis graph drawn from a
+published payload.
+
 Checked: 439 add-on tests (ported from `cram_viz` where the code is shared, plus the route and
 launcher tests), the routes against `cram_viz/scenes/simple_pouring` itself (all three designators
 available, the designator and hypothesis views answer), and a kept run performed through the
 live module (the pour performed in 7 s; the bridge reported the PR2 and its four objects and
-published a 45-node plan). Not moved: the panels, plan-step events in a run's log, EQL access to
-the knowledge, the hardcoded demo.
+published a 45-node plan). Not moved: plan-step events in a run's log, EQL access to the
+knowledge, the hardcoded demo. Seen in the browser: when the right column is short, the stacked
+panels are clipped at the bottom (also the Designators panel); `cramera`'s layout, not changed.
 
 ## 3. Live testing
 

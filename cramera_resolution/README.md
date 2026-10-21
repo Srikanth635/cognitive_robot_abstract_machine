@@ -50,12 +50,16 @@ the runs kept (a tab; a click shows one again, as does `?run=<name>` in the addr
 the llm_reasoner viewer links to), and Execute. The panel publishes the hypothesis a
 resolution consulted as `hypothesis:generated` on the bus.
 
-The panel's logic is tested with node (`test_web_panels.py`), as `cramera`'s own panels are.
+`web/addon/knowledge_panel.js` mounts a *Knowledge* panel below it, with the hypothesis graph,
+the ontology graph and the designator description as tabs, fetched from `view` for the open
+scene. It redraws on `hypothesis:generated`; clicking a node emits `entity:select`, and
+`entity:highlight` reveals or spotlights nodes on the hypothesis graph. The drawing modules
+(`hypothesis_graph.js`, `ontology_graph.js`, `designator_view.js`) are copies of `cram_viz`'s.
+
+The panels' logic is tested with node (`test_web_panels.py`), as `cramera`'s own panels are.
 
 ## What is not moved yet
 
-- The panels for the hypothesis graph, the ontology graph and the designator description.
-  Their data is served at `view`; the page has no panel for it.
 - Plan steps and nodes are not written to a run's log as they change (`cram_viz` did, from
   its own bridge's snapshots); a run's start and end are.
 - The knowledge is not yet queryable from `cramera`'s EQL panel.
