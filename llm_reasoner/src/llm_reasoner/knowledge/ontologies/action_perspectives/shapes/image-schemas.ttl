@@ -1,0 +1,72 @@
+@prefix :        <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/image-schemas#> .
+@prefix schemas: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+# Structural rules of the image schemas that relate several fragments to one another, which
+# OWL restrictions cannot state. Each shape's comment is shown to the language model.
+
+<http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/image-schemas> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world structural rules of the image schemas."@en ;
+    sh:declare
+        [ sh:prefix "ac" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#"^^xsd:anyURI ] ,
+        [ sh:prefix "schemas" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#"^^xsd:anyURI ] .
+
+# %% requirements
+
+:RequirementSlotsTakePart a sh:NodeShape ;
+    sh:targetClass schemas:ImageSchema ;
+    rdfs:comment "The subject and the reference slot of every requirement of a schema take part in that schema, themselves or as a part of a slot that does."@en ;
+    sh:sparql [
+        sh:message "has_requirement names a requirement whose subject_slot or reference_slot takes no part in the schema" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/image-schemas> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                $this schemas:hasRequirement ?value .
+                ?value schemas:subjectSlot|schemas:referenceSlot ?slot .
+                FILTER NOT EXISTS {
+                    $this schemas:hasParticipation/schemas:participatingSlot ?taking .
+                    FILTER (?taking = ?slot || EXISTS { ?slot ac:isPartOfSlot ?taking })
+                }
+            }
+        """ ;
+    ] .
+
+:SubjectIsNotTheReference a sh:NodeShape ;
+    sh:targetClass schemas:SchemaRequirement ;
+    rdfs:comment "A requirement relates two different slots: its subject slot is never its reference slot."@en ;
+    sh:sparql [
+        sh:message "subject_slot and reference_slot name the same slot" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/image-schemas> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this schemas:subjectSlot ?value ;
+                    schemas:referenceSlot ?value .
+            }
+        """ ;
+    ] .
+
+:QuantityAboutRequirementSlots a sh:NodeShape ;
+    sh:targetClass schemas:SchemaRequirement ;
+    rdfs:comment "Every quantity deciding a requirement is about its subject or its reference slot, a part of either, or the slot either is a part of."@en ;
+    sh:sparql [
+        sh:message "decided_by names a quantity about neither subject_slot nor reference_slot" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/image-schemas> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this schemas:decidedBy ?value .
+                ?value ac:aboutSlot ?about .
+                FILTER NOT EXISTS {
+                    $this schemas:subjectSlot|schemas:referenceSlot ?related .
+                    FILTER (
+                        ?about = ?related
+                        || EXISTS { ?about ac:isPartOfSlot ?related }
+                        || EXISTS { ?related ac:isPartOfSlot ?about }
+                    )
+                }
+            }
+        """ ;
+    ] .

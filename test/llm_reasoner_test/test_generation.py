@@ -62,6 +62,7 @@ from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,
+    PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
 )
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms, OntologyFiles
@@ -328,6 +329,7 @@ class TestGenerationSchema:
         assert all(
             structure_rule_entry(shape) in json.loads(rules)
             for shape in StructureShapes.shipped().shapes
+            if str(shape.iri).startswith(PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT)
         )
 
     def test_every_generation_prompt_is_made_only_of_tagged_sections(self):

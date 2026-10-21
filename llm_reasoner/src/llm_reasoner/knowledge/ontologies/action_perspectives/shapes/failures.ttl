@@ -1,0 +1,98 @@
+@prefix :         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/failures#> .
+@prefix failures: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+
+# Structural rules of the failures that relate several fragments to one another, which OWL
+# restrictions cannot state. Each shape's comment is shown to the language model.
+
+<http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/failures> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world structural rules of the failures."@en ;
+    sh:declare
+        [ sh:prefix "ac" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#"^^xsd:anyURI ] ,
+        [ sh:prefix "failures" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#"^^xsd:anyURI ] .
+
+# %% corrections
+
+:ChangeCorrectsItsFailuresCondition a sh:NodeShape ;
+    sh:targetClass failures:Failure ;
+    rdfs:comment "Every parameter change of a failure's correction corrects a condition that failure has failed: corrects_condition names one of the failure's has_failed_condition."@en ;
+    sh:sparql [
+        sh:message "a change of has_correction corrects a condition the failure does not have" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/failures> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                $this failures:hasCorrection/failures:hasChange ?value .
+                ?value failures:correctsCondition ?condition .
+                FILTER NOT EXISTS { $this failures:hasFailedCondition ?condition }
+            }
+        """ ;
+    ] .
+
+:ChangeMovesACausingDimension a sh:NodeShape ;
+    sh:targetClass failures:Failure ;
+    sh:severity sh:Warning ;
+    rdfs:comment "A parameter change of a failure's correction normally changes a dimension the failure is caused by."@en ;
+    sh:sparql [
+        sh:message "a change of has_correction changes a dimension the failure is not caused by" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/failures> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                $this failures:hasCorrection/failures:hasChange ?value .
+                ?value failures:changesDimension ?dimension .
+                FILTER NOT EXISTS { $this failures:causedByDimension ?dimension }
+            }
+        """ ;
+    ] .
+
+:TargetNamedOnlyForTargetDirections a sh:NodeShape ;
+    sh:targetClass failures:ParameterChange ;
+    rdfs:comment "A change towards or away from a target names the slot it moves the choice towards or away from in change_towards_slot, and a change in any other direction names none."@en ;
+    sh:sparql [
+        sh:message "has_direction and change_towards_slot disagree: towards or away names a target slot, and only they do" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/failures> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                {
+                    $this failures:hasDirection ?direction .
+                    FILTER (?direction IN (failures:TowardsTarget, failures:AwayFromTarget))
+                    FILTER NOT EXISTS { $this failures:changeTowardsSlot ?any }
+                } UNION {
+                    $this failures:changeTowardsSlot ?value .
+                    FILTER NOT EXISTS {
+                        $this failures:hasDirection ?targeted .
+                        FILTER (?targeted IN (failures:TowardsTarget, failures:AwayFromTarget))
+                    }
+                }
+            }
+        """ ;
+    ] .
+
+# %% what a failure is about
+
+:ObservedOnConcernedSlots a sh:NodeShape ;
+    sh:targetClass failures:Failure ;
+    sh:severity sh:Warning ;
+    rdfs:comment "A failure's failed conditions and indicators are about the slots the failure concerns, or about parts of them."@en ;
+    sh:sparql [
+        sh:message "a condition or indicator of the failure is about a slot failure_concerns_slot does not name" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/failures> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                {
+                    $this failures:hasFailedCondition ?value .
+                    ?value ac:conditionOnSlot ?slot .
+                } UNION {
+                    $this failures:hasIndicator ?value .
+                    ?value ac:aboutSlot ?slot .
+                }
+                FILTER NOT EXISTS {
+                    $this failures:failureConcernsSlot ?concerned .
+                    FILTER (?concerned = ?slot || EXISTS { ?slot ac:isPartOfSlot ?concerned })
+                }
+            }
+        """ ;
+    ] .

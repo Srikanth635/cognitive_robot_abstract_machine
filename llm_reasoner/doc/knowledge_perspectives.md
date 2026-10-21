@@ -386,7 +386,21 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    properties (`quantityOfSlot`, `measuredOnSlot`) are gone, a list of two slots becoming the
    slot and the slot it is measured from. All are DUL concepts, as a parameter is. Versions:
    action core 0.5.0, image schemas 0.2.0, failures 0.5.0.
-6. Still open: linking the instances of a Flanagan hypothesis to those of a core
+6. *Shapes for the perspectives, 2026-10-21.* `StructureShapes` loads the shapes of every
+   module of either family, and the action perspectives keep theirs under
+   `action_perspectives/shapes/`, so perspective answers are checked across fragments as the
+   Flanagan ones are and told the rules in the prompt. Errors: a quantity is not measured from
+   its own slot, a condition does not involve its own slot (core); a feature condition's part
+   belongs to its slot, an expectation's conditions are on its slot (frame); a requirement's
+   slots take part in its schema, its subject is not its reference, its deciding quantities are
+   about its slots (image schemas); a change corrects a condition of its own failure, and a
+   target slot is named exactly for changes towards or away from it (failures). Warnings: one
+   expectation per slot; a change moves a dimension its failure comes from; a failure's
+   conditions and indicators are about the slots it concerns. The one stored live frame answer
+   already kept these rules; the scripted failures answer did not (it moved the amount towards
+   a target without naming one) and now says the amount increases. No vocabulary changed, so no
+   stored knowledge is invalidated.
+7. Still open: linking the instances of a Flanagan hypothesis to those of a core
    hypothesis.
 
 **Phase 8 — more actions (D8):** navigating, picking up and placing in the core, with the
@@ -422,7 +436,7 @@ concept, with no situation features, until phase 4 shows a need for them.
 | Stage | Generic | Tied to the Flanagan modules |
 |---|---|---|
 | Generation | The schema walks every type reachable from the root, with subclasses; decoding, patches and repair | The role and the content rule of the prompt describe predictive manipulation (phases, events, forces) |
-| Acceptance | `RestrictionsHold`, `RangesHold` | `ShapesHold` and `ComponentsDeclared` apply only to Flanagan structures, so they find nothing to check elsewhere |
+| Acceptance | `RestrictionsHold`, `RangesHold` | `ShapesHold` and `ComponentsDeclared` apply only to Flanagan structures, so they find nothing to check elsewhere (since 2026-10-21 the perspectives have shapes of their own, §9 phase 7) |
 | Vocabulary lookup | | `Vocabulary` (IRI → generated class) knows only the Flanagan modules |
 | Admission | HermiT, contradiction finding | `HermitCheck.from_environment` loads only the Flanagan modules |
 | Store | Key: root type and fixed values | The key's module versions are those of every Flanagan module |

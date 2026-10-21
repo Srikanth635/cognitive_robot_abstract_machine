@@ -1,0 +1,69 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-frame#> .
+@prefix frame: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# Structural rules of the action frame that relate several fragments to one another, which
+# OWL restrictions cannot state. Each shape's comment is shown to the language model.
+
+<http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-frame> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world structural rules of the action frame."@en ;
+    sh:declare
+        [ sh:prefix "ac" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#"^^xsd:anyURI ] ,
+        [ sh:prefix "frame" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#"^^xsd:anyURI ] .
+
+# %% conditions
+
+:FeaturePartOfConditionSlot a sh:NodeShape ;
+    sh:targetClass frame:FeatureCondition ;
+    rdfs:comment "The part a feature condition requires is a part of the slot the condition is on, such as the lip of the source in the condition that the source has a lip."@en ;
+    sh:sparql [
+        sh:message "condition_requires_part names a part of another slot than condition_on_slot" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-frame> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this frame:conditionRequiresPart ?value ;
+                    ac:conditionOnSlot ?slot .
+                FILTER NOT EXISTS { ?value ac:isPartOfSlot ?slot }
+            }
+        """ ;
+    ] .
+
+# %% expectations
+
+:ExpectationConditionsOnItsSlot a sh:NodeShape ;
+    sh:targetClass frame:SlotExpectation ;
+    rdfs:comment "Every condition an expectation expects of a slot's filler is on that slot or on a part of it."@en ;
+    sh:sparql [
+        sh:message "expects_filler_to_satisfy names a condition on another slot than expects_of_slot" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-frame> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this frame:expectsOfSlot ?slot ;
+                    frame:expectsFillerToSatisfy ?value .
+                ?value ac:conditionOnSlot ?on .
+                FILTER (?on != ?slot)
+                FILTER NOT EXISTS { ?on ac:isPartOfSlot ?slot }
+            }
+        """ ;
+    ] .
+
+:OneExpectationPerSlot a sh:NodeShape ;
+    sh:targetClass frame:FrameStereotype ;
+    sh:severity sh:Warning ;
+    rdfs:comment "A stereotype states at most one expectation of each slot, which gathers every condition expected of that slot's filler."@en ;
+    sh:sparql [
+        sh:message "has_slot_expectation names two expectations of one slot" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-frame> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this frame:hasSlotExpectation ?value , ?other .
+                ?value frame:expectsOfSlot ?slot .
+                ?other frame:expectsOfSlot ?slot .
+                FILTER (?value != ?other)
+            }
+        """ ;
+    ] .

@@ -24,14 +24,11 @@ from llm_reasoner.knowledge.acceptance.derived import DerivedRule
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceRule, Severity, Violation
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.representation.rdf import GraphWriter
-from llm_reasoner.knowledge.ontologies import (
-    PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT,
-    PredictiveManipulationOntologyFile,
-)
+from llm_reasoner.knowledge.ontologies import KNOWLEDGE_ONTOLOGY_MODULES
 from llm_reasoner.knowledge.ontologies.linked import OntologyFiles
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
 
-CHECKED_NAMESPACE = PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT + "checked#"
+CHECKED_NAMESPACE = "http://www.ease-crc.org/ont/llm_reasoner/checked#"
 """
 The namespace the fragments being checked are named in while they are validated.
 """
@@ -86,8 +83,8 @@ class StructureShape:
 @dataclass
 class StructureShapes:
     """
-    The SHACL shapes of every module that states structural rules, with the ontology
-    modules they are checked against.
+    The SHACL shapes of every module of either family that states structural rules, with
+    the ontology modules they are checked against.
     """
 
     graph: Graph
@@ -115,13 +112,11 @@ class StructureShapes:
         :return: The shapes shipped beside the ontology modules.
         """
         graph = Graph()
-        for module_file in PredictiveManipulationOntologyFile:
+        for module_file in KNOWLEDGE_ONTOLOGY_MODULES:
             if module_file.shapes_path.exists():
                 graph.parse(module_file.shapes_path, format="turtle")
         modules = OntologyFiles(
-            paths=[
-                module_file.path for module_file in PredictiveManipulationOntologyFile
-            ]
+            paths=[module_file.path for module_file in KNOWLEDGE_ONTOLOGY_MODULES]
         ).graph()
         ontology = Graph()
         for statement in HIERARCHY_PROPERTIES:

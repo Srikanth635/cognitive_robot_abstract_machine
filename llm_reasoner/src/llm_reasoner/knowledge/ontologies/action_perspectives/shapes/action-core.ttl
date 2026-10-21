@@ -1,0 +1,47 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-core#> .
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# Structural rules of the action core that relate several fragments to one another, which
+# OWL restrictions cannot state. Each shape's comment is shown to the language model.
+
+<http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-core> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world structural rules of the action core."@en ;
+    sh:declare
+        [ sh:prefix "ac" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#"^^xsd:anyURI ] .
+
+# %% quantities
+
+:QuantityNotFromItsOwnSlot a sh:NodeShape ;
+    sh:targetClass ac:SlotQuantity ;
+    rdfs:comment "A quantity is never measured from the slot it is about: relative_to_slot names another slot, or is left out for a quantity measured from nothing in particular."@en ;
+    sh:sparql [
+        sh:message "relative_to_slot is the slot the quantity is about" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this ac:aboutSlot ?value ;
+                    ac:relativeToSlot ?value .
+            }
+        """ ;
+    ] .
+
+# %% conditions
+
+:ConditionNotInvolvingItsOwnSlot a sh:NodeShape ;
+    sh:targetClass ac:SlotCondition ;
+    rdfs:comment "A condition never involves the slot it is on: condition_involves_slot names the other slots whose fillers the condition relates the first one to."@en ;
+    sh:sparql [
+        sh:message "condition_involves_slot names the slot the condition is on" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this ac:conditionOnSlot ?value ;
+                    ac:conditionInvolvesSlot ?value .
+            }
+        """ ;
+    ] .
