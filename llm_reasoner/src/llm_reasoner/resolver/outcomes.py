@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from typing_extensions import Any, List, Sequence
+from typing_extensions import Any, List, Sequence, Tuple
 
 from llm_reasoner.clients.tools import Tool
 from llm_reasoner.resolver.prompt_format import PromptRule
@@ -21,13 +21,22 @@ class OutcomeCheck(ABC):
     falls short of what they are for.
     """
 
+    @property
+    def withheld_slots(self) -> Tuple[str, ...]:
+        """
+        The fields of the action that the query leaves out and the model is not asked
+        for until a refusal opens them; the action's defaults stand until then.
+        """
+        return ()
+
     @abstractmethod
     def check(self, instances: Sequence[Any]) -> None:
         """
         Try the instances an answer constructs.
 
         :param instances: The instances, already meeting the query's conditions.
-        :raises OutcomeFellShort: When what they do falls short, stating the outcome.
+        :raises OutcomeFellShort: When what they do falls short, stating the outcome and
+            the withheld slots it opens, if any.
         """
 
 

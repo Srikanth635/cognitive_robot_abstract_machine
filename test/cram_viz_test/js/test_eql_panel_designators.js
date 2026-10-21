@@ -77,6 +77,7 @@ function designatorsPayload() {
       },
     ],
     phase_structure: { label: 'phase structure', summary: 'How a kind of manipulation task is organised.' },
+    geometry_adjustment: { label: 'adjust the pour geometry', summary: 'A miss may be corrected with the pour geometry.' },
     perspectives: [
       { name: 'action-frame.ttl', label: 'action frame', summary: 'The action frame describes an action.' },
       { name: 'failures.ttl', label: 'failures', summary: 'The failures describe how an action goes wrong.' },
@@ -135,7 +136,7 @@ function loadEqlPanel(options) {
   const names = [
     '#kb-status', '#answer', '#query-input', '#query-run', '#presets',
     '#designators', '#query-generate', '#designator-execute', '#demo-execute',
-    '#source-designators', '#source-questions', '#perspectives', '#knowledge-choices',
+    '#source-designators', '#source-questions', '#perspectives', '#knowledge-choices', '#adjustment-choices',
   ];
   names.forEach(function (name) { elements[name] = element(); });
 
@@ -672,4 +673,41 @@ test('Generate leaves out the phase structure when it is unticked', async functi
 
   const call = panel.requests.find(function (r) { return r.url === '/api/designator/resolve'; });
   assert.strictEqual(JSON.parse(call.init.body).phase_structure, false);
+});
+
+// %% adjusting the pour geometry
+function geometryAdjustmentChoice(panel) {
+  return panel.elements['#adjustment-choices'].children[0];
+}
+
+test('adjusting the pour geometry is offered, ticked', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  const choice = geometryAdjustmentChoice(panel);
+  assert.ok(choice.title.includes(designatorsPayload().geometry_adjustment.summary));
+  assert.strictEqual(choice.children[0].checked, true);
+});
+
+test('Generate says nothing of it while it is ticked', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  const call = panel.requests.find(function (r) { return r.url === '/api/designator/resolve'; });
+  assert.strictEqual(JSON.parse(call.init.body).adjust_geometry, undefined);
+});
+
+test('Generate leaves out adjusting the pour geometry when it is unticked', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  geometryAdjustmentChoice(panel).children[0].checked = false;
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  const call = panel.requests.find(function (r) { return r.url === '/api/designator/resolve'; });
+  assert.strictEqual(JSON.parse(call.init.body).adjust_geometry, false);
 });

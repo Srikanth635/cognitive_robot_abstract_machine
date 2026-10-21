@@ -138,6 +138,20 @@ class ActionWithBodyAndValueSlots(Symbol):
     """The angle to tilt the body to, in radians."""
 
 
+@dataclass(eq=False)
+class ActionWithAnOptionalOffset(Symbol):
+    """Tilt one body to pour from it, shifted sideways if need be."""
+
+    source: WorldBody
+    """The body poured from."""
+
+    angle: float = 0.5
+    """The angle to tilt the body to, in radians."""
+
+    offset: float = 0.0
+    """How far the pouring is shifted sideways, in metres."""
+
+
 class Side(Enum):
     """Which side of a body an action works on."""
 

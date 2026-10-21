@@ -686,6 +686,17 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   2.4 rad, stopped after the refusals at 2.0–2.4 and never asked about 2.5–3.0, and named the
   real cause itself (`pour_side_offset` is not an open slot of `objects_given`).
 
+- Slots an outcome check opens (2026-10-21, `architecture.md` §3 step 7): an `OutcomeCheck`
+  may hold back fields of the action the query leaves out (`withheld_slots`) and open them in
+  a refusal (`OutcomeFellShort.opens`); the model is shown them in an `<opened_slots>` section
+  and answers for them from the next attempt on, the action's defaults standing until then.
+  cram_viz's `SimulatedPouring` holds back `pour_side_offset`, `pour_approach_offset` and
+  `pour_height` and opens only the one a pour's miss shows: sideways or along the approach
+  beyond the opening's radius, or the mouth not above the opening. A box "adjust the pour
+  geometry", ticked by default, turns it off (`adjust_geometry: false`). The resolved action
+  lists an opened slot as chosen. This relaxes the rule that the query alone decides the open
+  slots, as the user decided. Tests and a simulator check; the live run follows.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

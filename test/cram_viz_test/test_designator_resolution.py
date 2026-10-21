@@ -46,6 +46,7 @@ from cram_viz.resolution.designators import (
     QuerySlots,
     SceneNamespace,
 )
+from cram_viz.resolution.pouring_slot import PouringSlot
 from cram_viz.resolution.prediction import PREDICTION_RULE
 from cram_viz.resolution.resolver import (
     RESOLVER_MAX_TOKENS,
@@ -68,6 +69,23 @@ from .resolutions import LANDS, MISSES, resolver_replaying
 SOURCES = Path(__file__).parent / "query_sources"
 """
 The query sources the tests read.
+"""
+
+SIDE_SHIFT = -0.188
+"""
+The sideways shift of the pour point the recorded model sets once it may.
+"""
+
+BESIDE_THE_OPENING = {
+    OutcomeKey.LANDS_IN_OPENING: False,
+    OutcomeKey.OPENING_RADIUS: 0.069,
+    OutcomeKey.RIGHT_OF_OPENING_CENTRE: 0.184,
+    OutcomeKey.AHEAD_OF_OPENING_CENTRE: 0.038,
+    OutcomeKey.ABOVE_OPENING: 0.087,
+    OutcomeKey.DISTANCE_FROM_OPENING_CENTRE: 0.188,
+}
+"""
+The outcome of a pour whose mouth ends to the right of the opening, as measured.
 """
 
 # %% helpers
@@ -398,6 +416,42 @@ class TestTrials:
         first, second = [trial.outcome for trial in run.resolution.trials]
         assert first[OutcomeKey.TILT_REACHES_FLOW_ONSET] is False
         assert second[OutcomeKey.TILT_REACHES_FLOW_ONSET] is True
+
+    def test_a_pour_ending_beside_the_opening_opens_the_sideways_shift_the_model_sets(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = resolver_replaying(
+            "objects_given_side_shifted",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+            trial_outcomes=[BESIDE_THE_OPENING, LANDS],
+        )
+        run = resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        (action,) = run.resolution.actions
+        slots = {slot.name: slot for slot in action.slots}
+        assert slots[PouringSlot.POUR_SIDE_OFFSET].serialized == SIDE_SHIFT
+        assert slots[PouringSlot.POUR_SIDE_OFFSET].given is False
+        assert run.resolution.trials[-1].values[PouringSlot.POUR_SIDE_OFFSET] == (
+            SIDE_SHIFT
+        )
+
+    def test_a_pour_landing_at_once_opens_nothing(self, pouring_bundle, tmp_path):
+        resolver = resolver_replaying(
+            "objects_given",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        run = resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        (action,) = run.resolution.actions
+        assert all(slot.name not in PouringSlot.geometry() for slot in action.slots)
 
     def test_when_no_pour_lands_the_one_ending_nearest_the_opening_is_kept(
         self, pouring_bundle, tmp_path

@@ -282,6 +282,12 @@ class LanguageModelBackend(GenerativeBackend):
     Why each instance of the latest resolution was chosen and what its choices rest on.
     """
 
+    opened_slots: List[str] = field(default_factory=list, init=False)
+    """
+    The fields of the queried action that a refusal opened in the latest resolution, in
+    the order they were opened.
+    """
+
     def __post_init__(self) -> None:
         if not self.tools:
             self.completion = PlainCompletion(client=self.client)
@@ -385,13 +391,20 @@ class LanguageModelBackend(GenerativeBackend):
 
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
         self.justifications = []
+        self.opened_slots = []
+        self._leave_withheld_open(expression)
         slots = reflect_slots(expression)
-        with self._reporting(expression, slots) as resolution:
-            self._reject_unresolvable(slots)
+        held_back = self._held_back(slots)
+        offered = [slot for slot in slots if not self._is_among(slot, held_back)]
+        with self._reporting(expression, offered) as resolution:
+            self._reject_unresolvable(offered)
 
-            open_slots = [slot for slot in slots if slot.kind is not SlotKind.BOUND]
+            open_slots = [slot for slot in offered if slot.kind is not SlotKind.BOUND]
             if not open_slots:
-                accepted = self._validate(expression, [expression.construct_instance()])
+                accepted = self._validate(
+                    expression,
+                    [self._construct(expression, self._defaults_of(held_back))],
+                )
                 self._finished(resolution, 0, accepted)
                 yield from accepted
                 return
@@ -400,8 +413,53 @@ class LanguageModelBackend(GenerativeBackend):
                 expression.expression._limit_ or self.number_of_candidates
             )
             yield from self._ask(
-                expression, slots, open_slots, number_of_candidates, resolution
+                expression,
+                slots,
+                open_slots,
+                number_of_candidates,
+                resolution,
+                held_back,
             )
+
+    def _leave_withheld_open(self, expression: Match[T]) -> None:
+        """
+        Add the fields the outcome check holds back to the match as open slots, where
+        the query does not state them.
+        """
+        if self.outcome_check is None:
+            return
+        for name in self.outcome_check.withheld_slots:
+            expression.kwargs.setdefault(name, ...)
+
+    def _held_back(self, slots: Sequence[Slot]) -> List[Slot]:
+        """
+        :param slots: Every reflected slot.
+        :return: The open slots the outcome check holds back and the action gives a
+            default, which the model is not asked for until a refusal opens them.
+        """
+        if self.outcome_check is None:
+            return []
+        return [
+            slot
+            for slot in slots
+            if slot.kind is not SlotKind.BOUND
+            and slot.has_default
+            and slot.attribute_name in self.outcome_check.withheld_slots
+        ]
+
+    @staticmethod
+    def _is_among(slot: Slot, slots: Sequence[Slot]) -> bool:
+        """
+        :return: Whether the slot is one of the slots, by the path it is reached by.
+        """
+        return any(slot.path == other.path for other in slots)
+
+    @staticmethod
+    def _defaults_of(held_back: Sequence[Slot]) -> Dict[str, Any]:
+        """
+        :return: The action's default of every slot held back, by the slot's path.
+        """
+        return {slot.path: slot.default for slot in held_back}
 
     @contextmanager
     def _reporting(self, expression: Match[T], slots: Sequence[Slot]) -> Iterator[str]:
@@ -510,6 +568,7 @@ class LanguageModelBackend(GenerativeBackend):
         open_slots: Sequence[Slot],
         number_of_candidates: int,
         resolution: str,
+        held_back: Sequence[Slot] = (),
     ) -> List[T]:
         """
         Request every slot in a single completion, repairing on rejection, including an
@@ -524,12 +583,14 @@ class LanguageModelBackend(GenerativeBackend):
         :param number_of_candidates: How many alternatives to request.
         :param resolution: The identifier of the resolution, which what is reported
             repeats.
+        :param held_back: The slots the model is not asked for until a refusal opens
+            them; the action's defaults stand meanwhile.
         :return: The instances built from the answer that meet the where-conditions.
         """
         self._consult(expression, resolution)
         prompt = self._prompt_builder().build(
             expression=expression,
-            slots=slots,
+            slots=[slot for slot in slots if not self._is_among(slot, held_back)],
             context_sections=context_sections(self.context_provider, expression),
             number_of_candidates=number_of_candidates,
             backend=self,
@@ -539,6 +600,7 @@ class LanguageModelBackend(GenerativeBackend):
         completion = self.request_completion
         last_error: Optional[Exception] = None
         fallback: Optional[FallbackAnswer] = None
+        held_back = list(held_back)
         for attempt in range(self.max_repairs + 1):
             self.observer.emit(AttemptStarted(resolution=resolution, attempt=attempt))
             try:
@@ -569,13 +631,21 @@ class LanguageModelBackend(GenerativeBackend):
                 )
             )
             try:
-                accepted = self._accept(expression, raw_response, open_slots)
+                accepted = self._accept(expression, raw_response, open_slots, held_back)
                 self._try_outcome(accepted)
             except OutcomeFellShort as error:
                 last_error = error
                 fallback = self._better_fallback(fallback, error, accepted)
+                opened = [
+                    slot for slot in held_back if slot.attribute_name in error.opens
+                ]
+                held_back = [
+                    slot for slot in held_back if not self._is_among(slot, opened)
+                ]
+                open_slots = [*open_slots, *opened]
+                self.opened_slots.extend(slot.attribute_name for slot in opened)
                 prompt = self._rejected(
-                    resolution, attempt, prompt, raw_response, error
+                    resolution, attempt, prompt, raw_response, error, expression, opened
                 )
                 continue
             except RetryableModelFailure as error:
@@ -634,11 +704,16 @@ class LanguageModelBackend(GenerativeBackend):
         prompt: str,
         raw_response: str,
         error: RetryableModelFailure,
+        expression: Optional[Match[T]] = None,
+        opened: Sequence[Slot] = (),
     ) -> str:
         """
         Report an answer as rejected.
 
-        :return: The prompt asking again, with the rejected answer and why.
+        :param expression: The match being resolved, which the opened slots belong to.
+        :param opened: The slots the rejection opened.
+        :return: The prompt asking again, with the rejected answer, why, and the slots
+            the rejection opened.
         """
         self.observer.emit(
             AttemptRejected(
@@ -649,7 +724,13 @@ class LanguageModelBackend(GenerativeBackend):
                 answer=raw_response,
             )
         )
-        return PromptBuilder.build_repair(prompt, raw_response, error)
+        builder = self._prompt_builder()
+        return PromptBuilder.build_repair(
+            prompt,
+            raw_response,
+            error,
+            [builder.slot_entry(slot, expression) for slot in opened],
+        )
 
     def _sent_back_unfinished(
         self,
@@ -737,19 +818,27 @@ class LanguageModelBackend(GenerativeBackend):
         )
 
     def _accept(
-        self, expression: Match[T], raw_response: str, open_slots: Sequence[Slot]
+        self,
+        expression: Match[T],
+        raw_response: str,
+        open_slots: Sequence[Slot],
+        held_back: Sequence[Slot] = (),
     ) -> List[T]:
         """
         :param expression: The match being resolved.
         :param raw_response: The response text.
         :param open_slots: The slots the model was asked to fill.
+        :param held_back: The slots the model was not asked for, which keep the
+            action's defaults.
         :return: The instances built from the response that meet the where-conditions,
             each kept with its justification.
         :raises NoValidCandidates: When none of them does.
         """
         decoded = self._decode(raw_response, open_slots)
+        defaults = self._defaults_of(held_back)
         constructed = [
-            self._construct(expression, element.assignment) for element in decoded
+            self._construct(expression, {**defaults, **element.assignment})
+            for element in decoded
         ]
         accepted = self._validate(expression, constructed)
         self.justifications = [

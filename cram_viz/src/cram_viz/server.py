@@ -99,6 +99,12 @@ class ResolveRequestKey(StrEnum):
     out.
     """
 
+    ADJUST_GEOMETRY = "adjust_geometry"
+    """
+    Whether a pour that misses may open the pour geometry the query leaves out; it may
+    when left out.
+    """
+
 
 def _no_eql_error() -> Dict[str, Any]:
     """
@@ -405,6 +411,9 @@ def _resolver_for(request: Dict[str, Any]):
         consults_phase_structure=bool(
             request.get(ResolveRequestKey.PHASE_STRUCTURE, True)
         ),
+        adjusts_pour_geometry=bool(
+            request.get(ResolveRequestKey.ADJUST_GEOMETRY, True)
+        ),
     )
 
 
@@ -459,6 +468,7 @@ def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
         SceneNamespace,
     )
     from cram_viz.resolution.perspective_choice import (
+        OfferedGeometryAdjustment,
         OfferedPerspective,
         OfferedPhaseStructure,
     )
@@ -479,6 +489,7 @@ def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
         "scene": name,
         "designators": offered,
         "phase_structure": OfferedPhaseStructure().payload(),
+        "geometry_adjustment": OfferedGeometryAdjustment().payload(),
         "perspectives": [
             perspective.payload() for perspective in OfferedPerspective.every()
         ],
