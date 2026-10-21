@@ -109,6 +109,8 @@ test/krrood_test/test_ripple_down_rules/test_generated_rdrs
 *.o
 *.obj
 !test/cramera_test/dataset/material.obj
+!cramera/scenes/**/*.obj
+!cramera/scenes/**/*.png
 
 # Precompiled Headers
 *.gch

@@ -788,6 +788,15 @@ cover the panel and the three modules. Checked in the browser against the add-on
 three tabs, the designator description, the empty prompts, and a hypothesis graph drawn from a
 published payload.
 
+Scene data (2026-10-21): `cramera`'s EQL panel and graph tabs failed on `cram_viz`'s bundles
+(`KeyError: 'position'`; the PR2's `<transmission type=…>` refused by `urdf_parser_py`). The
+converter `cramera_resolution.scene_conversion` writes the bundles in `cramera`'s format
+(`position` for `pos`; transmissions left out); its output is committed as `cramera/scenes`
+(609 files, 261 MB; `.gitignore` lets its `.obj` and `.png` files in, as `cram_viz`'s
+were), which `cramera` finds without configuration. `cram_viz/scenes` is unchanged. All five
+of `cramera`'s knowledge views answer on the three scenes, the EQL panel opens without the
+error, and the `cramera` suite (1066) and the add-on's (470) pass.
+
 Checked: 439 add-on tests (ported from `cram_viz` where the code is shared, plus the route and
 launcher tests), the routes against `cram_viz/scenes/simple_pouring` itself (all three designators
 available, the designator and hypothesis views answer), and a kept run performed through the

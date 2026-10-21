@@ -1,0 +1,7 @@
+{
+ "default": "tiny",
+ "scenes": [
+  "tiny",
+  "bare"
+ ]
+}

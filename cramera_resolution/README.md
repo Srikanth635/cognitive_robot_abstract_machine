@@ -67,9 +67,16 @@ The panels' logic is tested with node (`test_web_panels.py`), as `cramera`'s own
 - The NEEM of a performance is kept only where the generated ORM interface exists
   (`scripts/regenerate_all_orm.py`).
 
-## Scene bundles of cram_viz
+## Scene bundles
 
-`cramera` reads them, but its own knowledge views fail on them (`KeyError: 'position'`):
-a bundle's `placeTarget` holds `pos` where `cramera` reads `position`, and the PR2's URDF
-has a `<transmission>` with no `type`, which stops the kinematics view. The add-on does not
-use those views, so its panel and routes work on the bundles as they are.
+`cramera/scenes` holds the bundles of `cram_viz/scenes` in the format `cramera` reads, and
+`cramera` finds it without `CRAMERA_SCENES`. Two things differ from `cram_viz`'s bundles:
+a `placeTarget` holds `position` where `cram_viz` writes `pos`, and the PR2's `<transmission>`
+elements, which describe the real robot's actuators and which `cramera`'s URDF reader
+refuses, are left out. Everything else is copied as it is, and `cram_viz/scenes` is not changed.
+
+```bash
+python -m cramera_resolution.scene_conversion cram_viz/scenes cramera/scenes
+```
+
+Run it again after `cram_viz`'s bundles are regenerated.

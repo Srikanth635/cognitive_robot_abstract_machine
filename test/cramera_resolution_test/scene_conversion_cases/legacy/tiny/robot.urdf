@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<robot name="tiny">
+  <link name="base"/>
+  <link name="arm"/>
+  <joint name="shoulder" type="revolute">
+    <parent link="base"/>
+    <child link="arm"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1" lower="-1" upper="1" velocity="1"/>
+  </joint>
+  <transmission name="shoulder_trans" type="pr2_mechanism_model/SimpleTransmission">
+    <actuator name="shoulder_motor"/>
+    <joint name="shoulder"/>
+    <mechanicalReduction>-79.2</mechanicalReduction>
+  </transmission>
+  <transmission name="wrist_trans" type="pr2_mechanism_model/WristTransmission">
+    <rightActuator mechanicalReduction="60.1" name="wrist_r_motor"/>
+    <leftActuator mechanicalReduction="60.1" name="wrist_l_motor"/>
+    <flexJoint mechanicalReduction="-1.0" name="wrist_flex_joint"/>
+    <rollJoint mechanicalReduction="1.0" name="wrist_roll_joint"/>
+  </transmission>
+</robot>
