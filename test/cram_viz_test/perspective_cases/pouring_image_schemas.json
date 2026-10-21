@@ -39,7 +39,7 @@
    "names_state": ["aicor:ContainedState"],
    "constrains_dimension": ["amount"]},
   {"id": "opening_centre", "type": "DecidingQuantity", "label": "where the opening's centre is",
-   "quantity_of_slot": "opening", "quantity_aspect": "CENTRE", "has_quantity_kind": "POSITION"},
+   "about_slot": "opening", "quantity_aspect": "CENTRE", "has_quantity_kind": "POSITION"},
   {"id": "lip_location", "type": "DecidingQuantity", "label": "where the lip is",
-   "quantity_of_slot": "lip", "quantity_aspect": "LOCATION", "has_quantity_kind": "POSITION"}
+   "about_slot": "lip", "quantity_aspect": "LOCATION", "has_quantity_kind": "POSITION"}
 ]}

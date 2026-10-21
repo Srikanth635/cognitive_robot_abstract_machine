@@ -626,6 +626,14 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   still refused. Versions moved (action core 0.4.0, action frame 0.5.0, failures 0.4.0), so
   stored frame and failures knowledge is generated again. Tests and HermiT only, not run live.
 
+- One quantity about a slot (2026-10-21): the action core's `SlotQuantity` (`hasQuantityKind`,
+  `aboutSlot`, `relativeToSlot`, a DUL concept) is the class above `ParameterDimension`, the
+  image schemas' `DecidingQuantity` (adding its aspect) and the failures' `Indicator` (adding
+  its form and noticer); `quantityOfSlot` and `measuredOnSlot` are gone. Versions moved (action
+  core 0.5.0, image schemas 0.2.0, failures 0.5.0), so every stored action-perspective
+  hypothesis is generated again. With this, the four duplicated concepts the audit named are
+  merged. Tests and HermiT only, not run live.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

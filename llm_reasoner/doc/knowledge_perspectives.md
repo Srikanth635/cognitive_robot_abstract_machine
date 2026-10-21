@@ -378,8 +378,16 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    hypothesis states, such as a slot (`FragmentDecoder.given_types`). The Flanagan
    `ConditionRequirement` names a phase condition type rather than a slot and stays as it is.
    Versions: action core 0.4.0, action frame 0.5.0, failures 0.4.0.
-5. Still open: linking the instances of a Flanagan hypothesis to those of a core hypothesis,
-   and merging the quantities (`DecidingQuantity`, `Indicator`).
+5. *One quantity about a slot, 2026-10-21.* The action core's `SlotQuantity` is a kind of
+   quantity about a slot's filler, possibly measured from another slot's (`hasQuantityKind`,
+   `aboutSlot`, `relativeToSlot`), carrying no value. `ParameterDimension` is the kind the
+   action chooses; the image schemas' `DecidingQuantity` adds only its aspect (centre, extent,
+   location) and the failures' `Indicator` only its form and who notices it. Their own slot
+   properties (`quantityOfSlot`, `measuredOnSlot`) are gone, a list of two slots becoming the
+   slot and the slot it is measured from. All are DUL concepts, as a parameter is. Versions:
+   action core 0.5.0, image schemas 0.2.0, failures 0.5.0.
+6. Still open: linking the instances of a Flanagan hypothesis to those of a core
+   hypothesis.
 
 **Phase 8 — more actions (D8):** navigating, picking up and placing in the core, with the
 concepts CRAM-AICOR lacks proposed in our module (§10), and their perspectives.

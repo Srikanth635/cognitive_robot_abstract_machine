@@ -13,8 +13,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas/0.1.0> ;
-    owl:versionInfo "0.1.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas/0.2.0> ;
+    owl:versionInfo "0.2.0" .
 
 # %% classes
 
@@ -103,13 +103,7 @@ schemas:SchemaRequirement a owl:Class ;
 schemas:DecidingQuantity a owl:Class ;
     rdfs:label "deciding quantity"@en ;
     rdfs:comment "A kind of quantity about a slot, such as the centre or size of an opening or the position of a lip, that decides whether a required relation holds; it carries no value."@en ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty core:hasQuantityKind ;
-            owl:someValuesFrom core:QuantityKind ],
-        [ a owl:Restriction ;
-            owl:onProperty schemas:quantityOfSlot ;
-            owl:someValuesFrom core:FrameSlot ],
-        dul:Description .
+    rdfs:subClassOf core:SlotQuantity .
 
 # %% value partitions
 
@@ -411,13 +405,6 @@ schemas:decidedBy a owl:ObjectProperty ;
     rdfs:comment "A kind of quantity that decides whether the required relation holds."@en ;
     rdfs:domain schemas:SchemaRequirement ;
     rdfs:range schemas:DecidingQuantity .
-
-schemas:quantityOfSlot a owl:FunctionalProperty,
-        owl:ObjectProperty ;
-    rdfs:label "quantity of slot"@en ;
-    rdfs:comment "The slot whose filler the deciding quantity is about."@en ;
-    rdfs:domain schemas:DecidingQuantity ;
-    rdfs:range core:FrameSlot .
 
 schemas:quantityAspect a owl:FunctionalProperty,
         owl:ObjectProperty ;

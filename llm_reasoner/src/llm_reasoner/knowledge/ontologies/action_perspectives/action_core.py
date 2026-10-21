@@ -427,16 +427,16 @@ class Objective(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class ParameterDimension(DescriptionEntity):
+class SlotQuantity(DescriptionEntity):
     """
-    A kind of choice an action leaves open, independent of any designator: how much, how fast, where relative to another participant, which way something faces, how far or how long, or which of several. A designator's field is one way of making the choice.
+    A kind of quantity about the filler of a slot, possibly measured from the filler of another slot, such as the tilt of the source or the height of the lip above the goal; it carries no value. What it is for is said by its kind: a choice the action leaves open, a quantity deciding whether a relation holds, or one a failure is noticed by.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
-        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ParameterDimension",
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotQuantity",
         linked_terms=(
-            "http://aicor.knowledge/l2-ontology.owl#ActionParameterSpace",
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Parameter",
+            "http://aicor.knowledge/l2-ontology.owl#dul_Concept",
+            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Concept",
         ),
         evidence_status="",
         claims=(),
@@ -471,7 +471,7 @@ class ParameterDimension(DescriptionEntity):
         ).as_dict(),
     )
     """
-    The slot whose filler the choice is about, such as the source whose orientation is chosen.
+    The slot whose filler the quantity is about, such as the source whose orientation is chosen.
     """
 
     has_quantity_kind: Optional[QuantityKind] = field(
@@ -494,7 +494,29 @@ class ParameterDimension(DescriptionEntity):
         ).as_dict(),
     )
     """
-    The slot whose filler the choice is measured from, such as the goal a position above which is chosen; absent for a choice measured from nothing in particular.
+    The slot whose filler the quantity is measured from, such as the goal a position above which is chosen, or the opening the lip ends beside; absent for a quantity measured from nothing in particular.
+    """
+
+
+@dataclass(eq=False)
+class ParameterDimension(SlotQuantity):
+    """
+    A kind of choice an action leaves open, independent of any designator: how much, how fast, where relative to another participant, which way something faces, how far or how long, or which of several. A designator's field is one way of making the choice.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ParameterDimension",
+        linked_terms=(
+            "http://aicor.knowledge/l2-ontology.owl#ActionParameterSpace",
+            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Parameter",
+        ),
+        evidence_status="",
+        claims=(),
+        restrictions=(),
+        definition=None,
+    )
+    """
+    The ontology class this class stands for.
     """
 
 
@@ -827,7 +849,7 @@ class SubstanceSlot(ParticipantSlot):
 @dataclass
 class AboutSlot(ObjectPropertyDescriptor):
     """
-    The slot whose filler the choice is about, such as the source whose orientation is chosen.
+    The slot whose filler the quantity is about, such as the source whose orientation is chosen.
     """
 
 
@@ -890,7 +912,7 @@ class LeavesOpen(ObjectPropertyDescriptor):
 @dataclass
 class RelativeToSlot(ObjectPropertyDescriptor):
     """
-    The slot whose filler the choice is measured from, such as the goal a position above which is chosen; absent for a choice measured from nothing in particular.
+    The slot whose filler the quantity is measured from, such as the goal a position above which is chosen, or the opening the lip ends beside; absent for a quantity measured from nothing in particular.
     """
 
 
@@ -903,7 +925,7 @@ class StatesObjective(ObjectPropertyDescriptor):
 
 # %% descriptor attachments
 
-ParameterDimension.about_slot = AboutSlot(ParameterDimension, "about_slot")
+SlotQuantity.about_slot = AboutSlot(SlotQuantity, "about_slot")
 Consequence.affects_slot = AffectsSlot(Consequence, "affects_slot")
 ActionFrame.brings_about = BringsAbout(ActionFrame, "brings_about")
 Objective.concerns_slot = ConcernsSlot(Objective, "concerns_slot")
@@ -914,7 +936,5 @@ SlotCondition.condition_on_slot = ConditionOnSlot(SlotCondition, "condition_on_s
 ActionFrame.defines_slot = DefinesSlot(ActionFrame, "defines_slot")
 PartSlot.is_part_of_slot = IsPartOfSlot(PartSlot, "is_part_of_slot")
 ActionFrame.leaves_open = LeavesOpen(ActionFrame, "leaves_open")
-ParameterDimension.relative_to_slot = RelativeToSlot(
-    ParameterDimension, "relative_to_slot"
-)
+SlotQuantity.relative_to_slot = RelativeToSlot(SlotQuantity, "relative_to_slot")
 ActionFrame.states_objective = StatesObjective(ActionFrame, "states_objective")

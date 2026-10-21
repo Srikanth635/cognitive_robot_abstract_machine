@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.4.0> ;
-    owl:versionInfo "0.4.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.5.0> ;
+    owl:versionInfo "0.5.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -171,24 +171,29 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 
 # %% the choices an action leaves open
 
-:ParameterDimension a owl:Class ;
-    rdfs:subClassOf dul:Parameter , aicor:ActionParameterSpace ,
+:SlotQuantity a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ,
         [ a owl:Restriction ; owl:onProperty :aboutSlot ; owl:someValuesFrom :FrameSlot ] ,
         [ a owl:Restriction ; owl:onProperty :hasQuantityKind ; owl:someValuesFrom :QuantityKind ] ;
+    rdfs:label "slot quantity"@en ;
+    rdfs:comment "A kind of quantity about the filler of a slot, possibly measured from the filler of another slot, such as the tilt of the source or the height of the lip above the goal; it carries no value. What it is for is said by its kind: a choice the action leaves open, a quantity deciding whether a relation holds, or one a failure is noticed by."@en .
+
+:ParameterDimension a owl:Class ;
+    rdfs:subClassOf :SlotQuantity , dul:Parameter , aicor:ActionParameterSpace ;
     rdfs:label "parameter dimension"@en ;
     rdfs:comment "A kind of choice an action leaves open, independent of any designator: how much, how fast, where relative to another participant, which way something faces, how far or how long, or which of several. A designator's field is one way of making the choice."@en .
 
 :aboutSlot a owl:ObjectProperty , owl:FunctionalProperty ;
-    rdfs:domain :ParameterDimension ;
+    rdfs:domain :SlotQuantity ;
     rdfs:range :FrameSlot ;
     rdfs:label "about slot"@en ;
-    rdfs:comment "The slot whose filler the choice is about, such as the source whose orientation is chosen."@en .
+    rdfs:comment "The slot whose filler the quantity is about, such as the source whose orientation is chosen."@en .
 
 :relativeToSlot a owl:ObjectProperty , owl:FunctionalProperty ;
-    rdfs:domain :ParameterDimension ;
+    rdfs:domain :SlotQuantity ;
     rdfs:range :FrameSlot ;
     rdfs:label "relative to slot"@en ;
-    rdfs:comment "The slot whose filler the choice is measured from, such as the goal a position above which is chosen; absent for a choice measured from nothing in particular."@en .
+    rdfs:comment "The slot whose filler the quantity is measured from, such as the goal a position above which is chosen, or the opening the lip ends beside; absent for a quantity measured from nothing in particular."@en .
 
 :hasQuantityKind a owl:ObjectProperty , owl:FunctionalProperty ;
     rdfs:range :QuantityKind ;

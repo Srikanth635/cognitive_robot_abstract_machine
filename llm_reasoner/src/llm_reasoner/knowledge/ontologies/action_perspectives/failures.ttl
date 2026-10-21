@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.4.0> ;
-    owl:versionInfo "0.4.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.5.0> ;
+    owl:versionInfo "0.5.0" .
 
 # %% classes
 
@@ -47,13 +47,7 @@ failures:Failure a owl:Class ;
 failures:Indicator a owl:Class ;
     rdfs:label "indicator"@en ;
     rdfs:comment "The quantity or occurrence by which a failure is noticed, such as how far one part ends from another, the value at which a process starts, or whether a motion finishes."@en ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty core:hasQuantityKind ;
-            owl:someValuesFrom core:QuantityKind ],
-        [ a owl:Restriction ;
-            owl:onProperty failures:measuredOnSlot ;
-            owl:someValuesFrom core:FrameSlot ],
-        dul:Description .
+    rdfs:subClassOf core:SlotQuantity .
 
 failures:ParameterChange a owl:Class ;
     rdfs:label "parameter change"@en ;
@@ -218,12 +212,6 @@ failures:hasCorrection a owl:ObjectProperty ;
     rdfs:comment "A correction that puts the failure right."@en ;
     rdfs:domain failures:Failure ;
     rdfs:range failures:Correction .
-
-failures:measuredOnSlot a owl:ObjectProperty ;
-    rdfs:label "measured on slot"@en ;
-    rdfs:comment "A slot, or part of a slot, between or on which the indicator's quantity is measured."@en ;
-    rdfs:domain failures:Indicator ;
-    rdfs:range core:FrameSlot .
 
 failures:hasIndicatorForm a owl:FunctionalProperty,
         owl:ObjectProperty ;
