@@ -47,7 +47,8 @@ and one made here cannot be read by `cram_viz`.
 panel, as two tabs with the EQL tab first, in the tab classes `cramera`'s stylesheet has (a page
 opened with `?run=` starts on the designators; a graph node or scene part clicked brings the
 EQL tab forward, where it is described). It offers the scene's designators as
-chips that copy their query into a box, the knowledge to consult (the phase structure, each
+chips that copy their query into a box (one the scene cannot resolve is dimmed, says what the
+scene lacks, and can still be copied; Resolve then refuses it), the knowledge to consult (the phase structure, each
 perspective, adjusting the pour geometry), Resolve, what the resolver chose, why, what it
 rests on and the pours it tried, the runs kept (a tab; a click shows one again, as does
 `?run=<name>` in the address, which the llm_reasoner viewer links to), and Execute. The box

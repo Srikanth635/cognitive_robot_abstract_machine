@@ -145,7 +145,8 @@ test('an unavailable designator says what the scene lacks', function () {
   });
   assert.strictEqual(
     hint,
-    'objects_given needs an object named pouring_cup, a candidate for source_container, which this scene lacks',
+    'objects_given needs an object named pouring_cup, a candidate for source_container, which this scene lacks;' +
+      ' click to copy it into the box anyway, but Resolve will refuse it here',
   );
 });
 

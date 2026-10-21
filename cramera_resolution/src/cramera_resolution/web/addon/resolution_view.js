@@ -102,7 +102,8 @@
     }).concat(designator.without_candidates.map(function (slot) {
       return 'a candidate for ' + slot;
     }));
-    return designator.identifier + ' needs ' + lacks.join(', ') + ', which this scene lacks';
+    return designator.identifier + ' needs ' + lacks.join(', ') + ', which this scene lacks;' +
+      ' click to copy it into the box anyway, but Resolve will refuse it here';
   }
 
   // one run of the list: which scene and designator, and the query it was made from

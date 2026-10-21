@@ -332,12 +332,13 @@ test('a chip shows its whole match query on hover', async function () {
   assert.ok(chips(panel)[0].title.includes(designatorsPayload().designators[0].query));
 });
 
-test('a designator naming an object the scene lacks says so and resolves nothing', async function () {
+test('a designator naming an object the scene lacks says so, and can still be copied into the box', async function () {
   const panel = await mounted();
   const unavailable = chips(panel)[1];
   assert.ok(unavailable.className.includes('unavailable'));
   assert.ok(unavailable.title.includes(designatorsPayload().designators[1].unbound[0]));
-  assert.strictEqual(unavailable.listeners.click, undefined);
+  unavailable.listeners.click();
+  assert.strictEqual(panel.elements['#resolution-query'].value, designatorsPayload().designators[1].query);
 });
 
 test('a designator with nothing in the scene to take for a slot says so', async function () {
@@ -345,6 +346,12 @@ test('a designator with nothing in the scene to take for a slot says so', async 
   const unavailable = chips(panel)[2];
   assert.ok(unavailable.className.includes('unavailable'));
   assert.ok(unavailable.title.includes(designatorsPayload().designators[2].without_candidates[0]));
+});
+
+test('a designator with nothing to take for a slot can still be copied into the box', async function () {
+  const panel = await mounted();
+  chips(panel)[2].listeners.click();
+  assert.strictEqual(panel.elements['#resolution-query'].value, designatorsPayload().designators[2].query);
 });
 
 test('clicking an available designator copies its query into the box and resolves nothing', async function () {

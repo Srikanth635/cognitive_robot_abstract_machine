@@ -124,9 +124,7 @@
         chip.className = 'designator-query' + (designator.available ? '' : ' unavailable');
         chip.textContent = designator.query_on_one_line;
         chip.title = designator.query + '\n' + view.designatorHint(designator);
-        if (designator.available) {
-          chip.addEventListener('click', function () { queryEl.value = designator.query; });
-        }
+        chip.addEventListener('click', function () { queryEl.value = designator.query; });
         designatorsEl.appendChild(chip);
       });
     }
