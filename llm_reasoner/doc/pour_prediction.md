@@ -190,3 +190,24 @@ It did not try the near-upside-down tilts the first run reached (2.9 rad), which
 the turned base, so facing the bowl widens what can land but does not make the model look
 there; $0.60 and 4.4 minutes, all of it the resolver's. The pour prediction (off in cram_viz)
 is what names tilts near 3 rad as the ones that land (§5); with it the model would be told.
+
+The same run with the pour prediction on (`predicts_pours`, same store and setup): it did not
+land either, and the resolver refused ("no choice of arm and tilt both lands the mouth and
+reaches the flow tilt"); $0.47, 4.7 minutes, 3 pours tried and 55 predictions asked. It tried
+tilts from -0.6 to 2.8 rad in the prediction and found only 0 to 0.25 rad landing, which is
+below the flow tilt, so the pour that landed (0.2 rad, 0.05 m) was refused for not flowing.
+It never tried 2.9, and was told by the prediction that 2.0 to 2.8 are out of reach.
+
+That was wrong. From the turned base the reach check calls every tilt from 2.0 rad up
+unreachable, whatever the solver's iteration budget (200 to 3000), while the simulation
+performs 2.0, 2.8 and 2.9 rad (and fails 2.2, 2.4, 2.6, 3.0 and 3.07):
+
+| tilt (rad) | 1.5–1.96 | 2.0 | 2.2–2.6 | 2.8 | 2.9 | 3.0, 3.07 |
+|---|---|---|---|---|---|---|
+| simulation | finishes | finishes | fails | finishes | finishes | fails |
+| reach check | reachable | out of reach | out of reach | out of reach | out of reach | out of reach |
+
+The check solves with the base fixed, while the pour is a whole-body motion; so §7's "a pour
+predicted unreachable is certain to fail" does not hold from the turned base (it held for the
+nine-tilt grid its test uses, which has no tilt at 2.0, 2.8 or 2.9). Open: let the reach check
+move the base, or stop it from refusing.
