@@ -5,7 +5,7 @@ decided, and what is proposed next. Read it with [`architecture.md`](architectur
 which describes how the package is built. Update both in the same change whenever the
 work moves on.
 
-Last updated: 2026-10-21; code on the branch `llm-reasoner`, which carries `origin/main` of that day.
+Last updated: 2026-10-21; code on the branch `feature/llm_reasoner`, which carries `origin/main` of that day.
 
 ## 1. State at a glance
 
