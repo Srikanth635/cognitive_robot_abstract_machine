@@ -658,7 +658,9 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   slot to correct the 0.188 m side miss. The first run exposed a prompt defect from the
   quantity merge (a base no field ranges over was never described, so the model missed
   `about_slot` and `has_quantity_kind`); a type's entry now takes in such bases, and the second
-  run generated every hypothesis on the first attempt.
+  run generated every hypothesis on the first attempt. With the geometry open
+  (`pour_geometry_open`, knowledge served from the store) the second pour landed 5 mm from the
+  opening's centre, for $0.14.
 
 ## 3. Live testing
 
