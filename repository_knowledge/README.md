@@ -9,6 +9,7 @@ This directory contains the source-navigation tool, task assistance, development
 | `wiki/` | OKF bundle: package, workflow and convention concepts | Yes |
 | `scripts/` | Memory-capped Windows test runner | Yes |
 | `config/` | Optional MCP host configuration examples | Yes |
+| `notebooks/` | Provider-selectable Q&A and code-proposal playground | Yes |
 | `.cache/` | Rebuildable SQLite indexes | No |
 | `.venv/` | Local Python 3.12 environment | No |
 | `../test/repository_knowledge_test/` | Tests and source datasets | Yes |
@@ -110,3 +111,7 @@ Phase 8 adds the optional `cram-knowledge-mcp` stdio server, bounded basstler st
 ## Evaluation and recovery
 
 Phase 9 adds reproducible source/structural/context comparisons, storage and client recovery tests, and optional Windows job memory receipts. See [the measured report](docs/phase9-evaluation.md), [operations guide](docs/operations.md) and [release checklist](docs/phase9-release.md). Rich context remains an explicit operation because measured CLI requests took 72–93 seconds. Local navigation correctness does not establish model task success or token savings; the team-release gate remains open.
+
+## Try a model
+
+Open [the notebook](notebooks/knowledge_playground.ipynb) with the **CRAM Knowledge** kernel. The default run verifies real MCP navigation without a model or API key. Select a provider/model and explicitly enable live requests to try source-grounded Q&A or a code proposal, then inspect reported tokens and query traces. Proposals are returned as text. See [setup, refresh commands and credential handling](docs/notebook.md). The optional `notebook` extra supplies the SDK and Jupyter tooling; core indexing stays independent of them.

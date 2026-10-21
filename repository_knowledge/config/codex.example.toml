@@ -1,0 +1,6 @@
+# Replace the paths with the selected checkout and configured interpreter.
+[mcp_servers.cram-knowledge]
+command = "C:/path/to/CRAM/repository_knowledge/.venv/Scripts/python.exe"
+args = ["-m", "repository_knowledge.interfaces.mcp", "--repository", "C:/path/to/CRAM", "--database", "C:/path/to/CRAM/repository_knowledge/.cache/agent-working.sqlite3", "--scope", "working-tree", "--include-untracked", "repository_knowledge", "--include-untracked", "test/repository_knowledge_test"]
+startup_timeout_sec = 30
+tool_timeout_sec = 300

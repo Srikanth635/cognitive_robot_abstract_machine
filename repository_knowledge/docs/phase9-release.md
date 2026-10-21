@@ -23,3 +23,5 @@ Checkpoint E is **not yet a supported team release**. Local implementation and e
 - [ ] Owner-managed retention preserves the canonical artifact and pinned runtime needed for rollback beyond their current expiry.
 
 The configured publication mode remains automated and requires no other person's approval. None of these gates asks an external reviewer to approve ordinary local development. A trust-root update and team deployment remain distinct operations; phase 9 does not change the existing activation pins.
+
+The [model playground](notebook.md) now provides the instrumented path for local Q&A and code-proposal trials. Mocked-provider tests establish integration behavior; they do not close the live generation, token-cost or task-success gates above.

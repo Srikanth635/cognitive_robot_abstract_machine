@@ -18,6 +18,7 @@ from typing_extensions import TYPE_CHECKING
 
 from repository_knowledge.exceptions import InvalidSerializedType
 from repository_knowledge.clients import CanonicalStatus, SessionReport, SessionState
+from repository_knowledge.model_trials import ModelTrial, QueryObservation, QueryOrigin
 from repository_knowledge.publication import (
     AdmissionResult,
     ExtractionFingerprint,
@@ -251,6 +252,9 @@ class EvidenceType(Enum):
     SESSION_REPORT = SessionReport
     SESSION_STATE = SessionState
     CANONICAL_STATUS = CanonicalStatus
+    MODEL_TRIAL = ModelTrial
+    QUERY_OBSERVATION = QueryObservation
+    QUERY_ORIGIN = QueryOrigin
 
     @classmethod
     def resolve(cls, serialized_type: str) -> type:

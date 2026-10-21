@@ -1,0 +1,22 @@
+[
+  {
+    "id": "offline-tool",
+    "model": "offline-test",
+    "choices": [{"index": 0, "finish_reason": "tool_calls", "message": {
+      "role": "assistant", "content": null,
+      "tool_calls": [{"id": "definition-query", "type": "function", "function": {
+        "name": "query_repository",
+        "arguments": "{\"tool\":\"describe-symbol\",\"symbol_identifier\":\"first.api.Child\"}"
+      }}]
+    }}],
+    "usage": {"prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18}
+  },
+  {
+    "id": "offline-answer",
+    "model": "offline-test",
+    "choices": [{"index": 0, "finish_reason": "stop", "message": {
+      "role": "assistant", "content": "The child declaration is supported by the returned committed source."
+    }}],
+    "usage": {"prompt_tokens": 13, "completion_tokens": 9, "total_tokens": 22}
+  }
+]

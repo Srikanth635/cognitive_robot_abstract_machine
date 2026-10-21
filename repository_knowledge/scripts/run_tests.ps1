@@ -10,6 +10,7 @@ param(
 
 # %% isolated package checks
 
+$env:LITELLM_LOCAL_MODEL_COST_MAP = "True"
 $arguments = @("-q", "--tb=short", "--maxfail=1", "-o", "addopts=", "--confcutdir=test/repository_knowledge_test", "--orm-build", "never") + $TestPaths
 & "$PSScriptRoot/run_command.ps1" -Module pytest -Arguments $arguments -Repository $Repository -MinimumFreeBytes $MinimumFreeBytes -MaximumBytes $MaximumBytes -StatisticsPath $StatisticsPath
 exit $LASTEXITCODE
