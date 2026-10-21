@@ -138,6 +138,11 @@ class AddOnScript(StrEnum):
     The panel that resolves designators, chooses what to consult and performs runs.
     """
 
+    PANEL_TABS = "addon/panel_tabs.js"
+    """
+    Puts the EQL panel and the designator panel in one frame, as two tabs.
+    """
+
     KNOWLEDGE_TABS = "addon/knowledge_tabs.js"
     """
     Adds the hypothesis graph, the ontology graph and the designator to the tabs of the

@@ -789,7 +789,9 @@ marked until opened. Clicking a node emits `entity:select`, and `entity:highligh
 spotlights nodes.
 
 Layout (2026-10-21): the Designators panel is titled *Underspecified Action Designators* and
-sits right below the EQL panel, and its box suggests as the EQL box does, through `cramera`'s
+shares one frame with the EQL panel, as two tabs (`web/addon/panel_tabs.js`, which joins the
+page's boot so the frame exists before the column's divider is installed; the divider between
+the frame and the graph works again as a result). Its box suggests as the EQL box does, through `cramera`'s
 own menu (`EqlSuggestions`, `Completion`, reused as served): the action designators and,
 inside one's argument list, its parameters with types and defaults, from the
 `action_vocabulary` of the `designators` route (the init fields of the action classes the

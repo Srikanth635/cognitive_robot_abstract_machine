@@ -63,6 +63,9 @@ class TestPanelsInTheBrowser:
     def test_the_designator_panel(self):
         self.run_node("test_designator_panel.js")
 
+    def test_the_panel_tabs(self):
+        self.run_node("test_panel_tabs.js")
+
     def test_the_knowledge_tabs(self):
         self.run_node("test_knowledge_tabs.js")
 

@@ -42,8 +42,11 @@ and one made here cannot be read by `cram_viz`.
 
 ## The panel
 
-`web/addon/designator_panel.js` mounts an *Underspecified Action Designators* panel right
-below `cramera`'s EQL panel, through its panel registry. It offers the scene's designators as
+`web/addon/designator_panel.js` mounts an *Underspecified Action Designators* panel through
+`cramera`'s panel registry; `web/addon/panel_tabs.js` shares one frame between it and the EQL
+panel, as two tabs with the EQL tab first, in the tab classes `cramera`'s stylesheet has (a page
+opened with `?run=` starts on the designators; a graph node or scene part clicked brings the
+EQL tab forward, where it is described). It offers the scene's designators as
 chips that copy their query into a box, the knowledge to consult (the phase structure, each
 perspective, adjusting the pour geometry), Resolve, what the resolver chose, why, what it
 rests on and the pours it tried, the runs kept (a tab; a click shows one again, as does
