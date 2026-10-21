@@ -167,7 +167,10 @@ meeting the query's `where`-conditions; or one of these outcomes:
 2. **Consult the knowledge component** (`knowledge.py`; §3.6), when the backend has a
    knowledge requester and the model is to be asked: a first resolution chooses the
    situation features, and the knowledge component serves the hypothesis for them,
-   generating it on a store miss. The consultation is kept on the backend
+   generating it on a store miss. The same features key the action core's frame, so the
+   core and every perspective on it are served for that situation too; without the phase
+   structure they are chosen on the core's frame, and without perspectives either no
+   situation is chosen. The consultation is kept on the backend
    (`consultation`, `situation_backend`), and the knowledge tools over the hypothesis
    (`knowledge_tools`, §3.7) are offered to the request below beside the world tools
    when the backend asks with tools, with the `knowledge` rule saying how to read and

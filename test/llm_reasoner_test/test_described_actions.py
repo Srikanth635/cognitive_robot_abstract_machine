@@ -61,9 +61,9 @@ class TestStructureQuery:
     def test_the_query_fixes_the_values_given(self):
         described = DescribedActions().describing(POURING_DESIGNATOR)
         structure = described.query(
-            {"has_material_regime": pouring.MaterialRegime.GRANULAR}
+            {"has_material_regime": action_core.MaterialRegime.GRANULAR}
         ).construct_instance()
-        assert structure.has_material_regime is pouring.MaterialRegime.GRANULAR
+        assert structure.has_material_regime is action_core.MaterialRegime.GRANULAR
 
 
 class TestFrameQuery:

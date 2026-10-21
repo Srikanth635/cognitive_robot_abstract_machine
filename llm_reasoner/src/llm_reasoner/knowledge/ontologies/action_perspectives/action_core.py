@@ -67,6 +67,27 @@ class ConditionPolarity(StrEnum):
     """
 
 
+class MaterialRegime(StrEnum):
+    """
+    The physical flow behaviour of a transferred substance.
+    """
+
+    LIQUID = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Liquid"
+    """
+    A low-shear material that flows freely and may slosh.
+    """
+
+    GRANULAR = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Granular"
+    """
+    Discrete particles whose bulk flow is not characterised by viscosity.
+    """
+
+    COHESIVE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Cohesive"
+    """
+    A highly viscous or cohesive material with delayed flow.
+    """
+
+
 class QuantityKind(StrEnum):
     """
     The kind of quantity a choice an action leaves open sets.
@@ -107,6 +128,32 @@ class QuantityKind(StrEnum):
     SELECTION = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Selection"
     """
     Which of several alternatives is taken, such as the hand that holds the source.
+    """
+
+
+class TransferTerminationReason(StrEnum):
+    """
+    The condition that intentionally or exceptionally ends a transfer.
+    """
+
+    TARGET_QUANTITY_ATTAINED = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TargetQuantityAttained"
+    """
+    The requested transferred quantity has been reached.
+    """
+
+    SOURCE_EXHAUSTED = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceExhausted"
+    """
+    No transferable material remains in the source.
+    """
+
+    INSTRUCTED_STOP = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#InstructedStop"
+    """
+    An external instruction requests that the transfer stop.
+    """
+
+    TRANSFER_FAILURE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TransferFailure"
+    """
+    A spill or another failure forces the transfer to stop.
     """
 
 
@@ -267,6 +314,210 @@ class AgentSlot(ParticipantSlot):
 
 
 @dataclass(eq=False)
+class ManipulationActionFrame(ActionFrame):
+    """
+    The frame of an action that manipulates objects, which CRAM-AICOR calls a manipulation frame; an action that manipulates nothing, such as moving the robot's base, has a frame that is not one.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ManipulationActionFrame",
+        linked_terms=("http://aicor.knowledge/l2-ontology.owl#ManipulationFrame",),
+        evidence_status="",
+        claims=(),
+        restrictions=(),
+        definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class PouringFrame(ManipulationActionFrame):
+    """
+    The frame of pouring, CRAM-AICOR's aicor:Pouring: an agent makes a substance leave a source over a part of it, such as its lip, and enter a goal through a part of it, such as its opening, so that the substance accumulates in the goal, as aicor:PouringIntention and its telos say. It names the agent, the source, the substance and the goal.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame",
+        linked_terms=(),
+        evidence_status="",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#bringsAbout",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Consequence"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
+                quantifier=Quantifier.SOME,
+                filler=IntersectionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PartSlot"
+                        ),
+                        PropertyRestriction(
+                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#isPartOfSlot",
+                            quantifier=Quantifier.SOME,
+                            filler=NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#GoalSlot"
+                            ),
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
+                quantifier=Quantifier.SOME,
+                filler=IntersectionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PartSlot"
+                        ),
+                        PropertyRestriction(
+                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#isPartOfSlot",
+                            quantifier=Quantifier.SOME,
+                            filler=NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceSlot"
+                            ),
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AgentSlot"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#GoalSlot"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceSlot"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SubstanceSlot"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#framesAction",
+                quantifier=Quantifier.VALUE,
+                value="http://aicor.knowledge/l2-ontology.owl#Pouring",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialRegime"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TransferTerminationReason"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#leavesOpen",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ParameterDimension"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#statesObjective",
+                quantifier=Quantifier.SOME,
+                filler=IntersectionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Objective"
+                        ),
+                        PropertyRestriction(
+                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aimsAtState",
+                            quantifier=Quantifier.VALUE,
+                            value="http://aicor.knowledge/l2-ontology.owl#AccumulatedState",
+                        ),
+                    )
+                ),
+            ),
+        ),
+        definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+    has_material_regime: Optional[MaterialRegime] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+            functional=True,
+        ).as_dict(),
+    )
+    """
+    The flow behaviour of the transferred substance.
+    """
+
+    has_termination_reason: Optional[TransferTerminationReason] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+            functional=True,
+        ).as_dict(),
+    )
+    """
+    The condition that ends the transfer.
+    """
+
+
+@dataclass(eq=False)
+class CohesivePouringFrame(PouringFrame):
+    """
+    The frame of pouring a cohesive material.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#CohesivePouringFrame",
+        linked_terms=(),
+        evidence_status="",
+        claims=(),
+        restrictions=(),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Cohesive",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
 class Consequence(DescriptionEntity):
     """
     A change an action makes to one of its participants, intended or not, such as the source of a pour holding less, which CRAM-AICOR calls an effect.
@@ -339,6 +590,66 @@ class GoalSlot(ParticipantSlot):
 
 
 @dataclass(eq=False)
+class GranularPouringFrame(PouringFrame):
+    """
+    The frame of pouring a granular material.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#GranularPouringFrame",
+        linked_terms=(),
+        evidence_status="",
+        claims=(),
+        restrictions=(),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Granular",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class InstructedStopPouringFrame(PouringFrame):
+    """
+    The frame of a pour that ends on an instruction.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#InstructedStopPouringFrame",
+        linked_terms=(),
+        evidence_status="",
+        claims=(),
+        restrictions=(),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#InstructedStop",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
 class InstrumentSlot(ParticipantSlot):
     """
     The slot of a tool the agent acts with on something else.
@@ -358,18 +669,29 @@ class InstrumentSlot(ParticipantSlot):
 
 
 @dataclass(eq=False)
-class ManipulationActionFrame(ActionFrame):
+class LiquidPouringFrame(PouringFrame):
     """
-    The frame of an action that manipulates objects, which CRAM-AICOR calls a manipulation frame; an action that manipulates nothing, such as moving the robot's base, has a frame that is not one.
+    The frame of pouring a liquid.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
-        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ManipulationActionFrame",
-        linked_terms=("http://aicor.knowledge/l2-ontology.owl#ManipulationFrame",),
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#LiquidPouringFrame",
+        linked_terms=(),
         evidence_status="",
         claims=(),
         restrictions=(),
-        definition=None,
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Liquid",
+                ),
+            )
+        ),
     )
     """
     The ontology class this class stands for.
@@ -579,125 +901,6 @@ class PatientSlot(ParticipantSlot):
 
 
 @dataclass(eq=False)
-class PouringFrame(ManipulationActionFrame):
-    """
-    The frame of pouring, CRAM-AICOR's aicor:Pouring: an agent makes a substance leave a source over a part of it, such as its lip, and enter a goal through a part of it, such as its opening, so that the substance accumulates in the goal, as aicor:PouringIntention and its telos say. It names the agent, the source, the substance and the goal.
-    """
-
-    term: ClassVar[ClassTerm] = ClassTerm(
-        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame",
-        linked_terms=(),
-        evidence_status="",
-        claims=(),
-        restrictions=(
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#bringsAbout",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Consequence"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
-                quantifier=Quantifier.SOME,
-                filler=IntersectionOf(
-                    operands=(
-                        NamedClass(
-                            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PartSlot"
-                        ),
-                        PropertyRestriction(
-                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#isPartOfSlot",
-                            quantifier=Quantifier.SOME,
-                            filler=NamedClass(
-                                iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#GoalSlot"
-                            ),
-                        ),
-                    )
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
-                quantifier=Quantifier.SOME,
-                filler=IntersectionOf(
-                    operands=(
-                        NamedClass(
-                            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PartSlot"
-                        ),
-                        PropertyRestriction(
-                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#isPartOfSlot",
-                            quantifier=Quantifier.SOME,
-                            filler=NamedClass(
-                                iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceSlot"
-                            ),
-                        ),
-                    )
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AgentSlot"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#GoalSlot"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceSlot"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#definesSlot",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SubstanceSlot"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#framesAction",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Pouring",
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#leavesOpen",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ParameterDimension"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#statesObjective",
-                quantifier=Quantifier.SOME,
-                filler=IntersectionOf(
-                    operands=(
-                        NamedClass(
-                            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Objective"
-                        ),
-                        PropertyRestriction(
-                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aimsAtState",
-                            quantifier=Quantifier.VALUE,
-                            value="http://aicor.knowledge/l2-ontology.owl#AccumulatedState",
-                        ),
-                    )
-                ),
-            ),
-        ),
-        definition=None,
-    )
-    """
-    The ontology class this class stands for.
-    """
-
-
-@dataclass(eq=False)
 class SlotCondition(DescriptionEntity):
     """
     A condition a world can check about the filler of a slot, possibly in relation to the filler of another slot, such as having a part, affording something or being in a state, rather than membership of a class. Whether it is required or observed is said by the property relating it to what uses it.
@@ -770,6 +973,36 @@ class SlotCondition(DescriptionEntity):
 
 
 @dataclass(eq=False)
+class SourceExhaustedPouringFrame(PouringFrame):
+    """
+    The frame of a pour that ends once the source is empty.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceExhaustedPouringFrame",
+        linked_terms=(),
+        evidence_status="",
+        claims=(),
+        restrictions=(),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceExhausted",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
 class SourceSlot(ParticipantSlot):
     """
     The slot of where something the action moves comes from, such as the container poured from.
@@ -837,6 +1070,66 @@ class SubstanceSlot(ParticipantSlot):
         claims=(),
         restrictions=(),
         definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class TargetQuantityAttainedPouringFrame(PouringFrame):
+    """
+    The frame of a pour that ends once the wanted quantity is in the goal.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TargetQuantityAttainedPouringFrame",
+        linked_terms=(),
+        evidence_status="",
+        claims=(),
+        restrictions=(),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TargetQuantityAttained",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class TransferFailurePouringFrame(PouringFrame):
+    """
+    The frame of a pour that ends because it fails.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TransferFailurePouringFrame",
+        linked_terms=(),
+        evidence_status="",
+        claims=(),
+        restrictions=(),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TransferFailure",
+                ),
+            )
+        ),
     )
     """
     The ontology class this class stands for.

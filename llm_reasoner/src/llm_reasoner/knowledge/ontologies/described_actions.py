@@ -110,11 +110,14 @@ class DescribedAction:
         """
         return the(self.structure)(decomposes_task=self.concept, **values)
 
-    def frame_query(self) -> Match:
+    def frame_query(self, situation: Optional[Mapping[str, Any]] = None) -> Match:
         """
-        :return: A query for the action core's one frame framing this action's concept.
+        :param situation: The situation features chosen for the action, by field name;
+            none when no situation is known.
+        :return: A query for the action core's one frame framing this action's concept
+            in the situation.
         """
-        return the(self.frame)(frames_action=self.concept)
+        return the(self.frame)(frames_action=self.concept, **(situation or {}))
 
     def field_roles(
         self, slot_roles: SlotRoles

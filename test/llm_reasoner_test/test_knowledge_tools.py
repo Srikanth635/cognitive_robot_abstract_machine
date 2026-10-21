@@ -14,6 +14,7 @@ from jsonschema import Draft202012Validator
 from llm_reasoner.clients.tools import ToolBox, ToolErrorKey, tool_error_schema
 from llm_reasoner.knowledge.access import (
     KNOWLEDGE_ACCESS_VERSION,
+    action_core,
     HypothesisStore,
     KnowledgeAccess,
     KnowledgeService,
@@ -181,10 +182,10 @@ class TestOverview:
         (material,) = [
             feature
             for feature in SituationFeatures().of(pouring.PouringPhaseStructure)
-            if pouring.MaterialRegime.GRANULAR in feature.values
+            if action_core.MaterialRegime.GRANULAR in feature.values
         ]
         assert overview["situation"] == {
-            material.field_name: pouring.MaterialRegime.GRANULAR.name
+            material.field_name: action_core.MaterialRegime.GRANULAR.name
         }
 
     def test_a_phase_names_the_subgoal_it_aims_for(self, service):

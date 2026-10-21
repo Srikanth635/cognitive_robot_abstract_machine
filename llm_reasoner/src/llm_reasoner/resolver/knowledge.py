@@ -13,7 +13,7 @@ from enum import StrEnum
 
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
-from typing_extensions import Optional
+from typing_extensions import Any, Callable, Mapping, Optional
 
 from llm_reasoner.clients.tools import Tool
 from llm_reasoner.knowledge.access import (
@@ -21,6 +21,7 @@ from llm_reasoner.knowledge.access import (
     ActionPerspectiveFile,
     DescribedAction,
     DescribedActions,
+    DescriptionEntity,
     KnowledgeAccess,
     KnowledgeToolName,
     SituationFeatures,
@@ -189,35 +190,58 @@ class KnowledgeRequester:
         if described is None:
             return KnowledgeConsultation(designator=designator)
         if not self.consults_phase_structure:
+            situation = (
+                self.situation_of(
+                    described.frame, described.frame_query, situation_backend
+                )
+                if self.perspectives
+                else {}
+            )
             return KnowledgeConsultation(
                 designator=designator,
+                situation=situation,
                 perspective_record_ids=self.perspective_records_for(
-                    described, designator
+                    described, designator, situation
                 ),
             )
-        situation = self.situation_of(described, situation_backend)
+        situation = self.situation_of(
+            described.structure, described.query, situation_backend
+        )
         return KnowledgeConsultation(
             designator=designator,
             situation=situation,
             record_id=self.service.serve(
                 described.query(situation), instruction=designator
             ),
-            perspective_record_ids=self.perspective_records_for(described, designator),
+            perspective_record_ids=self.perspective_records_for(
+                described, designator, situation
+            ),
         )
 
     def perspective_records_for(
-        self, described: DescribedAction, designator: str
+        self,
+        described: DescribedAction,
+        designator: str,
+        situation: Mapping[str, StrEnum],
     ) -> list[str]:
         """
-        :return: The records of the action core's frame of the action and of each
-            perspective consulted on it, served and generated first when none is
-            stored; none when no perspective is consulted or the core has no frame of
-            the action.
+        :param situation: The situation features chosen for the action, by field name.
+        :return: The records of the action core's frame of the action in the situation,
+            as far as the frame accepts its features, and of each perspective consulted
+            on that frame, served and generated first when none is stored; none when no
+            perspective is consulted or the core has no frame of the action.
         """
         if not self.perspectives or described.frame is None:
             return []
+        accepted = {
+            feature.field_name
+            for feature in self.situation_features.of(described.frame)
+        }
         core_record = self.service.serve(
-            described.frame_query(), instruction=designator
+            described.frame_query(
+                {name: value for name, value in situation.items() if name in accepted}
+            ),
+            instruction=designator,
         )
         return [
             core_record,
@@ -291,18 +315,23 @@ class KnowledgeRequester:
         )
 
     def situation_of(
-        self, described: DescribedAction, situation_backend: GenerativeBackend
+        self,
+        root_type: Optional[type[DescriptionEntity]],
+        query_for: Callable[[Mapping[str, Any]], Match],
+        situation_backend: GenerativeBackend,
     ) -> dict[str, StrEnum]:
         """
-        :param described: The knowledge describing the action.
+        :param root_type: The knowledge the situation is chosen for: the phase structure
+            or the action core's frame describing the action.
+        :param query_for: Makes the query for that knowledge with the values given.
         :param situation_backend: Fills the situation features.
         :return: The situation features the backend chose, by field name, the ones it
             left unknown omitted; none when the knowledge accepts no features.
         """
-        features = self.situation_features.of(described.structure)
+        features = [] if root_type is None else self.situation_features.of(root_type)
         if not features:
             return {}
-        query = described.query({feature.field_name: ... for feature in features})
+        query = query_for({feature.field_name: ... for feature in features})
         (structure,) = query.evaluate(backend=situation_backend)
         chosen = {
             feature.field_name: feature.value_in(structure) for feature in features

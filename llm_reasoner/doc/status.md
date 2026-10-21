@@ -642,6 +642,15 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   one (a change towards a target naming none) and was corrected. No vocabulary changed. Tests
   only, not run live.
 
+- Perspectives keyed by situation (2026-10-21): the material regime and the termination
+  reason moved from the Flanagan pouring module into the action core, `PouringFrame` takes
+  both with a defined variant per value, and the situation chosen once keys both the phase
+  structure and the core's frame (on the frame alone when the phase structure is left out; no
+  pass at all when nothing is consulted). Each perspective cites the core of its situation, so
+  granular pouring gets its own core, frame, image schemas and failures. Versions moved
+  (action core 0.6.0, pouring 0.7.0), so every stored hypothesis is generated again; up to 12
+  situations × 4 hypotheses, each on first use. Tests and HermiT only, not run live.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

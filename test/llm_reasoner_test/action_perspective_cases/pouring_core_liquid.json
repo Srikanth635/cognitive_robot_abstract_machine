@@ -1,0 +1,22 @@
+{"fragments": [
+  {"id": "pouring", "type": "PouringFrame", "label": "pouring",
+   "frames_action": "aicor:Pouring", "has_material_regime": "LIQUID",
+   "defines_slot": ["agent", "source", "substance", "goal", "lip", "opening"],
+   "states_objective": ["accumulated"],
+   "brings_about": ["contained"],
+   "leaves_open": ["lip_position", "amount"]},
+  {"id": "agent", "type": "AgentSlot", "label": "the one pouring"},
+  {"id": "source", "type": "SourceSlot", "label": "the container poured from"},
+  {"id": "substance", "type": "SubstanceSlot", "label": "what is poured"},
+  {"id": "goal", "type": "GoalSlot", "label": "the container poured into"},
+  {"id": "lip", "type": "PartSlot", "label": "the source's lip", "is_part_of_slot": "source"},
+  {"id": "opening", "type": "PartSlot", "label": "the goal's opening", "is_part_of_slot": "goal"},
+  {"id": "accumulated", "type": "Objective", "label": "the substance gathered in the goal",
+   "aims_at_state": "aicor:AccumulatedState", "concerns_slot": ["substance", "goal"]},
+  {"id": "contained", "type": "Consequence", "label": "the goal holds the substance",
+   "affects_slot": ["goal"], "results_in_state": "aicor:ContainedState"},
+  {"id": "lip_position", "type": "ParameterDimension", "label": "where the lip is over the opening",
+   "about_slot": "lip", "has_quantity_kind": "POSITION", "relative_to_slot": "opening"},
+  {"id": "amount", "type": "ParameterDimension", "label": "how much is poured",
+   "about_slot": "substance", "has_quantity_kind": "AMOUNT"}
+]}

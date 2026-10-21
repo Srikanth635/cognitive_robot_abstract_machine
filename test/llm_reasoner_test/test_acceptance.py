@@ -1383,8 +1383,8 @@ def pouring_structure(**fields: object) -> pouring.PouringPhaseStructure:
     Return a pouring structure of liquid ending at the target quantity.
     """
     defaults: dict[str, object] = {
-        "has_material_regime": pouring.MaterialRegime.LIQUID,
-        "has_termination_reason": pouring.TransferTerminationReason.TARGET_QUANTITY_ATTAINED,
+        "has_material_regime": action_core.MaterialRegime.LIQUID,
+        "has_termination_reason": action_core.TransferTerminationReason.TARGET_QUANTITY_ATTAINED,
     }
     defaults.update(fields)
     return pouring.PouringPhaseStructure(**defaults)

@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.5.0> ;
-    owl:versionInfo "0.5.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.6.0> ;
+    owl:versionInfo "0.6.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -42,9 +42,58 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
         [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :PartSlot [ a owl:Restriction ; owl:onProperty :isPartOfSlot ; owl:someValuesFrom :GoalSlot ] ) ] ] ,
         [ a owl:Restriction ; owl:onProperty :statesObjective ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :Objective [ a owl:Restriction ; owl:onProperty :aimsAtState ; owl:hasValue aicor:AccumulatedState ] ) ] ] ,
         [ a owl:Restriction ; owl:onProperty :bringsAbout ; owl:someValuesFrom :Consequence ] ,
-        [ a owl:Restriction ; owl:onProperty :leavesOpen ; owl:someValuesFrom :ParameterDimension ] ;
+        [ a owl:Restriction ; owl:onProperty :leavesOpen ; owl:someValuesFrom :ParameterDimension ] ,
+        [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:allValuesFrom :MaterialRegime ] ,
+        [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:allValuesFrom :TransferTerminationReason ] ;
     rdfs:label "pouring frame"@en ;
     rdfs:comment "The frame of pouring, CRAM-AICOR's aicor:Pouring: an agent makes a substance leave a source over a part of it, such as its lip, and enter a goal through a part of it, such as its opening, so that the substance accumulates in the goal, as aicor:PouringIntention and its telos say. It names the agent, the source, the substance and the goal."@en .
+
+# %% the situations a pour is performed in
+
+:LiquidPouringFrame a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringFrame [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:hasValue :Liquid ] ) ] ;
+    rdfs:label "liquid pouring frame"@en ;
+    rdfs:comment "The frame of pouring a liquid."@en .
+
+:GranularPouringFrame a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringFrame [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:hasValue :Granular ] ) ] ;
+    rdfs:label "granular pouring frame"@en ;
+    rdfs:comment "The frame of pouring a granular material."@en .
+
+:CohesivePouringFrame a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringFrame [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:hasValue :Cohesive ] ) ] ;
+    rdfs:label "cohesive pouring frame"@en ;
+    rdfs:comment "The frame of pouring a cohesive material."@en .
+
+:TargetQuantityAttainedPouringFrame a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringFrame [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:hasValue :TargetQuantityAttained ] ) ] ;
+    rdfs:label "target quantity attained pouring frame"@en ;
+    rdfs:comment "The frame of a pour that ends once the wanted quantity is in the goal."@en .
+
+:SourceExhaustedPouringFrame a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringFrame [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:hasValue :SourceExhausted ] ) ] ;
+    rdfs:label "source exhausted pouring frame"@en ;
+    rdfs:comment "The frame of a pour that ends once the source is empty."@en .
+
+:InstructedStopPouringFrame a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringFrame [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:hasValue :InstructedStop ] ) ] ;
+    rdfs:label "instructed stop pouring frame"@en ;
+    rdfs:comment "The frame of a pour that ends on an instruction."@en .
+
+:TransferFailurePouringFrame a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringFrame [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:hasValue :TransferFailure ] ) ] ;
+    rdfs:label "transfer failure pouring frame"@en ;
+    rdfs:comment "The frame of a pour that ends because it fails."@en .
+
+:hasMaterialRegime a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:range :MaterialRegime ;
+    rdfs:label "has material regime"@en ;
+    rdfs:comment "The flow behaviour of the transferred substance."@en .
+
+:hasTerminationReason a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:range :TransferTerminationReason ;
+    rdfs:label "has termination reason"@en ;
+    rdfs:comment "The condition that ends the transfer."@en .
 
 :framesAction a owl:ObjectProperty , owl:FunctionalProperty ;
     rdfs:domain :ActionFrame ;
@@ -284,3 +333,31 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 :Decreases a owl:NamedIndividual , :ChangeDirection ; rdfs:label "decreases"@en ;
     rdfs:comment "Becomes smaller, or grows more slowly."@en .
 [ a owl:AllDifferent ; owl:distinctMembers ( :Increases :Decreases ) ] .
+
+:MaterialRegime a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Liquid :Granular :Cohesive ) ] ;
+    rdfs:label "material regime"@en ;
+    rdfs:comment "The physical flow behaviour of a transferred substance."@en .
+:Liquid a owl:NamedIndividual , :MaterialRegime ; rdfs:label "liquid"@en ;
+    rdfs:comment "A low-shear material that flows freely and may slosh."@en .
+:Granular a owl:NamedIndividual , :MaterialRegime ; rdfs:label "granular"@en ;
+    rdfs:comment "Discrete particles whose bulk flow is not characterised by viscosity."@en .
+:Cohesive a owl:NamedIndividual , :MaterialRegime ; rdfs:label "cohesive"@en ;
+    rdfs:comment "A highly viscous or cohesive material with delayed flow."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Liquid :Granular :Cohesive ) ] .
+
+:TransferTerminationReason a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :TargetQuantityAttained :SourceExhausted :InstructedStop :TransferFailure ) ] ;
+    rdfs:label "transfer termination reason"@en ;
+    rdfs:comment "The condition that intentionally or exceptionally ends a transfer."@en .
+:TargetQuantityAttained a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "target quantity attained"@en ;
+    rdfs:comment "The requested transferred quantity has been reached."@en .
+:SourceExhausted a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "source exhausted"@en ;
+    rdfs:comment "No transferable material remains in the source."@en .
+:InstructedStop a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "instructed stop"@en ;
+    rdfs:comment "An external instruction requests that the transfer stop."@en .
+:TransferFailure a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "transfer failure"@en ;
+    rdfs:comment "A spill or another failure forces the transfer to stop."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :TargetQuantityAttained :SourceExhausted :InstructedStop :TransferFailure ) ] .
