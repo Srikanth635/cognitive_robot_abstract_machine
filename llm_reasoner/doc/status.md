@@ -5,7 +5,7 @@ decided, and what is proposed next. Read it with [`architecture.md`](architectur
 which describes how the package is built. Update both in the same change whenever the
 work moves on.
 
-Last updated: 2026-10-20; code at commit `a1dc8de3d`.
+Last updated: 2026-10-21; code on the branch `integrate/origin-main-2026-10-21`, which carries `origin/main` of that day.
 
 ## 1. State at a glance
 
@@ -702,6 +702,39 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   turning of the base was involved in that pour's reach (the plan turns to face the bowl
   after the pick-up, as before).
 
+## 2a. Moved onto the upstream main (2026-10-21)
+
+`origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,
+`semantic_digital_twin` and `coraplex` are taken as upstream has them, with only the 19
+lines of `SubClassSafeGeneric` that were ours on top; `llm_reasoner`, `llm_reasoner_viz`,
+`cram_viz` and the experiments of ours were adapted. Upstream's `cramera` is the viewer
+`cram_viz` grew into and stays beside it; moving `cram_viz`'s functions over is later work.
+
+What upstream changed that reached us, and how it is met:
+- **`Match` internals sit behind the underscore convention** (`_kwargs_`, `_variable_`,
+  `_type_`, `_parent_`, `_matches_with_variables_`). The old names read as symbolic
+  attributes instead of failing, so every read of one was found by its tests and renamed.
+- **`Pose` is read through properties** (`position`, `quaternion`, `yaw`,
+  `homogeneous_matrix`) instead of `to_position()` and the like.
+- **`Arms` is gone: an arm is a robot part of the world** (`PouringAction.arm: Arm`). The
+  query now reads `arm=variable(Arm)`, the model picks among the arms the scene's robot
+  holds (`PR2LeftArm#1`, `PR2RightArm#1`), a run keeps the arm by its own name
+  (`PR2RightArm`, not `RIGHT`), and a scene needs a recognised robot to offer the slot.
+  Runs kept before this hold `"arm": "RIGHT"` and no longer execute.
+- **A pick-up takes a grasp the object offers**: cram_viz picks the grasp whose approach
+  runs most nearly the way the robot faces. The hold after the pick-up matches the old
+  one to 0.01 rad in every arm joint.
+- **A simulated run is given up on after 5 s without approaching its goal.** The pour's
+  tilt keeps the torso rising slowly while the arm waits, which the rule gave up on, so
+  the plan raises the torso right after the pick-up. Pours at 0.9 to 2.0 and 2.9 rad
+  perform; **2.7 and 2.8 rad no longer do** (2.8 did before). Upstream's `MotionDidNotFinish`
+  is `MotionMadeNoProgress`.
+- `cram-classes.ttl` was written again from the classes as they are now.
+
+Checked on the merged tree: `llm_reasoner_test`, `llm_reasoner_viz_test` and
+`cram_viz_test` (1849 passed, 2 skipped, 1 expected failure, as before), our experiments'
+tests, and upstream's `cramera_test` (1066 passed).
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
@@ -1097,11 +1130,15 @@ beyond the Flanagan microworld* (several perspectives); see §4.
 - krrood's verbalizer writes contradictory bounds as "between 0.01 and 0.005" and enum
   lists as `[<CuttingTechnique.SLICE: 1>, …]`.
 - krrood does not enforce an `exists` condition over a variable declared outside the
-  match; conditions must use `query.variable.…`.
+  match; conditions must use `query._variable_.…`.
 - coraplex: `ToolMotionAction.arm` and `.tool` have no docstrings; `PouringAction` has
   no speed or duration field; `composite/searching.py` fails to import
   (`PerceptionObjectNotFound` is missing).
 - The test kitchen gives the bread's body two `Connection6DoF` connections as child.
+- The experiments' tests rebuild every package's ORM interface, and the experiments' control
+  loop needs ROS's `control_msgs`, which this machine lacks; they run with
+  `--orm-build=never` here.
+- `krrood/test/dataset` tracks a generated `ormatic_interface.*.py.tmp` file of 3851 lines.
 
 ## 8. Continuing the work
 

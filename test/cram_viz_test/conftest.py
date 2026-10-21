@@ -16,6 +16,8 @@ from pathlib import Path
 import coraplex
 import pytest
 from semantic_digital_twin.adapters.mesh import STLParser
+from semantic_digital_twin.adapters.package_resolver import PackageUriResolver
+from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Bowl,
     PouringCup,
@@ -238,6 +240,21 @@ def pouring_bundle(tmp_path) -> Path:
     for name, source in MESH_SOURCES.items():
         shutil.copy(OBJECT_MESHES / source, meshes / name)
     return bundle
+
+
+@pytest.fixture
+def pouring_bundle_with_arms(pouring_bundle) -> Path:
+    """
+    The pouring scene bundle with a PR2 for its robot, so the arm a pouring takes is one
+    of the arms the scene holds.
+    """
+    scene_file = pouring_bundle / "scene.json"
+    scene = json.loads(scene_file.read_text())
+    robot_model, *_ = scene["models"]
+    robot_model["urdf"] = PackageUriResolver().resolve(PR2.get_ros_file_path())
+    scene["robot"]["name"] = "pr2"
+    scene_file.write_text(json.dumps(scene))
+    return pouring_bundle
 
 
 # %% the PR2 kitchen the simple_pouring scene records

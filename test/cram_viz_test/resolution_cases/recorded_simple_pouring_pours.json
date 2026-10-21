@@ -1,7 +1,7 @@
 [
  {
   "values": {
-   "arm": "RIGHT",
+   "arm": "PR2RightArm",
    "tilt_angle": 1.85,
    "pour_side": "RIGHT",
    "pour_side_offset": 0.0,
@@ -25,7 +25,7 @@
  },
  {
   "values": {
-   "arm": "RIGHT",
+   "arm": "PR2RightArm",
    "tilt_angle": 1.85,
    "pour_side": "RIGHT",
    "pour_side_offset": -0.18,
@@ -49,7 +49,7 @@
  },
  {
   "values": {
-   "arm": "RIGHT",
+   "arm": "PR2RightArm",
    "tilt_angle": 1.85,
    "pour_side": "RIGHT",
    "pour_side_offset": -0.188,
@@ -73,7 +73,7 @@
  },
  {
   "values": {
-   "arm": "RIGHT",
+   "arm": "PR2RightArm",
    "tilt_angle": 1.85,
    "pour_side": "RIGHT",
    "pour_side_offset": -0.17,
@@ -97,7 +97,7 @@
  },
  {
   "values": {
-   "arm": "RIGHT",
+   "arm": "PR2RightArm",
    "tilt_angle": 1.85,
    "pour_side": "RIGHT",
    "pour_side_offset": -0.184,
@@ -121,7 +121,7 @@
  },
  {
   "values": {
-   "arm": "RIGHT",
+   "arm": "PR2RightArm",
    "tilt_angle": 1.85,
    "pour_side": null,
    "pour_side_offset": null,
@@ -145,7 +145,7 @@
  },
  {
   "values": {
-   "arm": "RIGHT",
+   "arm": "PR2RightArm",
    "tilt_angle": 1.5708,
    "pour_side": null,
    "pour_side_offset": null,
@@ -169,7 +169,7 @@
  },
  {
   "values": {
-   "arm": "RIGHT",
+   "arm": "PR2RightArm",
    "tilt_angle": 1.57,
    "pour_side": null,
    "pour_side_offset": null,

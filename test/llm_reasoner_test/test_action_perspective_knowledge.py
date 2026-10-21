@@ -876,8 +876,8 @@ class TestPerspectiveRoots:
     def test_a_perspective_query_fixes_the_core_frame_it_describes(self):
         cited = StoredRoot(record_id="core-record")
         query = PERSPECTIVE_ROOTS[ActionPerspectiveFile.ACTION_FRAME].query(cited)
-        assert query.type is action_frame.FrameStereotype
-        assert query.kwargs == {"stereotype_of": cited}
+        assert query._type_ is action_frame.FrameStereotype
+        assert query._kwargs_ == {"stereotype_of": cited}
 
 
 # %% what every condition of the frame must state

@@ -10,7 +10,7 @@ import math
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from coraplex.datastructures.enums import Arms, CuttingTechnique
+from coraplex.datastructures.enums import CuttingTechnique
 from coraplex.robot_plans.actions.composite.tool_based import (
     CuttingAction,
     PouringAction,
@@ -33,6 +33,8 @@ from llm_reasoner.resolver.exceptions import (
     NoFittingReferent,
     UnsatisfiableRequest,
 )
+from semantic_digital_twin.robots.pr2 import PR2LeftArm, PR2RightArm
+from semantic_digital_twin.robots.robot_parts import Arm
 from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     CuttingKnife,
     Food,
@@ -95,7 +97,7 @@ class KitchenQueries:
         return dict(
             object_to_cut=variable(Body),
             tool=variable(Tool),
-            arm=...,
+            arm=variable(Arm),
             technique=...,
             slice_thickness=...,
         )
@@ -109,7 +111,7 @@ class KitchenQueries:
         return dict(
             target_container=variable(Body),
             source_container=variable(Tool),
-            arm=...,
+            arm=variable(Arm),
             tilt_angle=...,
         )
 
@@ -149,7 +151,7 @@ class KitchenQueries:
         """
         :return: The query with the conditions on its variable.
         """
-        return query.where(*conditions(query.variable))
+        return query.where(*conditions(query._variable_))
 
 
 # %% what a resolution satisfies
@@ -267,7 +269,7 @@ RESOLUTION_CASES = (
         lambda q: q.cut(
             object_to_cut=variable(Body, domain=[q.body(SceneBody.BREAD)]),
             tool=variable(Tool, domain=[q.annotation(CuttingKnife)]),
-            arm=Arms.RIGHT,
+            arm=q.annotation(PR2RightArm),
             technique=CuttingTechnique.SLICE,
         ),
         meets=lambda actions: all(
@@ -331,17 +333,15 @@ RESOLUTION_CASES = (
     ),
     ResolutionCase(
         "C5",
-        "SLICE or HALVING, and LEFT or RIGHT",
+        "SLICE or HALVING",
         lambda q: q.where(
             q.cut(),
             lambda v: [
                 in_(v.technique, [CuttingTechnique.SLICE, CuttingTechnique.HALVING]),
-                not_(v.arm == Arms.BOTH),
             ],
         ),
         meets=lambda actions: all(
             action.technique in (CuttingTechnique.SLICE, CuttingTechnique.HALVING)
-            and action.arm != Arms.BOTH
             for action in actions
         ),
     ),
@@ -359,10 +359,12 @@ RESOLUTION_CASES = (
         "P5",
         "the LEFT arm, or a tilt angle above 2.0",
         lambda q: q.where(
-            q.pour(), lambda v: [or_(v.arm == Arms.LEFT, v.tilt_angle > 2.0)]
+            q.pour(),
+            lambda v: [or_(v.arm == q.annotation(PR2LeftArm), v.tilt_angle > 2.0)],
         ),
         meets=lambda actions: all(
-            action.arm == Arms.LEFT or action.tilt_angle > 2.0 for action in actions
+            isinstance(action.arm, PR2LeftArm) or action.tilt_angle > 2.0
+            for action in actions
         ),
     ),
     ResolutionCase(
@@ -394,7 +396,7 @@ RESOLUTION_CASES = (
         "P7",
         "the bowl, with the given LEFT arm",
         lambda q: q.where(
-            q.pour(arm=Arms.LEFT),
+            q.pour(arm=q.annotation(PR2LeftArm)),
             lambda v: [contains(v.target_container.name.name, SceneBody.BOWL)],
         ),
         meets=pours_from_the_cup_into_the_bowl,
@@ -489,7 +491,7 @@ RESOLUTION_CASES = (
         "the left arm",
         lambda q: q.pour(),
         meets=lambda actions: pours_from_the_cup_into_the_bowl(actions)
-        and all(action.arm == Arms.LEFT for action in actions),
+        and all(isinstance(action.arm, PR2LeftArm) for action in actions),
         task="Pour from the cup into the bowl slowly with the left arm.",
     ),
     ResolutionCase(

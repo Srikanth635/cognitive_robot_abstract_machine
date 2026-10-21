@@ -393,7 +393,7 @@ class PromptBuilder:
         open_slots = [slot for slot in slots if slot.kind is not SlotKind.BOUND]
         bound_slots = [slot for slot in slots if slot.kind is SlotKind.BOUND]
         blocks = [
-            *self.describe_types(expression.type, slots),
+            *self.describe_types(expression._type_, slots),
             PromptBlock(
                 section=PromptSection.REQUEST,
                 body=self.verbalize_request(expression, backend),

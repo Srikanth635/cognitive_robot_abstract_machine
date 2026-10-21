@@ -344,7 +344,7 @@ class SlotReflector:
         """
         return [
             self._slot_for(attribute_match)
-            for attribute_match in expression.matches_with_variables
+            for attribute_match in expression._matches_with_variables_
         ]
 
     def _slot_for(self, attribute_match: AttributeMatch) -> Slot:
@@ -354,8 +354,8 @@ class SlotReflector:
         """
         declared_type = attribute_match.assigned_variable._type_
         assigned_value = attribute_match.assigned_value
-        owner = attribute_match.parent.type
-        attribute_name = attribute_match.variable._attribute_name_
+        owner = attribute_match._parent_._type_
+        attribute_name = attribute_match._variable_._attribute_name_
         alternatives = union_alternatives(declared_type)
         base = self._sortal_base_for(owner, attribute_name, assigned_value)
         kind = self._classify(declared_type, alternatives, assigned_value, base)
@@ -478,14 +478,14 @@ class SlotReflector:
         :return: The nesting attribute's access path, its type and its docstring, or
             three ``None`` when the leaf sits directly on the constructed type.
         """
-        nesting_node = attribute_match.parent
+        nesting_node = attribute_match._parent_
         if not isinstance(nesting_node, AttributeMatch):
             return None, None, None
         return (
             nesting_node.name_from_variable_access_path,
-            nesting_node.type,
+            nesting_node._type_,
             self._docstring_for(
-                nesting_node.parent.type, nesting_node.variable._attribute_name_
+                nesting_node._parent_._type_, nesting_node._variable_._attribute_name_
             ),
         )
 

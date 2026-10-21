@@ -14,12 +14,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
-from coraplex.datastructures.enums import Arms
 from coraplex.robot_plans.actions.composite.tool_based import PouringAction
 from krrood.code_generation.naming import to_snake_case
 from krrood.entity_query_language.factories import a, an, and_, not_, or_, the, variable
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.resolver.reflection import Slot, SlotKind, reflect_slots
+from semantic_digital_twin.robots.robot_parts import Arm
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Tool
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
@@ -42,7 +42,7 @@ QUERY_FACTORIES = (a, an, the, variable, and_, or_, not_)
 The krrood factories a designator's query reads, each by its name.
 """
 
-QUERY_VOCABULARY = (PouringAction, Arms, Tool, Body)
+QUERY_VOCABULARY = (PouringAction, Arm, Tool, Body)
 """
 The classes a designator's query reads, each by its name.
 """

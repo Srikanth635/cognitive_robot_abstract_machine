@@ -142,7 +142,7 @@ class TestObjects:
         with pouring_kitchen.modify_world():
             bowl.parent_connection.origin = (
                 HomogeneousTransformationMatrix.from_xyz_rpy(
-                    *bowl.global_pose.to_position().to_np()[:3],
+                    *bowl.global_pose.position.to_np()[:3],
                     roll=np.pi,
                     reference_frame=pouring_kitchen.root,
                 )
@@ -175,7 +175,7 @@ class TestObjects:
         with pouring_kitchen.modify_world():
             bowl.parent_connection.origin = (
                 HomogeneousTransformationMatrix.from_xyz_rpy(
-                    *bowl.global_pose.to_position().to_np()[:3],
+                    *bowl.global_pose.position.to_np()[:3],
                     roll=roll,
                     reference_frame=pouring_kitchen.root,
                 )

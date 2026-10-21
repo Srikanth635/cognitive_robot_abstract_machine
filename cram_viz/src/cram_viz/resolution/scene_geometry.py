@@ -130,7 +130,7 @@ class SceneGeometry(PromptContextProvider):
         geometry = {
             GeometryKey.KIND: type(annotation).__name__,
             GeometryKey.NAME: body.name.name,
-            GeometryKey.ORIGIN: rounded(body.global_pose.to_position().to_np()[:3]),
+            GeometryKey.ORIGIN: rounded(body.global_pose.position.to_np()[:3]),
             GeometryKey.BOUNDING_BOX: {
                 GeometryKey.MINIMUM: rounded([box.min_x, box.min_y, box.min_z]),
                 GeometryKey.MAXIMUM: rounded([box.max_x, box.max_y, box.max_z]),
@@ -177,8 +177,6 @@ class SceneGeometry(PromptContextProvider):
         pose = base.global_pose
         return {
             GeometryKey.NAME: base.name.name,
-            GeometryKey.POSITION: rounded(pose.to_position().to_np()[:2]),
-            GeometryKey.YAW: round(
-                float(pose.to_quaternion().to_rpy()[2]), COORDINATE_DIGITS
-            ),
+            GeometryKey.POSITION: rounded(pose.position.to_np()[:2]),
+            GeometryKey.YAW: round(float(pose.yaw), COORDINATE_DIGITS),
         }

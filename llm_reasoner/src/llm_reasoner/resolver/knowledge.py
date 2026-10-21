@@ -185,7 +185,7 @@ class KnowledgeRequester:
         :return: The consultation, with the hypothesis served for the action's
             situation when knowledge describes the action's designator.
         """
-        designator = identifier_of(action.type)
+        designator = identifier_of(action._type_)
         described = self.described_actions.describing(designator)
         if described is None:
             return KnowledgeConsultation(designator=designator)

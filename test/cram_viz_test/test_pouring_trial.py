@@ -15,7 +15,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from coraplex.datastructures.enums import Arms
 from llm_reasoner.observation.sinks import MemorySink
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
 from llm_reasoner.observation.sinks import JsonLinesSink
@@ -39,7 +38,7 @@ from cram_viz.resolution.trial import (
     SimulatedPouring,
 )
 
-from .resolutions import LANDS, MISSES, ScriptedTrials, objects_given
+from .resolutions import LANDS, MISSES, HandSide, ScriptedTrials, objects_given
 from .test_neem import PlanCollectingRecorder
 
 # %% helpers
@@ -59,7 +58,7 @@ class PourAnswer:
     What an answer constructs, as far as the check reads it.
     """
 
-    arm: Arms
+    arm: HandSide
     """
     The arm holding the source container.
     """
@@ -147,26 +146,26 @@ class TestOutcome:
 class TestSimulatedPouring:
     def test_a_pour_landing_in_the_opening_is_accepted(self):
         check = checking([LANDS])
-        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         assert [trial.outcome for trial in check.trials] == [LANDS]
 
     def test_a_pour_missing_the_opening_is_refused_with_its_outcome(self):
         check = checking([MISSES])
         with pytest.raises(OutcomeFellShort) as refusal:
-            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+            check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         assert refusal.value.outcome == MISSES
 
     def test_a_failed_simulation_is_refused_saying_why(self):
         check = checking([None])
         with pytest.raises(OutcomeFellShort) as refusal:
-            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+            check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         assert refusal.value.outcome[OutcomeKey.MOTION_FAILED] == (
-            "MotionDidNotFinish: out of reach"
+            "MotionMadeNoProgress: out of reach"
         )
 
     def test_every_pour_that_misses_is_refused_however_many_were_tried(self):
         check = checking([MISSES, MISSES, MISSES])
-        for arm in (Arms.RIGHT, Arms.LEFT, Arms.RIGHT):
+        for arm in (HandSide.RIGHT, HandSide.LEFT, HandSide.RIGHT):
             with pytest.raises(OutcomeFellShort):
                 check.check([PourAnswer(arm=arm, tilt_angle=1.85)])
         assert len(check.trials) == 3
@@ -176,7 +175,7 @@ class TestSimulatedPouring:
     ):
         check = checking([MISSES_BY_A_HAND])
         with pytest.raises(OutcomeFellShort) as refusal:
-            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+            check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         assert refusal.value.fallback_rank == (
             MISSES_BY_A_HAND[OutcomeKey.DISTANCE_FROM_OPENING_CENTRE]
         )
@@ -184,19 +183,19 @@ class TestSimulatedPouring:
     def test_a_pour_whose_motion_failed_is_never_kept(self):
         check = checking([None])
         with pytest.raises(OutcomeFellShort) as refusal:
-            check.check([PourAnswer(arm=Arms.LEFT, tilt_angle=1.85)])
+            check.check([PourAnswer(arm=HandSide.LEFT, tilt_angle=1.85)])
         assert refusal.value.fallback_rank is None
 
     def test_a_trial_runs_in_a_process_of_its_own_on_the_scene(self):
         check = checking([LANDS])
-        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         (command,) = check.run.commands
         assert command[:5] == [
             sys.executable,
             "-m",
             TRIAL_MODULE,
             str(check.bundle),
-            json.dumps({"arm": Arms.RIGHT.name, "tilt_angle": 1.85}),
+            json.dumps({"arm": HandSide.RIGHT.name, "tilt_angle": 1.85}),
         ]
 
 
@@ -226,7 +225,7 @@ def opened_by(outcome: Optional[Dict[str, Any]]) -> tuple:
     """
     check = checking([outcome])
     with pytest.raises(OutcomeFellShort) as refusal:
-        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
     return refusal.value.opens
 
 
@@ -276,7 +275,7 @@ class TestOpeningTheGeometry:
         check = checking([missing(right=0.184), missing(right=0.1)])
         for _ in range(2):
             with pytest.raises(OutcomeFellShort) as refusal:
-                check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+                check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         assert refusal.value.opens == ()
 
     def test_a_slot_the_query_states_is_never_opened(self):
@@ -286,18 +285,18 @@ class TestOpeningTheGeometry:
             run=ScriptedTrials(outcomes=[missing(right=0.184)]),
         )
         with pytest.raises(OutcomeFellShort) as refusal:
-            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+            check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         assert refusal.value.opens == ()
 
     def test_a_trial_after_the_opening_tries_the_slot_too(self):
         check = checking([missing(right=0.184), LANDS])
         with pytest.raises(OutcomeFellShort):
-            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+            check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         check.check(
-            [PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85, pour_side_offset=-0.188)]
+            [PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85, pour_side_offset=-0.188)]
         )
         assert check.trials[-1].values == {
-            "arm": Arms.RIGHT.name,
+            "arm": HandSide.RIGHT.name,
             "tilt_angle": 1.85,
             PouringSlot.POUR_SIDE_OFFSET: -0.188,
         }
@@ -306,7 +305,7 @@ class TestOpeningTheGeometry:
         check = checking([missing(right=0.184)], adjusts_geometry=False)
         assert check.withheld_slots == ()
         with pytest.raises(OutcomeFellShort) as refusal:
-            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+            check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         assert refusal.value.opens == ()
 
 
@@ -319,10 +318,10 @@ class TestObservedTrials:
     ):
         sink = MemorySink()
         check = checking([LANDS], observer=sink)
-        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         started, finished = sink.events
         assert (type(started), type(finished)) == (TrialStarted, TrialFinished)
-        assert started.values == {"arm": Arms.RIGHT.name, "tilt_angle": 1.85}
+        assert started.values == {"arm": HandSide.RIGHT.name, "tilt_angle": 1.85}
         assert finished.outcome == LANDS
         assert finished.trial == started.trial
         assert finished.seconds >= 0.0
@@ -331,15 +330,15 @@ class TestObservedTrials:
         sink = MemorySink()
         check = checking([None], observer=sink)
         with pytest.raises(OutcomeFellShort):
-            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+            check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         assert OutcomeKey.MOTION_FAILED in sink.events[-1].outcome
 
     def test_every_trial_is_reported(self):
         sink = MemorySink()
         check = checking([MISSES, LANDS], observer=sink)
         with pytest.raises(OutcomeFellShort):
-            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
-        check.check([PourAnswer(arm=Arms.LEFT, tilt_angle=1.6)])
+            check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
+        check.check([PourAnswer(arm=HandSide.LEFT, tilt_angle=1.6)])
         assert [type(event) for event in sink.events] == [
             TrialStarted,
             TrialFinished,
@@ -374,7 +373,7 @@ def trial_options(recording: NeemRecording, trial: str) -> argparse.Namespace:
 class TestKeepingTheNeemsOfTheTrials:
     def test_a_check_with_no_recording_asks_its_trials_to_keep_nothing(self):
         check = checking([LANDS])
-        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         (command,) = check.run.commands
         assert neem_options_of(command) == {}
 
@@ -386,7 +385,7 @@ class TestKeepingTheNeemsOfTheTrials:
         )
         sink = MemorySink()
         check = checking([LANDS], observer=sink, neems=recording)
-        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         (command,) = check.run.commands
         started, _ = sink.events
         assert neem_options_of(command) == {
@@ -400,14 +399,14 @@ class TestKeepingTheNeemsOfTheTrials:
             database=tmp_path / "neems.sqlite", events=tmp_path / "events.jsonl"
         )
         check = checking([LANDS], neems=recording)
-        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        check.check([PourAnswer(arm=HandSide.RIGHT, tilt_angle=1.85)])
         (command,) = check.run.commands
         assert command[:5] == [
             sys.executable,
             "-m",
             TRIAL_MODULE,
             str(check.bundle),
-            json.dumps({"arm": Arms.RIGHT.name, "tilt_angle": 1.85}),
+            json.dumps({"arm": HandSide.RIGHT.name, "tilt_angle": 1.85}),
         ]
         assert command[-1].endswith(OUTCOME_FILE)
 

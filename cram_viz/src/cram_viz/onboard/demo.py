@@ -207,8 +207,8 @@ class Recorder:
         A body's world pose as [x, y, z, qx, qy, qz, qw].
         """
         p = body.global_pose
-        t = p.to_position().to_np().flatten()
-        q = p.to_quaternion().to_np().flatten()
+        t = p.position.to_np().flatten()
+        q = p.quaternion.to_np().flatten()
         return [round(float(v), 5) for v in (t[0], t[1], t[2], q[0], q[1], q[2], q[3])]
 
     def _snap(self, executor: Executor) -> None:

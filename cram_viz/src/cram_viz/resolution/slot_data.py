@@ -1,7 +1,7 @@
 """
 A resolved slot's value as data a run keeps, and that data read back as a value in a
-world: a world object by its body's name, an enumeration member by its name, any other
-value as it is.
+world: a robot part by its own name, any other world object by its body's name, an
+enumeration member by its name, any other value as it is.
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from llm_reasoner.resolver.reflection import union_alternatives
+from semantic_digital_twin.robots.robot_parts import AbstractRobotPart
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
@@ -44,10 +45,13 @@ class SlotData:
     @staticmethod
     def from_value(value: Any) -> Any:
         """
-        :return: The value as data: a body by its name, an annotated object by its
-            body's name, an enumeration member by its name, any other value as it is.
+        :return: The value as data: a body by its name, a robot part by its own name,
+            an annotated object by its body's name, an enumeration member by its name,
+            any other value as it is.
         """
         if isinstance(value, Body):
+            return value.name.name
+        if isinstance(value, AbstractRobotPart):
             return value.name.name
         if isinstance(value, HasRootBody):
             return value.root.name.name
@@ -61,9 +65,9 @@ class SlotData:
         :param world: The world the value is found in.
         :param kind: The type the slot declares.
         :param data: The slot's value as data.
-        :return: The value: a body by its name, an annotated object by its body's name,
-            an enumeration member by its name, nothing for an optional slot left empty,
-            any other value as it is.
+        :return: The value: a body by its name, a robot part by its own name, an
+            annotated object by its body's name, an enumeration member by its name,
+            nothing for an optional slot left empty, any other value as it is.
         :raises NoObjectInWorld: When the world holds no such object.
         """
         if data is None:
@@ -82,7 +86,7 @@ class SlotData:
         found = [
             annotation
             for annotation in world.get_semantic_annotations_by_type(kind)
-            if annotation.root.name.name == data
+            if SlotData.from_value(annotation) == data
         ]
         if not found:
             raise NoObjectInWorld(kind=kind, name=data)

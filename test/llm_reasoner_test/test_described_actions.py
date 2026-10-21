@@ -55,7 +55,7 @@ class TestStructureQuery:
     def test_the_query_is_for_the_structure_decomposing_the_described_concept(self):
         described = DescribedActions().describing(POURING_DESIGNATOR)
         query = described.query({})
-        assert query.type is described.structure
+        assert query._type_ is described.structure
         assert query.construct_instance().decomposes_task == described.concept
 
     def test_the_query_fixes_the_values_given(self):
@@ -74,7 +74,7 @@ class TestFrameQuery:
     def test_the_frame_query_is_for_the_frame_framing_the_described_concept(self):
         described = DescribedActions().describing(POURING_DESIGNATOR)
         query = described.frame_query()
-        assert query.type is described.frame
+        assert query._type_ is described.frame
         assert query.construct_instance().frames_action == described.concept
 
     def test_an_entry_without_a_frame_has_none(self):

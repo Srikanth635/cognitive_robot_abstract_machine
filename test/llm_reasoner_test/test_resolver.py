@@ -315,7 +315,7 @@ class TestResolution:
         )
         query = tilt_query()
         condition = (
-            query.variable.angle < expected["ActionWithBodyAndValueSlots.angle"] + 0.1
+            query._variable_.angle < expected["ActionWithBodyAndValueSlots.angle"] + 0.1
         )
         query.where(condition)
         (action,) = query.evaluate(backend=backend)
@@ -329,7 +329,7 @@ class TestResolution:
             client=ScriptedClient(responses=[answer("body_and_angle_chosen.json")] * 2)
         )
         query = tilt_query()
-        query.where(query.variable.angle < 0.0)
+        query.where(query._variable_.angle < 0.0)
         with pytest.raises(RepairBudgetExhausted) as raised:
             list(query.evaluate(backend=backend))
         assert isinstance(raised.value.last_error, NoValidCandidates)
@@ -341,7 +341,7 @@ class TestResolution:
             client=ScriptedClient(responses=[answer("request_unsatisfiable.json")])
         )
         query = tilt_query()
-        query.where(query.variable.angle < 1.0, query.variable.angle > 2.0)
+        query.where(query._variable_.angle < 1.0, query._variable_.angle > 2.0)
         with pytest.raises(UnsatisfiableRequest):
             list(query.evaluate(backend=backend))
         assert [exchange.attempt for exchange in backend.log] == [0]

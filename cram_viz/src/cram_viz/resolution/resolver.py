@@ -482,7 +482,7 @@ class DesignatorResolver:
         consultation = backend.consultation
         return ResolvedDesignator(
             query=designator.source.text,
-            designator=query.type.__name__,
+            designator=query._type_.__name__,
             actions=[
                 self.resolved_action(
                     instance, slots, justifications, view, backend.opened_slots
@@ -519,7 +519,7 @@ class DesignatorResolver:
         :return: The prediction of where a pour ends, offered to the resolver when it
             predicts pours and the query is a pouring; none otherwise.
         """
-        if not self.predicts_pours or query.type is not PouringAction:
+        if not self.predicts_pours or query._type_ is not PouringAction:
             return None
         return PourPrediction(
             predictor=PourPredictor(
@@ -550,7 +550,7 @@ class DesignatorResolver:
         :return: The check trying a pouring in the simulation before it is accepted,
             each trial reported to the sink, or none for any other action.
         """
-        if query.type is not PouringAction:
+        if query._type_ is not PouringAction:
             return None
         return SimulatedPouring(
             bundle=bundle,
