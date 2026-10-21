@@ -86,6 +86,19 @@ The tilts, in radians, the pours are tried at: which of them the arm can reach i
 from the prediction itself, not written here.
 """
 
+PERFORMED_TILTS = (2.8, 2.9)
+"""
+Tilts, in radians, at which the simulation performs the pour from where the robot faces
+the bowl although the arm only gets there by a path other than the interpolated one the
+check follows.
+"""
+
+PERFORMED_WITHIN_THE_TOLERANCE = 2.0
+"""
+A tilt, in radians, at which the simulation also performs the pour, ending within the
+motion's tolerance of the pour pose, but which no solve of the check reaches.
+"""
+
 # %% helpers
 
 
@@ -229,6 +242,19 @@ class TestReachingThePourPose:
             predictor.predict({**POURING_VALUES, "tilt_angle": unreachable_tilt})
         assert unreachable.value.reason
 
+    @pytest.mark.parametrize("tilt_angle", PERFORMED_TILTS)
+    def test_a_pour_the_simulation_performs_is_not_refused(self, predictor, tilt_angle):
+        assert reaches(predictor, tilt_angle)
+
+    @pytest.mark.xfail(
+        strict=True,
+        reason="no solve reaches the pour pose the simulation ends within tolerance of",
+    )
+    def test_a_pour_the_simulation_ends_within_tolerance_of_is_not_refused(
+        self, predictor
+    ):
+        assert reaches(predictor, PERFORMED_WITHIN_THE_TOLERANCE)
+
     def test_asking_leaves_the_robot_where_it_was(self, predictor, unreachable_tilt):
         before = predictor.world.state.positions.copy()
         with pytest.raises(PourUnreachable):
@@ -348,6 +374,17 @@ class TestApproachTolerances:
 
 @pytest.mark.slow
 class TestAgainstThePourPerformed:
+    @pytest.mark.parametrize(
+        "tilt_angle", (*PERFORMED_TILTS, PERFORMED_WITHIN_THE_TOLERANCE)
+    )
+    def test_the_tilts_the_check_must_not_refuse_are_performed(
+        self, pouring_kitchen, tilt_angle
+    ):
+        outcome = PouringTrial.outcome_in(
+            deepcopy(pouring_kitchen), {**POURING_VALUES, "tilt_angle": tilt_angle}
+        )
+        assert OutcomeKey.MOTION_FAILED not in outcome
+
     def test_a_pour_predicted_out_of_reach_fails_in_the_simulation(
         self, pouring_kitchen, reach_by_tilt
     ):

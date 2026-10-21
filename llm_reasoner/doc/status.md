@@ -678,7 +678,10 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   (0.123 m off) and did not try the near-upside-down tilts that now land; $0.60, 4.4 minutes.
   With the pour prediction on it refused instead ($0.47, 4.7 minutes): the prediction told it
   2.0 to 2.8 rad are out of reach, though the simulation performs 2.0, 2.8 and 2.9 rad, because
-  the reach check solves with the base fixed (`pour_prediction.md` §8). Open.
+  the reach check followed an interpolated path the simulation does not (`pour_prediction.md`
+  §8; not the base, which does not move, nor the tolerances). The check now tries the pour
+  pose from every state it reached: 2.8 and 2.9 rad are accepted and the simulation's
+  failures at 2.2–2.6, 3.0 and 3.07 stay refused; 2.0 rad is still wrongly refused (pinned).
 
 ## 3. Live testing
 
