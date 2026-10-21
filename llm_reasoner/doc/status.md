@@ -634,6 +634,14 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   hypothesis is generated again. With this, the four duplicated concepts the audit named are
   merged. Tests and HermiT only, not run live.
 
+- Shapes for the perspective answers (2026-10-21): `StructureShapes` loads the SHACL shapes of
+  every module of either family, and `action_perspectives/shapes/` holds 12 for the core, the
+  frame, the image schemas and the failures (9 errors, 3 warnings; listed in
+  `knowledge_perspectives.md` §9 phase 7), so perspective answers are checked across
+  fragments and told the rules as the Flanagan ones are. The scripted failures answer broke
+  one (a change towards a target naming none) and was corrected. No vocabulary changed. Tests
+  only, not run live.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
