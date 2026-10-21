@@ -345,3 +345,8 @@ Begin with Phase 0 and the smallest Phase 1/2 slice: a pinned source snapshot, p
 
 This sequence produces a useful source-navigation capability before investing in LLM enrichment, publication credentials or a new interface. The first implementation review should contain the tested contracts and exact dependency proposal, not a large unverified wiki.
 
+
+
+## Robot plan generation development
+
+The requested simulation-plan use case has its own [PG1–PG6 plan](plan-generation.md). It builds on the source, context and notebook capabilities above, with source evidence first, then action selection, complete proposals, simulation validation, bounded repair and evaluation. Its phase numbers do not replace the platform phases.

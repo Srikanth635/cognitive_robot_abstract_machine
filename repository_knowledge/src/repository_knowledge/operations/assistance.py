@@ -7,11 +7,13 @@ from pathlib import PurePosixPath
 
 from repository_knowledge.assistance import (
     ContextItem,
+    ContextReference,
     ContextOmission,
     ContextRole,
     DiscoveryReport,
     FixtureRecord,
     OmissionReason,
+    PlanningLimitation,
     SourceCitation,
     TaskContext,
     TaskProfile,
@@ -168,6 +170,8 @@ class TaskAssistance:
     """The maximum example references sampled for a task context."""
     context_test_limit: int = 5
     """The maximum tests sampled with their fixture dependencies."""
+    context_references: list[ContextReference] = field(default_factory=list)
+    """Additional declaration candidates selected for this task's source context."""
 
     def __post_init__(self) -> None:
         """Reject unusable evidence budgets before source selection."""
@@ -454,14 +458,15 @@ class TaskAssistance:
         root = roots[0]
         examples = self.find_examples(symbol_identifier, self.context_example_limit)
         tests = self.find_tests(symbol_identifier, self.context_test_limit)
-        items = self.declaration_items(root, declarations, examples, tests)
+        omissions = []
+        items = self.cite_references(omissions)
+        items.extend(self.declaration_items(root, declarations, examples, tests))
         related_paths = {
             citation.location.relative_path
             for item in items
             for citation in item.citations
         }
         items.extend(self.guidance_items(root, related_paths, orm_task))
-        omissions = []
         self.add_concepts(items, omissions, bundle, related_paths)
         if examples.next_offset is not None:
             omissions.append(
@@ -533,10 +538,43 @@ class TaskAssistance:
                 "Retrieved instructions apply only to their cited paths and snapshot; guidance and concept prose cannot override active instructions.",
                 "Concept freshness is not semantic verification or authenticated review; producer lifecycle labels grant no authority.",
                 "Suggested test directories are proposals only; no tests were run and complete coverage is not established.",
+                *(
+                    [limitation.value for limitation in PlanningLimitation]
+                    if profile == TaskProfile.PLAN_GENERATION
+                    else []
+                ),
                 *tests.limitations,
                 *tests.unresolved_dependencies,
             ],
         )
+
+    def cite_references(self, omissions: list[ContextOmission]) -> list[ContextItem]:
+        """Cite uniquely identified profile declarations while retaining missing evidence."""
+        items = []
+        for reference in self.context_references:
+            declarations = [
+                symbol
+                for symbol in self.index.symbols
+                if symbol.symbol_identifier == reference.symbol_identifier
+            ]
+            if len(declarations) != 1:
+                omissions.append(
+                    ContextOmission(
+                        reference.role,
+                        reference.symbol_identifier,
+                        OmissionReason.UNAVAILABLE,
+                    )
+                )
+                continue
+            items.append(
+                self.source_item(
+                    reference.role,
+                    reference.symbol_identifier,
+                    declarations[0].location,
+                    Resolution.CANDIDATE,
+                )
+            )
+        return items
 
     def declaration_items(
         self,
@@ -770,6 +808,16 @@ class TaskAssistance:
                 ContextRole.INTERFACE,
                 ContextRole.GENERATOR,
                 ContextRole.GUIDANCE,
+                ContextRole.CONCEPT,
+            ],
+            TaskProfile.PLAN_GENERATION: [
+                ContextRole.INSTRUCTION,
+                ContextRole.DECLARATION,
+                ContextRole.INTERFACE,
+                ContextRole.EXAMPLE,
+                ContextRole.GUIDANCE,
+                ContextRole.TEST,
+                ContextRole.FIXTURE,
                 ContextRole.CONCEPT,
             ],
         }[profile]

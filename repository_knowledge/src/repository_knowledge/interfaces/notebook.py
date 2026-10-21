@@ -19,6 +19,7 @@ from mcp.client.stdio import stdio_client
 from mcp.types import TextContent
 
 from repository_knowledge.adapters.serialization import RecordCodec
+from repository_knowledge.assistance import TaskProfile
 from repository_knowledge.exceptions import SourceSnapshotMismatch
 from repository_knowledge.interfaces.agents import AgentRequest, AgentTool
 from repository_knowledge.interfaces.cli import Option, RevisionSelector
@@ -189,6 +190,7 @@ class NotebookTools:
         offset: int = 0,
         depth: int = 1,
         character_budget: int = 16000,
+        profile: TaskProfile = TaskProfile.CODE_EXTENSION,
     ) -> str:
         """
         Find source symbols, references, relationships, examples or tests; prepare
@@ -205,6 +207,7 @@ class NotebookTools:
                 offset=offset,
                 depth=depth,
                 character_budget=character_budget,
+                profile=profile,
             )
         )
 

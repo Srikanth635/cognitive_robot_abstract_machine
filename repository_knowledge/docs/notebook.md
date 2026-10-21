@@ -79,3 +79,10 @@ Optional saving writes only typed `ModelTrial` evidence into the ignored `.cache
 Tests exercise the actual SDK tool loop with a mocked provider and real MCP subprocesses. They verify usage aggregation, typed round trips, credential exclusion, default live refusal and source-change refusal. nbformat validates the clean notebook, and nbclient executes every cell against an isolated committed fixture using the configured interpreter. No CI credential or external model call is needed; the package CI job installs the optional extra and uses LiteLLM's bundled cost map without an import-time metadata fetch.
 
 To measure usefulness, choose one representative question and one small coding task with expected evidence and independent acceptance checks. Keep source, model and task fixed, compare against your normal source-navigation workflow, and record actual provider usage plus end-to-end task results. A generated proposal or a smaller response alone does not establish correctness or token savings. Live model trials, hosted CI and a successor canonical trust-root activation remain separate work.
+
+
+## Robot planning context
+
+For a simulation-plan request, the model-facing `query_repository` function accepts `profile="plan-generation"` with the existing `prepare-context` tool and a qualified `symbol_identifier`. The profile adds action/plan contracts, deferred-grounding evidence and methods from the PR2 place-setting demonstration. Inspect omissions and excerpt limits; use bounded symbol queries for the parts omitted. The demonstration defaults to kinematic simulation, and its source does not prove support for a different robot or backend.
+
+This is PG1 of the [robot plan generation development](plan-generation.md). The notebook can propose text using this evidence, but a dedicated complete-plan workflow and simulation validator are subsequent phases. No robot world or provider request is started by selecting the profile.

@@ -115,3 +115,7 @@ Phase 9 adds reproducible source/structural/context comparisons, storage and cli
 ## Try a model
 
 Open [the notebook](notebooks/knowledge_playground.ipynb) with the **CRAM Knowledge** kernel. The default run verifies real MCP navigation without a model or API key. Select a provider/model and explicitly enable live requests to try source-grounded Q&A or a code proposal, then inspect reported tokens and query traces. Proposals are returned as text. See [setup, refresh commands and credential handling](docs/notebook.md). The optional `notebook` extra supplies the SDK and Jupyter tooling; core indexing stays independent of them.
+
+## Robot simulation plans
+
+The [PG1–PG6 development plan](docs/plan-generation.md) covers action discovery, full plan proposals, deferred grounding, simulation validation and measured repair. Its first phase adds `prepare-context --profile plan-generation` for an explicit qualified action or plan declaration. It supplies cited framework contracts and complete-demonstration method references within the shared budget, with missing evidence and runtime limits visible. CLI, MCP and the notebook use the same result. This phase supplies planning evidence; full plan generation and simulation validation follow in PG3 and PG4.

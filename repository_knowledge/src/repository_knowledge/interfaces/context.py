@@ -4,7 +4,7 @@ Dispatch task requests through coherent source and test-analysis contracts.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from repository_knowledge.exceptions import InvalidQuery, SourceScopeMismatch
 from repository_knowledge.interfaces.cli import Command, CommandArguments
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from repository_knowledge.concepts import KnowledgeBundle
     from repository_knowledge.assistance import (
         ChangeReport,
+        ContextReference,
         DiscoveryReport,
         TaskContext,
     )
@@ -52,6 +53,11 @@ class ContextApplication:
     The committed baseline source boundary.
     """
 
+    context_references: list[ContextReference] = field(default_factory=list)
+    """
+    Additional source declarations selected for the requested task purpose.
+    """
+
     def execute(
         self, arguments: CommandArguments, bundle: KnowledgeBundle
     ) -> DiscoveryReport | TaskContext | ChangeReport:
@@ -66,7 +72,9 @@ class ContextApplication:
         freshness = FreshnessCheck(IndexContents(index), self.source_reader)
         freshness.check(arguments.revision).require_current()
         catalog = self.test_analyzer.discover(index)
-        service = TaskAssistance(index, catalog)
+        service = TaskAssistance(
+            index, catalog, context_references=self.context_references
+        )
         result: DiscoveryReport | TaskContext | ChangeReport
         match arguments.command:
             case Command.FIND_EXAMPLES:

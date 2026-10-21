@@ -11,6 +11,8 @@ from enum import StrEnum
 from dataclasses import dataclass, replace
 
 from repository_knowledge.interfaces.agents import RequestApplication, ApplicationResult
+from repository_knowledge.assistance import TaskProfile
+from repository_knowledge.adapters.plan_sources import CoraplexPlanningSources
 from repository_knowledge.interfaces.clients import ClientConfiguration, ClientParser
 from repository_knowledge.adapters.canonical_process import PublicationProcess
 
@@ -128,6 +130,12 @@ class LocalApplication(RequestApplication):
                 PytestSource(),
                 baseline_reader,
                 GitSource(arguments.repository_root),
+                context_references=(
+                    CoraplexPlanningSources().select()
+                    if arguments.command == Command.PREPARE_CONTEXT
+                    and arguments.profile == TaskProfile.PLAN_GENERATION
+                    else []
+                ),
             ).execute(arguments, knowledge.bundle)
             if arguments.command == Command.PREPARE_CONTEXT:
                 result = replace(result, canonical_status=knowledge.canonical_status)

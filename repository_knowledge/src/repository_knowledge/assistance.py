@@ -27,6 +27,7 @@ class TaskProfile(StrEnum):
     DEBUGGING = "debugging"
     REVIEW = "review"
     MIGRATION = "migration"
+    PLAN_GENERATION = "plan-generation"
 
 
 class ContextRole(StrEnum):
@@ -50,6 +51,16 @@ class OmissionReason(StrEnum):
     BUDGET = "character-budget"
     UNAVAILABLE = "unavailable"
     INVALID_KNOWLEDGE = "knowledge-not-current-or-policy-invalid"
+
+
+class PlanningLimitation(StrEnum):
+    """Restrictions on interpreting source evidence as an executable robot plan."""
+
+    SOURCE_ONLY = (
+        "Planning context is static source evidence; no plan was generated or executed."
+    )
+    CAPABILITY_UNKNOWN = "An action declared in source does not establish compatibility with a robot or simulation backend."
+    GROUNDING_UNKNOWN = "World-dependent choices require supported runtime grounding; missing evidence does not resolve a binding."
 
 
 class ChangeKind(StrEnum):
@@ -143,6 +154,16 @@ class DiscoveryReport:
 
 
 # %% context evidence
+
+
+@dataclass(frozen=True)
+class ContextReference:
+    """An operator-selected declaration to include as task-relevance evidence."""
+
+    role: ContextRole
+    """The evidence category requested for the declaration."""
+    symbol_identifier: str
+    """The qualified source identity to resolve within the captured index."""
 
 
 @dataclass(frozen=True)
