@@ -150,3 +150,34 @@ upright to upside down, read the labels from the prediction, and check that ever
 predicted out of reach fails in the simulation (a slow test), that the labels are the same
 across step sizes, and that the grid holds both kinds. The converse is not claimed, since
 the simulation also fails where only a collision stops it.
+
+## 8. The robot turns to face the bowl before pouring (2026-10-21)
+
+Found in a cram_viz run of `objects_given` (pitcher into bowl, arm and tilt open): the
+resolver's third pour, 2.9 rad on the right arm, failed as a motion (`MotionDidNotFinish`)
+and its fourth answer was cut off, so the best pour kept missed by 0.114 m. The plan
+(`PouringExecution.steps_before_pour`) had the robot stand facing the *pitcher*, pick it up and
+pour from that same standing; the pour poses are around the bowl, which lies 0.389 rad to the
+left of that heading, 0.66 m away.
+
+Measured by inserting a `NavigateAction` after the pick-up (pitcher, bowl and right arm of
+`simple_pouring`, about 80 simulated pours):
+
+- Standing elsewhere changes nothing for the pours that finish at moderate tilts: the mouth
+  ends 0.187–0.189 m from the opening's centre at 1.85 rad wherever the robot stands, since the
+  sideways miss comes from the pour pose relative to the bowl (§5), not from the base.
+- Turning in place changes which tilts the arm can make. With no turn 2.8, 2.9 and 3.0 rad
+  all fail; with a turn of 0.3–0.5 rad 2.8 and 2.9 land (0.036–0.053 m) and 3.0 lands from 0.4
+  rad (0.016 m).
+- Reach is jagged in this region. Facing the bowl exactly (0.389 rad) lands 2.8 rad (0.049 m)
+  and 2.9 rad (0.035 m) but fails 3.0, and 2.6 rad, which finishes without the turn (0.094 m
+  off), fails with it. Only trying a pour tells.
+- The pours that land are nearly upside down (2.8–3.0 rad, 160–172°), not natural pours.
+
+The plan now turns the robot in place to face the target container after the pick-up
+(`facing_pose`), in `steps_before_pour`, so the trials, Execute and the pour prediction (which
+simulates the same pick-up) all stand there. From the turned base the reach check's solver, at
+its default of 200 iterations, stopped short for two recorded pours that the simulation performs
+(approach offsets of 0.04 m, predicted out of reach), and a 0.7 rad step refused 1.96 rad; the
+check now allows 400 iterations (`ApproachTolerances.max_solver_iterations`), which restores
+both. Not done: choosing the stance (other than facing the target) by search.
