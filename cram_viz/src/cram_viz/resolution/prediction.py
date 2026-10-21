@@ -35,6 +35,7 @@ from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.spatial_computations.ik_solver import IKSolverException
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix, Pose
 from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Dict, List, Mapping, Self
 
 from cram_viz.resolution.execution import PouringExecution
@@ -256,7 +257,8 @@ class PourReach:
         :param pre_pour_pose: The pose the tool starts the pour from.
         :param pour_pose: The tilted pose the tool pours at.
         :raises PourUnreachable: When inverse kinematics finds no arm configuration for
-            a pose between them.
+            the pour pose, from where the pick-up left the arm or from any pose between
+            the pre-pour pose and it that it reaches.
         """
         world = deepcopy(self.world)
         for dof in world.degrees_of_freedom:
@@ -264,25 +266,65 @@ class PourReach:
         world.notify_state_change()
         robot = world.get_semantic_annotations_by_type(AbstractRobot)[0]
         tool_frame = ViewManager.get_end_effector_view(arm, robot).tool_frame
-        try:
-            for pose in self.poses_between(
-                pre_pour_pose.to_homogeneous_matrix().to_np(),
-                pour_pose.to_homogeneous_matrix().to_np(),
-                self.tolerances,
-            ):
-                solution = world.compute_inverse_kinematics(
-                    robot.root,
-                    tool_frame,
-                    HomogeneousTransformationMatrix(pose, reference_frame=world.root),
-                    max_iterations=self.tolerances.max_solver_iterations,
-                )
-                for dof, position in solution.items():
-                    world.state[dof.id].position = position
-                world.notify_state_change()
-        except IKSolverException as failed:
-            raise PourUnreachable(
-                reason=f"{type(failed).__name__}: {failed}"
-            ) from failed
+        *waypoints, goal = self.poses_between(
+            pre_pour_pose.to_homogeneous_matrix().to_np(),
+            pour_pose.to_homogeneous_matrix().to_np(),
+            self.tolerances,
+        )
+        configurations = [self.configuration_of(world)]
+        for waypoint in waypoints:
+            try:
+                self.solve_for(world, robot, tool_frame, waypoint)
+            except IKSolverException:
+                continue
+            configurations.append(self.configuration_of(world))
+        failures: List[IKSolverException] = []
+        for configuration in reversed(configurations):
+            self.restore(world, configuration)
+            try:
+                self.solve_for(world, robot, tool_frame, goal)
+            except IKSolverException as failed:
+                failures.append(failed)
+                continue
+            return
+        raise PourUnreachable(reason=f"{type(failures[-1]).__name__}: {failures[-1]}")
+
+    def solve_for(
+        self, world: World, robot: AbstractRobot, tool_frame: Body, pose: np.ndarray
+    ) -> None:
+        """
+        Move the arm in the world to a configuration with the tool at the pose.
+
+        :param pose: The 4x4 pose the tool is to be at.
+        :raises IKSolverException: When inverse kinematics finds none.
+        """
+        solution = world.compute_inverse_kinematics(
+            robot.root,
+            tool_frame,
+            HomogeneousTransformationMatrix(pose, reference_frame=world.root),
+            max_iterations=self.tolerances.max_solver_iterations,
+        )
+        for dof, position in solution.items():
+            world.state[dof.id].position = position
+        world.notify_state_change()
+
+    @staticmethod
+    def configuration_of(world: World) -> Dict[Any, float]:
+        """
+        :return: The position of every degree of freedom of the world.
+        """
+        return {
+            dof.id: world.state[dof.id].position for dof in world.degrees_of_freedom
+        }
+
+    @staticmethod
+    def restore(world: World, configuration: Dict[Any, float]) -> None:
+        """
+        Put every degree of freedom of the world back to the configuration.
+        """
+        for dof_id, position in configuration.items():
+            world.state[dof_id].position = position
+        world.notify_state_change()
 
     @staticmethod
     def poses_between(

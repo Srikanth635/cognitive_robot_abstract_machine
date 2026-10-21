@@ -205,9 +205,27 @@ performs 2.0, 2.8 and 2.9 rad (and fails 2.2, 2.4, 2.6, 3.0 and 3.07):
 | tilt (rad) | 1.5–1.96 | 2.0 | 2.2–2.6 | 2.8 | 2.9 | 3.0, 3.07 |
 |---|---|---|---|---|---|---|
 | simulation | finishes | finishes | fails | finishes | finishes | fails |
-| reach check | reachable | out of reach | out of reach | out of reach | out of reach | out of reach |
+| reach check, before | reachable | out of reach | out of reach | out of reach | out of reach | out of reach |
+| reach check, now | reachable | out of reach | out of reach | reachable | reachable | out of reach |
 
-The check solves with the base fixed, while the pour is a whole-body motion; so §7's "a pour
-predicted unreachable is certain to fail" does not hold from the turned base (it held for the
-nine-tilt grid its test uses, which has no tilt at 2.0, 2.8 or 2.9). Open: let the reach check
-move the base, or stop it from refusing.
+Why, measured (2026-10-21, same scene, right arm):
+
+- It is not the base. The simulated pour moves the base 0.000 m. Inverse kinematics from the
+  world's root, with the base free, calls every tilt reachable, by driving the base 0.2 to 1.1
+  m and up to 1.1 rad; it is no model of the pour.
+- It is not the tolerances. The tool ends within 5–6 mm and 0.005–0.014 rad of the pour pose
+  the check solves for, inside the motion's thresholds (5 mm, 0.02 rad), but loosening the
+  solver's slack to 2 cm or its velocity limit, or allowing up to 3000 iterations, changes no
+  label.
+- It is the path. The check followed the interpolated orientation from the pre-pour pose to
+  the pour pose and refused when any step stopped short, but the simulation does not follow
+  that path, and from some intermediate state the final pose is out of the solver's reach
+  although the pick-up's own state reaches it.
+
+The check now treats the intermediate poses as stepping stones: it skips one it cannot reach
+and accepts the pour pose if it can be solved from the state the pick-up left or from any
+intermediate state reached (`PourReach.check`). Against the simulation: 2.8 and 2.9 rad are no
+longer refused, and 2.2, 2.4, 2.6, 3.0 and 3.07 rad, which the simulation fails, still are.
+2.0 rad is still refused although the simulation performs it (no start reaches it); a test pins
+that as a known failure. §7's "predicted unreachable is certain to fail" therefore still does
+not hold, at 2.0 rad.
