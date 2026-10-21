@@ -695,7 +695,12 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   beyond the opening's radius, or the mouth not above the opening. A box "adjust the pour
   geometry", ticked by default, turns it off (`adjust_geometry: false`). The resolved action
   lists an opened slot as chosen. This relaxes the rule that the query alone decides the open
-  slots, as the user decided. Tests and a simulator check; the live run follows.
+  slots, as the user decided. Live (Sonnet 5.5, `objects_given`, every perspective, the liquid
+  knowledge served from the store, no pour prediction): the first pour (right arm, 1.85 rad)
+  missed 0.187 m, the refusal opened `pour_side_offset` alone, and the second pour set it to
+  -0.184 m and landed 4 mm from the opening's centre; $0.12, 0.6 minutes, two pours. No
+  turning of the base was involved in that pour's reach (the plan turns to face the bowl
+  after the pick-up, as before).
 
 ## 3. Live testing
 

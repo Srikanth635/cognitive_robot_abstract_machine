@@ -240,3 +240,9 @@ about 0.11 m or more beside the opening, and "fixing this needs pour_side_offset
 pour_approach_offset, which are not open slots". With those slots open, the same scene lands
 in two pours (`knowledge_perspectives.md` §13.8).
 
+The remedy that works for `objects_given` is the geometry rather than the tilt (2026-10-21):
+the refusal of a pour that ends beside the opening now opens `pour_side_offset` (and the
+approach offset or height when the miss is along the approach or below the rim), and the
+resolver sets it. Live: right arm, 1.85 rad, `pour_side_offset` -0.184 m, 4 mm from the
+opening's centre in the second pour, $0.12 (`status.md`).
+
