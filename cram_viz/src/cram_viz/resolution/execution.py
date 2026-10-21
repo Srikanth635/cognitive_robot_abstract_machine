@@ -2,7 +2,8 @@
 Performing a run's resolved pouring action in the simulation, from the environment the
 run started from: the scene's world built anew, the robot readied with its arms parked
 and its torso lowered, brought to face the source container, which it picks up with the
-resolved arm, and the pouring performed as resolved.
+resolved arm, then turned to face the target container, and the pouring performed as
+resolved.
 """
 
 from __future__ import annotations
@@ -102,6 +103,24 @@ def standing_pose(world: World, base: Body, source: Body) -> Pose:
     )
 
 
+def facing_pose(standing: Pose, target: Body, world: World) -> Pose:
+    """
+    :param standing: The pose the robot stands at.
+    :param target: The body to face.
+    :param world: The world the robot stands in.
+    :return: The pose at the same place turned in place to face the target.
+    """
+    world_P_stand = standing.to_position().to_np()[:2]
+    world_P_target = target.global_pose.to_position().to_np()[:2]
+    heading = world_P_target - world_P_stand
+    return Pose.from_xyz_rpy(
+        x=float(world_P_stand[0]),
+        y=float(world_P_stand[1]),
+        yaw=float(np.arctan2(heading[1], heading[0])),
+        reference_frame=world.root,
+    )
+
+
 # %% performing
 
 
@@ -109,7 +128,8 @@ def standing_pose(world: World, base: Body, source: Body) -> Pose:
 class PouringExecution:
     """
     Performs a resolved pouring action in a world: the robot parks its arms, lowers its
-    torso, faces the source container, picks it up with the resolved arm, and pours.
+    torso, faces the source container, picks it up with the resolved arm, turns to face
+    the target container, and pours.
     """
 
     world: World
@@ -188,7 +208,7 @@ class PouringExecution:
     def plan(self) -> SequentialNode:
         """
         :return: The plan: park the arms, lower the torso, face the source container,
-            pick it up with the resolved arm, pour.
+            pick it up with the resolved arm, face the target container, pour.
         """
         action = self.action()
         return sequential(
@@ -198,8 +218,9 @@ class PouringExecution:
     def steps_before_pour(self, action: PouringAction) -> List[ActionDescription]:
         """
         :param action: The pouring the steps prepare.
-        :return: Parking the arms, lowering the torso, facing the source container and
-            picking it up with the action's arm.
+        :return: Parking the arms, lowering the torso, facing the source container,
+            picking it up with the action's arm and turning in place to face the target
+            container, which brings the pour poses within the arm's reach.
         """
         robot = self.robot
         grasp = GraspDescription(
@@ -207,13 +228,13 @@ class PouringExecution:
             vertical_alignment=VerticalAlignment.NoAlignment,
             end_effector=ViewManager.get_end_effector_view(action.arm, robot),
         )
+        standing = standing_pose(self.world, robot.root, action.source_container.root)
         return [
             ParkArmsAction(Arms.BOTH),
             MoveTorsoAction(REACHING_TORSO),
-            NavigateAction(
-                standing_pose(self.world, robot.root, action.source_container.root)
-            ),
+            NavigateAction(standing),
             PickUpAction(action.source_container, action.arm, grasp),
+            NavigateAction(facing_pose(standing, action.target_container, self.world)),
         ]
 
     def context(self) -> Context:

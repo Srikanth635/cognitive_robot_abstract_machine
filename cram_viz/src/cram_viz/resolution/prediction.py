@@ -220,6 +220,13 @@ class ApproachTolerances:
     the arm reaches.
     """
 
+    max_solver_iterations: int = 400
+    """
+    The most iterations inverse kinematics may take to solve for one pose. Fewer stop
+    short of poses the arm reaches, from where the robot stands after turning to face
+    the target.
+    """
+
 
 @dataclass
 class PourReach:
@@ -267,6 +274,7 @@ class PourReach:
                     robot.root,
                     tool_frame,
                     HomogeneousTransformationMatrix(pose, reference_frame=world.root),
+                    max_iterations=self.tolerances.max_solver_iterations,
                 )
                 for dof, position in solution.items():
                     world.state[dof.id].position = position

@@ -662,6 +662,18 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   (`pour_geometry_open`, knowledge served from the store) the second pour landed 5 mm from the
   opening's centre, for $0.14.
 
+- The robot faces the target before pouring (2026-10-21, `pour_prediction.md` §8): a cram_viz
+  run of `objects_given` failed its third pour (2.9 rad, `MotionDidNotFinish`) and had its
+  fourth answer cut off. Measured in the simulation, turning the base in place after the
+  pick-up lets 2.8 and 2.9 rad finish and land (0.049 and 0.035 m) though no base position
+  moves the sideways miss of natural tilts, and reach there is jagged (3.0 rad fails at the
+  exact facing turn, 2.6 rad finishes without it). The plan (`steps_before_pour`, so trials,
+  Execute and the pour prediction) now ends the pick-up with a turn in place to face the
+  target container (`facing_pose`). The reach check's solver budget became
+  `ApproachTolerances.max_solver_iterations` (400): from the turned base 200 iterations
+  refused two recorded pours the simulation performs. The NEEM sqlite slow test fails in this
+  environment with or without the change (no `json_msgs` module).
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
