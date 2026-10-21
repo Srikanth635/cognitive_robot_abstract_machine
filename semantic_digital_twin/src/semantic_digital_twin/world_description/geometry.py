@@ -589,7 +589,7 @@ class Shape(ABC, SubclassJSONSerializer, HasSimulatorProperties):
         center_z = (bounding_box.min_z + bounding_box.max_z) / 2
         self.origin = HomogeneousTransformationMatrix.from_point_rotation_matrix(
             point=Point3(-center_x, -center_y, -center_z),
-            rotation_matrix=self.origin.to_rotation_matrix(),
+            rotation_matrix=self.origin.rotation_matrix,
             reference_frame=self.origin.reference_frame,
         )
 
@@ -941,6 +941,35 @@ class Mesh(Shape):
             origin=origin,
             scale=scale,
         )
+
+    @classmethod
+    def triangular_prism(
+        cls,
+        side: float,
+        height: float,
+        origin: Optional[HomogeneousTransformationMatrix] = None,
+    ) -> "Mesh":
+        """
+        Create an upright prism of equilateral cross-section, its apex pointing along +x.
+
+        The prism is centred on the middle of its bounding box rather than on its
+        centroid, so its flat face and its apex stand equally far from its origin.
+
+        :param side: Side of the triangular cross-section.
+        :param height: Height of the prism along z.
+        :param origin: Origin of the mesh.
+        :return: Mesh wrapping the prism.
+        """
+        circumradius = side / math.sqrt(3)
+        inradius = side / (2 * math.sqrt(3))
+        outline = np.array(
+            [[circumradius, 0.0], [-inradius, side / 2], [-inradius, -side / 2]]
+        )
+        solid = trimesh.creation.extrude_triangulation(
+            vertices=outline, faces=np.array([[0, 1, 2]]), height=height
+        )
+        solid.apply_translation([-(circumradius - inradius) / 2, 0.0, -height / 2])
+        return cls.from_trimesh(mesh=solid, origin=origin)
 
     @classmethod
     def from_vertices_and_faces(

@@ -23,6 +23,7 @@ from typing_extensions import (
 )
 
 from krrood.entity_query_language.factories import variable_from
+from krrood.exceptions import UnboundGenericParameter
 from krrood.patterns.subclass_safe_generic import SubClassSafeGeneric
 from krrood.utils import get_generic_type_parameters
 from ..dataset.generic_under_annotation_holding_metaclass import (
@@ -734,3 +735,67 @@ def test_subclass_declaring_no_annotations_is_bound_under_a_metaclass_holding_an
 
     (value_field,) = fields(BoundToInt)
     assert value_field.type is int
+
+
+# %% reading back what a parameter is bound to
+
+
+def test_a_parameter_an_intermediate_class_bound_is_read_back():
+    """
+    Each parameter is read back by name, so a class that binds its own parameter still
+    reports what its bases bound theirs to.
+    """
+    ContentType = TypeVar("ContentType")
+    LabelType = TypeVar("LabelType")
+
+    @dataclass
+    class Container(Generic[ContentType], SubClassSafeGeneric):
+        content: ContentType
+
+    @dataclass
+    class LabelledContainer(Container[str], Generic[LabelType], SubClassSafeGeneric):
+        label: LabelType
+
+    @dataclass
+    class CountingContainer(LabelledContainer[int]):
+        pass
+
+    assert CountingContainer.get_type_of_generic_parameter(ContentType) is str
+    assert CountingContainer.get_type_of_generic_parameter(LabelType) is int
+
+
+def test_a_parameter_nothing_bound_is_rejected():
+    """
+    A parameter no class in the chain bound to a concrete type is an error, rather than
+    a silently wrong type.
+    """
+    ContentType = TypeVar("ContentType")
+
+    @dataclass
+    class Container(Generic[ContentType], SubClassSafeGeneric):
+        content: ContentType
+
+    with pytest.raises(UnboundGenericParameter):
+        Container.get_type_of_generic_parameter(ContentType)
+
+
+def test_a_parameter_only_renamed_by_a_subclass_is_rejected():
+    """
+    Passing a parameter on under another name binds nothing, so it is rejected like a
+    parameter that was never bound.
+    """
+    ContentType = TypeVar("ContentType")
+    OtherType = TypeVar("OtherType")
+
+    @dataclass
+    class Container(Generic[ContentType], SubClassSafeGeneric):
+        content: ContentType
+
+    @dataclass
+    class RenamingContainer(
+        Container[OtherType], Generic[OtherType], SubClassSafeGeneric
+    ):
+        pass
+
+    with pytest.raises(UnboundGenericParameter):
+        RenamingContainer.get_type_of_generic_parameter(ContentType)
