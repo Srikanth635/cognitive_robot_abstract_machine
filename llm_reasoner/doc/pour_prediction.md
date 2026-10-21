@@ -181,3 +181,12 @@ its default of 200 iterations, stopped short for two recorded pours that the sim
 (approach offsets of 0.04 m, predicted out of reach), and a 0.7 rad step refused 1.96 rad; the
 check now allows 400 iterations (`ApproachTolerances.max_solver_iterations`), which restores
 both. Not done: choosing the stance (other than facing the target) by search.
+
+Live re-run of the same `objects_given` (Sonnet 5.5, every perspective, the liquid knowledge
+served from the store, no pour prediction): it did not land. The resolver tried right 1.85 rad
+(0.187 m off), left 1.85 (motion failed), right 1.57 (0.199 m) and right 0.6 (0.123 m), kept the
+last, and said itself that the right arm probably cannot land the mouth within the opening.
+It did not try the near-upside-down tilts the first run reached (2.9 rad), which now land from
+the turned base, so facing the bowl widens what can land but does not make the model look
+there; $0.60 and 4.4 minutes, all of it the resolver's. The pour prediction (off in cram_viz)
+is what names tilts near 3 rad as the ones that land (§5); with it the model would be told.
