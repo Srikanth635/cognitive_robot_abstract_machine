@@ -2,7 +2,9 @@
  * addon/designator_panel.js — resolving underspecified actions with llm_reasoner.
  *
  * The scene's predefined designators are krrood match queries; a click copies one into
- * the query box, where it can be edited before Resolve resolves it in the scene (POST
+ * the query box, where it can be edited before Resolve resolves it in the scene. The box
+ * suggests the action designators and, inside one, its parameters, through cramera's own
+ * suggestion menu, as the EQL box suggests names (POST
  * /api/resolution/resolve). What the resolver chose, why, what that rests on and the
  * pours it tried in the simulation are shown below. Execute performs the resolution's
  * run under the live viewer. Runs kept earlier are listed and shown again on a click, or
@@ -28,10 +30,10 @@
     const view = window.ResolutionView;
     root.innerHTML =
       '<div class="panel-head">' +
-      '  <h2>Designators · resolve with llm_reasoner</h2>' +
+      '  <h2>Underspecified Action Designators</h2>' +
       '</div>' +
       '<div class="query-box">' +
-      '  <textarea id="resolution-query" rows="3" spellcheck="false" placeholder="the(PouringAction)(…)   —  pick a designator below, edit it, then Resolve"></textarea>' +
+      '  <textarea id="resolution-query" rows="3" spellcheck="false" placeholder="the(PouringAction)(…)   —  type for suggestions or pick a designator below, then Resolve"></textarea>' +
       '  <div class="query-actions">' +
       '    <button id="resolution-resolve" class="primary" title="Resolve the query in the box with llm_reasoner in this scene">Resolve</button>' +
       '    <button id="resolution-execute" title="Perform the resolved designator in the simulation, under the live viewer" disabled>Execute</button>' +
@@ -62,6 +64,21 @@
     const perspectivesEl = root.querySelector('#resolution-perspectives');
     const adjustmentEl = root.querySelector('#resolution-adjustment');
     executeBtn.disabled = true;  // nothing to execute before a run is shown
+
+    // ---- the box suggests the action designators and their parameters -------------------
+    let vocabulary = [];  // what the server offers to complete
+    const suggestions = EqlSuggestions.of({
+      input: queryEl,
+      anchor: root.querySelector('.query-box'),
+      entries: function () {
+        return DesignatorCompletion.entriesAt(vocabulary, queryEl.value, queryEl.selectionStart);
+      },
+      fetchMembers: function () { return Promise.resolve([]); },
+    });
+    queryEl.addEventListener('keydown', function (event) {
+      // the menu owns the arrows, Tab, Escape and Enter while it is open
+      if (suggestions.handledKey(event)) event.preventDefault();
+    });
 
     // ---- the two lists below the query box, one shown at a time ------------------------
     const sources = [
@@ -95,6 +112,7 @@
         designatorsEl.textContent = 'designators unavailable: ' + (payload.error || 'unknown error');
         return;
       }
+      vocabulary = payload.action_vocabulary || [];
       buildChoice(phaseStructureEl, payload.phase_structure, '');
       buildChoice(adjustmentEl, payload.geometry_adjustment, '');
       perspectivesEl.innerHTML = '';
@@ -293,7 +311,7 @@
     return {};
   });
 
-  // mounted below the panels cramera ships, before the page boots them
+  // mounted right below the EQL panel, before the page boots them
   const layout = (window.CRAMERA_CONFIG || {}).layout || {};
-  if (layout.right) layout.right.push(PANEL_ID);
+  if (layout.right) layout.right.splice(layout.right.indexOf('eql') + 1, 0, PANEL_ID);
 })();

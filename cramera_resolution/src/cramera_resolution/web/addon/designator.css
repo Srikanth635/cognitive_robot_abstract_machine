@@ -53,3 +53,7 @@
   margin:4px 0 8px;font-family:var(--mono);font-size:11px;line-height:1.45;
   white-space:pre;overflow-x:auto;color:var(--ink)
 }
+/* right below the EQL panel, taking the room it needs, up to two fifths of the column, and
+   scrolling beyond that, so the graph below keeps room to be read */
+.slot > .panel-resolution-designators{flex:0 1 auto;min-height:170px;max-height:40%;overflow-y:auto}
+.slot > .panel-graph{min-height:300px}

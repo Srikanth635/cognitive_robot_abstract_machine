@@ -128,14 +128,20 @@ class AddOnScript(StrEnum):
     Writes a resolution and the runs kept as markup.
     """
 
+    DESIGNATOR_COMPLETION = "addon/designator_completion.js"
+    """
+    Decides which action designators and parameters the designator box suggests.
+    """
+
     DESIGNATOR_PANEL = "addon/designator_panel.js"
     """
     The panel that resolves designators, chooses what to consult and performs runs.
     """
 
-    KNOWLEDGE_PANEL = "addon/knowledge_panel.js"
+    KNOWLEDGE_TABS = "addon/knowledge_tabs.js"
     """
-    The panel that shows the hypothesis graph, the ontology graph and the designator.
+    Adds the hypothesis graph, the ontology graph and the designator to the tabs of the
+    graph panel.
     """
 
 
@@ -149,9 +155,9 @@ class AddOnStylesheet(StrEnum):
     The look of the designator panel.
     """
 
-    KNOWLEDGE_PANEL = "addon/knowledge.css"
+    KNOWLEDGE_VIEWS = "addon/knowledge.css"
     """
-    The look of the knowledge panel and the views it draws.
+    The look of the knowledge views in the graph panel.
     """
 
 

@@ -1,46 +1,56 @@
 /* ============================================================================
- * addon/knowledge.css — the look of the knowledge panel: its tabs, the canvas the
- * three views are drawn into, and the rules of the views themselves (the hypothesis
- * graph, the ontology graph and the designator as Lisp or JSON). cramera's own
- * stylesheet gives the colours and the panel head.
+ * addon/knowledge.css — the look of the knowledge views in cramera's graph panel: the
+ * canvas area they take when one of their tabs is open, and the rules of the views
+ * themselves (the hypothesis graph, the ontology graph and the designator as Lisp or
+ * JSON). cramera's own stylesheet gives the tabs and the colours.
  * ==========================================================================*/
-.panel-resolution-knowledge{display:flex;flex-direction:column;min-height:380px}
-.panel-resolution-knowledge .resolution-knowledge-wrap{position:relative;flex:1;min-height:320px}
-.panel-resolution-knowledge .knowledge-tabs{
-  display:flex;gap:2px;border-bottom:1px solid var(--line2);height:34px;align-items:flex-end
+/* the three views take the graph's canvas area when one of their tabs is open; cramera's
+   own canvas, controls and legend step aside, whatever style cramera set on them */
+.graph-wrap > .resolution-views{position:absolute;inset:34px 0 0;display:none}
+.graph-wrap[data-resolution-view] > .resolution-views{display:block}
+.graph-wrap[data-resolution-view] > .graph-canvas,
+.graph-wrap[data-resolution-view] > .graph-zoom,
+.graph-wrap[data-resolution-view] > .graph-steps,
+.graph-wrap[data-resolution-view] > .graph-steps-toggle,
+.graph-wrap[data-resolution-view] > #graph-empty,
+.graph-wrap[data-resolution-view] > #graph-nav,
+.graph-wrap[data-resolution-view] > #legend{display:none !important}
+/* eight tabs share the bar: none wraps its label, and a narrow bar scrolls */
+.graph-tabs{overflow-x:auto;scrollbar-width:none}
+.graph-tabs button{white-space:nowrap;flex:0 0 auto}
+/* the tab of the open view is the lit one, not the tab cramera last lit */
+.graph-tabs button.resolution-active{color:var(--accent);border-bottom-color:var(--accent)}
+.graph-wrap[data-resolution-view] .graph-tabs button.active:not(.resolution-active){
+  color:var(--muted);border-bottom-color:transparent
 }
-.panel-resolution-knowledge .knowledge-tabs button{
-  background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
-  color:var(--muted);font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer
-}
-.panel-resolution-knowledge .knowledge-tabs button:hover{color:var(--ink)}
-.panel-resolution-knowledge .knowledge-tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
-.panel-resolution-knowledge .knowledge-empty{
-  position:absolute;inset:34px 0 0;display:flex;align-items:center;justify-content:center;
+/* a tab marks a hypothesis generated since it was last opened */
+.graph-tabs button.fresh::after{content:"\2022";color:var(--accent);margin-left:5px}
+.resolution-views .knowledge-empty{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   padding:24px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.5;
   pointer-events:none
 }
-.panel-resolution-knowledge .hypothesis-toolbar{
-  position:absolute;left:52px;top:46px;z-index:6;display:flex;align-items:center;gap:6px;
+.resolution-views .hypothesis-toolbar{
+  position:absolute;left:52px;top:12px;z-index:6;display:flex;align-items:center;gap:6px;
   background:rgba(20,24,33,.82);border:1px solid #37404f;border-radius:4px;
   padding:4px 8px;backdrop-filter:blur(4px);
 }
-.panel-resolution-knowledge .hypothesis-toolbar button{
+.resolution-views .hypothesis-toolbar button{
   background:none;border:1px solid #37404f;border-radius:3px;color:#c8d1e0;
   font:inherit;font-size:11.5px;line-height:1;padding:4px 8px;cursor:pointer;transition:.15s;
 }
-.panel-resolution-knowledge .hypothesis-toolbar button:hover{color:#fff;border-color:var(--accent)}
-.panel-resolution-knowledge .legend{
-  position:absolute;right:12px;top:46px;z-index:5;display:flex;flex-direction:column;gap:5px;
+.resolution-views .hypothesis-toolbar button:hover{color:#fff;border-color:var(--accent)}
+.resolution-views .legend{
+  position:absolute;right:12px;top:12px;z-index:5;display:flex;flex-direction:column;gap:5px;
   background:rgba(10,17,32,.72);border:1px solid var(--line2);border-radius:4px;padding:9px 11px;
   backdrop-filter:blur(4px)
 }
-.panel-resolution-knowledge .legend .li{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
-.panel-resolution-knowledge .legend .dot{width:11px;height:11px;border-radius:50%}
+.resolution-views .legend .li{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.resolution-views .legend .dot{width:11px;height:11px;border-radius:50%}
 
-#resolution-hypothesis-graph{position:absolute;inset:34px 0 0;background:#ffffff}
+#resolution-hypothesis-graph{position:absolute;inset:0;background:#ffffff}
 /* the Ontology Graph tab: a class graph laid out like the L2 ontology graph */
-#resolution-ontology-graph{position:absolute;inset:34px 0 0;container-type:size;background:#f7f8fa;color:#1f2933;font-family:system-ui,sans-serif}
+#resolution-ontology-graph{position:absolute;inset:0;container-type:size;background:#f7f8fa;color:#1f2933;font-family:system-ui,sans-serif}
 #resolution-ontology-graph .og-layout{display:grid;grid-template-columns:1fr 300px;width:100%;height:100%}
 /* a narrow panel puts the class details under the graph instead of beside it */
 @container (max-width: 760px){
@@ -82,7 +92,7 @@
 
 /* ---- Designator tab: the action designator as collapsible Lisp or JSON --------- */
 #resolution-designator-view{
-  position:absolute;inset:34px 0 0;display:flex;flex-direction:column;
+  position:absolute;inset:0;display:flex;flex-direction:column;
   background:#f7f8fa;color:#1f2933;font-family:system-ui,sans-serif
 }
 #resolution-designator-view .dz-toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px 8px 56px;border-bottom:1px solid #dde2ea}

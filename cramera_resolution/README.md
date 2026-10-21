@@ -42,19 +42,27 @@ and one made here cannot be read by `cram_viz`.
 
 ## The panel
 
-`web/addon/designator_panel.js` mounts a *Designators* panel below `cramera`'s own, through
-its panel registry. It offers the scene's designators as chips that copy their query into a
-box, the knowledge to consult (the phase structure, each perspective, adjusting the pour
-geometry), Resolve, what the resolver chose, why, what it rests on and the pours it tried,
-the runs kept (a tab; a click shows one again, as does `?run=<name>` in the address, which
-the llm_reasoner viewer links to), and Execute. The panel publishes the hypothesis a
-resolution consulted as `hypothesis:generated` on the bus.
+`web/addon/designator_panel.js` mounts an *Underspecified Action Designators* panel right
+below `cramera`'s EQL panel, through its panel registry. It offers the scene's designators as
+chips that copy their query into a box, the knowledge to consult (the phase structure, each
+perspective, adjusting the pour geometry), Resolve, what the resolver chose, why, what it
+rests on and the pours it tried, the runs kept (a tab; a click shows one again, as does
+`?run=<name>` in the address, which the llm_reasoner viewer links to), and Execute. The box
+suggests as the EQL box does, through `cramera`'s own suggestion menu: the action designators
+by name and, inside one's argument list, the parameters it takes with their types and
+defaults (`designators` route, `action_vocabulary`); like the EQL box, it offers once a letter
+is typed. The panel publishes the hypothesis a resolution consulted as
+`hypothesis:generated` on the bus.
 
-`web/addon/knowledge_panel.js` mounts a *Knowledge* panel below it, with the hypothesis graph,
-the ontology graph and the designator description as tabs, fetched from `view` for the open
-scene. It redraws on `hypothesis:generated`; clicking a node emits `entity:select`, and
-`entity:highlight` reveals or spotlights nodes on the hypothesis graph. The drawing modules
-(`hypothesis_graph.js`, `ontology_graph.js`, `designator_view.js`) are copies of `cram_viz`'s.
+`web/addon/knowledge_tabs.js` adds the hypothesis graph, the ontology graph and the designator
+description as tabs of `cramera`'s graph panel, beside Knowledge, Plan, Statechart, Kinematics
+and Transforms, once the page has booted its panels. A tab of ours takes the area of the
+graph's canvas while it is open, and one of `cramera`'s gives it back. Each view is fetched
+from `view` for the open scene. A hypothesis generated while no tab of ours is open marks the
+Hypothesis Graph tab with a dot until it is opened; while one is open, it is redrawn.
+Clicking a node emits `entity:select`, and `entity:highlight` reveals or spotlights nodes on
+the hypothesis graph. The drawing modules (`hypothesis_graph.js`, `ontology_graph.js`,
+`designator_view.js`) are copies of `cram_viz`'s.
 
 The panels' logic is tested with node (`test_web_panels.py`), as `cramera`'s own panels are.
 

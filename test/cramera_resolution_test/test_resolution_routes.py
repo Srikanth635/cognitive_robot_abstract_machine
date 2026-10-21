@@ -6,6 +6,7 @@ run again, choosing what to consult, generating knowledge and performing a run.
 
 from __future__ import annotations
 
+import dataclasses
 import inspect
 import json
 import shutil
@@ -15,6 +16,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 import pytest
+from coraplex.robot_plans.actions.composite.tool_based import PouringAction
 from llm_reasoner.attribute_docstrings import attribute_docstrings
 from llm_reasoner.knowledge.access import (
     PERSPECTIVE_ROOTS,
@@ -22,11 +24,16 @@ from llm_reasoner.knowledge.access import (
     HypothesisStore,
     core,
 )
+from semantic_digital_twin.robots.robot_parts import Arm
 from typing_extensions import Any
 
 from cramera_resolution import paths
 from cramera_resolution.exceptions import EmptyInstruction
 from cramera_resolution.payload import PayloadKey
+from cramera_resolution.resolution.action_vocabulary import (
+    VocabularyKey,
+    VocabularyKind,
+)
 from cramera_resolution.resolution.designators import (
     DesignatorQuery,
     NotAMatchQuery,
@@ -190,6 +197,46 @@ class TestDesignators:
             payload[PayloadKey.GEOMETRY_ADJUSTMENT]["summary"]
             == attribute_docstrings(DesignatorResolver)["adjusts_pour_geometry"]
         )
+
+    def test_the_scene_offers_the_action_designators_to_complete(self, served):
+        payload = served.get(Route.DESIGNATORS, scene="pouring")
+        assert [
+            entry[VocabularyKey.NAME]
+            for entry in payload[PayloadKey.ACTION_VOCABULARY]
+            if entry[VocabularyKey.KIND] == VocabularyKind.CLASS
+        ] == [PouringAction.__name__]
+
+    def test_the_parameters_of_an_action_designator_are_offered_with_it(self, served):
+        payload = served.get(Route.DESIGNATORS, scene="pouring")
+        assert [
+            entry[VocabularyKey.NAME]
+            for entry in payload[PayloadKey.ACTION_VOCABULARY]
+            if entry[VocabularyKey.KIND] == VocabularyKind.FIELD
+            and entry[VocabularyKey.OWNER] == PouringAction.__name__
+        ] == [field.name for field in dataclasses.fields(PouringAction) if field.init]
+
+    def test_a_parameter_with_a_default_states_it(self, served):
+        payload = served.get(Route.DESIGNATORS, scene="pouring")
+        (tilt,) = [
+            entry
+            for entry in payload[PayloadKey.ACTION_VOCABULARY]
+            if entry[VocabularyKey.NAME] == "tilt_angle"
+        ]
+        default = next(
+            field.default
+            for field in dataclasses.fields(PouringAction)
+            if field.name == "tilt_angle"
+        )
+        assert tilt[VocabularyKey.DETAIL].endswith(f"= {default}")
+
+    def test_a_parameter_without_a_default_states_only_its_type(self, served):
+        payload = served.get(Route.DESIGNATORS, scene="pouring")
+        (arm,) = [
+            entry
+            for entry in payload[PayloadKey.ACTION_VOCABULARY]
+            if entry[VocabularyKey.NAME] == "arm"
+        ]
+        assert arm[VocabularyKey.DETAIL] == Arm.__name__
 
     def test_a_scene_that_is_not_held_is_reported(self, served):
         payload = served.get(Route.DESIGNATORS, scene="no-such-scene")

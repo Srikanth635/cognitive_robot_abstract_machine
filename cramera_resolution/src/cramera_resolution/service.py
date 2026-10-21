@@ -24,6 +24,7 @@ from cramera_resolution.hypothesis_knowledge.generation import (
 from cramera_resolution.live import LiveRunLauncher
 from cramera_resolution.payload import PayloadKey
 from cramera_resolution.query_source import QuerySource
+from cramera_resolution.resolution.action_vocabulary import ActionDesignatorVocabulary
 from cramera_resolution.resolution.designators import (
     DesignatorQuery,
     OfferedDesignator,
@@ -182,6 +183,11 @@ class ResolutionService:
             PayloadKey.DESIGNATORS: [
                 OfferedDesignator.in_scene(identifier, names).payload()
                 for identifier in PouringDesignator
+            ],
+            PayloadKey.ACTION_VOCABULARY: [
+                entry.payload()
+                for vocabulary in ActionDesignatorVocabulary.every()
+                for entry in vocabulary.entries()
             ],
             PayloadKey.PHASE_STRUCTURE: OfferedPhaseStructure().payload(),
             PayloadKey.GEOMETRY_ADJUSTMENT: OfferedGeometryAdjustment().payload(),

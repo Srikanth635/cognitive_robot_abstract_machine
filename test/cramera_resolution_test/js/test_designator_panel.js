@@ -12,6 +12,9 @@ const path = require('path');
 const WEB_ADDON = path.join(
   __dirname, '..', '..', '..', 'cramera_resolution', 'src', 'cramera_resolution', 'web', 'addon',
 );
+const COMPLETION = path.join(
+  __dirname, '..', '..', '..', 'cramera', 'src', 'cramera', 'web', 'core', 'completion.js',
+);
 
 const PANEL_ID = 'resolution-designators';
 
@@ -68,6 +71,11 @@ function designatorsPayload() {
     ],
     phase_structure: { label: 'phase structure', summary: 'How a kind of manipulation task is organised.' },
     geometry_adjustment: { label: 'adjust the pour geometry', summary: 'A miss may be corrected with the pour geometry.' },
+    action_vocabulary: [
+      { name: 'PouringAction', kind: 'class', detail: 'action designator', module: 'coraplex', owner: '' },
+      { name: 'source_container', kind: 'field', detail: 'Tool', module: 'PouringAction', owner: 'PouringAction' },
+      { name: 'tilt_angle', kind: 'field', detail: 'float = 1.85', module: 'PouringAction', owner: 'PouringAction' },
+    ],
     perspectives: [
       { name: 'action-frame.ttl', label: 'action frame', summary: 'The action frame describes an action.' },
       { name: 'failures.ttl', label: 'failures', summary: 'The failures describe how an action goes wrong.' },
@@ -117,7 +125,7 @@ function loadPanel(options) {
     '#resolution-answer', '#resolution-query', '#resolution-resolve', '#resolution-execute',
     '#resolution-designators', '#resolution-runs', '#resolution-phase-structure',
     '#resolution-perspectives', '#resolution-adjustment', '#resolution-tab-designators',
-    '#resolution-tab-runs',
+    '#resolution-tab-runs', '.query-box',
   ].forEach(function (name) { elements[name] = element(); });
 
   const root = { innerHTML: '', querySelector(selector) { return elements[selector]; } };
@@ -162,10 +170,24 @@ function loadPanel(options) {
 
   const defined = {};
   global.Panels = { define(identifier, factory) { defined[identifier] = factory; } };
-  ['resolution_view.js', 'designator_panel.js'].forEach(function (file) {
+  const menus = [];
+  const menuKeys = { taken: false };
+  global.EqlSuggestions = {
+    of(options) {
+      menus.push(options);
+      return { handledKey() { return menuKeys.taken; } };
+    },
+  };
+  new Function(fs.readFileSync(COMPLETION, 'utf8'))();
+  global.Completion = global.window.Completion;
+  ['resolution_view.js', 'designator_completion.js', 'designator_panel.js'].forEach(function (file) {
     new Function(fs.readFileSync(path.join(WEB_ADDON, file), 'utf8'))();
   });
-  return { root, bus, elements, requests, emitted, defined, layout, mount() { return defined[PANEL_ID](root, bus); } };
+  global.DesignatorCompletion = global.window.DesignatorCompletion;
+  return {
+    root, bus, elements, requests, emitted, defined, layout, menus, menuKeys,
+    mount() { return defined[PANEL_ID](root, bus); },
+  };
 }
 
 async function settle() {
@@ -196,10 +218,15 @@ function resolve(panel, query) {
 }
 
 // %% the panel in the page
-test('the panel is defined under its identifier and added below the shipped panels', function () {
+test('the panel is defined under its identifier and added right below the EQL panel', function () {
   const panel = loadPanel();
   assert.deepStrictEqual(Object.keys(panel.defined), [PANEL_ID]);
-  assert.deepStrictEqual(panel.layout.right, ['eql', 'graph', PANEL_ID]);
+  assert.deepStrictEqual(panel.layout.right, ['eql', PANEL_ID, 'graph']);
+});
+
+test('the panel is titled for what it resolves', async function () {
+  const panel = await mounted();
+  assert.ok(panel.root.innerHTML.includes('<h2>Underspecified Action Designators</h2>'));
 });
 
 test('a layout with no right slot is left as it is', function () {
@@ -210,12 +237,80 @@ test('a layout with no right slot is left as it is', function () {
 test('every id the panel reads is in its markup, none of them an id cramera already uses', async function () {
   const panel = await mounted();
   const html = panel.root.innerHTML;
-  Object.keys(panel.elements).forEach(function (selector) {
+  Object.keys(panel.elements).filter(function (selector) { return selector[0] === '#'; }).forEach(function (selector) {
     assert.ok(html.includes('id="' + selector.slice(1) + '"'), selector);
   });
   ['query-input', 'query-run', 'presets', 'answer'].forEach(function (shipped) {
     assert.ok(!html.includes('id="' + shipped + '"'), shipped);
   });
+});
+
+// %% the suggestions
+test('the box suggests through cramera\'s own menu, anchored to the query box', async function () {
+  const panel = await mounted();
+  const [menu] = panel.menus;
+  assert.strictEqual(menu.input, panel.elements['#resolution-query']);
+  assert.strictEqual(menu.anchor, panel.elements['.query-box']);
+});
+
+test('before any word is typed the box suggests the action designators', async function () {
+  const panel = await mounted();
+  const box = panel.elements['#resolution-query'];
+  box.value = '';
+  box.selectionStart = 0;
+  assert.deepStrictEqual(
+    panel.menus[0].entries().map(function (entry) { return entry.name; }), ['PouringAction'],
+  );
+});
+
+test('inside a designator the box suggests its parameters from the vocabulary the server sent', async function () {
+  const panel = await mounted();
+  const box = panel.elements['#resolution-query'];
+  box.value = 'the(PouringAction)(';
+  box.selectionStart = box.value.length;
+  assert.deepStrictEqual(
+    panel.menus[0].entries().map(function (entry) { return entry.name; }),
+    ['source_container', 'tilt_angle'],
+  );
+});
+
+test('a parameter is suggested with its type and default', async function () {
+  const panel = await mounted();
+  const box = panel.elements['#resolution-query'];
+  box.value = 'the(PouringAction)(';
+  box.selectionStart = box.value.length;
+  assert.deepStrictEqual(
+    panel.menus[0].entries().map(function (entry) { return entry.detail; }),
+    ['Tool', 'float = 1.85'],
+  );
+});
+
+test('designators the server could not offer leave the box with nothing to suggest', async function () {
+  const panel = await mounted({ designators: { ok: false, error: 'NoSuchScene: none' } });
+  const box = panel.elements['#resolution-query'];
+  box.value = 'the(';
+  box.selectionStart = box.value.length;
+  assert.deepStrictEqual(panel.menus[0].entries(), []);
+});
+
+test('the members behind a dot are never fetched', async function () {
+  const panel = await mounted();
+  assert.deepStrictEqual(await panel.menus[0].fetchMembers('bowl'), []);
+});
+
+test('a key the menu takes is kept from the box', async function () {
+  const panel = await mounted();
+  panel.menuKeys.taken = true;
+  let prevented = false;
+  panel.elements['#resolution-query'].listeners.keydown({ key: 'Enter', preventDefault() { prevented = true; } });
+  assert.strictEqual(prevented, true);
+});
+
+test('a key the menu leaves is left to the box', async function () {
+  const panel = await mounted();
+  let prevented = false;
+  panel.elements['#resolution-query'].listeners.keydown({ key: 'Enter', preventDefault() { prevented = true; } });
+  assert.strictEqual(prevented, false);
 });
 
 // %% the designators

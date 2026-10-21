@@ -45,6 +45,7 @@ class PayloadKey(StrEnum):
     DESIGNATOR = "designator"
     SCENE = "scene"
     DESIGNATORS = "designators"
+    ACTION_VOCABULARY = "action_vocabulary"
     PHASE_STRUCTURE = "phase_structure"
     GEOMETRY_ADJUSTMENT = "geometry_adjustment"
     PERSPECTIVES = "perspectives"

@@ -1,14 +1,18 @@
 /* ============================================================================
- * addon/knowledge_panel.js — the knowledge a resolution consulted, in three views.
+ * addon/knowledge_tabs.js — the knowledge a resolution consulted, as tabs of cramera's
+ * graph panel, beside Knowledge, Plan, Statechart, Kinematics and Transforms.
  *
  *   Hypothesis Graph   the active hypothesis projected phase first: click a node to expand
  *                      it, double-click to collapse its branch
  *   Ontology Graph     the classes behind it, up to CRAM-AICOR and DUL
  *   Designator         the action designator, as Lisp or JSON
  *
- * Each view is fetched from /api/resolution/view and drawn by its own module
- * (hypothesis_graph.js, ontology_graph.js, designator_view.js) into a container of this
- * panel, once per payload. A new hypothesis replaces what is shown.
+ * The tabs are added to the graph panel's tab bar once the page has booted its panels,
+ * and a tab of ours takes the area of cramera's canvas while it is open. Each view is
+ * fetched from /api/resolution/view and drawn by its own module (hypothesis_graph.js,
+ * ontology_graph.js, designator_view.js) into a container of its own, once per payload.
+ * A new hypothesis replaces what is shown, and marks the Hypothesis Graph tab until it is
+ * opened.
  *
  * Bus events:
  *   listens  hypothesis:generated {payload}     the hypothesis a resolution consulted
@@ -18,7 +22,6 @@
 (function () {
   'use strict';
 
-  const PANEL_ID = 'resolution-knowledge';
   const VIEW_ROUTE = '/api/resolution/view';
 
   const VIEW = Object.freeze({
@@ -27,43 +30,51 @@
     designator: 'designator',
   });
 
-  Panels.define(PANEL_ID, function (root, bus) {
-    root.innerHTML =
-      '<div class="panel-head">' +
-      '  <h2>Knowledge · what a resolution consulted</h2>' +
-      '</div>' +
-      '<div class="resolution-knowledge-wrap">' +
-      '  <div class="knowledge-tabs" id="resolution-knowledge-tabs">' +
-      '    <button data-view="hypothesis" class="active" title="the hypothesis the resolution consulted, phase first — click a node to expand it, double-click to collapse its branch">Hypothesis Graph</button>' +
-      '    <button data-view="ontology" title="the ontology behind the hypothesis: the classes it instantiates, what they specialise up to CRAM-AICOR and DUL, and how the hypothesis links them">Ontology Graph</button>' +
-      '    <button data-view="designator" title="the action designator: coraplex\'s action slots followed by the generated hypothesis, as Lisp or JSON">Designator</button>' +
-      '  </div>' +
-      '  <div id="resolution-hypothesis-graph"></div>' +
-      '  <div id="resolution-ontology-graph" style="display:none"></div>' +
-      '  <div id="resolution-designator-view" style="display:none"></div>' +
-      '  <div id="resolution-knowledge-empty" class="knowledge-empty" style="display:none"></div>' +
-      '  <div id="resolution-hypothesis-toolbar" class="hypothesis-toolbar">' +
-      '    <button id="resolution-expand-all" title="Expand every node in the graph">Expand all</button>' +
-      '    <button id="resolution-collapse-all" title="Collapse back to the root node">Collapse all</button>' +
-      '  </div>' +
-      '  <div class="legend" id="resolution-legend"></div>' +
-      '</div>';
+  const TABS_HTML =
+    '<button data-resolution-tab="hypothesis" title="the hypothesis the resolution consulted, phase first — click a node to expand it, double-click to collapse its branch">Hypothesis Graph</button>' +
+    '<button data-resolution-tab="ontology" title="the ontology behind the hypothesis: the classes it instantiates, what they specialise up to CRAM-AICOR and DUL, and how the hypothesis links them">Ontology Graph</button>' +
+    '<button data-resolution-tab="designator" title="the action designator: coraplex\'s action slots followed by the generated hypothesis, as Lisp or JSON">Designator</button>';
 
-    const tabsEl = root.querySelector('#resolution-knowledge-tabs');
-    const emptyEl = root.querySelector('#resolution-knowledge-empty');
-    const toolbarEl = root.querySelector('#resolution-hypothesis-toolbar');
-    const legendEl = root.querySelector('#resolution-legend');
+  const VIEWS_HTML =
+    '<div class="resolution-views" id="resolution-views">' +
+    '  <div id="resolution-hypothesis-graph"></div>' +
+    '  <div id="resolution-ontology-graph" style="display:none"></div>' +
+    '  <div id="resolution-designator-view" style="display:none"></div>' +
+    '  <div id="resolution-knowledge-empty" class="knowledge-empty" style="display:none"></div>' +
+    '  <div id="resolution-hypothesis-toolbar" class="hypothesis-toolbar">' +
+    '    <button id="resolution-expand-all" title="Expand every node in the graph">Expand all</button>' +
+    '    <button id="resolution-collapse-all" title="Collapse back to the root node">Collapse all</button>' +
+    '  </div>' +
+    '  <div class="legend" id="resolution-legend"></div>' +
+    '</div>';
+
+  function attach(bus) {
+    const graphRoot = document.querySelector('[data-panel="graph"]');
+    if (!graphRoot) return;
+    const tabsEl = graphRoot.querySelector('#graph-tabs');
+    const wrapEl = graphRoot.querySelector('.graph-wrap');
+    if (!tabsEl || !wrapEl) return;
+    tabsEl.querySelector('#gt-live').insertAdjacentHTML('beforebegin', TABS_HTML);
+    wrapEl.insertAdjacentHTML('beforeend', VIEWS_HTML);
+
+    const emptyEl = wrapEl.querySelector('#resolution-knowledge-empty');
+    const toolbarEl = wrapEl.querySelector('#resolution-hypothesis-toolbar');
+    const legendEl = wrapEl.querySelector('#resolution-legend');
     const containers = {
-      hypothesis: root.querySelector('#resolution-hypothesis-graph'),
-      ontology: root.querySelector('#resolution-ontology-graph'),
-      designator: root.querySelector('#resolution-designator-view'),
+      hypothesis: wrapEl.querySelector('#resolution-hypothesis-graph'),
+      ontology: wrapEl.querySelector('#resolution-ontology-graph'),
+      designator: wrapEl.querySelector('#resolution-designator-view'),
     };
-    root.querySelector('#resolution-expand-all').addEventListener('click', function () { HypothesisGraph.expandAll(); });
-    root.querySelector('#resolution-collapse-all').addEventListener('click', function () { HypothesisGraph.collapseAll(); });
+    const ownTabs = Array.prototype.slice.call(tabsEl.querySelectorAll('[data-resolution-tab]'));
+    const cramerasTabs = Array.prototype.slice.call(tabsEl.querySelectorAll('button:not([data-resolution-tab])'));
+    wrapEl.querySelector('#resolution-expand-all').addEventListener('click', function () { HypothesisGraph.expandAll(); });
+    wrapEl.querySelector('#resolution-collapse-all').addEventListener('click', function () { HypothesisGraph.collapseAll(); });
 
-    let tab = VIEW.hypothesis;
+    let open = null;            // the view being shown, or null while cramera's own tab is
     const base = {};            // view -> the payload as loaded from the server
     let hypothesisDrawn = false;
+    const tabOf = {};
+    ownTabs.forEach(function (button) { tabOf[button.dataset.resolutionTab] = button; });
 
     // each view is drawn by its own module, once per loaded payload
     const draw = {
@@ -78,7 +89,7 @@
 
     // ---- showing a view ---------------------------------------------------------------
     function showEmptyState(payload) {
-      const empty = !(payload.nodes || []).length && tab !== VIEW.designator;
+      const empty = !(payload.nodes || []).length && open !== VIEW.designator;
       emptyEl.style.display = empty ? '' : 'none';
       emptyEl.textContent = empty ? (payload.empty || 'Nothing to show in this view.') : '';
     }
@@ -93,11 +104,13 @@
       return response.json();
     }
 
-    async function showTab(name) {
-      tab = name;
-      Array.prototype.forEach.call(tabsEl.querySelectorAll('button'), function (button) {
-        button.classList.toggle('active', button.dataset.view === name);
+    async function showView(name) {
+      open = name;
+      wrapEl.setAttribute('data-resolution-view', name);
+      Object.keys(tabOf).forEach(function (view) {
+        tabOf[view].classList.toggle('resolution-active', view === name);
       });
+      if (name === VIEW.hypothesis) tabOf[name].classList.remove('fresh');
       Object.keys(containers).forEach(function (view) {
         containers[view].style.display = view === name ? '' : 'none';
       });
@@ -107,17 +120,16 @@
       try {
         if (!base[name]) {
           const payload = await load(name);
+          // the reader can be on another tab by the time a view arrives
+          if (open !== name) return;
           if (!payload.ok) {
             showError(payload.error || 'view unavailable');
             return;
           }
           base[name] = payload;
-          showEmptyState(payload);
-          draw[name](payload);
-        } else {
-          showEmptyState(base[name]);
-          draw[name](base[name]);
         }
+        showEmptyState(base[name]);
+        draw[name](base[name]);
       } catch (error) {
         showError('Could not load this view: ' + ((error && error.message) || error));
         return;
@@ -125,9 +137,17 @@
       if (name === VIEW.hypothesis) HypothesisGraph.showLegend(legendEl);
     }
 
-    Array.prototype.forEach.call(tabsEl.querySelectorAll('button'), function (button) {
-      button.addEventListener('click', function () { showTab(button.dataset.view); });
+    // a tab of cramera's own gives the canvas back
+    function giveBackCanvas() {
+      open = null;
+      wrapEl.removeAttribute('data-resolution-view');
+      Object.keys(tabOf).forEach(function (view) { tabOf[view].classList.remove('resolution-active'); });
+    }
+
+    ownTabs.forEach(function (button) {
+      button.addEventListener('click', function () { showView(button.dataset.resolutionTab); });
     });
+    cramerasTabs.forEach(function (button) { button.addEventListener('click', giveBackCanvas); });
 
     // ---- a node of the hypothesis graph was clicked -------------------------------------
     function labelOf(payload, id) {
@@ -157,7 +177,7 @@
     // ---- highlights from elsewhere (an EQL result, a node described in another panel) ----
     bus.on('entity:highlight', function (highlighted) {
       // the other views draw classes and slots, not the fragments an answer names
-      if (tab !== VIEW.hypothesis) return;
+      if (open !== VIEW.hypothesis) return;
       const payload = base[VIEW.hypothesis];
       const ids = ((highlighted && highlighted.ids) || []).slice();
       if (payload && highlighted && highlighted.focus) {
@@ -175,14 +195,17 @@
       Object.keys(base).forEach(function (view) { delete base[view]; });
       base[VIEW.hypothesis] = payload;
       hypothesisDrawn = false;
-      showTab(tab);
+      if (open) showView(open);
+      else tabOf[VIEW.hypothesis].classList.add('fresh');
     });
+  }
 
-    showTab(VIEW.hypothesis);
-    return {};
-  });
+  window.ResolutionKnowledgeTabs = { attach: attach };
 
-  // mounted below the panels cramera ships, before the page boots them
-  const layout = (window.CRAMERA_CONFIG || {}).layout || {};
-  if (layout.right) layout.right.push(PANEL_ID);
+  // the graph panel exists once the page has booted its panels
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { attach(window.Bus); });
+  } else {
+    attach(window.Bus);
+  }
 })();
