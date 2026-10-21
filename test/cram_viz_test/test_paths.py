@@ -1,5 +1,5 @@
 """
-Tests for the scene-bundle search order (env → submodule → data dir).
+Tests for the scene-bundle search order (env → bundled scenes → data dir).
 """
 
 import json
@@ -12,23 +12,23 @@ class TestScenesDir:
         monkeypatch.setenv("CRAM_VIZ_SCENES", str(tmp_path / "mine"))
         assert paths.scenes_dir() == tmp_path / "mine"
 
-    def test_initialized_submodule_is_used(self, monkeypatch, tmp_path):
+    def test_bundled_scenes_with_an_index_are_used(self, monkeypatch, tmp_path):
         monkeypatch.delenv("CRAM_VIZ_SCENES", raising=False)
-        submodule = tmp_path / "scenes"
-        submodule.mkdir()
-        (submodule / "index.json").write_text(
-            json.dumps({"default": None, "scenes": []})
-        )
-        monkeypatch.setattr(paths, "SCENES_SUBMODULE", submodule)
-        assert paths.scenes_dir() == submodule
+        bundled = tmp_path / "scenes"
+        bundled.mkdir()
+        (bundled / "index.json").write_text(json.dumps({"default": None, "scenes": []}))
+        monkeypatch.setattr(paths, "BUNDLED_SCENES", bundled)
+        assert paths.scenes_dir() == bundled
 
-    def test_empty_submodule_falls_back_to_data_dir(self, monkeypatch, tmp_path):
-        # an un-initialized submodule is an empty directory — must be skipped
+    def test_bundled_scenes_without_an_index_fall_back_to_data_dir(
+        self, monkeypatch, tmp_path
+    ):
+        # a bundled directory with no index.json is skipped
         monkeypatch.delenv("CRAM_VIZ_SCENES", raising=False)
         monkeypatch.setenv("CRAM_VIZ_DATA", str(tmp_path / "data"))
         empty = tmp_path / "scenes"
         empty.mkdir()
-        monkeypatch.setattr(paths, "SCENES_SUBMODULE", empty)
+        monkeypatch.setattr(paths, "BUNDLED_SCENES", empty)
         assert paths.scenes_dir() == tmp_path / "data" / "scenes"
 
     def test_data_dir_env_override(self, monkeypatch, tmp_path):

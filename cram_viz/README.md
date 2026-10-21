@@ -17,17 +17,14 @@ cram-viz-onboard path/to/demo.py --name my_scene    # record a demo once
 cram-viz-live path/to/demo.py             # run a demo with the live bridge
 ```
 
-Scene bundles are **generated artifacts** (tens of MB per scene) and are not
-part of this repository — ready-made demo recordings live in
-[sunava/cram-scenes](https://github.com/sunava/cram-scenes), wired as an
-**optional** submodule:
-
-```bash
-git submodule update --init cram_viz/scenes    # ready-made demo scenes (optional)
-```
+Scene bundles are **generated artifacts** (tens of MB per scene). The ready-made demo
+recordings (`pr2_kitchen`, `garmi_apartment`, `simple_pouring`) are part of this
+repository in `cram_viz/scenes`; they came from
+[sunava/cram-scenes](https://github.com/sunava/cram-scenes), and nothing needs
+initialising.
 
 The viewer looks for bundles in this order: `CRAM_VIZ_SCENES=/path` (env
-override) → the initialized submodule `cram_viz/scenes` → `~/.cram_viz/scenes`
+override) → `cram_viz/scenes` → `~/.cram_viz/scenes`
 (where the onboarder writes by default). Live visualization and freshly
 onboarded scenes need none of the ready-made bundles. Select a scene with
 `?scene=<name>` or `CRAM_VIZ_SCENE=<name>`.
