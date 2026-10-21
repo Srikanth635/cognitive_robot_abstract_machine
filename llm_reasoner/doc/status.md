@@ -682,6 +682,9 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   §8; not the base, which does not move, nor the tolerances). The check now tries the pour
   pose from every state it reached: 2.8 and 2.9 rad are accepted and the simulation's
   failures at 2.2–2.6, 3.0 and 3.07 stay refused; 2.0 rad is still wrongly refused (pinned).
+  Live re-run with the corrected check: refused again ($0.34, 3.1 minutes); it searched 0.1 to
+  2.4 rad, stopped after the refusals at 2.0–2.4 and never asked about 2.5–3.0, and named the
+  real cause itself (`pour_side_offset` is not an open slot of `objects_given`).
 
 ## 3. Live testing
 

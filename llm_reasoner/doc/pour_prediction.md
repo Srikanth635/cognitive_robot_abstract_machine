@@ -229,3 +229,14 @@ longer refused, and 2.2, 2.4, 2.6, 3.0 and 3.07 rad, which the simulation fails,
 2.0 rad is still refused although the simulation performs it (no start reaches it); a test pins
 that as a known failure. §7's "predicted unreachable is certain to fail" therefore still does
 not hold, at 2.0 rad.
+
+Live re-run with the corrected check (same setup, prediction on): it refused again, in 3.1
+minutes for $0.34, after 2 pours tried and 31 predictions asked. It searched tilts of 0.1 to
+2.4 rad on the right arm and found only 0.1 to 0.25 rad landing, below the flow tilt; the
+prediction answered "out of reach" at 2.0 (wrongly, the known exception), 2.2 and 2.4, and the
+resolver stopped there and never asked about 2.5 to 3.0 rad, where 2.8 and 2.9 land. Its
+reason was right about the cause: with only arm and tilt open, a flowing pour leaves the mouth
+about 0.11 m or more beside the opening, and "fixing this needs pour_side_offset or
+pour_approach_offset, which are not open slots". With those slots open, the same scene lands
+in two pours (`knowledge_perspectives.md` §13.8).
+
