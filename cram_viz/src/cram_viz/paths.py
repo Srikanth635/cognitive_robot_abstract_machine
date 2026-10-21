@@ -1,16 +1,13 @@
 """
 Filesystem locations for cram_viz, all overridable via environment.
 
-The frontend (``web/``) ships inside the package. Scene bundles are GENERATED
-artifacts (tens to hundreds of MB per scene, produced by ``cram-viz-onboard``)
-and are deliberately not part of this repository — they are versioned in
-https://github.com/sunava/cram-scenes, wired here as the OPTIONAL submodule
-``cram_viz/scenes`` (live visualization and freshly onboarded scenes work
-without it). :func:`scenes_dir` looks in this order:
+The frontend (``web/``) ships inside the package, and so do the ready-made demo scenes
+in ``cram_viz/scenes`` (tens of MB each, originally onboarded with ``cram-viz-onboard``
+and kept in https://github.com/sunava/cram-scenes). Freshly onboarded scenes and live
+visualization work without them. :func:`scenes_dir` looks in this order:
 
     1. CRAM_VIZ_SCENES=/path/to/scenes        explicit override
-    2. cram_viz/scenes                        the submodule, if initialized
-                                              (git submodule update --init cram_viz/scenes)
+    2. cram_viz/scenes                        the bundled scenes
     3. ~/.cram_viz/scenes                     default data directory
 
     CRAM_VIZ_ARCHITECTURE=/path/to/repo       CRAM repo scanned by the KB graph
@@ -111,23 +108,22 @@ def resolution_runs_dir() -> Path:
     return data_dir() / "runs"
 
 
-#: the optional cram-scenes submodule checkout (``<member dir>/scenes``)
-SCENES_SUBMODULE = WEB_ROOT.parents[2] / "scenes"
+#: the demo scenes that ship with the package (``<member dir>/scenes``)
+BUNDLED_SCENES = WEB_ROOT.parents[2] / "scenes"
 
 
 def scenes_dir() -> Path:
     """
     Directory holding the onboarded scene bundles (``<name>/scene.json``).
 
-    Search order: ``CRAM_VIZ_SCENES`` env var, then the initialized
-    cram-scenes submodule, then ``~/.cram_viz/scenes``. An un-initialized
-    submodule is an empty directory and is skipped (index.json is the marker).
+    Search order: ``CRAM_VIZ_SCENES`` env var, then the bundled scenes, then
+    ``~/.cram_viz/scenes``. A bundled directory without an ``index.json`` is skipped.
     """
     env = os.environ.get("CRAM_VIZ_SCENES")
     if env:
         return Path(env).expanduser()
-    if (SCENES_SUBMODULE / "index.json").is_file():
-        return SCENES_SUBMODULE
+    if (BUNDLED_SCENES / "index.json").is_file():
+        return BUNDLED_SCENES
     return data_dir() / "scenes"
 
 

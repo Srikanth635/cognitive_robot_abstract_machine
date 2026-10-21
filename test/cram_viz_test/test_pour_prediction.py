@@ -7,7 +7,6 @@ the gripper holds the source, and offered to the resolver as a tool.
 from __future__ import annotations
 
 import json
-import os
 from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -479,7 +478,7 @@ class TestTool:
 class TestAgainstPerformedPours:
     def test_every_recorded_pour_is_predicted_within_a_centimetre(self):
         bundle = paths.scenes_dir() / "simple_pouring"
-        if not bundle.is_dir() or os.environ.get("CRAM_VIZ_SCENES") is None:
+        if not bundle.is_dir():
             pytest.skip("needs the simple_pouring scene")
         held = HeldSource.measure_in(
             SceneWorldBuilder.robot_world(bundle), POURING_VALUES
@@ -531,7 +530,7 @@ class TestMeasuredHolding:
     @pytest.mark.slow
     def test_the_hold_measured_in_a_process_of_its_own_is_read_back(self):
         bundle = paths.scenes_dir() / "simple_pouring"
-        if not bundle.is_dir() or os.environ.get("CRAM_VIZ_SCENES") is None:
+        if not bundle.is_dir():
             pytest.skip("needs the simple_pouring scene")
         held = MeasuredHolding(bundle=bundle).held(POURING_VALUES)
         assert held.source_in_tool_frame.shape == (4, 4)
