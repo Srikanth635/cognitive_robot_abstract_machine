@@ -328,49 +328,21 @@ class ContainmentSchema(ImageSchema):
 
 
 @dataclass(eq=False)
-class DecidingQuantity(DescriptionEntity):
+class DecidingQuantity(action_core.SlotQuantity):
     """
     A kind of quantity about a slot, such as the centre or size of an opening or the position of a lip, that decides whether a required relation holds; it carries no value.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
         iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#DecidingQuantity",
-        linked_terms=(
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
-        ),
+        linked_terms=(),
         evidence_status="",
         claims=(),
-        restrictions=(
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#QuantityKind"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#quantityOfSlot",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot"
-                ),
-            ),
-        ),
+        restrictions=(),
         definition=None,
     )
     """
     The ontology class this class stands for.
-    """
-
-    has_quantity_kind: Optional[action_core.QuantityKind] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
-            functional=True,
-        ).as_dict(),
-    )
-    """
-    What kind of quantity something about an action is about, such as the quantity a choice sets, a condition constrains or a change changes.
     """
 
     quantity_aspect: Optional[QuantityAspect] = field(
@@ -382,18 +354,6 @@ class DecidingQuantity(DescriptionEntity):
     )
     """
     Which aspect of the slot's filler the quantity measures, such as its centre or its extent.
-    """
-
-    quantity_of_slot: Optional[action_core.FrameSlot] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#quantityOfSlot",
-            functional=True,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot",
-        ).as_dict(),
-    )
-    """
-    The slot whose filler the deciding quantity is about.
     """
 
 
@@ -751,13 +711,6 @@ class ParticipatingSlot(ObjectPropertyDescriptor):
 
 
 @dataclass
-class QuantityOfSlot(ObjectPropertyDescriptor):
-    """
-    The slot whose filler the deciding quantity is about.
-    """
-
-
-@dataclass
 class ReferenceSlot(ObjectPropertyDescriptor):
     """
     The slot that the required relation is measured against.
@@ -790,7 +743,6 @@ SchemaStereotype.has_schema = HasSchema(SchemaStereotype, "has_schema")
 SchemaParticipation.participating_slot = ParticipatingSlot(
     SchemaParticipation, "participating_slot"
 )
-DecidingQuantity.quantity_of_slot = QuantityOfSlot(DecidingQuantity, "quantity_of_slot")
 SchemaRequirement.reference_slot = ReferenceSlot(SchemaRequirement, "reference_slot")
 SchemaStereotype.schema_stereotype_of = SchemaStereotypeOf(
     SchemaStereotype, "schema_stereotype_of"

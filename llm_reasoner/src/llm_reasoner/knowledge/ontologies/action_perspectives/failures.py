@@ -336,49 +336,21 @@ class FailureStereotype(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class Indicator(DescriptionEntity):
+class Indicator(action_core.SlotQuantity):
     """
     The quantity or occurrence by which a failure is noticed, such as how far one part ends from another, the value at which a process starts, or whether a motion finishes.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
         iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#Indicator",
-        linked_terms=(
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
-        ),
+        linked_terms=(),
         evidence_status="",
         claims=(),
-        restrictions=(
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#QuantityKind"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#measuredOnSlot",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot"
-                ),
-            ),
-        ),
+        restrictions=(),
         definition=None,
     )
     """
     The ontology class this class stands for.
-    """
-
-    has_quantity_kind: Optional[action_core.QuantityKind] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
-            functional=True,
-        ).as_dict(),
-    )
-    """
-    What kind of quantity something about an action is about, such as the quantity a choice sets, a condition constrains or a change changes.
     """
 
     has_indicator_form: Optional[IndicatorForm] = field(
@@ -390,18 +362,6 @@ class Indicator(DescriptionEntity):
     )
     """
     Whether the indicator is a measured value, the value at which something starts, or whether something happens.
-    """
-
-    measured_on_slot: List[action_core.FrameSlot] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#measuredOnSlot",
-            functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot",
-        ).as_dict(),
-    )
-    """
-    A slot, or part of a slot, between or on which the indicator's quantity is measured.
     """
 
     noted_by: List[Noticer] = field(
@@ -599,13 +559,6 @@ class HasIndicator(ObjectPropertyDescriptor):
 
 
 @dataclass
-class MeasuredOnSlot(ObjectPropertyDescriptor):
-    """
-    A slot, or part of a slot, between or on which the indicator's quantity is measured.
-    """
-
-
-@dataclass
 class RequiresOfChoice(ObjectPropertyDescriptor):
     """
     A condition a world can check that the newly chosen value must meet, such as being reachable by the agent.
@@ -633,7 +586,6 @@ Failure.has_correction = HasCorrection(Failure, "has_correction")
 Failure.has_failed_condition = HasFailedCondition(Failure, "has_failed_condition")
 FailureStereotype.has_failure = HasFailure(FailureStereotype, "has_failure")
 Failure.has_indicator = HasIndicator(Failure, "has_indicator")
-Indicator.measured_on_slot = MeasuredOnSlot(Indicator, "measured_on_slot")
 ParameterChange.requires_of_choice = RequiresOfChoice(
     ParameterChange, "requires_of_choice"
 )
