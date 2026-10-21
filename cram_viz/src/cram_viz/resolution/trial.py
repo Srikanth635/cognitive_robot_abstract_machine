@@ -149,7 +149,7 @@ class PourOutcome:
         return cls.at(
             top_centre(source.root),
             target,
-            float(robot_base.global_pose.to_quaternion().to_rpy()[2]),
+            float(robot_base.global_pose.yaw),
         )
 
     @classmethod

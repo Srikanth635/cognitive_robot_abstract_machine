@@ -56,7 +56,10 @@ def of_kind(events: List[Dict[str, Any]], kind: type) -> List[Dict[str, Any]]:
 
 
 def resolve(
-    pouring_bundle: Path, tmp_path: Path, recording: str = "objects_given", **settings
+    pouring_bundle_with_arms: Path,
+    tmp_path: Path,
+    recording: str = "objects_given",
+    **settings,
 ):
     """
     :return: The run of resolving the designator giving the objects, replaying the
@@ -71,7 +74,7 @@ def resolve(
     run = resolver.resolve(
         DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
         "pouring",
-        pouring_bundle,
+        pouring_bundle_with_arms,
     )
     return run, logged(tmp_path / "runs" / run.resolution.run)
 
@@ -81,9 +84,9 @@ def resolve(
 
 class TestRun:
     def test_a_run_logs_that_it_started_with_its_query_and_scene(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        run, events = resolve(pouring_bundle, tmp_path)
+        run, events = resolve(pouring_bundle_with_arms, tmp_path)
         started = events[0]
         assert started[EventKey.EVENT] == RunStarted.__name__
         assert started["run"] == run.resolution.run
@@ -91,16 +94,16 @@ class TestRun:
         assert started["scene"] == "pouring"
 
     def test_a_run_logs_that_it_finished_and_how_long_it_took(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        run, events = resolve(pouring_bundle, tmp_path)
+        run, events = resolve(pouring_bundle_with_arms, tmp_path)
         finished = events[-1]
         assert finished[EventKey.EVENT] == RunFinished.__name__
         assert finished["run"] == run.resolution.run
         assert finished["seconds"] >= 0.0
 
     def test_a_run_that_fails_is_logged_as_failed_and_fails_as_before(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_replaying(
             PouringDesignator.OBJECTS_GIVEN,
@@ -113,7 +116,7 @@ class TestRun:
             resolver.resolve(
                 DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
                 "pouring",
-                pouring_bundle,
+                pouring_bundle_with_arms,
             )
         (directory,) = (tmp_path / "runs").iterdir()
         events = logged(directory)
@@ -123,14 +126,14 @@ class TestRun:
         assert events[-1]["run"] == directory.name
 
     def test_every_event_is_a_line_of_json_naming_its_kind(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        _, events = resolve(pouring_bundle, tmp_path)
+        _, events = resolve(pouring_bundle_with_arms, tmp_path)
         assert all(isinstance(event[EventKey.EVENT], str) for event in events)
 
-    def test_two_runs_keep_logs_apart(self, pouring_bundle, tmp_path):
-        first, first_events = resolve(pouring_bundle, tmp_path / "first")
-        second, second_events = resolve(pouring_bundle, tmp_path / "second")
+    def test_two_runs_keep_logs_apart(self, pouring_bundle_with_arms, tmp_path):
+        first, first_events = resolve(pouring_bundle_with_arms, tmp_path / "first")
+        second, second_events = resolve(pouring_bundle_with_arms, tmp_path / "second")
         assert len(of_kind(first_events, RunStarted)) == 1
         assert len(of_kind(second_events, RunStarted)) == 1
 
@@ -140,23 +143,23 @@ class TestRun:
 
 class TestComponents:
     def test_what_the_resolver_asked_the_model_is_logged_as_the_resolvers(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        _, events = resolve(pouring_bundle, tmp_path)
+        _, events = resolve(pouring_bundle_with_arms, tmp_path)
         asked = of_kind(events, ModelAsked)
         resolver_asked = [
             event for event in asked if event["source"] == Component.RESOLVER
         ]
         assert len(resolver_asked) == len(recorded("objects_given")["turns"])
 
-    def test_the_resolution_is_logged(self, pouring_bundle, tmp_path):
-        _, events = resolve(pouring_bundle, tmp_path)
+    def test_the_resolution_is_logged(self, pouring_bundle_with_arms, tmp_path):
+        _, events = resolve(pouring_bundle_with_arms, tmp_path)
         assert len(of_kind(events, ResolutionFinished)) >= 1
 
     def test_what_the_knowledge_component_asked_the_model_is_logged_as_the_knowledges(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        _, events = resolve(pouring_bundle, tmp_path)
+        _, events = resolve(pouring_bundle_with_arms, tmp_path)
         generation = [
             event
             for event in of_kind(events, ModelAsked)
@@ -166,9 +169,9 @@ class TestComponents:
         assert all(event["style"] == CompletionStyle.STRUCTURED for event in generation)
 
     def test_the_hypothesis_generated_is_logged_as_served(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        run, events = resolve(pouring_bundle, tmp_path)
+        run, events = resolve(pouring_bundle_with_arms, tmp_path)
         (requested,) = of_kind(events, HypothesisRequested)
         (served,) = of_kind(events, HypothesisServed)
         assert served["record_id"] == run.resolution.record_id
@@ -181,10 +184,10 @@ class TestComponents:
 
 class TestTrials:
     def test_each_pour_tried_is_logged_with_what_it_brought_about(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         run, events = resolve(
-            pouring_bundle,
+            pouring_bundle_with_arms,
             tmp_path,
             recording="objects_given_retried",
             trial_outcomes=[MISSES, LANDS],

@@ -12,9 +12,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 from coraplex.datastructures.dataclasses import Context
-from coraplex.datastructures.enums import ApproachDirection, Arms, VerticalAlignment
-from coraplex.datastructures.grasp import GraspDescription
-from coraplex.execution_environment import simulated_robot
+from coraplex.execution_environment import kinematically_simulated_robot
 from coraplex.language import SequentialNode
 from coraplex.plans.factories import sequential
 from coraplex.robot_plans.actions.base import ActionDescription
@@ -22,9 +20,10 @@ from coraplex.robot_plans.actions.composite.tool_based import PouringAction
 from coraplex.robot_plans.actions.core.navigation import NavigateAction
 from coraplex.robot_plans.actions.core.pick_up import PickUpAction
 from coraplex.robot_plans.actions.core.robot_body import MoveTorsoAction, ParkArmsAction
-from coraplex.view_manager import ViewManager
 from semantic_digital_twin.datastructures.definitions import TorsoState
+from semantic_digital_twin.grasping.grasp_candidates import GraspCandidate
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
+from semantic_digital_twin.semantic_annotations.mixins import HasGraspCandidates
 from semantic_digital_twin.spatial_types import Pose
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
@@ -43,6 +42,14 @@ REACHING_TORSO = TorsoState.LOW
 """
 The torso height the robot reaches for the source container from: raised, the PR2's
 gripper cannot come down to an object at counter height.
+"""
+
+POURING_TORSO = TorsoState.HIGH
+"""
+The torso height the robot pours from.
+
+Raised before the pour, the arm tilts the source at once: left low, the torso rises
+slowly while the arm waits, which the simulation's stall rule gives up on.
 """
 
 PICK_UP_DISTANCE = 0.63
@@ -90,8 +97,8 @@ def standing_pose(world: World, base: Body, source: Body) -> Pose:
     :return: The pose the base stands at to pick the source up: facing it,
         :data:`PICK_UP_DISTANCE` away along the line from where the base stands now.
     """
-    world_P_base = base.global_pose.to_position().to_np()[:2]
-    world_P_source = source.global_pose.to_position().to_np()[:2]
+    world_P_base = base.global_pose.position.to_np()[:2]
+    world_P_source = source.global_pose.position.to_np()[:2]
     heading = world_P_source - world_P_base
     heading = heading / np.linalg.norm(heading)
     world_P_stand = world_P_source - heading * PICK_UP_DISTANCE
@@ -110,14 +117,28 @@ def facing_pose(standing: Pose, target: Body, world: World) -> Pose:
     :param world: The world the robot stands in.
     :return: The pose at the same place turned in place to face the target.
     """
-    world_P_stand = standing.to_position().to_np()[:2]
-    world_P_target = target.global_pose.to_position().to_np()[:2]
+    world_P_stand = standing.position.to_np()[:2]
+    world_P_target = target.global_pose.position.to_np()[:2]
     heading = world_P_target - world_P_stand
     return Pose.from_xyz_rpy(
         x=float(world_P_stand[0]),
         y=float(world_P_stand[1]),
         yaw=float(np.arctan2(heading[1], heading[0])),
         reference_frame=world.root,
+    )
+
+
+def grasp_facing(graspable: HasGraspCandidates, standing: Pose) -> GraspCandidate:
+    """
+    :param graspable: The object to take hold of.
+    :param standing: The pose the robot stands at, facing the object.
+    :return: The grasp the object offers whose approach direction runs most nearly the
+        way the robot faces, so the gripper comes at the object from the robot's side.
+    """
+    heading = standing.to_np()[:2, 0]
+    return max(
+        graspable.grasp_candidates(),
+        key=lambda grasp: float(grasp.world_T_grasp.to_np()[:2, 0] @ heading),
     )
 
 
@@ -219,21 +240,17 @@ class PouringExecution:
         """
         :param action: The pouring the steps prepare.
         :return: Parking the arms, lowering the torso, facing the source container,
-            picking it up with the action's arm and turning in place to face the target
-            container, which brings the pour poses within the arm's reach.
+            picking it up with the action's arm, raising the torso and turning in place to
+            face the target container, which brings the pour poses within the arm's reach.
         """
         robot = self.robot
-        grasp = GraspDescription(
-            approach_direction=ApproachDirection.FRONT,
-            vertical_alignment=VerticalAlignment.NoAlignment,
-            end_effector=ViewManager.get_end_effector_view(action.arm, robot),
-        )
         standing = standing_pose(self.world, robot.root, action.source_container.root)
         return [
-            ParkArmsAction(Arms.BOTH),
+            ParkArmsAction([robot.left_arm, robot.right_arm]),
             MoveTorsoAction(REACHING_TORSO),
             NavigateAction(standing),
-            PickUpAction(action.source_container, action.arm, grasp),
+            PickUpAction(grasp_facing(action.source_container, standing), action.arm),
+            MoveTorsoAction(POURING_TORSO),
             NavigateAction(facing_pose(standing, action.target_container, self.world)),
         ]
 
@@ -250,7 +267,7 @@ class PouringExecution:
         """
         root = self.plan()
         try:
-            with simulated_robot:
+            with kinematically_simulated_robot:
                 root.perform()
         finally:
             self.recorder.record(root.plan)

@@ -1,6 +1,6 @@
 {"turns": [
   {"answer": [{"PouringPhaseStructure.has_material_regime": null, "PouringPhaseStructure.has_termination_reason": null, "why": "Nothing says what the cup holds or when to stop.", "grounds": []}]},
-  {"answer": [{"PouringAction.target_container": "Body#1", "PouringAction.source_container": "PouringCup#1", "PouringAction.arm": "RIGHT", "PouringAction.tilt_angle": 1.85, "why": "The bowl and the cup are the only candidates; the default tilt lets the substance flow.", "grounds": [{"knowledge": "pour"}]}]}
+  {"answer": [{"PouringAction.target_container": "Body#1", "PouringAction.source_container": "PouringCup#1", "PouringAction.arm": "PR2RightArm#1", "PouringAction.tilt_angle": 1.85, "why": "The bowl and the cup are the only candidates; the default tilt lets the substance flow.", "grounds": [{"knowledge": "pour"}]}]}
 ],
  "generations": [
   {"fragments": [{"id": "pour", "type": "PouringPhaseStructure", "decomposes_task": "aicor:Pouring"}]}

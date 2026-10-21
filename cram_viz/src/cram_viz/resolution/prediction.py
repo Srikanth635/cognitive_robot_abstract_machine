@@ -21,17 +21,15 @@ from enum import StrEnum
 from pathlib import Path
 
 import numpy as np
-from coraplex.datastructures.enums import Arms
-from coraplex.execution_environment import simulated_robot
+from coraplex.execution_environment import kinematically_simulated_robot
 from coraplex.plans.factories import sequential
-from coraplex.view_manager import ViewManager
 from krrood.adapters.json_serializer import SubclassJSONSerializer
 from llm_reasoner.clients.tools import Tool, ToolDefinition, ToolOutcome
 from llm_reasoner.resolver.outcomes import OutcomePrediction
 from llm_reasoner.resolver.prompt_format import PromptRule, RuleName
 from llm_reasoner.world.access import WorldAccess
 from scipy.spatial.transform import Rotation, Slerp
-from semantic_digital_twin.robots.robot_parts import AbstractRobot
+from semantic_digital_twin.robots.robot_parts import AbstractRobot, Arm
 from semantic_digital_twin.spatial_computations.ik_solver import IKSolverException
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix, Pose
 from semantic_digital_twin.world import World
@@ -167,20 +165,16 @@ class HeldSource(SubclassJSONSerializer):
         """
         execution = PouringExecution(world=world, values=dict(values))
         action = execution.action()
-        with simulated_robot:
+        with kinematically_simulated_robot:
             sequential(
                 execution.steps_before_pour(action), context=execution.context()
             ).perform()
-        tool_frame = ViewManager.get_end_effector_view(
-            action.arm, execution.robot
-        ).tool_frame
+        tool_frame = action.arm.end_effector.tool_frame
         return cls(
             source_in_tool_frame=world.compute_forward_kinematics_np(
                 tool_frame, action.source_container.root
             ),
-            robot_yaw=float(
-                execution.robot.root.global_pose.to_quaternion().to_rpy()[2]
-            ),
+            robot_yaw=float(execution.robot.root.global_pose.yaw),
             joint_positions={
                 str(dof.name): float(world.state[dof.id].position)
                 for dof in world.degrees_of_freedom
@@ -251,7 +245,7 @@ class PourReach:
     How finely the turn to the pour pose is followed.
     """
 
-    def check(self, arm: Arms, pre_pour_pose: Pose, pour_pose: Pose) -> None:
+    def check(self, arm: Arm, pre_pour_pose: Pose, pour_pose: Pose) -> None:
         """
         :param arm: The arm holding the source.
         :param pre_pour_pose: The pose the tool starts the pour from.
@@ -265,10 +259,10 @@ class PourReach:
             world.state[dof.id].position = self.held.joint_positions[str(dof.name)]
         world.notify_state_change()
         robot = world.get_semantic_annotations_by_type(AbstractRobot)[0]
-        tool_frame = ViewManager.get_end_effector_view(arm, robot).tool_frame
+        tool_frame = world.get_body_by_name(arm.end_effector.tool_frame.name)
         *waypoints, goal = self.poses_between(
-            pre_pour_pose.to_homogeneous_matrix().to_np(),
-            pour_pose.to_homogeneous_matrix().to_np(),
+            pre_pour_pose.homogeneous_matrix.to_np(),
+            pour_pose.homogeneous_matrix.to_np(),
             self.tolerances,
         )
         configurations = [self.configuration_of(world)]
@@ -394,7 +388,7 @@ class PourPredictor:
             action.arm, pre_pour_pose, pour_pose
         )
         mouth = (
-            pour_pose.to_homogeneous_matrix().to_np()
+            pour_pose.homogeneous_matrix.to_np()
             @ held.source_in_tool_frame
             @ top_centre_in_own_frame(action.source_container.root)
         )[:3]

@@ -1,3 +1,3 @@
 {"turns": [
-  {"answer": [{"CuttingAction.object_to_cut": {"no_fitting_candidate": "Neither the bowl nor the spoon is something to cut."}, "CuttingAction.tool": "CuttingKnife#1", "CuttingAction.arm": "RIGHT", "CuttingAction.technique": "SLICE", "CuttingAction.slice_thickness": 0.02, "why": "No candidate is food.", "grounds": []}]}
+  {"answer": [{"CuttingAction.object_to_cut": {"no_fitting_candidate": "Neither the bowl nor the spoon is something to cut."}, "CuttingAction.tool": "CuttingKnife#1", "CuttingAction.arm": "PR2RightArm#1", "CuttingAction.technique": "SLICE", "CuttingAction.slice_thickness": 0.02, "why": "No candidate is food.", "grounds": []}]}
 ]}

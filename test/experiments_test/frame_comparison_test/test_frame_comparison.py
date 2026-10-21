@@ -7,6 +7,7 @@ kitchen, and how the arms are summarised.
 from __future__ import annotations
 
 import json
+from enum import Enum
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -19,7 +20,6 @@ from llm_reasoner.knowledge.access import (
 )
 from llm_reasoner.resolver.grounds import GroundKey
 
-from coraplex.datastructures.enums import Arms
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.semantic_annotations.semantic_annotations import PouringCup
 from semantic_digital_twin.world_description.world_entity import Body
@@ -342,6 +342,16 @@ class TestOutput:
 # %% the objects chosen
 
 
+class HandSide(Enum):
+    """
+    The hand a pour is chosen with, standing in for an arm where a test reads only that
+    the choice is written by its member's name.
+    """
+
+    LEFT = "left"
+    RIGHT = "right"
+
+
 @dataclass
 class PourChoosingObjects:
     """
@@ -350,7 +360,7 @@ class PourChoosingObjects:
 
     source_container: PouringCup
     target_container: Body
-    arm: Arms
+    arm: HandSide
     tilt_angle: float
 
 
@@ -366,7 +376,7 @@ class TestChosenValues:
         pour = PourChoosingObjects(
             source_container=PouringCup(root=Body(name=PrefixedName("cup.stl"))),
             target_container=Body(name=PrefixedName("bowl.stl")),
-            arm=Arms.RIGHT,
+            arm=HandSide.RIGHT,
             tilt_angle=1.85,
         )
         assert chosen_values(pour) == {

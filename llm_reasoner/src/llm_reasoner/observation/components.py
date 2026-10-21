@@ -277,7 +277,7 @@ class ObservedKnowledge(KnowledgeAccess):
         return self.reporter.made(
             KnowledgeOperation.SERVE,
             {
-                ArgumentKey.QUERY: kind_named(query.type),
+                ArgumentKey.QUERY: kind_named(query._type_),
                 ArgumentKey.INSTRUCTION: instruction,
             },
             lambda: self.knowledge.serve(query, instruction),

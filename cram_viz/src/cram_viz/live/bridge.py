@@ -110,8 +110,8 @@ def _pose_as_position_quaternion(body: Body) -> List[float]:
     Return a body's world pose as ``[x, y, z, qx, qy, qz, qw]``.
     """
     pose = body.global_pose
-    translation = pose.to_position().to_np().flatten()
-    quaternion = pose.to_quaternion().to_np().flatten()
+    translation = pose.position.to_np().flatten()
+    quaternion = pose.quaternion.to_np().flatten()
     return [round(float(value), 5) for value in (*translation[:3], *quaternion[:4])]
 
 

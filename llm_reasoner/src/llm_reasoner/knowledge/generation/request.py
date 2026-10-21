@@ -66,16 +66,16 @@ class HypothesisRequest:
         :raises UnsupportedFixedValue: When the match fixes a field to a nested match.
         """
         fixed = {}
-        for name, value in expression.kwargs.items():
+        for name, value in expression._kwargs_.items():
             if value is Ellipsis:
                 continue
             if isinstance(value, Match):
                 raise UnsupportedFixedValue(field_name=name)
             fixed[name] = value
         return cls(
-            root_type=expression.type,
+            root_type=expression._type_,
             fixed_values=fixed,
-            instruction=instruction or expression.type.__name__,
+            instruction=instruction or expression._type_.__name__,
         )
 
     @property

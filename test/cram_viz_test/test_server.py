@@ -262,7 +262,7 @@ class TestSceneScopedKnowledge:
 
 
 @pytest.fixture()
-def pouring_server(fixture_scene, pouring_bundle):
+def pouring_server(fixture_scene, pouring_bundle_with_arms):
     """
     The real server on an ephemeral port, offering the fixture scene and, beside it, a
     scene with a bowl and a pouring vessel and one with the bowl alone.
@@ -271,8 +271,8 @@ def pouring_server(fixture_scene, pouring_bundle):
     from cram_viz.resolution.scene_world import SCENE_FILE, SceneKey
 
     scenes = fixture_scene / "scenes"
-    shutil.copytree(pouring_bundle, scenes / "pouring")
-    shutil.copytree(pouring_bundle, scenes / "bowl_only")
+    shutil.copytree(pouring_bundle_with_arms, scenes / "pouring")
+    shutil.copytree(pouring_bundle_with_arms, scenes / "bowl_only")
     scene_file = scenes / "bowl_only" / SCENE_FILE
     scene = json.loads(scene_file.read_text())
     scene[SceneKey.OBJECTS] = [

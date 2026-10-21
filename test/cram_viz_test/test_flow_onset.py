@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from math import radians
 
 import pytest
-from coraplex.datastructures.enums import Arms
 from llm_reasoner.knowledge.access import core, pouring
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
 from typing_extensions import Dict, List, Optional, Sequence
@@ -18,7 +17,7 @@ from typing_extensions import Dict, List, Optional, Sequence
 from cram_viz.resolution.flow_onset import FlowOnsetKnowledge
 from cram_viz.resolution.trial import OutcomeKey
 
-from .resolutions import LANDS
+from .resolutions import LANDS, HandSide
 from .test_pouring_trial import PourAnswer, checking
 
 # %% helpers
@@ -182,7 +181,7 @@ class TestFlowOnsetKnowledge:
 
 class TestPourFlows:
     def answer(self, tilt_angle: float) -> PourAnswer:
-        return PourAnswer(arm=Arms.RIGHT, tilt_angle=tilt_angle)
+        return PourAnswer(arm=HandSide.RIGHT, tilt_angle=tilt_angle)
 
     def check_stating(self):
         check = checking([LANDS])

@@ -429,7 +429,7 @@ class LanguageModelBackend(GenerativeBackend):
         if self.outcome_check is None:
             return
         for name in self.outcome_check.withheld_slots:
-            expression.kwargs.setdefault(name, ...)
+            expression._kwargs_.setdefault(name, ...)
 
     def _held_back(self, slots: Sequence[Slot]) -> List[Slot]:
         """
@@ -476,7 +476,7 @@ class LanguageModelBackend(GenerativeBackend):
             ResolutionStarted(
                 resolution=resolution,
                 purpose=self.purpose,
-                action=identifier_of(expression.type),
+                action=identifier_of(expression._type_),
                 slots=[
                     SlotSummary(
                         path=slot.path,
@@ -1059,7 +1059,7 @@ class LanguageModelBackend(GenerativeBackend):
         Keep only the instances satisfying the match's where-conditions.
 
         .. note::
-            Conditions must be bound through ``match.variable``. Binding them through
+            Conditions must be bound through ``match._variable_``. Binding them through
             ``match.expression`` yields a condition that matches nothing.
 
         :param expression: The match being resolved.
@@ -1082,9 +1082,9 @@ class LanguageModelBackend(GenerativeBackend):
                     )
                 ],
             )
-        expression.variable._update_domain_(meeting)
+        expression._variable_._update_domain_(meeting)
         return list(
-            entity(expression.variable)
+            entity(expression._variable_)
             ._quantify_(expression._quantifier_type_)
             ._evaluate_natively_()
         )
@@ -1099,8 +1099,8 @@ class LanguageModelBackend(GenerativeBackend):
         :param conditions: Conditions bound through the match's variable.
         :return: The candidates meeting every one of the conditions.
         """
-        expression.variable._update_domain_(instances)
-        query = entity(expression.variable)._quantify_(An)
+        expression._variable_._update_domain_(instances)
+        query = entity(expression._variable_)._quantify_(An)
         if conditions:
             query = query.where(*conditions)
         return list(query._evaluate_natively_())

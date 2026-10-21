@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 
 from llm_reasoner.clients.base import ScriptedClient
@@ -17,6 +18,8 @@ from llm_reasoner.knowledge.access import (
     KnowledgeService,
 )
 from llm_reasoner.resolver.grounds import GroundKey
+from semantic_digital_twin.robots.robot_parts import Arm
+from semantic_digital_twin.world import World
 from typing_extensions import Any, List, Optional, Sequence
 
 from cram_viz.resolution.designators import DesignatorQuery, PouringDesignator
@@ -29,6 +32,30 @@ from cram_viz.resolution.resolver import (
 )
 from cram_viz.resolution.runs import ResolutionRuns
 from cram_viz.resolution.trial import OutcomeKey
+
+
+class HandSide(Enum):
+    """
+    The hand an answer picks, standing in for an arm where a test reads only that the
+    answer names one.
+    """
+
+    LEFT = "left"
+    RIGHT = "right"
+
+
+def arm_in(world: World, name: str) -> Arm:
+    """
+    :param world: A world holding a robot.
+    :param name: The name of one of the robot's arms.
+    :return: The arm of that name.
+    """
+    (arm,) = (
+        arm
+        for arm in world.get_semantic_annotations_by_type(Arm)
+        if arm.name.name == name
+    )
+    return arm
 
 
 def objects_given() -> ResolvedDesignator:
@@ -54,7 +81,9 @@ def objects_given() -> ResolvedDesignator:
                         given=True,
                         serialized="bowl.stl",
                     ),
-                    ResolvedSlot("arm", "RIGHT", given=False, serialized="RIGHT"),
+                    ResolvedSlot(
+                        "arm", "PR2RightArm", given=False, serialized="PR2RightArm"
+                    ),
                     ResolvedSlot("tilt_angle", "1.85", given=False, serialized=1.85),
                 ],
                 why="The default tilt lets the substance flow.",
@@ -172,7 +201,7 @@ class ScriptedTrials:
         outcome = self.outcomes.pop(0)
         if outcome is None:
             return FinishedTrial(
-                returncode=1, stderr="Traceback\nMotionDidNotFinish: out of reach\n"
+                returncode=1, stderr="Traceback\nMotionMadeNoProgress: out of reach\n"
             )
         Path(command[-1]).write_text(json.dumps(outcome))
         return FinishedTrial(returncode=0)

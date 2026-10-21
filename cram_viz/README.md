@@ -87,7 +87,7 @@ Below the EQL query box are predefined, underspecified pouring designators
 (`cram_viz.resolution`), each shown as a krrood match query written in a file of its
 own under `resolution/designator_queries/`: it states some slots of coraplex's
 `PouringAction` and leaves the others open (`...`, or a variable such as
-`variable(Tool)`). A query reads krrood's factories, `PouringAction`, `Arms`, `Tool` and
+`variable(Tool)`). A query reads krrood's factories, `PouringAction`, `Arm`, `Tool` and
 `Body`, and the scene's objects, each by its kind in snake case (`pouring_cup`, `bowl`).
 Clicking one copies its query into the search bar, where it may be edited; **Generate**
 resolves the query in the search bar with `llm_reasoner`'s resolver in the selected

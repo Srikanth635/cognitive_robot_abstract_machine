@@ -110,7 +110,10 @@ def names_in(bundle: Path) -> Dict[str, Any]:
     """
     :return: The names a designator is evaluated with on the bundle's scene.
     """
-    return SceneNamespace(world=SceneWorldBuilder().build(bundle)).names()
+    builder = SceneWorldBuilder()
+    world = builder.build(bundle)
+    builder.annotate_known_robot(world, bundle)
+    return SceneNamespace(world=world).names()
 
 
 # %% the designators
@@ -123,52 +126,56 @@ class TestDesignators:
         ) == sorted(PouringDesignator)
 
     def test_every_designator_is_a_match_query_on_a_scene_with_a_pouring_cup(
-        self, pouring_bundle
+        self, pouring_bundle_with_arms
     ):
-        names = names_in(pouring_bundle)
+        names = names_in(pouring_bundle_with_arms)
         assert all(
             isinstance(DesignatorQuery.shipped(identifier).query_in(names), Match)
             for identifier in PouringDesignator
         )
 
-    def test_a_designator_is_offered_as_its_query_text(self, pouring_bundle):
+    def test_a_designator_is_offered_as_its_query_text(self, pouring_bundle_with_arms):
         identifier = PouringDesignator.OBJECTS_GIVEN
-        offered = OfferedDesignator.in_scene(identifier, names_in(pouring_bundle))
+        offered = OfferedDesignator.in_scene(
+            identifier, names_in(pouring_bundle_with_arms)
+        )
         assert (
             offered.query
             == (DESIGNATOR_DIRECTORY / f"{identifier}{QUERY_SUFFIX}").read_text()
         )
         assert offered.available is True
 
-    def test_a_designator_is_offered_on_one_line_too(self, pouring_bundle):
+    def test_a_designator_is_offered_on_one_line_too(self, pouring_bundle_with_arms):
         identifier = PouringDesignator.OBJECTS_GIVEN
-        offered = OfferedDesignator.in_scene(identifier, names_in(pouring_bundle))
+        offered = OfferedDesignator.in_scene(
+            identifier, names_in(pouring_bundle_with_arms)
+        )
         assert offered.payload()["query_on_one_line"] == (
             DesignatorQuery.shipped(identifier).source.on_one_line
         )
 
     def test_a_scene_lacking_an_object_the_query_names_cannot_offer_it(
-        self, pouring_bundle
+        self, pouring_bundle_with_arms
     ):
-        names = names_in(without_object(pouring_bundle, "Static_MilkPitcher"))
+        names = names_in(without_object(pouring_bundle_with_arms, "Static_MilkPitcher"))
         offered = OfferedDesignator.in_scene(PouringDesignator.OBJECTS_GIVEN, names)
         assert offered.unbound == [SceneNamespace.name_of(PouringCup)]
         assert offered.available is False
 
     def test_a_scene_with_nothing_to_take_for_a_slot_cannot_offer_it(
-        self, pouring_bundle
+        self, pouring_bundle_with_arms
     ):
-        names = names_in(without_object(pouring_bundle, "Static_MilkPitcher"))
+        names = names_in(without_object(pouring_bundle_with_arms, "Static_MilkPitcher"))
         offered = OfferedDesignator.in_scene(PouringDesignator.OBJECTS_OPEN, names)
         assert offered.without_candidates == ["source_container"]
         assert offered.available is False
 
-    def test_a_query_that_is_not_a_match_is_refused(self, pouring_bundle):
+    def test_a_query_that_is_not_a_match_is_refused(self, pouring_bundle_with_arms):
         designator = DesignatorQuery(
             source=QuerySource.read(SOURCES / "not_a_match.py")
         )
         with pytest.raises(NotAMatchQuery):
-            designator.query_in(names_in(pouring_bundle))
+            designator.query_in(names_in(pouring_bundle_with_arms))
 
 
 # %% the slots
@@ -176,10 +183,10 @@ class TestDesignators:
 
 class TestQuerySlots:
     def test_the_slots_are_named_in_the_order_the_query_states_them(
-        self, pouring_bundle
+        self, pouring_bundle_with_arms
     ):
         query = DesignatorQuery.shipped(PouringDesignator.OBJECTS_OPEN).query_in(
-            names_in(pouring_bundle)
+            names_in(pouring_bundle_with_arms)
         )
         assert QuerySlots.of(query).names == [
             "source_container",
@@ -189,10 +196,10 @@ class TestQuerySlots:
         ]
 
     def test_the_pour_geometry_designator_leaves_the_geometry_to_the_resolver(
-        self, pouring_bundle
+        self, pouring_bundle_with_arms
     ):
         query = DesignatorQuery.shipped(PouringDesignator.POUR_GEOMETRY_OPEN).query_in(
-            names_in(pouring_bundle)
+            names_in(pouring_bundle_with_arms)
         )
         slots = QuerySlots.of(query)
         assert slots.given == ["source_container", "target_container"]
@@ -205,9 +212,9 @@ class TestQuerySlots:
             "pour_height",
         ]
 
-    def test_only_a_value_the_query_states_is_given(self, pouring_bundle):
+    def test_only_a_value_the_query_states_is_given(self, pouring_bundle_with_arms):
         query = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN).query_in(
-            names_in(pouring_bundle)
+            names_in(pouring_bundle_with_arms)
         )
         assert QuerySlots.of(query).given == ["source_container", "target_container"]
 
@@ -243,39 +250,45 @@ def reopening_resolver(tmp_path: Path):
 
 
 class TestResolution:
-    def test_a_resolution_names_the_value_of_every_slot(self, pouring_bundle, tmp_path):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+    def test_a_resolution_names_the_value_of_every_slot(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         (action,) = run.resolution.actions
         assert {slot.name: slot.value for slot in action.slots} == {
             "target_container": "bowl.stl",
             "source_container": "PouringCup (Static_MilkPitcher.stl)",
-            "arm": "RIGHT",
+            "arm": "PR2RightArm (torso_lift_link)",
             "tilt_angle": "1.85",
         }
 
-    def test_a_resolved_slot_keeps_its_value_as_data(self, pouring_bundle, tmp_path):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+    def test_a_resolved_slot_keeps_its_value_as_data(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         (action,) = run.resolution.actions
         assert {slot.name: slot.serialized for slot in action.slots} == {
             "source_container": "Static_MilkPitcher.stl",
             "target_container": "bowl.stl",
-            "arm": "RIGHT",
+            "arm": "PR2RightArm",
             "tilt_angle": 1.85,
         }
 
     def test_a_resolution_marks_the_slots_its_query_states_as_given(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         (action,) = run.resolution.actions
         query = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN).query_in(
-            names_in(pouring_bundle)
+            names_in(pouring_bundle_with_arms)
         )
         assert [slot.name for slot in action.slots if slot.given] == (
             QuerySlots.of(query).given
         )
 
-    def test_the_resolver_reads_the_scene_geometry(self, pouring_bundle, tmp_path):
+    def test_the_resolver_reads_the_scene_geometry(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
         resolver = resolver_replaying(
             PouringDesignator.OBJECTS_GIVEN,
             HypothesisStore(directory=tmp_path / "store"),
@@ -284,22 +297,26 @@ class TestResolution:
         resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         geometry = SceneGeometry(
-            world=SceneWorldBuilder().build(pouring_bundle)
+            world=SceneWorldBuilder().build(pouring_bundle_with_arms)
         ).context_for(None)
         assert [geometry in user for _, user in resolver.client.calls] == [True] * len(
             resolver.client.calls
         )
 
-    def test_a_resolution_states_the_query_it_resolved(self, pouring_bundle, tmp_path):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+    def test_a_resolution_states_the_query_it_resolved(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         designator = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN)
         assert run.resolution.query == designator.source.text
 
-    def test_a_resolution_folds_its_query_onto_one_line(self, pouring_bundle, tmp_path):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+    def test_a_resolution_folds_its_query_onto_one_line(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         one_line = run.resolution.query_on_one_line
         assert "\n" not in one_line
         assert one_line.split() == run.resolution.query.split()
@@ -318,7 +335,7 @@ class TestResolution:
         assert all(name in sys.modules for name in WORLD_MODEL_MODULES)
 
     def test_a_query_the_scene_cannot_resolve_is_refused(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_replaying(
             PouringDesignator.OBJECTS_GIVEN,
@@ -329,31 +346,31 @@ class TestResolution:
             resolver.resolve(
                 DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
                 "pouring",
-                without_object(pouring_bundle, "Static_MilkPitcher"),
+                without_object(pouring_bundle_with_arms, "Static_MilkPitcher"),
             )
 
     def test_a_resolution_names_what_its_answer_rests_on(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         (action,) = run.resolution.actions
         assert [(ground.source, ground.name) for ground in action.grounds] == [
             (GroundKey.KNOWLEDGE, "pour"),
         ]
 
     def test_a_knowledge_ground_keeps_the_citation_it_rests_on(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         (action,) = run.resolution.actions
         (ground,) = action.grounds
         view = run.knowledge.view(run.resolution.record_id)
         assert Citation.from_iri(ground.identifier) == view.citation_of(view.root)
 
     def test_a_resolution_reports_the_knowledge_it_consulted(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         (record,) = run.knowledge.backend.store.records()
         assert run.resolution.record_id == record.record_id
         assert run.resolution.situation == {}
@@ -364,7 +381,7 @@ class TestResolution:
 
 class TestTrials:
     def test_a_pour_that_misses_is_resolved_again_with_its_outcome(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_replaying(
             "objects_given_retried",
@@ -375,13 +392,15 @@ class TestTrials:
         resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         _, retried = resolver.client.calls[-1]
         assert f'kind="{OutcomeFellShort.__name__}"' in retried
         assert json.dumps({"outcome": MISSES}, indent=2) in retried
 
-    def test_a_resolution_keeps_the_pours_it_tried(self, pouring_bundle, tmp_path):
+    def test_a_resolution_keeps_the_pours_it_tried(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
         resolver = resolver_replaying(
             "objects_given_retried",
             HypothesisStore(directory=tmp_path / "store"),
@@ -391,7 +410,7 @@ class TestTrials:
         run = resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         (action,) = run.resolution.actions
         assert [trial.outcome for trial in run.resolution.trials] == [MISSES, LANDS]
@@ -400,7 +419,7 @@ class TestTrials:
         }
 
     def test_a_pour_tilted_less_than_the_consulted_knowledge_says_it_needs_is_refused(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_replaying(
             "objects_given_shallow",
@@ -411,14 +430,14 @@ class TestTrials:
         run = resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         first, second = [trial.outcome for trial in run.resolution.trials]
         assert first[OutcomeKey.TILT_REACHES_FLOW_ONSET] is False
         assert second[OutcomeKey.TILT_REACHES_FLOW_ONSET] is True
 
     def test_a_pour_ending_beside_the_opening_opens_the_sideways_shift_the_model_sets(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_replaying(
             "objects_given_side_shifted",
@@ -429,7 +448,7 @@ class TestTrials:
         run = resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         (action,) = run.resolution.actions
         slots = {slot.name: slot for slot in action.slots}
@@ -439,7 +458,9 @@ class TestTrials:
             SIDE_SHIFT
         )
 
-    def test_a_pour_landing_at_once_opens_nothing(self, pouring_bundle, tmp_path):
+    def test_a_pour_landing_at_once_opens_nothing(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
         resolver = resolver_replaying(
             "objects_given",
             HypothesisStore(directory=tmp_path / "store"),
@@ -448,13 +469,13 @@ class TestTrials:
         run = resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         (action,) = run.resolution.actions
         assert all(slot.name not in PouringSlot.geometry() for slot in action.slots)
 
     def test_when_no_pour_lands_the_one_ending_nearest_the_opening_is_kept(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         misses = [
             {
@@ -472,7 +493,7 @@ class TestTrials:
         run = resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         nearest = min(
             misses, key=lambda outcome: outcome[OutcomeKey.DISTANCE_FROM_OPENING_CENTRE]
@@ -502,16 +523,16 @@ class TestRuns:
         ).read_text() == "stored"
 
     def test_what_a_run_admits_is_added_to_the_baseline_store(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         assert [
             record.record_id
             for record in HypothesisStore(directory=tmp_path / "store").records()
         ] == [run.resolution.record_id]
 
     def test_the_next_run_is_served_what_an_earlier_run_admitted(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_replaying(
             PouringDesignator.OBJECTS_GIVEN,
@@ -520,21 +541,23 @@ class TestRuns:
             times=2,
         )
         designator = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN)
-        first = resolver.resolve(designator, "pouring", pouring_bundle)
-        second = resolver.resolve(designator, "pouring", pouring_bundle)
+        first = resolver.resolve(designator, "pouring", pouring_bundle_with_arms)
+        second = resolver.resolve(designator, "pouring", pouring_bundle_with_arms)
         assert second.resolution.record_id == first.resolution.record_id
         assert len(resolver.baseline.backend.client.calls) == 1
 
     def test_an_earlier_runs_own_knowledge_is_left_as_it_was(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        first, second = resolve_objects_given(pouring_bundle, tmp_path, times=2)
+        first, second = resolve_objects_given(
+            pouring_bundle_with_arms, tmp_path, times=2
+        )
         assert [
             record.record_id for record in first.knowledge.backend.store.records()
         ] == [first.resolution.record_id]
 
     def test_a_run_that_fails_still_adds_what_it_admitted(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_replaying(
             PouringDesignator.OBJECTS_GIVEN,
@@ -546,14 +569,16 @@ class TestRuns:
             resolver.resolve(
                 DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
                 "pouring",
-                pouring_bundle,
+                pouring_bundle_with_arms,
             )
         assert len(HypothesisStore(directory=tmp_path / "store").records()) == 1
 
     def test_every_run_starts_from_the_same_baseline_store(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        first, second = resolve_objects_given(pouring_bundle, tmp_path, times=2)
+        first, second = resolve_objects_given(
+            pouring_bundle_with_arms, tmp_path, times=2
+        )
         assert first.resolution.run != second.resolution.run
         assert [
             len(run.knowledge.backend.store.records()) for run in (first, second)
@@ -563,16 +588,16 @@ class TestRuns:
         ]
 
     def test_a_run_keeps_the_environment_it_started_from(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
         assert kept.environment() == RunEnvironment(
-            scene="pouring", bundle=pouring_bundle
+            scene="pouring", bundle=pouring_bundle_with_arms
         )
 
-    def test_a_run_is_found_by_its_name(self, pouring_bundle, tmp_path):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+    def test_a_run_is_found_by_its_name(self, pouring_bundle_with_arms, tmp_path):
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         found = ResolutionRuns(directory=tmp_path / "runs").named(run.resolution.run)
         assert found.directory == tmp_path / "runs" / run.resolution.run
 
@@ -582,13 +607,17 @@ class TestRuns:
         with pytest.raises(UnknownRun):
             ResolutionRuns(directory=tmp_path / "runs").named(name)
 
-    def test_a_run_is_reopened_with_what_it_resolved(self, pouring_bundle, tmp_path):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+    def test_a_run_is_reopened_with_what_it_resolved(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         reopened = reopening_resolver(tmp_path).reopen(run.resolution.run)
         assert reopened.resolution == run.resolution
 
-    def test_a_reopened_run_consults_its_own_store(self, pouring_bundle, tmp_path):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+    def test_a_reopened_run_consults_its_own_store(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         reopened = reopening_resolver(tmp_path).reopen(run.resolution.run)
         assert reopened.knowledge.backend.store == run.knowledge.backend.store
         assert reopened.knowledge.backend.store.records() == (
@@ -601,9 +630,9 @@ class TestRuns:
             reopening_resolver(tmp_path).reopen("no-such-run")
 
     def test_a_run_keeps_its_resolution_beside_its_knowledge(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
         assert (kept.directory / RunFile.RESOLUTION).is_file()
         assert kept.resolution() == run.resolution
@@ -656,7 +685,7 @@ class TestResolverNeems:
         assert resolver.neem_database == paths.neem_database_path()
 
     def test_a_resolver_given_a_database_tells_each_trial_where_to_keep_its_neem_in_the_run_log(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_replaying(
             PouringDesignator.OBJECTS_GIVEN,
@@ -667,7 +696,7 @@ class TestResolverNeems:
         run = resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         (command,) = resolver.simulate.commands
         options = command[command.index(NeemOption.DATABASE) :]
@@ -679,7 +708,7 @@ class TestResolverNeems:
         ]
 
     def test_a_resolver_given_no_database_tells_its_trials_to_keep_nothing(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_replaying(
             PouringDesignator.OBJECTS_GIVEN,
@@ -689,7 +718,7 @@ class TestResolverNeems:
         resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         (command,) = resolver.simulate.commands
         assert NeemOption.DATABASE not in command
@@ -735,7 +764,7 @@ def resolver_offering_the_frame(
 
 class TestOfferingTheFrame:
     def test_a_resolution_reports_the_core_and_the_frame_it_consulted(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = resolver_offering_the_frame(
             HypothesisStore(directory=tmp_path / "store"), tmp_path / "runs"
@@ -743,7 +772,7 @@ class TestOfferingTheFrame:
         run = resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         core_record, frame_record = run.resolution.perspective_record_ids
         assert isinstance(
@@ -754,15 +783,15 @@ class TestOfferingTheFrame:
         )
 
     def test_by_default_a_resolution_consults_no_perspective(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         assert run.resolution.perspective_record_ids == []
 
     def test_a_run_kept_before_perspectives_were_reported_is_reopened(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
-        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
         kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
         stored = json.loads((kept.directory / RunFile.RESOLUTION).read_text())
         del stored["perspective_record_ids"]
@@ -780,7 +809,7 @@ class TestOfferingTheFrame:
 
 class TestPredictingPours:
     def test_a_resolver_predicting_pours_states_the_prediction_rule(
-        self, pouring_bundle, tmp_path
+        self, pouring_bundle_with_arms, tmp_path
     ):
         resolver = replace(
             resolver_replaying(
@@ -793,12 +822,14 @@ class TestPredictingPours:
         resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         system, _ = resolver.client.calls[-1]
         assert PREDICTION_RULE.render() in system
 
-    def test_by_default_a_resolver_predicts_nothing(self, pouring_bundle, tmp_path):
+    def test_by_default_a_resolver_predicts_nothing(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
         resolver = resolver_replaying(
             PouringDesignator.OBJECTS_GIVEN,
             HypothesisStore(directory=tmp_path / "store"),
@@ -807,7 +838,7 @@ class TestPredictingPours:
         resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
-            pouring_bundle,
+            pouring_bundle_with_arms,
         )
         system, _ = resolver.client.calls[-1]
         assert PREDICTION_RULE.render() not in system

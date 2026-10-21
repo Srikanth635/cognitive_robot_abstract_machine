@@ -1,6 +1,6 @@
 the(PouringAction)(
     source_container=variable(Tool),
     target_container=variable(Body),
-    arm=...,
+    arm=variable(Arm),
     tilt_angle=...,
 )

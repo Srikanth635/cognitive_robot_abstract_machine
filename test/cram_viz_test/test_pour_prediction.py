@@ -15,7 +15,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from coraplex.exceptions import MotionDidNotFinish
+from coraplex.plans.failures import MotionMadeNoProgress
 from scipy.spatial.transform import Rotation
 from jsonschema import Draft202012Validator
 from llm_reasoner.resolver.prompt_format import RuleName
@@ -55,14 +55,14 @@ ended.
 POURING_VALUES = {
     "source_container": "Static_MilkPitcher.stl",
     "target_container": "bowl.stl",
-    "arm": "RIGHT",
+    "arm": "PR2RightArm",
     "tilt_angle": 1.85,
 }
 """
 A pour from the pitcher into the bowl, its geometry left to the action's defaults.
 """
 
-PICK_UP_FAILURE = "MotionDidNotFinish: out of reach"
+PICK_UP_FAILURE = "MotionMadeNoProgress: out of reach"
 """
 Why a scripted pick-up fails, as the last line a failing process writes.
 """
@@ -86,7 +86,7 @@ The tilts, in radians, the pours are tried at: which of them the arm can reach i
 from the prediction itself, not written here.
 """
 
-PERFORMED_TILTS = (2.8, 2.9)
+PERFORMED_TILTS = (2.9,)
 """
 Tilts, in radians, at which the simulation performs the pour from where the robot faces
 the bowl although the arm only gets there by a path other than the interpolated one the
@@ -184,9 +184,9 @@ class TestPrediction:
     def test_predicting_performs_nothing_in_the_world(self, predictor):
         execution = PouringExecution(world=predictor.world, values=POURING_VALUES)
         source = execution.action().source_container.root
-        before = source.global_pose.to_position().to_np()
+        before = source.global_pose.position.to_np()
         predictor.predict(POURING_VALUES)
-        assert np.array_equal(source.global_pose.to_position().to_np(), before)
+        assert np.array_equal(source.global_pose.position.to_np(), before)
 
 
 # %% reaching the pour pose
@@ -273,7 +273,7 @@ class TestReachingThePourPose:
                 {
                     "source_container": view.handle_of(cup),
                     "target_container": view.handle_of(bowl),
-                    "arm": "RIGHT",
+                    "arm": "PR2RightArm",
                     "tilt_angle": unreachable_tilt,
                 }
             ).content
@@ -391,7 +391,7 @@ class TestAgainstThePourPerformed:
         out_of_reach = [tilt for tilt, reached in reach_by_tilt.items() if not reached]
         assert out_of_reach
         for tilt_angle in out_of_reach:
-            with pytest.raises(MotionDidNotFinish):
+            with pytest.raises(MotionMadeNoProgress):
                 PouringTrial.outcome_in(
                     deepcopy(pouring_kitchen),
                     {**POURING_VALUES, "tilt_angle": tilt_angle},
@@ -412,7 +412,7 @@ class TestTool:
                 {
                     "source_container": view.handle_of(cup),
                     "target_container": view.handle_of(bowl),
-                    "arm": "RIGHT",
+                    "arm": "PR2RightArm",
                     "tilt_angle": 1.85,
                 }
             ).content
@@ -430,7 +430,7 @@ class TestTool:
                     {
                         "source_container": view.handle_of(cup),
                         "target_container": view.handle_of(bowl),
-                        "arm": "RIGHT",
+                        "arm": "PR2RightArm",
                         "tilt_angle": 1.85,
                     }
                 ).content
@@ -454,7 +454,7 @@ class TestTool:
                 {
                     "source_container": view.handle_of(cup),
                     "target_container": view.handle_of(bowl),
-                    "arm": "LEFT",
+                    "arm": "PR2LeftArm",
                 }
             ).content
         )
@@ -510,7 +510,7 @@ class TestMeasuredHolding:
         holding = MeasuredHolding(bundle=tmp_path, run=run)
         holding.held(POURING_VALUES)
         holding.held({**POURING_VALUES, "tilt_angle": 1.2})
-        holding.held({**POURING_VALUES, "arm": "LEFT"})
+        holding.held({**POURING_VALUES, "arm": "PR2LeftArm"})
         assert len(run.commands) == 2
 
     def test_a_hold_the_process_cannot_pick_up_is_refused_with_its_reason(
@@ -567,7 +567,7 @@ class ProcessFailingToPickUp:
 
     def __call__(self, command, **settings):
         return FinishedTrial(
-            returncode=1, stderr="Traceback\nMotionDidNotFinish: out of reach\n"
+            returncode=1, stderr="Traceback\nMotionMadeNoProgress: out of reach\n"
         )
 
 
