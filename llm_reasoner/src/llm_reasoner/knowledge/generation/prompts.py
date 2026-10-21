@@ -11,7 +11,16 @@ from operator import attrgetter
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
 
-from typing_extensions import Any, Callable, Dict, List, Mapping, Optional, Sequence
+from typing_extensions import (
+    Any,
+    Callable,
+    Collection,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+)
 
 from llm_reasoner.knowledge.acceptance.derived import described
 from llm_reasoner.knowledge.acceptance.rules import Violation
@@ -358,27 +367,38 @@ def field_takes(field_schema: FieldSchema) -> Dict[str, Any]:
     return {TakesKey.LITERAL: field_schema.kind}
 
 
-def type_entry(type_schema: TypeSchema) -> Dict[str, Any]:
+def type_entry(
+    type_schema: TypeSchema, described_types: Optional[Collection[type]] = None
+) -> Dict[str, Any]:
     """
-    :return: A fragment type as data: its name, the types it is a kind of, its meaning,
-        its definition when it has one, what the ontology requires of it beyond its
-        bases, and the fields it adds to them.
+    :param described_types: The types the prompt gives entries of; every base when ``None``.
+    :return: A fragment type as data: its name, the described types it is a kind of,
+        its meaning, its definition when it has one, what the ontology requires of it
+        beyond those, and the fields it adds to them. A base the prompt does not
+        describe is taken into the entry, its fields and requirements with it.
     """
-    term = type_schema.python_type.term
-    own = vars(type_schema.python_type).get("__annotations__", {})
+    python_type = type_schema.python_type
+    term = python_type.term
+    taken_in = [python_type, *undescribed_bases(python_type, described_types)]
+    own = {
+        name for owner in taken_in for name in vars(owner).get("__annotations__", {})
+    }
     entry: Dict[str, Any] = {
         TypeKey.NAME: type_schema.name,
         TypeKey.KIND_OF: [
             base.__name__
-            for base in type_schema.python_type.__bases__
-            if "term" in vars(base)
+            for owner in taken_in
+            for base in owner.__bases__
+            if "term" in vars(base) and base not in taken_in
         ],
         TypeKey.MEANING: type_schema.description,
     }
     if term.definition is not None:
         entry[TypeKey.DEFINED] = described(term.definition, False)
     entry[TypeKey.REQUIRES] = [
-        described(restriction, False) for restriction in term.restrictions
+        described(restriction, False)
+        for owner in taken_in
+        for restriction in owner.term.restrictions
     ]
     entry[TypeKey.FIELDS] = [
         {
@@ -391,6 +411,27 @@ def type_entry(type_schema: TypeSchema) -> Dict[str, Any]:
         if field_schema.name in own
     ]
     return entry
+
+
+def undescribed_bases(
+    python_type: type, described_types: Optional[Collection[type]]
+) -> list[type]:
+    """
+    :param described_types: The types the prompt gives entries of; every base when ``None``.
+    :return: The generated classes the type specialises, through classes the prompt
+        does not describe, that the prompt does not describe either, nearest first.
+    """
+    if described_types is None:
+        return []
+    found: list[type] = []
+    pending = list(python_type.__bases__)
+    while pending:
+        base = pending.pop(0)
+        if "term" not in vars(base) or base in described_types or base in found:
+            continue
+        found.append(base)
+        pending.extend(base.__bases__)
+    return found
 
 
 def structure_rule_entry(shape: StructureShape) -> Dict[str, str]:
@@ -453,7 +494,13 @@ class GenerationPrompt:
                     section=GenerationSection.TYPES,
                     body=as_json(
                         [
-                            type_entry(type_schema)
+                            type_entry(
+                                type_schema,
+                                {
+                                    listed.python_type
+                                    for listed in schema.types.values()
+                                },
+                            )
                             for _, type_schema in sorted(schema.types.items())
                         ]
                     ),

@@ -800,6 +800,41 @@ nine runs counting the intact one, $1.77 read from the runs' events):
   turned the bowl over by name and were not repeated with this harness. The slots it reads are
   `PouringSlot` members, checked against the fields of `PouringAction`.
 
+### 13.8 A granular pour, every perspective consulted (2026-10-21)
+
+`objects_given` in `simple_pouring` (the pitcher into the bowl; arm and tilt open), the phase
+structure and all three perspectives consulted, Sonnet 5.5, two runs each on a fresh store.
+cram_viz states no task and coraplex's `PouringAction` takes only a `Tool` as its source, so
+the cereal box cannot be the source; the run's script added the task "Pour the cereal from the
+cup into the bowl." to the resolver's context (not part of the code).
+
+| | Run 1 | Run 2 (prompt fix below) |
+|---|---|---|
+| Situation chosen | granular, termination left open | the same |
+| Hypotheses generated (structure, core, frame, schemas, failures) | 5, in 9 attempts | 5, each on the first attempt |
+| Pours tried | right 1.85 rad (0.188 m off), left 1.85 (motion failed), right 0.55 (0.114 m off) | right 1.85 (0.188 m), left 1.85 (failed), right 1.5 (0.200 m), right 2.95 (failed) |
+| Landed | no; kept the best pour tried | no; kept the best pour tried |
+| Cost (knowledge + resolver) | $0.69 + $0.40 = $1.09 | $0.73 + $0.57 = $1.30 |
+
+- The situation worked end to end: one pass chose granular from the task, and the phase
+  structure, the core (`has_material_regime` granular) and the three perspectives on it were
+  generated for it and served together.
+- The perspectives say little that is granular: the failures are titled for a granular
+  material but are the three the description seeds (lands beside the opening, tilted too
+  little, cannot reach), and the frame's default is still "until the wanted amount". The
+  phase structure gave a 30° flow onset (run 1) and the resolver read a 30–120° or 45–120°
+  tilt range from the knowledge.
+- No pour could land: the first pour misses 0.188 m to the side, as in every liquid run
+  (§13.6), and `objects_given` leaves no geometry slot to correct it with; changing the arm or
+  the tilt does not move the mouth over the opening. A granular `pour_geometry_open` run would
+  test landing.
+- Run 1 showed a prompt defect from the quantity merge: a type's entry lists only its own
+  fields and points to its bases, and `SlotQuantity` is no field's range, so it had no entry
+  and the model was never told the fields and requirements every `ParameterDimension`,
+  `DecidingQuantity` and `Indicator` has. It recovered through repair rounds. A type's entry
+  now takes in every base the prompt does not describe (`type_entry`); run 2 generated every
+  hypothesis on the first attempt.
+
 ## Sources
 
 - M. Beetz, M. Kümpel. *From Frames to Pouring: The CRAM Cognitive Architecture for
