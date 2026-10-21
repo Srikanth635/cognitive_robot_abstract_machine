@@ -651,6 +651,15 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   (action core 0.6.0, pouring 0.7.0), so every stored hypothesis is generated again; up to 12
   situations × 4 hypotheses, each on first use. Tests and HermiT only, not run live.
 
+- Live granular pour (2026-10-21, `knowledge_perspectives.md` §13.8): `objects_given` with the
+  task "Pour the cereal from the cup into the bowl." added by the run's script, every
+  perspective consulted, Sonnet 5.5, two runs ($1.09 and $1.30). Granular was chosen and all
+  five hypotheses were generated for it; no pour landed, as the designator leaves no geometry
+  slot to correct the 0.188 m side miss. The first run exposed a prompt defect from the
+  quantity merge (a base no field ranges over was never described, so the model missed
+  `about_slot` and `has_quantity_kind`); a type's entry now takes in such bases, and the second
+  run generated every hypothesis on the first attempt.
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
