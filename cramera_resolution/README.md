@@ -20,6 +20,7 @@ Each answers JSON, and an error as `{"ok": false, "error": "<Type>: <message>"}`
 
 | Route | `cram_viz` route | What it does |
 | --- | --- | --- |
+| `GET runs` | (none) | The runs kept, newest first, each with its scene, designator, query, cost and pours tried |
 | `GET designators?scene=` | `/api/designators` | The predefined designators the scene offers, and the knowledge to choose from |
 | `POST resolve` | `/api/designator/resolve` | Resolves a designator query in a scene with `llm_reasoner` |
 | `GET run?name=&scene=` | `/api/designator/run` | Shows a kept run as it was made |
@@ -39,13 +40,32 @@ Scenes are found as `cramera` finds them, through `CRAMERA_SCENES`.
 Runs store the class paths of their parts, so a run made by `cram_viz` cannot be read here,
 and one made here cannot be read by `cram_viz`.
 
+## The panel
+
+`web/addon/designator_panel.js` mounts a *Designators* panel below `cramera`'s own, through
+its panel registry. It offers the scene's designators as chips that copy their query into a
+box, the knowledge to consult (the phase structure, each perspective, adjusting the pour
+geometry), Resolve, what the resolver chose, why, what it rests on and the pours it tried,
+the runs kept (a tab; a click shows one again, as does `?run=<name>` in the address, which
+the llm_reasoner viewer links to), and Execute. The panel publishes the hypothesis a
+resolution consulted as `hypothesis:generated` on the bus.
+
+The panel's logic is tested with node (`test_web_panels.py`), as `cramera`'s own panels are.
+
 ## What is not moved yet
 
-- The panels: designators, hypothesis graph and ontology graph. The routes above serve
-  their data; the page has only a test panel.
+- The panels for the hypothesis graph, the ontology graph and the designator description.
+  Their data is served at `view`; the page has no panel for it.
 - Plan steps and nodes are not written to a run's log as they change (`cram_viz` did, from
   its own bridge's snapshots); a run's start and end are.
 - The knowledge is not yet queryable from `cramera`'s EQL panel.
 - Performing a run with no run named (`cram_viz`'s hardcoded demo) is not moved.
 - The NEEM of a performance is kept only where the generated ORM interface exists
   (`scripts/regenerate_all_orm.py`).
+
+## Scene bundles of cram_viz
+
+`cramera` reads them, but its own knowledge views fail on them (`KeyError: 'position'`):
+a bundle's `placeTarget` holds `pos` where `cramera` reads `position`, and the PR2's URDF
+has a `<transmission>` with no `type`, which stops the kinematics view. The add-on does not
+use those views, so its panel and routes work on the bundles as they are.

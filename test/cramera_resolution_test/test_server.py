@@ -18,9 +18,11 @@ from cramera.server import ViewerServer
 from typing_extensions import Any
 
 from cramera_resolution.exceptions import IndexPageHasNoBootScript, NoSuchScene
+from cramera_resolution.paths import AddOnDirectory
 from cramera_resolution.payload import PayloadKey
 from cramera_resolution.server import (
     AddOnScript,
+    AddOnStylesheet,
     AddOnUrl,
     IndexPage,
     PageMarker,
@@ -99,6 +101,10 @@ class ServiceRecordingItsCalls(ResolutionService):
     What was asked, in order: the operation and its arguments.
     """
 
+    def kept_runs(self):
+        self.calls.append(("kept_runs", ()))
+        return {PayloadKey.OK: True}
+
     def offered_designators(self, requested_scene):
         self.calls.append(("offered_designators", (requested_scene,)))
         return {PayloadKey.OK: True}
@@ -149,22 +155,35 @@ def serving_with(service: ResolutionService):
 
 
 class TestIndexPage:
-    def test_the_add_on_scripts_come_before_the_script_that_mounts_the_panels(
+    def test_the_add_on_assets_come_before_the_script_that_mounts_the_panels(
         self, cramera_page
     ):
-        page = IndexPage(html=cramera_page).with_scripts(list(AddOnScript))
+        page = IndexPage(html=cramera_page).with_assets(
+            list(AddOnScript), list(AddOnStylesheet)
+        )
         boot = page.index(PageMarker.BOOT_SCRIPT)
-        assert all(page.index(script) < boot for script in AddOnScript)
+        assert all(
+            page.index(asset) < boot for asset in (*AddOnScript, *AddOnStylesheet)
+        )
 
-    def test_nothing_but_the_script_tags_is_added(self, cramera_page):
-        page = IndexPage(html=cramera_page).with_scripts(list(AddOnScript))
+    def test_the_scripts_run_in_the_order_they_are_given(self, cramera_page):
+        page = IndexPage(html=cramera_page).with_assets(list(AddOnScript))
+        positions = [page.index(script) for script in AddOnScript]
+        assert positions == sorted(positions)
+
+    def test_nothing_but_the_tags_is_added(self, cramera_page):
+        page = IndexPage(html=cramera_page).with_assets(
+            list(AddOnScript), list(AddOnStylesheet)
+        )
         for script in AddOnScript:
             page = page.replace(f'<script src="{script}"></script>\n', "")
+        for sheet in AddOnStylesheet:
+            page = page.replace(f'<link rel="stylesheet" href="{sheet}">\n', "")
         assert page == cramera_page
 
     def test_a_page_with_no_script_to_boot_the_panels_is_refused(self):
         with pytest.raises(IndexPageHasNoBootScript):
-            IndexPage(html="<html></html>").with_scripts(list(AddOnScript))
+            IndexPage(html="<html></html>").with_assets(list(AddOnScript))
 
 
 # %% the served viewer
@@ -175,13 +194,15 @@ class TestServedViewer:
     def test_the_page_served_carries_the_add_on_scripts(self, route, cramera_page):
         with serving(ResolutionServer(0)) as address:
             page = fetched(address, route)
-        assert page == IndexPage(html=cramera_page).with_scripts(list(AddOnScript))
+        assert page == IndexPage(html=cramera_page).with_assets(
+            list(AddOnScript), list(AddOnStylesheet)
+        )
 
-    @pytest.mark.parametrize("script", list(AddOnScript))
-    def test_an_add_on_script_is_served(self, script):
+    @pytest.mark.parametrize("asset", [*AddOnScript, *AddOnStylesheet])
+    def test_an_add_on_asset_is_served_as_it_is_kept(self, asset):
         with serving(ResolutionServer(0)) as address:
-            served = fetched(address, AddOnUrl.PREFIX + script.removeprefix("addon/"))
-        assert "Panels.define" in served
+            served = fetched(address, AddOnUrl.PREFIX + asset.removeprefix("addon/"))
+        assert served == (AddOnDirectory.WEB / asset).read_text(encoding="utf-8")
 
     def test_a_file_outside_the_add_on_is_refused(self):
         with serving(ResolutionServer(0)) as address:
@@ -225,6 +246,7 @@ class TestRoutesRunTheService:
     @pytest.mark.parametrize(
         ("route", "query", "operation", "arguments"),
         [
+            (Route.RUNS, "", "kept_runs", ()),
             (Route.DESIGNATORS, "?scene=pouring", "offered_designators", ("pouring",)),
             (Route.DESIGNATORS, "", "offered_designators", (None,)),
             (Route.RUN, "?name=a-run&scene=pouring", "open_run", ("a-run", "pouring")),

@@ -769,7 +769,14 @@ the routes share is held by one `ResolutionService` instead of module-level cach
 starts `python -m cramera_resolution.live --run <run>`, which performs the run and serves the
 world and plan through `cramera`'s own live bridge.
 
-Checked: 421 add-on tests (ported from `cram_viz` where the code is shared, plus the route and
+Phase 2 (2026-10-21) added the Designators panel (`web/addon/designator_panel.js`, mounted
+through `cramera`'s panel registry; styles and the markup helper beside it) and the route
+`GET /api/resolution/runs` for its run list. It does what `cram_viz`'s EQL panel did for
+designators: the chips, the choices of knowledge, Resolve, the answer with its trials, the
+runs, `?run=` and Execute. Page assets are inserted into `cramera`'s own `index.html` as it
+is served. 61 node tests cover the panel and its markup, and run in the suite.
+
+Checked: 439 add-on tests (ported from `cram_viz` where the code is shared, plus the route and
 launcher tests), the routes against `cram_viz/scenes/simple_pouring` itself (all three designators
 available, the designator and hypothesis views answer), and a kept run performed through the
 live module (the pour performed in 7 s; the bridge reported the PR2 and its four objects and

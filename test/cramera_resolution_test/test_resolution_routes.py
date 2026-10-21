@@ -35,6 +35,7 @@ from cramera_resolution.resolution.designators import (
 from cramera_resolution.resolution.perspective_choice import UnknownPerspective
 from cramera_resolution.resolution.resolver import DesignatorResolver
 from cramera_resolution.resolution.runs import RunFile, UnknownRun
+from cramera_resolution.query_source import QuerySource
 from cramera_resolution.resolution.scene_world import SCENE_FILE, SceneKey
 from cramera_resolution.server import ResolutionServer, Route
 from cramera_resolution.service import ResolutionService
@@ -114,6 +115,20 @@ def scripted_resolver(tmp_path) -> DesignatorResolver:
         PouringDesignator.OBJECTS_GIVEN,
         HypothesisStore(directory=tmp_path / "store"),
         tmp_path / "runs",
+    )
+
+
+@pytest.fixture
+def resolver_keeping_runs_in_the_data_directory(tmp_path) -> DesignatorResolver:
+    """
+    A resolver replaying the recorded answers twice, keeping its runs where the add-on
+    lists them from.
+    """
+    return resolver_replaying(
+        PouringDesignator.OBJECTS_GIVEN,
+        HypothesisStore(directory=tmp_path / "store"),
+        paths.resolution_runs_dir(),
+        times=2,
     )
 
 
@@ -280,6 +295,38 @@ class TestShowingARunAgain:
         payload = served.get(Route.RUN, name="no-such-run", scene="pouring")
         assert payload[PayloadKey.OK] is False
         assert payload[PayloadKey.ERROR].startswith(UnknownRun.__name__)
+
+
+class TestKeptRuns:
+    def test_no_run_is_listed_before_one_is_made(self, served):
+        assert served.get(Route.RUNS)[PayloadKey.RUNS] == []
+
+    def test_every_run_made_is_listed_newest_first(
+        self, served, resolver_keeping_runs_in_the_data_directory, objects_given_query
+    ):
+        served.service.resolver = resolver_keeping_runs_in_the_data_directory
+        request = {"query": objects_given_query, "scene": "pouring"}
+        first = served.post(Route.RESOLVE, request)[PayloadKey.RESOLUTION]["run"]
+        second = served.post(Route.RESOLVE, request)[PayloadKey.RESOLUTION]["run"]
+        listed = served.get(Route.RUNS)[PayloadKey.RUNS]
+        assert [run[PayloadKey.NAME] for run in listed] == [second, first]
+
+    def test_a_run_is_listed_with_what_it_resolved(
+        self, served, resolver_keeping_runs_in_the_data_directory, objects_given_query
+    ):
+        served.service.resolver = resolver_keeping_runs_in_the_data_directory
+        resolution = served.post(
+            Route.RESOLVE, {"query": objects_given_query, "scene": "pouring"}
+        )[PayloadKey.RESOLUTION]
+        (listed,) = served.get(Route.RUNS)[PayloadKey.RUNS]
+        assert listed[PayloadKey.SCENE] == "pouring"
+        assert listed[PayloadKey.DESIGNATOR] == resolution["designator"]
+        assert (
+            listed[PayloadKey.QUERY]
+            == QuerySource(text=resolution["query"]).on_one_line
+        )
+        assert listed[PayloadKey.COST] == resolution["cost"]
+        assert listed[PayloadKey.TRIALS] == len(resolution["trials"])
 
 
 # %% what the request chooses to consult

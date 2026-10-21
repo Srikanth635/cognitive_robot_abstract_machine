@@ -9,6 +9,7 @@ one object the server owns.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+from datetime import datetime
 from enum import StrEnum
 from functools import cached_property
 
@@ -35,7 +36,7 @@ from cramera_resolution.resolution.perspective_choice import (
     OfferedPhaseStructure,
 )
 from cramera_resolution.resolution.resolver import DesignatorResolver, ResolutionRun
-from cramera_resolution.resolution.runs import ResolutionRuns
+from cramera_resolution.resolution.runs import ResolutionRuns, RunDirectory, RunFile
 from cramera_resolution.resolution.scene_world import SceneWorlds
 from cramera_resolution.scenes import SceneBundle
 from cramera_resolution.views import ViewName, view_payload
@@ -257,6 +258,50 @@ class ResolutionService:
         """
         self.launcher.launch(self.runs.named(request.get(ExecuteRequestKey.RUN) or ""))
         return {PayloadKey.OK: True}
+
+    def kept_runs(self) -> dict[str, Any]:
+        """
+        :return: A summary of every run kept, the newest first.
+        """
+        directory = self.runs.directory
+        kept = (
+            [
+                RunDirectory(directory=path)
+                for path in directory.iterdir()
+                if (path / RunFile.RESOLUTION).is_file()
+            ]
+            if directory.is_dir()
+            else []
+        )
+        newest_first = sorted(
+            kept,
+            key=lambda run: (run.directory / RunFile.RESOLUTION).stat().st_mtime,
+            reverse=True,
+        )
+        return {
+            PayloadKey.OK: True,
+            PayloadKey.RUNS: [self.summary_of(run) for run in newest_first],
+        }
+
+    @staticmethod
+    def summary_of(run: RunDirectory) -> dict[str, Any]:
+        """
+        :param run: A run kept.
+        :return: What the list of runs shows of it.
+        """
+        resolution = run.resolution()
+        kept_at = (run.directory / RunFile.RESOLUTION).stat().st_mtime
+        return {
+            PayloadKey.NAME: run.name,
+            PayloadKey.SCENE: run.environment().scene,
+            PayloadKey.DESIGNATOR: resolution.designator,
+            PayloadKey.QUERY: QuerySource(text=resolution.query).on_one_line,
+            PayloadKey.COST: resolution.cost,
+            PayloadKey.TRIALS: len(resolution.trials),
+            PayloadKey.AT: datetime.fromtimestamp(kept_at).isoformat(
+                timespec="seconds"
+            ),
+        }
 
     def view(self, name: str, requested_scene: str | None) -> dict[str, Any]:
         """

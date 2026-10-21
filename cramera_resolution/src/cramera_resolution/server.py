@@ -55,6 +55,11 @@ class Route(StrEnum):
     Tells that the add-on's server is the one answering.
     """
 
+    RUNS = "/api/resolution/runs"
+    """
+    The runs kept, newest first.
+    """
+
     DESIGNATORS = "/api/resolution/designators"
     """
     The predefined designators a scene offers.
@@ -99,12 +104,29 @@ class AddOnUrl(StrEnum):
 
 class AddOnScript(StrEnum):
     """
-    The scripts inserted into the viewer's page, by their address relative to it.
+    The scripts inserted into the viewer's page, by their address relative to it, in the
+    order they run.
     """
 
-    HELLO_PANEL = "addon/hello_panel.js"
+    RESOLUTION_VIEW = "addon/resolution_view.js"
     """
-    A panel that shows the add-on's server is answering.
+    Writes a resolution and the runs kept as markup.
+    """
+
+    DESIGNATOR_PANEL = "addon/designator_panel.js"
+    """
+    The panel that resolves designators, chooses what to consult and performs runs.
+    """
+
+
+class AddOnStylesheet(StrEnum):
+    """
+    The stylesheets inserted into the viewer's page, by their address relative to it.
+    """
+
+    DESIGNATOR_PANEL = "addon/designator.css"
+    """
+    The look of the designator panel.
     """
 
 
@@ -171,17 +193,23 @@ class IndexPage:
             re.S,
         )
 
-    def with_scripts(self, sources: Sequence[str]) -> str:
+    def with_assets(
+        self, scripts: Sequence[str], stylesheets: Sequence[str] = ()
+    ) -> str:
         """
-        :param sources: The scripts to insert, by their address relative to the page.
-        :return: The page with a script tag for each, just before the script that mounts the
-            panels, so they define their panels and change the layout in time.
+        :param scripts: The scripts to insert, by their address relative to the page.
+        :param stylesheets: The stylesheets to insert, by their address relative to the
+            page.
+        :return: The page with a tag for each, just before the script that mounts the
+            panels, so the scripts define their panels and change the layout in time.
         :raises IndexPageHasNoBootScript: When the page has no such script.
         """
         boot_script = self.boot_script
         if boot_script is None:
             raise IndexPageHasNoBootScript(marker=PageMarker.BOOT_SCRIPT)
-        tags = "".join(f'<script src="{source}"></script>\n' for source in sources)
+        tags = "".join(
+            f'<link rel="stylesheet" href="{sheet}">\n' for sheet in stylesheets
+        ) + "".join(f'<script src="{source}"></script>\n' for source in scripts)
         return (
             self.html[: boot_script.start()] + tags + self.html[boot_script.start() :]
         )
@@ -209,6 +237,8 @@ class ResolutionHandler(Handler):
             return self._answer(
                 lambda: {PayloadKey.OK: True, PayloadKey.ADDON: __package__}
             )
+        if route == Route.RUNS:
+            return self._answer(self.service.kept_runs)
         if route == Route.DESIGNATORS:
             return self._answer(
                 lambda: self.service.offered_designators(self._requested_scene())
@@ -293,7 +323,9 @@ class ResolutionHandler(Handler):
         )
         if page.boot_script is None:
             return self._send_error(AddOnMessage.NO_BOOT_SCRIPT, 500)
-        body = page.with_scripts(list(AddOnScript)).encode("utf-8")
+        body = page.with_assets(list(AddOnScript), list(AddOnStylesheet)).encode(
+            "utf-8"
+        )
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
