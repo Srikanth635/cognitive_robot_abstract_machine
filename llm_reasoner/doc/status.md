@@ -673,6 +673,9 @@ Last updated: 2026-10-20; code at commit `a1dc8de3d`.
   `ApproachTolerances.max_solver_iterations` (400): from the turned base 200 iterations
   refused two recorded pours the simulation performs. The NEEM sqlite slow test fails in this
   environment with or without the change (no `json_msgs` module).
+  Live re-run of `objects_given` (every perspective, no prediction): still no landing. The
+  resolver tried right 1.85, left 1.85 (failed), right 1.57 and right 0.6 rad, kept 0.6 rad
+  (0.123 m off) and did not try the near-upside-down tilts that now land; $0.60, 4.4 minutes.
 
 ## 3. Live testing
 
