@@ -100,6 +100,8 @@ INPUT_MEANINGS = {
     PromptSection.OUTPUT: "the JSON schema the answer follows.",
     PromptSection.REJECTED_ANSWER: "an earlier answer that was refused.",
     PromptSection.REJECTION: "why that answer was refused.",
+    PromptSection.OPENED_SLOTS: "slots the refusal opened: answer for them too, "
+    "giving a slot's default to leave it as it is.",
 }
 """
 What each section of a request means, in the order a request may hold them.
@@ -728,26 +730,36 @@ class PromptBuilder:
 
     @staticmethod
     def build_repair(
-        previous_prompt: str, raw_response: str, error: RetryableModelFailure
+        previous_prompt: str,
+        raw_response: str,
+        error: RetryableModelFailure,
+        opened_slots: Sequence[Dict[str, Any]] = (),
     ) -> str:
         """
         :param previous_prompt: The prompt that produced the rejected response.
         :param raw_response: The rejected response.
         :param error: Why it was rejected.
-        :return: The prompt followed by the rejected answer and, as data, why it was
-            rejected.
+        :param opened_slots: The entries of the slots the rejection opened.
+        :return: The prompt followed by the rejected answer, as data why it was rejected
+            and the slots it opened.
         """
-        repair = render_blocks(
-            [
+        blocks = [
+            PromptBlock(
+                section=PromptSection.REJECTED_ANSWER,
+                body=raw_response[:REJECTED_ANSWER_LENGTH],
+            ),
+            PromptBlock(
+                section=PromptSection.REJECTION,
+                body=PromptBuilder.as_json(error.details()),
+                attributes={BlockAttribute.KIND: type(error).__name__},
+            ),
+        ]
+        if opened_slots:
+            blocks.append(
                 PromptBlock(
-                    section=PromptSection.REJECTED_ANSWER,
-                    body=raw_response[:REJECTED_ANSWER_LENGTH],
-                ),
-                PromptBlock(
-                    section=PromptSection.REJECTION,
-                    body=PromptBuilder.as_json(error.details()),
-                    attributes={BlockAttribute.KIND: type(error).__name__},
-                ),
-            ]
-        )
+                    section=PromptSection.OPENED_SLOTS,
+                    body=PromptBuilder.as_json(list(opened_slots)),
+                )
+            )
+        repair = render_blocks(blocks)
         return previous_prompt + SECTION_SEPARATOR + repair

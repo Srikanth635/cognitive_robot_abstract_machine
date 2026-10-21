@@ -591,6 +591,46 @@ class TestChosenPerspectives:
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         assert server_module._resolver_for({}).consults_phase_structure is True
 
+    def test_the_scene_offers_adjusting_the_pour_geometry_too(self, pouring_server):
+        from llm_reasoner.attribute_docstrings import attribute_docstrings
+
+        from cram_viz.resolution.resolver import DesignatorResolver
+
+        payload = get_json(pouring_server + "/api/designators?scene=pouring")
+        assert (
+            payload["geometry_adjustment"]["summary"]
+            == attribute_docstrings(DesignatorResolver)["adjusts_pour_geometry"]
+        )
+
+    def test_by_default_the_pour_geometry_is_adjusted(self, monkeypatch, tmp_path):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "objects_given", HypothesisStore(directory=tmp_path / "store"), tmp_path
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        assert server_module._resolver_for({}).adjusts_pour_geometry is True
+
+    def test_the_request_may_leave_out_adjusting_the_pour_geometry(
+        self, monkeypatch, tmp_path
+    ):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "objects_given", HypothesisStore(directory=tmp_path / "store"), tmp_path
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        consulting = server_module._resolver_for({"adjust_geometry": False})
+        assert consulting.adjusts_pour_geometry is False
+
     def test_the_request_may_leave_out_the_phase_structure(self, monkeypatch, tmp_path):
         from llm_reasoner.knowledge.access import HypothesisStore
 

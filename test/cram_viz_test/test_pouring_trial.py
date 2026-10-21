@@ -30,6 +30,7 @@ from cram_viz.neem import (
     NoNeemRecorder,
     SqliteNeemStore,
 )
+from cram_viz.resolution.pouring_slot import PouringSlot
 from cram_viz.resolution.trial import (
     OUTCOME_FILE,
     TRIAL_MODULE,
@@ -68,6 +69,21 @@ class PourAnswer:
     The tilt angle, in radians.
     """
 
+    pour_side_offset: float = 0.0
+    """
+    The sideways shift of the pour point, in metres.
+    """
+
+    pour_approach_offset: float = 0.0
+    """
+    The shift of the pour point along the approach, in metres.
+    """
+
+    pour_height: float = 0.13
+    """
+    The height of the tool above the target, in metres.
+    """
+
 
 MISSES_BY_A_HAND = {
     OutcomeKey.LANDS_IN_OPENING: False,
@@ -82,6 +98,7 @@ def checking(
     outcomes: List[Any],
     observer: MemorySink | None = None,
     neems: Optional[NeemRecording] = None,
+    adjusts_geometry: bool = True,
 ) -> SimulatedPouring:
     """
     :return: A check whose trials report the outcomes in turn, the trials to the
@@ -89,6 +106,7 @@ def checking(
     """
     settings = {} if observer is None else {"observer": observer}
     return SimulatedPouring(
+        adjusts_geometry=adjusts_geometry,
         neems=neems,
         bundle=Path("pouring"),
         slots=["arm", "tilt_angle"],
@@ -180,6 +198,116 @@ class TestSimulatedPouring:
             str(check.bundle),
             json.dumps({"arm": Arms.RIGHT.name, "tilt_angle": 1.85}),
         ]
+
+
+# %% opening the geometry
+
+
+def missing(
+    right: float = 0.0, ahead: float = 0.0, above: float = 0.1, radius: float = 0.069
+) -> Dict[str, Any]:
+    """
+    :return: The outcome of a pour that was performed and does not land, its mouth ending
+        as far right of and ahead of the opening's centre, and above it, as given.
+    """
+    return {
+        OutcomeKey.LANDS_IN_OPENING: False,
+        OutcomeKey.OPENING_RADIUS: radius,
+        OutcomeKey.RIGHT_OF_OPENING_CENTRE: right,
+        OutcomeKey.AHEAD_OF_OPENING_CENTRE: ahead,
+        OutcomeKey.ABOVE_OPENING: above,
+        OutcomeKey.DISTANCE_FROM_OPENING_CENTRE: float(np.hypot(right, ahead)),
+    }
+
+
+def opened_by(outcome: Optional[Dict[str, Any]]) -> tuple:
+    """
+    :return: The slots the check opens when a pour ends as the outcome says.
+    """
+    check = checking([outcome])
+    with pytest.raises(OutcomeFellShort) as refusal:
+        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+    return refusal.value.opens
+
+
+class TestOpeningTheGeometry:
+    def test_the_geometry_slots_the_query_leaves_out_are_held_back(self):
+        assert checking([]).withheld_slots == (
+            PouringSlot.POUR_SIDE_OFFSET,
+            PouringSlot.POUR_APPROACH_OFFSET,
+            PouringSlot.POUR_HEIGHT,
+        )
+
+    def test_a_geometry_slot_the_query_states_is_not_held_back(self):
+        check = SimulatedPouring(
+            bundle=Path("pouring"),
+            slots=["arm", "tilt_angle", PouringSlot.POUR_HEIGHT],
+            run=ScriptedTrials(outcomes=[]),
+        )
+        assert PouringSlot.POUR_HEIGHT not in check.withheld_slots
+
+    def test_a_pour_ending_beside_the_opening_opens_the_sideways_shift(self):
+        assert opened_by(missing(right=0.184)) == (PouringSlot.POUR_SIDE_OFFSET,)
+
+    def test_a_pour_ending_to_the_left_opens_it_too(self):
+        assert opened_by(missing(right=-0.184)) == (PouringSlot.POUR_SIDE_OFFSET,)
+
+    def test_a_pour_ending_ahead_of_the_opening_opens_the_shift_along_the_approach(
+        self,
+    ):
+        assert opened_by(missing(ahead=0.15)) == (PouringSlot.POUR_APPROACH_OFFSET,)
+
+    def test_a_pour_ending_below_the_rim_opens_the_height(self):
+        assert opened_by(missing(above=-0.02)) == (PouringSlot.POUR_HEIGHT,)
+
+    def test_a_miss_in_two_directions_opens_both_slots(self):
+        assert set(opened_by(missing(right=0.184, ahead=0.15))) == {
+            PouringSlot.POUR_SIDE_OFFSET,
+            PouringSlot.POUR_APPROACH_OFFSET,
+        }
+
+    def test_a_pour_ending_within_the_rim_sideways_opens_nothing(self):
+        assert opened_by(missing(right=0.02, ahead=0.02)) == ()
+
+    def test_a_failed_motion_opens_nothing(self):
+        assert opened_by(None) == ()
+
+    def test_a_slot_is_opened_once(self):
+        check = checking([missing(right=0.184), missing(right=0.1)])
+        for _ in range(2):
+            with pytest.raises(OutcomeFellShort) as refusal:
+                check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        assert refusal.value.opens == ()
+
+    def test_a_slot_the_query_states_is_never_opened(self):
+        check = SimulatedPouring(
+            bundle=Path("pouring"),
+            slots=["arm", "tilt_angle", PouringSlot.POUR_SIDE_OFFSET],
+            run=ScriptedTrials(outcomes=[missing(right=0.184)]),
+        )
+        with pytest.raises(OutcomeFellShort) as refusal:
+            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        assert refusal.value.opens == ()
+
+    def test_a_trial_after_the_opening_tries_the_slot_too(self):
+        check = checking([missing(right=0.184), LANDS])
+        with pytest.raises(OutcomeFellShort):
+            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        check.check(
+            [PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85, pour_side_offset=-0.188)]
+        )
+        assert check.trials[-1].values == {
+            "arm": Arms.RIGHT.name,
+            "tilt_angle": 1.85,
+            PouringSlot.POUR_SIDE_OFFSET: -0.188,
+        }
+
+    def test_adjusting_the_geometry_can_be_left_off(self):
+        check = checking([missing(right=0.184)], adjusts_geometry=False)
+        assert check.withheld_slots == ()
+        with pytest.raises(OutcomeFellShort) as refusal:
+            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        assert refusal.value.opens == ()
 
 
 # %% reporting the trials

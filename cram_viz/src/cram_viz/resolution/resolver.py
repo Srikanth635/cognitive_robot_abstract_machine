@@ -36,7 +36,7 @@ from llm_reasoner.world.view import WorldView
 from semantic_digital_twin.world import World
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
+from typing_extensions import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from cram_viz import paths
 from cram_viz.events import reporting_run
@@ -309,6 +309,12 @@ class DesignatorResolver:
     default.
     """
 
+    adjusts_pour_geometry: bool = True
+    """
+    Whether a pour that ends beside the opening opens the geometry slots the query leaves
+    out, so that the resolver may correct it with them.
+    """
+
     @classmethod
     def for_viewer(
         cls, source: ModelHypothesisSource, worlds: SceneWorlds
@@ -375,7 +381,7 @@ class DesignatorResolver:
                 resolution = self.resolution_in(
                     run,
                     designator,
-                    designator.query_in(names),
+                    names,
                     knowledge,
                     SceneGeometry(world=world),
                     bundle,
@@ -421,7 +427,7 @@ class DesignatorResolver:
         self,
         run: RunDirectory,
         designator: DesignatorQuery,
-        query: Match,
+        names: Dict[str, Any],
         knowledge: KnowledgeService,
         geometry: SceneGeometry,
         bundle: Path,
@@ -430,7 +436,7 @@ class DesignatorResolver:
         """
         :param run: The run resolving.
         :param designator: The designator resolved.
-        :param query: The designator's query on the scene.
+        :param names: The names the designator's query is evaluated with on the scene.
         :param knowledge: The knowledge component the run consults.
         :param geometry: The scene's geometry, stated as a fact of the situation.
         :param bundle: The scene's bundle directory, from which a pour is tried.
@@ -438,7 +444,8 @@ class DesignatorResolver:
         :return: What resolving the query chose, why, what it rests on, and the pours it
             tried in the simulation.
         """
-        slots = QuerySlots.of(query)
+        slots = QuerySlots.of(designator.query_in(names))
+        query = designator.query_in(names)
         trials = self.trials_for(query, slots, bundle, sink, self.neems_of(run))
         view = self.world_view()
         prediction = self.prediction_for(query, bundle, geometry.world, view)
@@ -477,7 +484,9 @@ class DesignatorResolver:
             query=designator.source.text,
             designator=query.type.__name__,
             actions=[
-                self.resolved_action(instance, slots, justifications, view)
+                self.resolved_action(
+                    instance, slots, justifications, view, backend.opened_slots
+                )
                 for instance in instances
             ],
             situation=(
@@ -549,6 +558,7 @@ class DesignatorResolver:
             run=self.simulate,
             observer=sink,
             neems=neems,
+            adjusts_geometry=self.adjusts_pour_geometry,
         )
 
     def resolved_action(
@@ -557,8 +567,11 @@ class DesignatorResolver:
         slots: QuerySlots,
         justifications: Dict[int, Justification],
         view: WorldView,
+        opened: Sequence[str] = (),
     ) -> ResolvedAction:
         """
+        :param opened: The slots the query left out that a miss opened, in the order
+            they were opened.
         :return: One resolved action, written for display.
         """
         justification = justifications.get(id(instance))
@@ -570,7 +583,7 @@ class DesignatorResolver:
                     given=name in slots.given,
                     serialized=SlotData.from_value(attrgetter(name)(instance)),
                 )
-                for name in slots.names
+                for name in (*slots.names, *opened)
             ],
             why="" if justification is None else justification.why,
             grounds=(

@@ -33,6 +33,7 @@ Panels.define('eql', function (root, bus) {
     '  <div class="knowledge-choices">' +
     '    <div id="knowledge-choices" class="perspectives" title="The phase structure Generate consults; untick it to leave it out"></div>' +
     '    <div id="perspectives" class="perspectives" title="Perspectives on the action core Generate also consults; untick one to leave it out"></div>' +
+    '    <div id="adjustment-choices" class="perspectives" title="Whether a pour that misses may open the pour geometry the query leaves out; untick it to keep the query as it is"></div>' +
     '  </div>' +
     '  <div class="query-sources">' +
     '    <div class="source-tabs">' +
@@ -53,6 +54,7 @@ Panels.define('eql', function (root, bus) {
   const designatorsEl = root.querySelector('#designators');
   const perspectivesEl = root.querySelector('#perspectives');
   const phaseStructureEl = root.querySelector('#knowledge-choices');
+  const geometryAdjustmentEl = root.querySelector('#adjustment-choices');
   const generateBtn = root.querySelector('#query-generate');
   const designatorExecuteBtn = root.querySelector('#designator-execute');
   const demoExecuteBtn = root.querySelector('#demo-execute');
@@ -181,6 +183,7 @@ Panels.define('eql', function (root, bus) {
     }
     buildPhaseStructure(payload.phase_structure);
     buildPerspectives(payload.perspectives || []);
+    buildGeometryAdjustment(payload.geometry_adjustment);
     payload.designators.forEach(function (designator) {
       const chip = document.createElement('pre');
       chip.className = 'designator-query' + (designator.available ? '' : ' unavailable');
@@ -210,6 +213,19 @@ Panels.define('eql', function (root, bus) {
     phaseStructureEl.innerHTML = '';
     if (!phaseStructure) return;
     phaseStructureEl.appendChild(knowledgeChoice(phaseStructure.label, phaseStructure.summary, ''));
+  }
+
+  // Adjusting the pour geometry is offered the same way, ticked by default: a pour that
+  // ends beside the opening may then open the pour geometry the query leaves out.
+  function buildGeometryAdjustment(adjustment) {
+    geometryAdjustmentEl.innerHTML = '';
+    if (!adjustment) return;
+    geometryAdjustmentEl.appendChild(knowledgeChoice(adjustment.label, adjustment.summary, ''));
+  }
+
+  function geometryAdjustmentLeftOut() {
+    const choice = geometryAdjustmentEl.children[0];
+    return Boolean(choice) && !choice.children[0].checked;
   }
 
   function knowledgeChoice(label, summary, value) {
@@ -298,6 +314,7 @@ Panels.define('eql', function (root, bus) {
     const perspectives = chosenPerspectives();
     if (perspectives.length) request.perspectives = perspectives;
     if (phaseStructureLeftOut()) request.phase_structure = false;
+    if (geometryAdjustmentLeftOut()) request.adjust_geometry = false;
     return request;
   }
 

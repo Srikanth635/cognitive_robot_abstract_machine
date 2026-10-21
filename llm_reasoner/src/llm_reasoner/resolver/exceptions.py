@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 
-from typing_extensions import Any, Dict, List, Optional
+from typing_extensions import Any, Dict, List, Optional, Tuple
 
 RESPONSE_REASON = "reason"
 """
@@ -12,6 +12,11 @@ The key under which an unparseable response's reason is shown to the model.
 OUTCOME_KEY = "outcome"
 """
 The key under which an outcome that fell short is shown to the model.
+"""
+
+OPENS_KEY = "opens"
+"""
+The key under which the slots a refusal opens are shown to the model.
 """
 
 # %% base
@@ -232,14 +237,23 @@ class OutcomeFellShort(RetryableModelFailure):
     succeed; ``None`` when it must never be accepted.
     """
 
+    opens: Tuple[str, ...] = ()
+    """
+    The fields of the action the check held back that the model is to answer for from
+    now on, because the outcome shows what they could correct.
+    """
+
     def __post_init__(self):
         super().__init__(f"trying the answer fell short: {self.outcome}")
 
     def details(self) -> Dict[str, Any]:
         """
-        :return: The outcome alone: the model is not told how its answer ranks.
+        :return: The outcome and the slots it opens, if any: the model is not told how
+            its answer ranks.
         """
-        return {OUTCOME_KEY: self.outcome}
+        if not self.opens:
+            return {OUTCOME_KEY: self.outcome}
+        return {OUTCOME_KEY: self.outcome, OPENS_KEY: list(self.opens)}
 
 
 @dataclass

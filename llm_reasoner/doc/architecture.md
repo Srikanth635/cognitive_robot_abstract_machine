@@ -188,8 +188,12 @@ meeting the query's `where`-conditions; or one of these outcomes:
    `OutcomeFellShort`, holding the outcome as data, when it falls short. A shortfall may
    carry a `fallback_rank`: such an answer may still be accepted as a last resort, the
    lowest rank winning, when the repair budget runs out with no answer succeeding; one
-   without a rank never is. The model is shown the outcome, not the rank. The situation
-   pass is never checked.
+   without a rank never is. The model is shown the outcome, not the rank. A check may also
+   hold back fields of the action the query leaves out (`withheld_slots`: the action's
+   defaults stand and the model is not asked for them) and open them in a shortfall
+   (`OutcomeFellShort.opens`): the refusal then shows the slots it opens in an
+   `<opened_slots>` section and the model answers for them from the next attempt on. The
+   situation pass is never checked.
 8. **Repair once** (`max_repairs = 1`) when an answer is unusable, breaks a condition or
    falls short when tried: a fresh conversation with the rejected answer and the
    rejection as data, its kind naming the failure.
@@ -706,6 +710,7 @@ stay apart across the hypotheses read.
 |---|---|
 | The resolver resolves; it does not check executability | Preconditions and navigation belong to the plan |
 | The query decides what fills a slot | A where-condition leaving one candidate decides it; the slot's type decides what kind of thing goes there; a task only chooses among candidates |
+| The query decides which slots are open, until a check opens more | A field the query leaves out keeps the action's default; an outcome check that holds fields back may open them after a trial (user, 2026-10-21), never a field the query states |
 | Refusals only for open slots | `no_fitting_candidate` when no candidate is what the request asks for or can do what the slot is for |
 | A chosen individual must be known | The model learns what a candidate is (holders or description) before choosing it |
 | Several answers only when each is good | Elements are never varied only to differ; fewer are given when fewer are good |

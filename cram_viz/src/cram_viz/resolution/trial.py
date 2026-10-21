@@ -31,13 +31,14 @@ from llm_reasoner.resolver.outcomes import OutcomeCheck
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import Any, Callable, Dict, List, Optional, Sequence
+from typing_extensions import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from cram_viz import configure_console_logging
 from cram_viz.events import NeemKind, TrialFinished, TrialStarted
 from cram_viz.neem import NeemRecorder, NeemRecording, NoNeemRecorder
 from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.flow_onset import FlowOnsetKnowledge
+from cram_viz.resolution.pouring_slot import PouringSlot
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 from cram_viz.resolution.slot_data import SlotData
 
@@ -347,17 +348,66 @@ class SimulatedPouring(OutcomeCheck):
     Without it the tilt is not checked.
     """
 
+    adjusts_geometry: bool = True
+    """
+    Whether the geometry slots the query leaves out are held back and opened, one at a
+    time, by a pour that ends where only they can correct.
+    """
+
+    opened: List[str] = field(default_factory=list)
+    """
+    The geometry slots opened so far, in the order they were opened.
+    """
+
+    @property
+    def withheld_slots(self) -> Tuple[str, ...]:
+        if not self.adjusts_geometry:
+            return ()
+        return tuple(slot for slot in PouringSlot.geometry() if slot not in self.slots)
+
     def check(self, instances: Sequence[Any]) -> None:
         instance, *_ = instances
         values = {
-            name: SlotData.from_value(attrgetter(name)(instance)) for name in self.slots
+            name: SlotData.from_value(attrgetter(name)(instance))
+            for name in (*self.slots, *self.opened)
         }
         outcome = self.with_flow(self.outcome_of(values), instance.tilt_angle)
         self.trials.append(TriedPour(values=values, outcome=outcome))
         if self.pours_into_opening(outcome):
             return
+        opens = self.geometry_opened_by(outcome)
+        self.opened.extend(opens)
         raise OutcomeFellShort(
-            outcome=outcome, fallback_rank=self.last_resort_rank(outcome)
+            outcome=outcome,
+            fallback_rank=self.last_resort_rank(outcome),
+            opens=opens,
+        )
+
+    def geometry_opened_by(self, outcome: Dict[str, Any]) -> Tuple[PouringSlot, ...]:
+        """
+        :param outcome: What a pour that was performed brought about.
+        :return: The geometry slots, not yet opened, that move the mouth the way the
+            outcome shows it is off: sideways or along the approach by more than the
+            opening's radius, or not above the opening.
+        """
+        radius = outcome.get(OutcomeKey.OPENING_RADIUS)
+        if OutcomeKey.MOTION_FAILED in outcome or radius is None:
+            return ()
+        off = {
+            PouringSlot.POUR_SIDE_OFFSET: abs(
+                outcome.get(OutcomeKey.RIGHT_OF_OPENING_CENTRE, 0.0)
+            )
+            > radius,
+            PouringSlot.POUR_APPROACH_OFFSET: abs(
+                outcome.get(OutcomeKey.AHEAD_OF_OPENING_CENTRE, 0.0)
+            )
+            > radius,
+            PouringSlot.POUR_HEIGHT: outcome.get(OutcomeKey.ABOVE_OPENING, 1.0) <= 0,
+        }
+        return tuple(
+            slot
+            for slot in self.withheld_slots
+            if off[slot] and slot not in self.opened
         )
 
     @staticmethod

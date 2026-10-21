@@ -93,6 +93,11 @@ class PromptSection(StrEnum):
     Why the earlier answer was refused, as data.
     """
 
+    OPENED_SLOTS = "opened_slots"
+    """
+    The slots a refusal opened, as data.
+    """
+
 
 class BlockAttribute(StrEnum):
     """

@@ -12,8 +12,11 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+from llm_reasoner.attribute_docstrings import attribute_docstrings
 from llm_reasoner.knowledge.access import PERSPECTIVE_ROOTS, ActionPerspectiveFile, core
 from typing_extensions import Any, Dict, List, Sequence, Tuple
+
+from cram_viz.resolution.resolver import DesignatorResolver
 
 
 class PerspectiveKey(StrEnum):
@@ -88,6 +91,31 @@ WORD_START = re.compile(r"(?<!^)(?=[A-Z])")
 """
 Where a new word begins in a class name written in capitals.
 """
+
+
+@dataclass(frozen=True)
+class OfferedGeometryAdjustment:
+    """
+    Letting a miss open the pour geometry the query leaves out, offered for choosing
+    beside the knowledge Generate consults.
+    """
+
+    label: str = "adjust the pour geometry"
+    """
+    What the viewer calls the choice.
+    """
+
+    def payload(self) -> Dict[str, Any]:
+        """
+        :return: The choice as the viewer offers it: a label and what the resolver does
+            when it is made.
+        """
+        return {
+            PerspectiveKey.LABEL: self.label,
+            PerspectiveKey.SUMMARY: attribute_docstrings(DesignatorResolver)[
+                "adjusts_pour_geometry"
+            ],
+        }
 
 
 @dataclass(frozen=True)
