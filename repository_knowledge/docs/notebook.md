@@ -49,6 +49,8 @@ The server offers bounded, read-only `query_repository`. The coding host can use
 
 Select the **CRAM Knowledge** kernel. The Windows local kernel launches `scripts/run_kernel.ps1`, which delegates to the existing guarded command runner with at least 8 GiB free memory and a 4 GiB process-tree cap. This includes the kernel and repository-server children. Other machines must configure an equivalent resource limit before running experiments. The portable notebook records the kernel name, never an absolute personal path.
 
+The Windows kernel uses Jupyter's standard `signal` interrupt mode. The launcher forwards extra kernel arguments, including nbclient's temporary history selection. The Windows regression checks the authoritative execution reply for `KeyboardInterrupt`; Jupyter can display an interrupt as stderr rather than a notebook error object.
+
 Use an ignored local copy for interactive sessions so your provider selections and saved outputs stay out of the tracked template:
 
 ```powershell
