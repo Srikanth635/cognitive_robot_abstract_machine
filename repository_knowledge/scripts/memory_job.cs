@@ -1,6 +1,8 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
 
 public static class MemoryJob
@@ -40,10 +42,12 @@ public static class MemoryJob
     private static extern bool SetInformationJobObject(IntPtr job, int information, ref ExtendedLimits limits, uint length);
     [DllImport("kernel32.dll", SetLastError=true)]
     private static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
+    [DllImport("kernel32.dll", SetLastError=true)]
+    private static extern bool QueryInformationJobObject(IntPtr job, int information, out ExtendedLimits limits, uint length, out uint returnedLength);
     [DllImport("kernel32.dll")]
     private static extern bool CloseHandle(IntPtr handle);
 
-    public static int Run(string executable, string worker, string directory, string[] arguments, ulong maximumBytes)
+    public static int Run(string executable, string worker, string directory, string[] arguments, ulong maximumBytes, string statisticsPath = null)
     {
         IntPtr job = CreateJobObject(IntPtr.Zero, null);
         if (job == IntPtr.Zero) throw new Win32Exception();
@@ -70,6 +74,18 @@ public static class MemoryJob
         process.StandardInput.Close();
         process.WaitForExit();
         int result = process.ExitCode;
+        if (!string.IsNullOrEmpty(statisticsPath))
+        {
+            ExtendedLimits measured;
+            uint returnedLength;
+            if (!QueryInformationJobObject(job, 9, out measured, (uint)Marshal.SizeOf(limits), out returnedLength)) throw new Win32Exception();
+            File.WriteAllText(statisticsPath,
+                "exit_status,peak_job_committed_bytes,peak_process_committed_bytes,maximum_bytes\n" +
+                result.ToString(CultureInfo.InvariantCulture) + "," +
+                measured.PeakJobMemoryUsed.ToUInt64().ToString(CultureInfo.InvariantCulture) + "," +
+                measured.PeakProcessMemoryUsed.ToUInt64().ToString(CultureInfo.InvariantCulture) + "," +
+                maximumBytes.ToString(CultureInfo.InvariantCulture) + "\n");
+        }
         process.Dispose();
         CloseHandle(job);
         return result;

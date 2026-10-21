@@ -302,11 +302,11 @@ Work:
 - Select latency and resource limits from baseline measurements and intended machine capacity. No unsupported throughput or token-saving percentage is promised.
 - Verify new tests are in CI, use the configured interpreter, and obey package-by-package execution and memory limits.
 
-Deliverables: evaluation report, operational limits, recovery guide and release checklist.
+Deliverables: evaluation report, operational limits, recovery guide and release checklist. The local implementation and experiment are described in [phase9.md](phase9.md), [the evaluation report](phase9-evaluation.md) and [the operations guide](operations.md).
 
 Exit gate: no unexplained correctness regression from the baseline; no false-current results in the defined mutation tests; the agreed resource budget holds. If savings are absent, preserve useful navigation and revise curation/retrieval before expanding infrastructure.
 
-Release checkpoint E: supported team release.
+Release checkpoint E: supported team release. It remains open until the unmeasured team-task and operating gates in [the release checklist](phase9-release.md) are satisfied.
 
 Suggested change split: evaluation; resilience/resource controls; release documentation.
 

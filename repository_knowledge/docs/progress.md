@@ -2,7 +2,7 @@
 
 Baseline: main at `7b27424de7768798dc561f447e11c2a8eb86c307`.
 
-Implementation branch: `cram_wiki` (phases 0–6 pushed to the fork at `ba38cd3033762774c7c940cf714516a5e6dc0747`), in an attached managed worktree. The original checkout's staged deletions and untracked replacement files were preserved.
+Implementation branch: `cram_wiki`, in an attached managed worktree. Phases 0–8 are on the fork; phase 9 adds local release-validation evidence and operating guidance below. The original checkout's staged deletions and untracked replacement files were preserved.
 
 | Phase | Delivered |
 | --- | --- |
@@ -15,6 +15,7 @@ Implementation branch: `cram_wiki` (phases 0–6 pushed to the fork at `ba38cd30
 | 6 | Bounded task context, examples, tests and change assessment with source citations and explicit uncertainty |
 | 7 | Automated trusted publication, authenticated artifact consumption and verified historical restoration on the fork |
 | 8 | Optional MCP client, source-bound canonical context, bounded basstler startup, shared CRAMERA architecture and opt-in refresh requests |
+| 9 | Local retrieval comparison, storage/client recovery checks, memory receipts, retention/recovery guidance and an explicit checklist of remaining team-release gates |
 
 Phases 0–3 validation: 40 focused pytest cases passed under the 4 GiB Windows job cap; the requested rerun also passed all 40 cases in 23.92 seconds. The required formatting script was applied to the new Python files. Black and unused-import checks passed, and the package built as a wheel. Main-branch indexing and six independently checked navigation tasks passed; measurements are in [evaluation.md](evaluation.md).
 
@@ -58,7 +59,7 @@ Final live working-tree validation passed all eight concepts with zero format, p
 
 ## Next phase
 
-Phase 7 adds owner-operated machine validation and canonical publication, with independent review optional. See [phase7.md](phase7.md). Phase 6 delivery is recorded below; hosted CI and production deployment are not claimed.
+Phase 9 local validation is recorded below. Supported team release remains conditional on the open gates in [phase9-release.md](phase9-release.md). Optional phase-10 capabilities require measured justification.
 
 ## Phase 6 validation — 20 October 2026
 
@@ -101,4 +102,18 @@ Final local validation passed **247 package tests**, with **one Windows-only ski
 
 Real committed-cache inspection had a 1.461-second median across three interpreter launches and correctly reported the old cache as stale without writing it. The complete basstler path returned in 1.469 seconds. The optional queue helper's median was 0.171 seconds. These are startup/request costs, not full graph maintenance or model-task results.
 
-See [phase8.md](phase8.md) and the configuration templates for setup and limits. Host configuration, viewer opt-in, commit-hook installation and a background queue worker were not enabled automatically. The phase-7 checker/runtime/source/artifact selection on main remains unchanged; new protected code needs a separately validated trust-root update before newer canonical publication. No phase-8 hosted run or full ROS/EQL test suite is claimed. Phase 9 evaluates the release and operating costs across real tasks.
+See [phase8.md](phase8.md) and the configuration templates for setup and limits. Host configuration, viewer opt-in, commit-hook installation and a background queue worker were not enabled automatically. The phase-7 checker/runtime/source/artifact selection on main remains unchanged; new protected code needs a separately validated trust-root update before newer canonical publication. No phase-8 hosted run or full ROS/EQL test suite is claimed.
+
+## Phase 9 local validation — 21 October 2026
+
+Added a reproducible operator-only evaluation module for committed source search, structural CLI and local curated context. It pins one source, audits returned evidence against independent committed blobs and preserves CSV observations without inventing model metrics. Incorrect line text/digests, a mismatched revision, unexpected same-name matches for an absent qualified symbol and missing independently required paths are covered by failing-first tests. Controlled source replacements repeat all three retrieval methods after rebuild.
+
+Recovery tests cover abrupt writer termination, concurrent readers, SQLite capacity exhaustion, lock refusal, corruption, quarantine/rebuild and real MCP refusal/recovery. Existing storage transactions already preserve complete snapshots in these cases; no storage rewrite, new dependency or KRROOD change was needed. The shared guarded command worker now also supports benchmark/extraction commands and optional peak Windows job commit-charge receipts.
+
+The complete isolated package suite passed **269 tests**, with **one Windows-only symlink skip**, in **208.68 seconds** under the **4 GiB** job cap. Peak job commit charge was **760,553,472 bytes**. A final fixture-entry cleanup was followed by all six recovery tests passing again in 4.20 seconds. All seven changed Python files passed the required formatting script, Black and unused-import checks. The wheel built at **124,178 bytes**, SHA-256 `f4b09e4af975542e1a8404fc4bed0d6332bff76cc60670a6e86cc866baa5a884`.
+
+All 18 real retrieval trials found their expected definition and all **157/157** returned citations passed independent source checks. Median source/structural/context latencies were **0.081/1.564/76.786 seconds**. Context is explicitly opt-in because the six measured calls took **72–93 seconds**. The comparison job peaked at about **527 MiB** of commit charge. Source recall here covers definition files, not complete coding-task evidence.
+
+A clean phase-8 source index captured **3,218 entries** in **98.70 seconds**, peaking at about **954 MiB**, and its freshness and exact LocalApplication query passed. Two unchanged refreshes reused **2,660 analyses**, parsed none and skipped publication in **2.52/2.65 seconds**. Cache write time was unchanged. The original baseline and overlay caches were preserved; no optional integration, hook, background worker or publication activation was enabled.
+
+See [phase9-evaluation.md](phase9-evaluation.md) for the raw evidence, [operations.md](operations.md) for limits/retention/rebuilds/rollback, and [phase9-release.md](phase9-release.md) for open gates. Model generation success, actual token use, edited-service amortization, team latency targets, hosted phase-9 CI and a successor canonical trust-root activation remain unconfirmed. Checkpoint E is open; local validation does not certify a supported team release.

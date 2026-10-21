@@ -1,0 +1,7 @@
+revision = "HEAD"
+
+[[navigation]]
+symbol = "first.base.Same"
+source_path = "first/src/first/base.py"
+start_line = 14
+required_paths = ["docs/overview.rst"]

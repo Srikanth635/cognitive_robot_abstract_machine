@@ -106,3 +106,7 @@ Phase 7 adds `cram-publication` (also `python -m repository_knowledge publicatio
 ## Agent clients
 
 Phase 8 adds the optional `cram-knowledge-mcp` stdio server, bounded basstler startup inspection, canonical context through the independently pinned consumer, and CRAMERA's shared architecture adapter. See [phase8.md](docs/phase8.md) for setup, query bounds, source-only fallback, opt-in queueing and validation. MCP and CRAMERA integration dependencies are optional; basstler does not import the robotics stack. Configuration examples are templates and are not installed automatically.
+
+## Evaluation and recovery
+
+Phase 9 adds reproducible source/structural/context comparisons, storage and client recovery tests, and optional Windows job memory receipts. See [the measured report](docs/phase9-evaluation.md), [operations guide](docs/operations.md) and [release checklist](docs/phase9-release.md). Rich context remains an explicit operation because measured CLI requests took 72–93 seconds. Local navigation correctness does not establish model task success or token savings; the team-release gate remains open.
