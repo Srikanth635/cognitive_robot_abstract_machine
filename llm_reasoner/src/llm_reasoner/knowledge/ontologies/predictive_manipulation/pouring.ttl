@@ -3,6 +3,7 @@
 @prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
 @prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
 @prefix gaze:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
 @prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
@@ -11,8 +12,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.3.0> ;
-    owl:versionInfo "0.6.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.7.0> ;
+    owl:versionInfo "0.7.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ,
         <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> ;
     rdfs:label "Predictive manipulation: pouring"@en ;
@@ -343,8 +344,8 @@
         [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom :ReturnUprightPhase ] ,
         [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:ReplacePhase ] ,
         [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:ContactReleasePhase ] ,
-        [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:someValuesFrom :MaterialRegime ] ,
-        [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:someValuesFrom :TransferTerminationReason ] ,
+        [ a owl:Restriction ; owl:onProperty ac:hasMaterialRegime ; owl:someValuesFrom ac:MaterialRegime ] ,
+        [ a owl:Restriction ; owl:onProperty ac:hasTerminationReason ; owl:someValuesFrom ac:TransferTerminationReason ] ,
         [ a owl:Restriction ; owl:onProperty pre:definesForceCoupling ; owl:someValuesFrom pre:GripLoadCoupling ] ,
         [ a owl:Restriction ; owl:onProperty gaze:definesGazeFixation ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( gaze:GazeFixation [ a owl:Restriction ; owl:onProperty gaze:servesPhase ; owl:someValuesFrom :AlignmentPhase ] ) ] ] ,
         [ a owl:Restriction ; owl:onProperty gaze:definesGazeFixation ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( gaze:GazeFixation [ a owl:Restriction ; owl:onProperty gaze:servesPhase ; owl:someValuesFrom :FlowRegulationPhase ] ) ] ] ;
@@ -355,21 +356,21 @@
 # Each material admits only its own flow dynamics: a liquid does not flow like a granular or cohesive material.
 
 :LiquidPouringStructure a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:hasValue :Liquid ] ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty ac:hasMaterialRegime ; owl:hasValue ac:Liquid ] ) ] ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty core:definesParameter ; owl:allValuesFrom [ a owl:Class ; owl:complementOf [ a owl:Class ; owl:unionOf ( :GranularFlowDynamicsEstimate :CohesiveFlowDynamicsEstimate ) ] ] ] ;
     rdfs:label "liquid pouring structure"@en ;
     rdfs:comment "A pouring structure transferring a liquid; it declares no granular or cohesive flow dynamics."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :GranularPouringStructure a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:hasValue :Granular ] ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty ac:hasMaterialRegime ; owl:hasValue ac:Granular ] ) ] ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty core:definesParameter ; owl:allValuesFrom [ a owl:Class ; owl:complementOf [ a owl:Class ; owl:unionOf ( :DynamicViscosityEstimate :SloshDynamicsEstimate :CohesiveFlowDynamicsEstimate ) ] ] ] ;
     rdfs:label "granular pouring structure"@en ;
     rdfs:comment "A pouring structure transferring a granular material; it declares no viscosity, slosh or cohesive flow dynamics."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :CohesivePouringStructure a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:hasValue :Cohesive ] ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty ac:hasMaterialRegime ; owl:hasValue ac:Cohesive ] ) ] ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty core:definesParameter ; owl:allValuesFrom [ a owl:Class ; owl:complementOf [ a owl:Class ; owl:unionOf ( :SloshDynamicsEstimate :GranularFlowDynamicsEstimate ) ] ] ] ;
     rdfs:label "cohesive pouring structure"@en ;
     rdfs:comment "A pouring structure transferring a cohesive material; it declares no slosh or granular flow dynamics."@en ;
@@ -378,28 +379,28 @@
 # The reason a transfer stops names an event the structure can predict and detect.
 
 :TargetQuantityAttainedPouringStructure a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:hasValue :TargetQuantityAttained ] ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty ac:hasTerminationReason ; owl:hasValue ac:TargetQuantityAttained ] ) ] ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty core:definesEventType ; owl:someValuesFrom :TargetQuantityReached ] ;
     rdfs:label "target quantity attained pouring structure"@en ;
     rdfs:comment "A pouring structure whose transfer stops once the target quantity is reached; it declares the event detecting that."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :SourceExhaustedPouringStructure a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:hasValue :SourceExhausted ] ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty ac:hasTerminationReason ; owl:hasValue ac:SourceExhausted ] ) ] ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty core:definesEventType ; owl:someValuesFrom :SourceEmpty ] ;
     rdfs:label "source exhausted pouring structure"@en ;
     rdfs:comment "A pouring structure whose transfer stops once the source is empty; it declares the event detecting that."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :InstructedStopPouringStructure a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:hasValue :InstructedStop ] ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty ac:hasTerminationReason ; owl:hasValue ac:InstructedStop ] ) ] ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty core:definesEventType ; owl:someValuesFrom core:ExternalTerminationEventType ] ;
     rdfs:label "instructed stop pouring structure"@en ;
     rdfs:comment "A pouring structure whose transfer stops on an instruction; it declares the external event that ends it."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :TransferFailurePouringStructure a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:hasValue :TransferFailure ] ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PouringPhaseStructure [ a owl:Restriction ; owl:onProperty ac:hasTerminationReason ; owl:hasValue ac:TransferFailure ] ) ] ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty core:definesEventType ; owl:someValuesFrom core:FailureEventType ] ;
     rdfs:label "transfer failure pouring structure"@en ;
     rdfs:comment "A pouring structure whose transfer stops because it fails; it declares the failure event that ends it."@en ;
@@ -426,40 +427,3 @@ pre:ReplacePhase :positionInPouring 13 .
 pre:UnloadPhase :positionInPouring 14 .
 pre:ContactReleasePhase :positionInPouring 15 .
 pre:WithdrawPhase :positionInPouring 16 .
-
-:hasMaterialRegime a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MaterialRegime ;
-    rdfs:label "has material regime"@en ; rdfs:comment "The flow behaviour of the transferred substance."@en .
-:hasTerminationReason a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :TransferTerminationReason ;
-    rdfs:label "has termination reason"@en ; rdfs:comment "The condition that ends the transfer in this task variant."@en .
-
-# %% value partitions
-
-:MaterialRegime a owl:Class ;
-    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Liquid :Granular :Cohesive ) ] ;
-    rdfs:label "material regime"@en ;
-    rdfs:comment "The physical flow behaviour of a transferred substance."@en ;
-    core:evidenceStatus core:EngineeringExtension .
-:Liquid a owl:NamedIndividual , :MaterialRegime ; rdfs:label "liquid"@en ;
-    rdfs:comment "A low-shear material that flows freely and may slosh."@en .
-:Granular a owl:NamedIndividual , :MaterialRegime ; rdfs:label "granular"@en ;
-    rdfs:comment "Discrete particles whose bulk flow is not characterised by viscosity."@en .
-:Cohesive a owl:NamedIndividual , :MaterialRegime ; rdfs:label "cohesive"@en ;
-    rdfs:comment "A highly viscous or cohesive material with delayed flow."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :Liquid :Granular :Cohesive ) ] .
-
-:TransferTerminationReason a owl:Class ;
-    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :TargetQuantityAttained :SourceExhausted :InstructedStop :TransferFailure ) ] ;
-    rdfs:label "transfer termination reason"@en ;
-    rdfs:comment "The condition that intentionally or exceptionally ends the transfer."@en ;
-    core:evidenceStatus core:EngineeringExtension .
-:TargetQuantityAttained a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "target quantity attained"@en ;
-    rdfs:comment "The requested transferred quantity has been reached."@en .
-:SourceExhausted a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "source exhausted"@en ;
-    rdfs:comment "No transferable material remains in the source."@en .
-:InstructedStop a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "instructed stop"@en ;
-    rdfs:comment "An external instruction requests that the transfer stop."@en .
-:TransferFailure a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "transfer failure"@en ;
-    rdfs:comment "A spill or another failure forces the transfer to stop."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :TargetQuantityAttained :SourceExhausted :InstructedStop :TransferFailure ) ] .

@@ -27,7 +27,7 @@ from krrood.entity_query_language.factories import (
     variable,
 )
 from krrood.entity_query_language.query.match import Match
-from llm_reasoner.knowledge.access import pouring
+from llm_reasoner.knowledge.access import action_core
 from llm_reasoner.resolver.exceptions import (
     LanguageModelBackendError,
     NoFittingReferent,
@@ -526,35 +526,35 @@ KNOWLEDGE_CASES = (
     KnowledgeCase(
         "K2",
         "Pour the milk from the cup into the bowl.",
-        (pouring.MaterialRegime.LIQUID,),
+        (action_core.MaterialRegime.LIQUID,),
     ),
     KnowledgeCase(
         "K3",
         "Pour the cereal from the cup into the bowl.",
-        (pouring.MaterialRegime.GRANULAR,),
+        (action_core.MaterialRegime.GRANULAR,),
     ),
     KnowledgeCase(
         "K4",
         "Pour milk from the cup into the bowl until the bowl is half full.",
         (
-            pouring.MaterialRegime.LIQUID,
-            pouring.TransferTerminationReason.TARGET_QUANTITY_ATTAINED,
+            action_core.MaterialRegime.LIQUID,
+            action_core.TransferTerminationReason.TARGET_QUANTITY_ATTAINED,
         ),
     ),
     KnowledgeCase(
         "K5",
         "Pour all the cereal from the cup into the bowl.",
         (
-            pouring.MaterialRegime.GRANULAR,
-            pouring.TransferTerminationReason.SOURCE_EXHAUSTED,
+            action_core.MaterialRegime.GRANULAR,
+            action_core.TransferTerminationReason.SOURCE_EXHAUSTED,
         ),
     ),
     KnowledgeCase(
         "K8",
         "Pour the milk from the cup into the bowl until I tell you to stop.",
         (
-            pouring.MaterialRegime.LIQUID,
-            pouring.TransferTerminationReason.INSTRUCTED_STOP,
+            action_core.MaterialRegime.LIQUID,
+            action_core.TransferTerminationReason.INSTRUCTED_STOP,
         ),
     ),
 )

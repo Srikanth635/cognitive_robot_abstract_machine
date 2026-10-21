@@ -249,8 +249,8 @@
     ns4:definesInternalModelComposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction_pathway> ;
     ns4:definesMotorCommand <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_command> ;
     ns4:definesSensorimotorMemory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_memory> ;
-    ns6:hasMaterialRegime ns6:Liquid ;
-    ns6:hasTerminationReason ns6:TargetQuantityAttained ;
+    ac:hasMaterialRegime ac:Liquid ;
+    ac:hasTerminationReason ac:TargetQuantityAttained ;
     ns3:definesAnticipatoryGripAdjustment <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_raise_before_flow> ;
     ns3:definesForceCoupling <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_load_coupling> ;
     ns3:definesGripForceCorridor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_corridor> .

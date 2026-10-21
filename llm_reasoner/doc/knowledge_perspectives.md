@@ -400,7 +400,19 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    already kept these rules; the scripted failures answer did not (it moved the amount towards
    a target without naming one) and now says the amount increases. No vocabulary changed, so no
    stored knowledge is invalidated.
-7. Still open: linking the instances of a Flanagan hypothesis to those of a core
+7. *Perspectives keyed by situation, 2026-10-21.* The material regime (liquid, granular,
+   cohesive) and the transfer's termination reason are the action core's
+   (`MaterialRegime`, `TransferTerminationReason`, `hasMaterialRegime`,
+   `hasTerminationReason`); the Flanagan pouring module uses them. `PouringFrame` takes
+   both, with a defined variant per value (`GranularPouringFrame`,
+   `SourceExhaustedPouringFrame`, …), so `SituationFeatures` finds the same features on it
+   as on the phase structure. The situation is chosen once: the values chosen for the phase
+   structure also key the core's frame, and without the phase structure the pass runs on the
+   core's frame. Each perspective cites the core record of its situation, so it is served per
+   situation and generated knowing it, with no field of its own. Versions: action core
+   0.6.0, pouring 0.7.0. Nothing measured yet: every scene so far pours a liquid, and the
+   situation is still read from the instruction, not the world.
+8. Still open: linking the instances of a Flanagan hypothesis to those of a core
    hypothesis.
 
 **Phase 8 — more actions (D8):** navigating, picking up and placing in the core, with the
@@ -429,7 +441,8 @@ compatible) and kept as a file in the repository (D9).
 
 Decided: the core once with each perspective on top (§11.2); consulted beside the
 Flanagan hypothesis (§11.6); one core and one hypothesis per perspective for each action
-concept, with no situation features, until phase 4 shows a need for them.
+concept, with no situation features, until phase 4 shows a need for them. (Superseded
+2026-10-21: the core's frame takes the phase structure's situation features, §9 phase 7.)
 
 ### 11.1 What the pipeline already does for any vocabulary
 

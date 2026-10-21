@@ -236,7 +236,7 @@ class TestKnowledgeRequester:
         consultation = requester.consult(
             action, situation_backend("situation_granular.json")
         )
-        granular = pouring.MaterialRegime.GRANULAR
+        granular = action_core.MaterialRegime.GRANULAR
         assert consultation.situation == {
             pouring_feature_taking(granular).field_name: granular
         }
@@ -261,7 +261,7 @@ class TestKnowledgeRequester:
         requester.consult(action, situation_backend("situation_granular.json"))
         (record,) = store.records()
         unknown = pouring_feature_taking(
-            pouring.TransferTerminationReason.SOURCE_EXHAUSTED
+            action_core.TransferTerminationReason.SOURCE_EXHAUSTED
         )
         assert unknown.field_name not in record.fixed_values
 
@@ -588,7 +588,7 @@ def requester_offering_the_frame(store: HypothesisStore) -> KnowledgeRequester:
                 client=ScriptedClient(
                     responses=[
                         GenerationCase.GRANULAR_POURING.text,
-                        (PERSPECTIVE_CASES / "pouring_core.json").read_text(),
+                        (PERSPECTIVE_CASES / "pouring_core_granular.json").read_text(),
                         (PERSPECTIVE_CASES / "pouring_frame.json").read_text(),
                     ]
                 ),
@@ -849,7 +849,7 @@ def requester_leaving_out_the_phase_structure(
             backend=HypothesisBackend(
                 client=ScriptedClient(
                     responses=[
-                        (PERSPECTIVE_CASES / "pouring_core.json").read_text(),
+                        (PERSPECTIVE_CASES / "pouring_core_granular.json").read_text(),
                         (PERSPECTIVE_CASES / "pouring_frame.json").read_text(),
                     ]
                 ),
@@ -873,26 +873,19 @@ class TestLeavingOutThePhaseStructure:
             HypothesisStore(directory=tmp_path), ActionPerspectiveFile.ACTION_FRAME
         )
         consultation = requester.consult(
-            tilt_of(body_with_geometry()), situation_backend()
+            tilt_of(body_with_geometry()),
+            situation_backend("situation_frame_granular.json"),
         )
         assert consultation.record_id is None
         assert len(consultation.perspective_record_ids) == 2
-
-    def test_no_situation_is_chosen_for_it(self, tmp_path):
-        requester = requester_leaving_out_the_phase_structure(
-            HypothesisStore(directory=tmp_path), ActionPerspectiveFile.ACTION_FRAME
-        )
-        consultation = requester.consult(
-            tilt_of(body_with_geometry()), situation_backend()
-        )
-        assert consultation.situation == {}
 
     def test_the_tools_read_the_core_and_its_perspectives(self, tmp_path):
         requester = requester_leaving_out_the_phase_structure(
             HypothesisStore(directory=tmp_path), ActionPerspectiveFile.ACTION_FRAME
         )
         consultation = requester.consult(
-            tilt_of(body_with_geometry()), situation_backend()
+            tilt_of(body_with_geometry()),
+            situation_backend("situation_frame_granular.json"),
         )
         assert requester.tools_for(consultation)
 
@@ -905,3 +898,106 @@ class TestLeavingOutThePhaseStructure:
         )
         assert consultation.record_ids == []
         assert requester.service.backend.client.calls == []
+
+
+# %% the core and its perspectives in the action's situation
+
+
+def requester_answering(
+    store: HypothesisStore, *responses: str, consults_phase_structure: bool = True
+) -> KnowledgeRequester:
+    """
+    :return: A requester for the tilting action framed as pouring that consults the
+        action frame, whose knowledge component gives the scripted answers in turn.
+    """
+    return KnowledgeRequester(
+        service=KnowledgeService(
+            backend=HypothesisBackend(
+                client=ScriptedClient(responses=list(responses)),
+                suite=AcceptanceSuite(rules=[]),
+                store=store,
+            )
+        ),
+        described_actions=DescribedActions(entries=[TILT_FRAMED_AS_POURING]),
+        perspectives=(ActionPerspectiveFile.ACTION_FRAME,),
+        consults_phase_structure=consults_phase_structure,
+    )
+
+
+def perspective_case(name: str) -> str:
+    """
+    :return: A scripted answer about the action core or a perspective.
+    """
+    return (PERSPECTIVE_CASES / name).read_text()
+
+
+class TestSituatedPerspectives:
+    def test_the_core_is_served_for_the_situation_chosen(self, tmp_path):
+        requester = requester_answering(
+            HypothesisStore(directory=tmp_path),
+            GenerationCase.GRANULAR_POURING.text,
+            perspective_case("pouring_core_granular.json"),
+            perspective_case("pouring_frame.json"),
+        )
+        consultation = requester.consult(
+            tilt_of(body_with_geometry()), situation_backend("situation_granular.json")
+        )
+        core_record, _ = consultation.perspective_record_ids
+        granular = action_core.MaterialRegime.GRANULAR
+        assert requester.service.view(core_record).root.has_material_regime is granular
+        assert consultation.situation == {
+            pouring_feature_taking(granular).field_name: granular
+        }
+
+    def test_another_situation_serves_another_core_and_perspectives(self, tmp_path):
+        requester = requester_answering(
+            HypothesisStore(directory=tmp_path),
+            GenerationCase.GRANULAR_POURING.text,
+            perspective_case("pouring_core_granular.json"),
+            perspective_case("pouring_frame.json"),
+            GenerationCase.LIQUID_POURING.text,
+            perspective_case("pouring_core_liquid.json"),
+            perspective_case("pouring_frame.json"),
+        )
+        action = tilt_of(body_with_geometry())
+        granular = requester.consult(
+            action, situation_backend("situation_granular.json")
+        )
+        liquid = requester.consult(action, situation_backend("situation_liquid.json"))
+        assert set(granular.perspective_record_ids).isdisjoint(
+            liquid.perspective_record_ids
+        )
+
+    def test_a_situation_met_before_serves_its_core_and_perspectives_again(
+        self, tmp_path
+    ):
+        requester = requester_answering(
+            HypothesisStore(directory=tmp_path),
+            GenerationCase.GRANULAR_POURING.text,
+            perspective_case("pouring_core_granular.json"),
+            perspective_case("pouring_frame.json"),
+        )
+        action = tilt_of(body_with_geometry())
+        first = requester.consult(action, situation_backend("situation_granular.json"))
+        second = requester.consult(action, situation_backend("situation_granular.json"))
+        assert second.perspective_record_ids == first.perspective_record_ids
+        assert len(requester.service.backend.client.calls) == 3
+
+    def test_without_the_phase_structure_the_situation_is_chosen_for_the_core(
+        self, tmp_path
+    ):
+        requester = requester_answering(
+            HypothesisStore(directory=tmp_path),
+            perspective_case("pouring_core_granular.json"),
+            perspective_case("pouring_frame.json"),
+            consults_phase_structure=False,
+        )
+        consultation = requester.consult(
+            tilt_of(body_with_geometry()),
+            situation_backend("situation_frame_granular.json"),
+        )
+        granular = action_core.MaterialRegime.GRANULAR
+        assert consultation.record_id is None
+        assert consultation.situation == {"has_material_regime": granular}
+        core_record, _ = consultation.perspective_record_ids
+        assert requester.service.view(core_record).root.has_material_regime is granular

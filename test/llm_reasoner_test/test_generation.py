@@ -66,6 +66,7 @@ from llm_reasoner.knowledge.ontologies import (
     PredictiveManipulationOntologyFile,
 )
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms, OntologyFiles
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
@@ -810,7 +811,7 @@ class TestHypothesisAssessor:
     ):
         structure = pouring.PouringPhaseStructure(
             decomposes_task=POURING,
-            has_material_regime=pouring.MaterialRegime.GRANULAR,
+            has_material_regime=action_core.MaterialRegime.GRANULAR,
             defines_parameter=[pouring.DynamicViscosityEstimate()],
         )
         decoded = DecodingResult(
@@ -819,7 +820,7 @@ class TestHypothesisAssessor:
         request = HypothesisRequest.from_match(
             the(pouring.PouringPhaseStructure)(
                 decomposes_task=POURING,
-                has_material_regime=pouring.MaterialRegime.GRANULAR,
+                has_material_regime=action_core.MaterialRegime.GRANULAR,
             ),
             instruction="pour",
         )
