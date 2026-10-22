@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CRAM Visualization</title>
 <link rel="stylesheet" href="app.css" />
+<link rel="stylesheet" href="panels/resolution/designator.css" />
+<link rel="stylesheet" href="panels/resolution/knowledge.css" />
 </head>
 <body>
 <header class="topbar">
@@ -69,7 +71,9 @@
 <script src="core/timeline-events.js"></script>
 <script src="core/panel-visibility.js"></script>
 <script src="core/panel-arrangement.js"></script>
+<script src="core/panel-tabs.js"></script>
 <script src="config.js"></script>
+<script src="panel-groups.js"></script>
 
 <!-- panels — each defines itself in the registry; config.js decides mounting -->
 <script src="panels/robot_scene/panel.js"></script>
@@ -78,7 +82,16 @@
 <script src="panels/graph/graph.js"></script>
 <script src="panels/graph/panel.js"></script>
 
-<script>PanelArrangement.install(); Panels.boot(); PanelVisibility.init();</script>
+<!-- resolution: underspecified action designators and the knowledge behind them -->
+<script src="panels/resolution/hypothesis_graph.js"></script>
+<script src="panels/resolution/ontology_graph.js"></script>
+<script src="panels/resolution/designator_view.js"></script>
+<script src="panels/resolution/resolution_view.js"></script>
+<script src="panels/resolution/designator_completion.js"></script>
+<script src="panels/resolution/panel.js"></script>
+<script src="panels/graph/knowledge_views.js"></script>
+
+<script>PanelArrangement.install(); Panels.boot(); PanelTabs.install(); PanelVisibility.init();</script>
 <script src="core/split-resize.js"></script>
 </body>
 </html>

@@ -735,16 +735,22 @@ Checked on the merged tree: `llm_reasoner_test`, `llm_reasoner_viz_test` and
 `cram_viz_test` (1849 passed, 2 skipped, 1 expected failure, as before), our experiments'
 tests, and upstream's `cramera_test` (1066 passed).
 
-## 2b. Moving cram_viz's features onto cramera (spike, 2026-10-21)
+## 2b. Moving cram_viz's features onto cramera (2026-10-21/22)
 
-Goal: every feature of `cram_viz` available in `cramera`, with neither package edited.
-`cramera` has no place to add a route or a graph tab (its handler and tab list are fixed),
-so the features come as an add-on package, `cramera_resolution`, on the branch
-`feature/cramera_resolution`. It subclasses `cramera`'s handler and server, serves its own
-panels under `/addon/`, and inserts their scripts into `cramera`'s own `index.html` as it is
-served. What is `cram_viz`'s alone and to be moved: `resolution/`, `hypothesis_knowledge/`,
-the designator and NEEM code, five API routes and the designator, hypothesis and ontology
-views.
+Goal: every feature of `cram_viz` available in `cramera`. They first came as an add-on
+package, `cramera_resolution`, that subclassed `cramera`'s handler and server so that nothing
+of `cramera` was edited (branch `feature/cramera_resolution`). On 2026-10-22 the add-on was
+merged into `cramera` itself, as the subpackage `cramera.resolution` (the former inner
+`resolution` package is `cramera.resolution.resolver`), with these edits to `cramera`'s own
+files: the handler answers the resolution routes (`Handler` gains the `ResolutionRoutes` mixin
+and two dispatch lines), the server holds a `ResolutionService`, `index.html` loads the
+panels, `config.js` lays them out, a new `core/panel-tabs.js` with `panel-groups.js` shares a
+frame between panels as tabs, the graph panel hands its root to `panels/graph/knowledge_views.js`,
+and `cramera` depends on `llm_reasoner`. The resolution routes are served only where `rclpy`
+is importable (coraplex needs it), so a `cramera` without ROS is served as before.
+Runs and hypotheses kept before the merge store the old class paths and cannot be read by
+the viewer's resolution views; `llm_reasoner_viz` reads only their logs and still shows them.
+What follows is the history of the spike and of the phases, under the add-on's names.
 
 The spike shows:
 - **The mechanism works.** A test panel defined by the add-on mounts beside `cramera`'s EQL

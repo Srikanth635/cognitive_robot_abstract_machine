@@ -628,6 +628,8 @@ Panels.define('graph', function (root, bus) {
 
   // %% boot
   showTab(DEFAULT_TAB);
+  // the knowledge of a resolution takes its own tabs here, when that feature is loaded
+  if (window.KnowledgeViews) window.KnowledgeViews.attach(root, bus);
 
   return {
     destroy: function () {

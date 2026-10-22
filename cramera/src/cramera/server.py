@@ -10,6 +10,9 @@ Serves three things from one port (default 8711):
       GET  /api/knowledge              the knowledge-graph overview payload
       GET  /api/knowledge/view?name=   one graph tab (knowledge/kinematics/plan/chart)
       GET  /api/knowledge/expand?node= drill-down subgraph for one node
+      ...  /api/resolution/*           resolving underspecified action designators with
+                                        llm_reasoner, and the views of its knowledge (see
+                                        :mod:`cramera.resolution.routes`)
       POST /api/eql             run an EQL query string
       GET  /api/recording/status       {state: finalized|idle} of the on-disk
                                         __recording__ bundle (see
@@ -34,6 +37,7 @@ why the knowledge panel is empty.
 from __future__ import annotations
 
 import http.server
+import importlib.util
 import json
 import logging
 import mimetypes
@@ -64,10 +68,20 @@ from cramera.logging_setup import get_logger
 from cramera.onboard.scene_index import InvalidSceneName, merged_scene_index
 from cramera.payload import CrameraPayload
 from cramera.request_origin import OriginHeader, RequestOrigin
+from cramera.resolution.routes import ResolutionRoutes
 
 logger = get_logger(__name__)
 
 DEFAULT_PORT = 8711
+
+RESOLUTION_AVAILABLE = importlib.util.find_spec("rclpy") is not None
+"""
+Whether the resolution routes can be served: they build on coraplex, which imports ROS's
+``rclpy``. Without it the viewer is served as before and the routes say so.
+"""
+
+if RESOLUTION_AVAILABLE:
+    from cramera.resolution.service import ResolutionService
 
 try:
     import krrood  # noqa: F401  (the EQL engine)
@@ -77,6 +91,7 @@ try:
     from cramera.knowledge.presets import Preset
     from cramera.knowledge.question_matching import QuestionMatcher
     from cramera.knowledge.views.dispatcher import GraphPanelViews
+    from krrood.symbol_graph.symbol_graph import SymbolGraph
 
     EQL_AVAILABLE = True
 except ImportError:  # pragma: no cover - depends on the environment
@@ -90,9 +105,10 @@ except (
 
 
 @dataclass(init=False, eq=False)
-class Handler(http.server.SimpleHTTPRequestHandler):
+class Handler(ResolutionRoutes, http.server.SimpleHTTPRequestHandler):
     """
-    Static files from the packaged web root, plus the JSON API routes.
+    Static files from the packaged web root, plus the JSON API routes and the routes of
+    the resolution feature.
     """
 
     server: ViewerServer
@@ -278,6 +294,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._send_json(
                 {"state": "finalized" if has_saveable_recording() else "idle"}
             )
+        if self.answer_resolution_get(route):
+            return
         return super().do_GET()
 
     @staticmethod
@@ -306,6 +324,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._save_recording()
         if route == "/api/recording/discard":
             return self._discard_recording()
+        if self.answer_resolution_post(route):
+            return
         return self._send_error("unknown endpoint", 404)
 
     def _save_recording(self) -> None:
@@ -419,12 +439,17 @@ class ViewerServer(socketserver.ThreadingTCPServer):
     query_lock: threading.Lock = field(default_factory=threading.Lock)
     """Protect query evaluation from concurrent HTTP requests."""
 
+    resolution: ResolutionService | None = None
+    """The operations of the resolution routes, and what they share; ``None`` where
+    :data:`RESOLUTION_AVAILABLE` is false."""
+
     def __init__(self, port: int) -> None:
         """Bind the viewer server to localhost.
 
         :param port: Listening port, or zero to choose an available port.
         """
         self.query_lock = threading.Lock()
+        self.resolution = ResolutionService() if RESOLUTION_AVAILABLE else None
         super().__init__(("127.0.0.1", port), Handler)
 
 
@@ -488,6 +513,10 @@ def main(arguments: Optional[List[str]] = None) -> None:
     options = parse_arguments(sys.argv[1:] if arguments is None else arguments)
     port = options.port
     if EQL_AVAILABLE:  # build the knowledge base once, before the first query
+        # Everything is imported by now, so the graph knows every class the knowledge
+        # vocabulary declares; the world of a scene is read from it.
+        SymbolGraph.clear()
+        SymbolGraph()
         EpisodeKnowledgeBase.of_active_scene()
     with make_server(port) as server:
         eql = "EQL ready (krrood)" if EQL_AVAILABLE else "EQL unavailable — static only"

@@ -88,6 +88,58 @@ local recordings with an optional shared bundle directory:
 Scene bundles and robot-model assets are data, and are not included in this Python
 package. New recordings are written under `CRAMERA_DATA/scenes`.
 
+## Resolve underspecified action designators
+
+`cramera.resolution` resolves underspecified action designators with `llm_reasoner`, shows the
+knowledge generated for them and performs what was resolved under the live viewer. It needs
+ROS's `rclpy` (coraplex builds on it); without it the viewer is served as before and the
+routes below say so. Resolving needs an Anthropic API key in the environment.
+
+The panels are in `web/panels/resolution`:
+- *Underspecified Action Designators* shares one frame with the EQL panel, as two tabs
+  (`web/core/panel-tabs.js`, configured in `web/panel-groups.js`). It offers the scene's
+  designators as chips that copy their query into a box (one the scene cannot resolve is
+  dimmed, says what the scene lacks, and can still be copied; Resolve then refuses it), the
+  knowledge to consult, Resolve, what the resolver chose, why, what it rests on and the pours
+  it tried, the runs kept, and Execute. The box suggests the action designators and, inside
+  one's argument list, their parameters, through the EQL box's own suggestion menu. A page
+  opened with `?run=<name>` shows that run.
+- The graph panel has three more tabs, *Hypothesis Graph*, *Ontology Graph* and *Designator*
+  (`web/panels/graph/knowledge_views.js`), that draw the knowledge a resolution consulted. A
+  freshly generated hypothesis redraws them, and marks the Hypothesis Graph tab until it is
+  opened.
+
+The routes, all under `/api/resolution/`, answer JSON, and an error as
+`{"ok": false, "error": "<Type>: <message>"}`:
+
+| Route | What it does |
+| --- | --- |
+| `GET runs` | The runs kept, newest first, each with its scene, designator, query, cost and pours tried |
+| `GET designators?scene=` | The predefined designators the scene offers, the action designators and parameters to suggest, and the knowledge to choose from |
+| `POST resolve` | Resolves a designator query in a scene |
+| `GET run?name=&scene=` | Shows a kept run as it was made |
+| `POST hypothesis` | Generates hypothesis knowledge for an instruction |
+| `POST execute` | Performs a kept run in the simulation under the live viewer |
+| `GET view?name=&scene=` | The hypothesis, ontology or designator view |
+
+Under `CRAMERA_DATA` (default `~/.cramera`) it keeps `runs/`, `hypotheses/` and the NEEM
+database `neems.sqlite`; `CRAMERA_HYPOTHESIS_STORE` and `CRAMERA_NEEM_DATABASE` move the last
+two. The runs are the ones the `llm_reasoner_viz` viewer shows
+(`LLM_REASONER_VIZ_RUNS=$CRAMERA_DATA/runs llm-reasoner-viz`), which the answers link to at
+`LLM_REASONER_VIZ_URL` (default `http://localhost:8721`).
+
+Not available yet: plan steps are not written to a run's log as they change (a run's start and
+end are), the knowledge cannot be queried from the EQL panel, and the NEEM of a performance
+is kept only where the generated ORM interface exists (`scripts/regenerate_all_orm.py`).
+
+`cramera/scenes` holds the bundles of `cram_viz/scenes` in the format `cramera` reads (a
+`placeTarget` stores `position`, and the PR2's `<transmission>` elements, which `cramera`'s URDF
+reader refuses, are left out). Write it again after `cram_viz`'s bundles are regenerated:
+
+```bash
+python -m cramera.resolution.scene_conversion cram_viz/scenes cramera/scenes
+```
+
 ## Package structure
 
 The frontend mounts independent panels through `web/core/registry.js` and an event
