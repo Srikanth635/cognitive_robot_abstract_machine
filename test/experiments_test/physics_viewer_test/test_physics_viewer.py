@@ -10,21 +10,21 @@ from __future__ import annotations
 import time
 from datetime import timedelta
 
+import mujoco
 import pytest
 from semantic_digital_twin.adapters.mjcf import MJCFParser
+from semantic_digital_twin.adapters.multi_sim import MujocoSim
 from semantic_digital_twin.world import World
 
 from experiments.physics_viewer.exceptions import HeadlessRunWithoutDuration
-from experiments.physics_viewer.scenes import MjcfFile, MjcfScene, PhysicsScene
+from experiments.physics_viewer.scenes import MjcfFile, PhysicsScene, UrdfFile
 from experiments.physics_viewer.viewer import PhysicsViewer
 
 # %% the scenes
 
 
 class TestScenes:
-    @pytest.mark.parametrize(
-        "scene", [PhysicsScene.CUBE, PhysicsScene.CUPS, PhysicsScene.KITCHEN]
-    )
+    @pytest.mark.parametrize("scene", [PhysicsScene.CUBE, PhysicsScene.CUPS])
     def test_an_mjcf_scene_is_the_world_its_file_describes(self, scene):
         described = MJCFParser(str(scene.value.file)).parse()
         assert len(scene.value.build().bodies) == len(described.bodies)
