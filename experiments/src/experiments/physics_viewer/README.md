@@ -14,7 +14,7 @@ python -m experiments.physics_viewer SCENE [--speed FACTOR] [--duration SECONDS]
 | `cube` | A cube dropped onto the ground |
 | `cups` | A set of cups |
 | `apartment` | The apartment, with its walls, floor and furniture |
-| `pr2_in_apartment` | The PR2 in the apartment with a milk carton and a cereal box, as the demos have it |
+| `pr2_in_apartment` | The PR2 in the apartment, where the demos have it stand |
 | `pr2` | The PR2 on the floor |
 | `tracy` | The Tracy robot on the floor |
 
@@ -27,3 +27,8 @@ The kitchen and apartment MJCF files of `semantic_digital_twin/resources/mjcf` d
 the kinematic structure, with no geometry, so MuJoCo shows nothing of them but a black window; the
 apartment here is the URDF one. The two URDF kitchens do not compile in MuJoCo (`axis too small in
 joint`), so there is no kitchen scene.
+
+A scene's furniture is made to rest: a drawer's collision shape overlaps the cabinet it slides in,
+which in physics throws every drawer and door open at the start, so the furniture's shapes do not
+collide with each other (only with what is not furniture) and its joints carry a little friction.
+A robot is spawned with its arms parked, so its servos do not pull them to a limit.
