@@ -4,13 +4,17 @@ Stepping a scene under MuJoCo physics at a chosen speed, in a window or without 
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass
 from datetime import timedelta
 
-from semantic_digital_twin.adapters.multi_sim import MujocoSim
+from coraplex.datastructures.dataclasses import Context
+from coraplex.execution_environment import PhysicallySimulatedRobot
+from semantic_digital_twin.robots.robot_parts import AbstractRobot
+from semantic_digital_twin.world import World
 
+from experiments.physics_viewer.actions import PhysicsAction
 from experiments.physics_viewer.exceptions import HeadlessRunWithoutDuration
+from experiments.physics_viewer.paced_simulation import RealTimeMujocoSim
 from experiments.physics_viewer.scenes import PhysicsScene
 
 # %% what a run did
@@ -30,6 +34,11 @@ class PhysicsRun:
     simulated_seconds: float
     """
     How much simulated time the frames add up to.
+    """
+
+    world: World
+    """
+    The world as the physics left it.
     """
 
 
@@ -73,33 +82,73 @@ class PhysicsViewer:
     How much simulated time one frame shows.
     """
 
+    action: PhysicsAction | None = None
+    """
+    The action the robot performs first; the duration then counts from the end of the
+    action.
+    """
+
+    settling: timedelta = timedelta(seconds=1)
+    """
+    How long a scene is left to come to rest before an action starts.
+    """
+
     def run(self) -> PhysicsRun:
         """
-        Step the scene's physics, frame by frame, until the duration is over or the
-        window is closed.
+        Perform the action, if there is one, then step the scene's physics, frame by
+        frame, until the duration is over or the window is closed.
 
         :raises HeadlessRunWithoutDuration: When there is no window and no duration.
         """
         if self.headless and self.duration is None:
             raise HeadlessRunWithoutDuration()
-        simulation = MujocoSim(world=self.scene.value.build(), headless=self.headless)
+        world = self.scene.value.build()
+        simulation = RealTimeMujocoSim(
+            world=world, speed=self.speed, headless=self.headless
+        )
         simulation.start_stepped_simulation()
-        frames = 0
-        started = time.monotonic()
         try:
-            while not self.is_over(simulation, frames):
-                simulation.step_simulation(self.frame)
-                frames += 1
-                time.sleep(
-                    max(0.0, started + self.real_seconds_of(frames) - time.monotonic())
-                )
+            if self.action is not None:
+                self.perform(simulation, world)
+            frames = self.step_until_over(simulation)
         finally:
             simulation.stop_simulation()
         return PhysicsRun(
-            frames=frames, simulated_seconds=frames * self.frame.total_seconds()
+            frames=frames,
+            simulated_seconds=frames * self.frame.total_seconds(),
+            world=world,
         )
 
-    def is_over(self, simulation: MujocoSim, frames: int) -> bool:
+    def perform(self, simulation: RealTimeMujocoSim, world: World) -> None:
+        """
+        Let the scene settle, then have the robot perform the action under physics.
+
+        :param simulation: The simulation, started.
+        :param world: The world being simulated.
+        """
+        [robot] = world.get_semantic_annotations_by_type(AbstractRobot)
+        simulation.step_simulation(self.settling)
+        plan = self.action.value.build(
+            Context(world=world, robot=robot, evaluate_conditions=False)
+        )
+        with PhysicallySimulatedRobot(simulation=simulation):
+            plan.perform()
+
+    def step_until_over(self, simulation: RealTimeMujocoSim) -> int:
+        """
+        Step the physics frame by frame until the duration is over or the window is
+        closed.
+
+        :param simulation: The simulation, started.
+        :return: How many frames were stepped.
+        """
+        frames = 0
+        while not self.is_over(simulation, frames):
+            simulation.step_simulation(self.frame)
+            frames += 1
+        return frames
+
+    def is_over(self, simulation: RealTimeMujocoSim, frames: int) -> bool:
         """
         :param simulation: The simulation being stepped.
         :param frames: How many frames have been stepped.
@@ -110,10 +159,3 @@ class PhysicsViewer:
         ):
             return True
         return not self.headless and not simulation.simulator.renderer.is_running()
-
-    def real_seconds_of(self, frames: int) -> float:
-        """
-        :param frames: How many frames have been stepped.
-        :return: How many seconds after the start of the run those frames are due.
-        """
-        return frames * self.frame.total_seconds() / self.speed

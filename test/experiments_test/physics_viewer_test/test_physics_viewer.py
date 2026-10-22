@@ -14,13 +14,18 @@ import mujoco
 import pytest
 from semantic_digital_twin.adapters.mjcf import MJCFParser
 from semantic_digital_twin.adapters.multi_sim import MujocoSim
-from semantic_digital_twin.datastructures.definitions import StaticJointState
+from semantic_digital_twin.datastructures.definitions import (
+    GripperState,
+    StaticJointState,
+)
 from semantic_digital_twin.adapters.urdf import URDFParser
-from semantic_digital_twin.robots.pr2 import PR2
+from semantic_digital_twin.robots.pr2 import PR2, PR2Joint
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.world import World
 
 from experiments.physics_viewer.exceptions import HeadlessRunWithoutDuration
+from experiments.physics_viewer.actions import PhysicsAction
+from experiments.physics_viewer.paced_simulation import RealTimeMujocoSim
 from experiments.physics_viewer.scenes import MjcfFile, PhysicsScene, UrdfFile
 from experiments.physics_viewer.viewer import PhysicsViewer
 
@@ -163,6 +168,118 @@ class TestColors:
 
     def test_a_scene_with_colors_of_its_own_keeps_them(self):
         assert (0.0, 0.0, 1.0, 1.0) in compiled_colors(PhysicsScene.CUPS)
+
+
+# %% objects to interact with
+
+
+class TestObjects:
+    """
+    The PR2 stands at the kitchen counter, with objects on it to interact with.
+    """
+
+    scene = PhysicsScene.PR2_AT_THE_COUNTER
+
+    def test_every_object_of_the_scene_is_in_its_world(self):
+        world = self.scene.value.build()
+        names = {body.name.name for body in world.bodies}
+        assert {placed.mesh for placed in self.scene.value.scene.objects} <= names
+
+    def test_an_object_with_an_annotation_has_it(self):
+        world = self.scene.value.build()
+        annotated = [
+            placed for placed in self.scene.value.scene.objects if placed.annotation
+        ]
+        assert annotated
+        assert all(
+            world.get_semantic_annotations_by_type(placed.annotation)
+            for placed in annotated
+        )
+
+    def test_the_objects_stay_on_the_counter_under_physics(self):
+        scene = self.scene
+        run = PhysicsViewer(
+            scene=scene, headless=True, duration=timedelta(seconds=2), speed=100.0
+        ).run()
+        for placed in scene.value.scene.objects:
+            height = float(run.world.get_body_by_name(placed.mesh).global_pose.z)
+            assert height == pytest.approx(placed.position.z, abs=0.01)
+
+    def test_the_robot_stands_where_the_scene_puts_it(self):
+        world = self.scene.value.build()
+        [robot] = world.get_semantic_annotations_by_type(AbstractRobot)
+        position = self.scene.value.position
+        assert float(robot.root.global_pose.x) == pytest.approx(position.x)
+        assert float(robot.root.global_pose.y) == pytest.approx(position.y)
+
+
+# %% actions in physics
+
+
+class TestActions:
+    def torso_position(self, run) -> float:
+        return run.world.get_connection_by_name(PR2Joint.TORSO_LIFT).position
+
+    def test_raising_the_torso_in_physics_lifts_it(self):
+        scene = PhysicsScene.PR2
+        before = (
+            scene.value.build().get_connection_by_name(PR2Joint.TORSO_LIFT).position
+        )
+        run = PhysicsViewer(
+            scene=scene,
+            headless=True,
+            duration=timedelta(seconds=0.1),
+            speed=100.0,
+            action=PhysicsAction.RAISE_TORSO,
+        ).run()
+        assert self.torso_position(run) > before + 0.1
+
+    @pytest.mark.parametrize(
+        ("action", "state"),
+        [
+            (PhysicsAction.OPEN_GRIPPERS, GripperState.OPEN),
+            (PhysicsAction.CLOSE_GRIPPERS, GripperState.CLOSE),
+        ],
+    )
+    def test_the_grippers_go_to_the_state_the_action_names(self, action, state):
+        run = PhysicsViewer(
+            scene=PhysicsScene.PR2,
+            headless=True,
+            duration=timedelta(seconds=0.1),
+            speed=100.0,
+            action=action,
+        ).run()
+        [robot] = run.world.get_semantic_annotations_by_type(AbstractRobot)
+        for arm in robot.all_arms:
+            target = arm.end_effector.get_joint_state_by_type(state)
+            positions = [connection.position for connection in target.connections]
+            assert positions == pytest.approx(target.target_values, abs=0.01)
+
+    def test_the_duration_counts_what_is_stepped_after_the_action(self):
+        viewer = PhysicsViewer(
+            scene=PhysicsScene.PR2,
+            headless=True,
+            duration=timedelta(seconds=0.5),
+            speed=100.0,
+            action=PhysicsAction.RAISE_TORSO,
+        )
+        assert viewer.run().frames == round(0.5 / viewer.frame.total_seconds())
+
+
+# %% pacing
+
+
+class TestPacing:
+    def test_a_simulation_steps_no_faster_than_real_time_times_its_speed(self):
+        simulation = RealTimeMujocoSim(
+            world=PhysicsScene.CUBE.value.build(), headless=True, speed=2.0
+        )
+        simulation.start_stepped_simulation()
+        started = time.monotonic()
+        simulation.step_simulation(timedelta(seconds=0.6))
+        elapsed = time.monotonic() - started
+        simulation.stop_simulation()
+        assert elapsed >= 0.6 / 2.0
 
 
 # %% robots that start parked

@@ -16,6 +16,11 @@ from semantic_digital_twin.adapters.mjcf import MJCFParser
 from semantic_digital_twin.adapters.multi_sim import ContactCategories, MujocoGeom
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.datastructures.definitions import StaticJointState
+from experiments.tool_based_actions.simple_demo.demo_world import (
+    BOWL_COLOR,
+    CUP_COLOR,
+    parse_object,
+)
 from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.robots.tracy import Tracy
@@ -23,10 +28,16 @@ from semantic_digital_twin.spatial_types.spatial_types import (
     HomogeneousTransformationMatrix,
 )
 from semantic_digital_twin.specifications.robots import RobotSpecification
+from semantic_digital_twin.semantic_annotations.semantic_annotations import (
+    Bowl,
+    Milk,
+    PouringCup,
+)
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connection_properties import JointDynamics
 from semantic_digital_twin.world_description.connections import ActiveConnection1DOF
 from semantic_digital_twin.world_description.geometry import Color, Mesh
+from semantic_digital_twin.world_description.world_entity import SemanticAnnotation
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Iterable
 
@@ -222,9 +233,9 @@ class UrdfScene(SceneWorld):
 
 
 @dataclass(frozen=True)
-class FloorPosition:
+class Position:
     """
-    A position on the floor of a world.
+    A position in a world, in meters.
     """
 
     x: float = 0.0
@@ -235,6 +246,11 @@ class FloorPosition:
     y: float = 0.0
     """
     The distance along the world's y axis, in meters.
+    """
+
+    z: float = 0.0
+    """
+    The distance along the world's z axis, in meters.
     """
 
 
@@ -254,7 +270,7 @@ class RobotInScene(SceneWorld):
     The robot to spawn.
     """
 
-    position: FloorPosition = FloorPosition()
+    position: Position = Position()
     """
     Where the robot stands.
     """
@@ -264,12 +280,76 @@ class RobotInScene(SceneWorld):
         robot = RobotSpecification(
             self.robot,
             world_T_odom=HomogeneousTransformationMatrix.from_xyz_rpy(
-                self.position.x, self.position.y, 0.0
+                self.position.x, self.position.y, self.position.z
             ),
         ).spawn(world)
         UrdfMaterialColors(self.robot.get_ros_file_path()).apply(world)
         for arm in robot.all_arms:
             arm.get_joint_state_by_type(StaticJointState.PARK).apply_to(world)
+        return world
+
+
+@dataclass(frozen=True)
+class PlacedObject:
+    """
+    An object lying in a scene.
+    """
+
+    mesh: str
+    """
+    The name of the object's mesh file in the demos' resources, which is also the name of
+    its body.
+    """
+
+    position: Position
+    """
+    Where the object lies, the height being where it comes to rest.
+    """
+
+    color: Color | None = None
+    """
+    The color to dye the object with; ``None`` keeps the mesh's own.
+    """
+
+    annotation: type[SemanticAnnotation] | None = None
+    """
+    What the object is, for the actions that look for it.
+    """
+
+
+@dataclass(frozen=True)
+class ObjectsInScene(SceneWorld):
+    """
+    A scene with objects lying in it, each free to move under physics.
+    """
+
+    scene: SceneWorld
+    """
+    The scene the objects lie in.
+    """
+
+    objects: tuple[PlacedObject, ...]
+    """
+    The objects.
+    """
+
+    def build(self) -> World:
+        world = self.scene.build()
+        for placed in self.objects:
+            world.merge_world_at_pose(
+                parse_object(placed.mesh, placed.color),
+                HomogeneousTransformationMatrix.from_xyz_rpy(
+                    placed.position.x,
+                    placed.position.y,
+                    placed.position.z,
+                    reference_frame=world.root,
+                ),
+            )
+            if placed.annotation is not None:
+                with world.modify_world():
+                    world.add_semantic_annotation(
+                        placed.annotation(root=world.get_body_by_name(placed.mesh))
+                    )
         return world
 
 
@@ -302,10 +382,29 @@ class PhysicsScene(Enum):
     """
 
     PR2_IN_APARTMENT = RobotInScene(
-        UrdfScene(UrdfFile.APARTMENT), PR2, FloorPosition(1.5, 2.5)
+        UrdfScene(UrdfFile.APARTMENT), PR2, Position(1.5, 2.5)
     )
     """
     The PR2 in the apartment, where the demos have it stand.
+    """
+
+    PR2_AT_THE_COUNTER = RobotInScene(
+        ObjectsInScene(
+            UrdfScene(UrdfFile.APARTMENT),
+            (
+                PlacedObject("milk.stl", Position(2.37, 2.0, 1.0345), annotation=Milk),
+                PlacedObject("breakfast_cereal.stl", Position(2.37, 1.8, 1.0487)),
+                PlacedObject("bowl.stl", Position(2.4, 2.4, 0.979), BOWL_COLOR, Bowl),
+                PlacedObject(
+                    "jeroen_cup.stl", Position(2.4, 2.6, 0.947), CUP_COLOR, PouringCup
+                ),
+            ),
+        ),
+        PR2,
+        Position(1.85, 2.2),
+    )
+    """
+    The PR2 at the kitchen counter, with a milk carton, a cereal box, a bowl and a cup on it.
     """
 
     PR2 = RobotInScene(MjcfScene(MjcfFile.FLOOR), PR2)
