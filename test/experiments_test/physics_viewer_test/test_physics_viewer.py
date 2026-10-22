@@ -15,6 +15,8 @@ import pytest
 from semantic_digital_twin.adapters.mjcf import MJCFParser
 from semantic_digital_twin.adapters.multi_sim import MujocoSim
 from semantic_digital_twin.datastructures.definitions import StaticJointState
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.world import World
 
@@ -97,6 +99,70 @@ class TestFurnitureAtRest:
             (offered == furniture_category) & (collidable == default_category)
         ).any()
         assert ((offered == default_category) & (collidable == default_category)).any()
+
+
+# %% the colors the URDF declares
+
+
+def declared_colors(file: str) -> set[tuple[float, ...]]:
+    """
+    :param file: A URDF file or the ROS path of one.
+    :return: The distinct colors its visuals declare through their materials.
+    """
+    parsed = URDFParser.from_file(file).parsed
+    by_name = {
+        material.name: material.color.rgba
+        for material in parsed.materials
+        if material.color
+    }
+    colors = set()
+    for link in parsed.links:
+        for visual in link.visuals:
+            material = visual.material
+            if material is None:
+                continue
+            rgba = material.color.rgba if material.color else by_name.get(material.name)
+            if rgba is not None:
+                colors.add(tuple(round(float(value), 2) for value in rgba))
+    return colors
+
+
+def compiled_colors(scene: PhysicsScene) -> set[tuple[float, ...]]:
+    """
+    :return: The distinct colors of the geoms the scene's window shows.
+    """
+    model = compiled(scene)
+    shown = model.geom_group < 3
+    return {
+        tuple(round(float(value), 2) for value in rgba)
+        for rgba in model.geom_rgba[shown]
+    }
+
+
+class TestColors:
+    """
+    semantic_digital_twin gives the colors a URDF declares to its boxes, spheres and
+    cylinders and not to its meshes, which leaves every mesh white.
+    """
+
+    def test_the_apartment_shows_the_colors_its_urdf_declares(self):
+        assert declared_colors(str(UrdfFile.APARTMENT)) <= compiled_colors(
+            PhysicsScene.APARTMENT
+        )
+
+    def test_the_pr2_shows_the_colors_its_urdf_declares(self):
+        assert declared_colors(PR2.get_ros_file_path()) <= compiled_colors(
+            PhysicsScene.PR2
+        )
+
+    def test_the_pr2_in_the_apartment_shows_the_colors_of_both(self):
+        declared = declared_colors(PR2.get_ros_file_path()) | declared_colors(
+            str(UrdfFile.APARTMENT)
+        )
+        assert declared <= compiled_colors(PhysicsScene.PR2_IN_APARTMENT)
+
+    def test_a_scene_with_colors_of_its_own_keeps_them(self):
+        assert (0.0, 0.0, 1.0, 1.0) in compiled_colors(PhysicsScene.CUPS)
 
 
 # %% robots that start parked
