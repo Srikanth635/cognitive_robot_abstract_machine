@@ -32,3 +32,7 @@ A scene's furniture is made to rest: a drawer's collision shape overlaps the cab
 which in physics throws every drawer and door open at the start, so the furniture's shapes do not
 collide with each other (only with what is not furniture) and its joints carry a little friction.
 A robot is spawned with its arms parked, so its servos do not pull them to a limit.
+
+The URDF parser gives a material's color to boxes, spheres and cylinders and leaves meshes white, so
+the viewer colors the meshes of the apartment and the robots with the colors their URDF declares. There
+are no textures to show: none of these meshes carries a texture image.

@@ -26,6 +26,7 @@ from semantic_digital_twin.specifications.robots import RobotSpecification
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connection_properties import JointDynamics
 from semantic_digital_twin.world_description.connections import ActiveConnection1DOF
+from semantic_digital_twin.world_description.geometry import Color, Mesh
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Iterable
 
@@ -72,6 +73,54 @@ class UrdfFile(PathEnumeration):
     """
     An apartment with its walls, floor and furniture.
     """
+
+
+# %% the colors of a URDF
+
+
+@dataclass(frozen=True)
+class UrdfMaterialColors:
+    """
+    Gives the meshes of a world the colors the URDF it was read from declares.
+
+    The URDF parser gives a material's color to a box, a sphere or a cylinder and leaves a
+    mesh white, so the meshes of a robot or an apartment all look white.
+    """
+
+    file: str
+    """
+    The URDF file, or the ROS path of one.
+    """
+
+    def apply(self, world: World) -> None:
+        """
+        Color the meshes of the bodies whose links the URDF gives a material.
+
+        :param world: The world the URDF was read into.
+        """
+        parsed = URDFParser.from_file(self.file).parsed
+        named = {
+            material.name: material.color.rgba
+            for material in parsed.materials
+            if material.color
+        }
+        for link in parsed.links:
+            body = world.get_body_by_name(link.name)
+            for visual, shape in zip(link.visuals, body.visual):
+                rgba = self.rgba_of(visual.material, named)
+                if rgba is not None and isinstance(shape, Mesh):
+                    shape.color = Color(*rgba)
+
+    @staticmethod
+    def rgba_of(material, named: dict[str, list[float]]) -> list[float] | None:
+        """
+        :param material: The material of a visual, if it has one.
+        :param named: The colors of the URDF's own materials, by their names.
+        :return: The color the material declares itself or by its name, if any.
+        """
+        if material is None:
+            return None
+        return material.color.rgba if material.color else named.get(material.name)
 
 
 # %% furniture that rests
@@ -167,6 +216,7 @@ class UrdfScene(SceneWorld):
 
     def build(self) -> World:
         world = URDFParser.from_file(str(self.file)).parse()
+        UrdfMaterialColors(str(self.file)).apply(world)
         RestingFurniture().apply(world, world.bodies)
         return world
 
@@ -217,6 +267,7 @@ class RobotInScene(SceneWorld):
                 self.position.x, self.position.y, 0.0
             ),
         ).spawn(world)
+        UrdfMaterialColors(self.robot.get_ros_file_path()).apply(world)
         for arm in robot.all_arms:
             arm.get_joint_state_by_type(StaticJointState.PARK).apply_to(world)
         return world
