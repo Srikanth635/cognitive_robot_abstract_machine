@@ -5,7 +5,7 @@ perform plans in a *kinematic* simulation; here the bodies fall, collide and are
 servos.
 
 ```bash
-python -m experiments.physics_viewer SCENE [--speed FACTOR] [--duration SECONDS] [--headless]
+python -m experiments.physics_viewer SCENE [--action ACTION] [--speed FACTOR] [--duration SECONDS] [--headless]
 ```
 
 | Scene | What it shows |
@@ -15,6 +15,7 @@ python -m experiments.physics_viewer SCENE [--speed FACTOR] [--duration SECONDS]
 | `cups` | A set of cups |
 | `apartment` | The apartment, with its walls, floor and furniture |
 | `pr2_in_apartment` | The PR2 in the apartment, where the demos have it stand |
+| `pr2_at_the_counter` | The PR2 at the kitchen counter, with a milk carton, a cereal box, a bowl and a cup on it |
 | `pr2` | The PR2 on the floor |
 | `tracy` | The Tracy robot on the floor |
 
@@ -36,3 +37,22 @@ A robot is spawned with its arms parked, so its servos do not pull them to a lim
 The URDF parser gives a material's color to boxes, spheres and cylinders and leaves meshes white, so
 the viewer colors the meshes of the apartment and the robots with the colors their URDF declares. There
 are no textures to show: none of these meshes carries a texture image.
+
+## Actions
+
+`--action ACTION` has the robot perform an action first, under MuJoCo physics: the scene is left
+a second to settle, the plan is performed by the robot's own servos, and the window stays open
+after it (or for `--duration`, counted from the end of the action):
+
+| Action | What happens |
+| --- | --- |
+| `raise_torso` | The torso moves up to its highest position |
+| `open_grippers` | The grippers of both arms open |
+| `close_grippers` | The grippers of both arms close |
+
+```bash
+python -m experiments.physics_viewer pr2_at_the_counter --action raise_torso --speed 4
+```
+
+The physics, and the plan with it, run no faster than the clock times `--speed`. At 1 raising the
+torso takes as long as the real torso, about half a minute.
