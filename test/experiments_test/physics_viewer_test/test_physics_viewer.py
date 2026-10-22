@@ -22,10 +22,14 @@ from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.robots.pr2 import PR2, PR2Joint
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import ActiveConnection1DOF
 
 from experiments.physics_viewer.exceptions import HeadlessRunWithoutDuration
 from experiments.physics_viewer.actions import PhysicsAction
+from experiments.physics_viewer.overlay import ActionOverlay
 from experiments.physics_viewer.paced_simulation import RealTimeMujocoSim
+from experiments.physics_viewer.placement import Position, ViewerCamera
+from experiments.physics_viewer.viewer import MovedJoint
 from experiments.physics_viewer.scenes import MjcfFile, PhysicsScene, UrdfFile
 from experiments.physics_viewer.viewer import PhysicsViewer
 
@@ -264,6 +268,115 @@ class TestActions:
             action=PhysicsAction.RAISE_TORSO,
         )
         assert viewer.run().frames == round(0.5 / viewer.frame.total_seconds())
+
+
+# %% the first view of a scene
+
+
+class TestCamera:
+    def test_a_camera_is_put_where_the_scene_asks(self):
+        camera = ViewerCamera(
+            lookat=Position(1.0, 2.0, 3.0), distance=4.0, azimuth=50.0, elevation=-20.0
+        )
+        view = mujoco.MjvCamera()
+        camera.apply(view)
+        assert view.lookat.tolist() == [1.0, 2.0, 3.0]
+        assert (view.distance, view.azimuth, view.elevation) == (4.0, 50.0, -20.0)
+
+    def test_the_counter_scene_looks_at_the_robot_and_the_objects_on_the_counter(self):
+        camera = PhysicsScene.PR2_AT_THE_COUNTER.value.initial_camera()
+        scene = PhysicsScene.PR2_AT_THE_COUNTER.value
+        xs = [placed.position.x for placed in scene.scene.objects] + [scene.position.x]
+        assert min(xs) <= camera.lookat.x <= max(xs)
+
+    def test_a_scene_without_a_view_of_its_own_leaves_the_default(self):
+        assert PhysicsScene.CUBE.value.initial_camera() is None
+
+
+# %% telling what an action did
+
+
+class TestActionReport:
+    def test_the_joints_an_action_moved_are_reported_with_where_they_went(self):
+        run = PhysicsViewer(
+            scene=PhysicsScene.PR2,
+            headless=True,
+            duration=timedelta(seconds=0.1),
+            speed=100.0,
+            action=PhysicsAction.RAISE_TORSO,
+        ).run()
+        torso = [
+            moved for moved in run.moved_joints if moved.joint == PR2Joint.TORSO_LIFT
+        ]
+        assert [round(moved.after, 1) for moved in torso] == [0.3]
+
+    def test_a_joint_the_action_did_not_move_is_not_reported(self):
+        run = PhysicsViewer(
+            scene=PhysicsScene.PR2,
+            headless=True,
+            duration=timedelta(seconds=0.1),
+            speed=100.0,
+            action=PhysicsAction.RAISE_TORSO,
+        ).run()
+        assert all(moved.joint != PR2Joint.HEAD_PAN for moved in run.moved_joints)
+
+    def test_only_joints_a_servo_drives_are_reported(self):
+        run = PhysicsViewer(
+            scene=PhysicsScene.PR2_AT_THE_COUNTER,
+            headless=True,
+            duration=timedelta(seconds=0.1),
+            speed=100.0,
+            action=PhysicsAction.RAISE_TORSO,
+        ).run()
+        driven = {
+            connection.name.name
+            for connection in run.world.connections
+            if isinstance(connection, ActiveConnection1DOF)
+            and any(connection.dof in actuator.dofs for actuator in run.world.actuators)
+        }
+        assert {moved.joint for moved in run.moved_joints} <= driven
+
+    def test_a_run_without_an_action_moved_no_joint(self):
+        run = PhysicsViewer(
+            scene=PhysicsScene.CUBE,
+            headless=True,
+            duration=timedelta(seconds=0.2),
+            speed=100.0,
+        ).run()
+        assert run.moved_joints == ()
+
+    def test_the_overlay_names_the_action_and_each_joint_it_moved(self):
+        viewer_handle = TextsRecorded()
+        overlay = ActionOverlay(viewer_handle)
+        overlay.show_done(
+            PhysicsAction.RAISE_TORSO, (MovedJoint("torso_lift_joint", 0.012, 0.29),)
+        )
+        text = " ".join(str(part) for part in viewer_handle.texts[-1])
+        assert "raise_torso" in text.lower()
+        assert "torso_lift_joint" in text
+
+    def test_the_overlay_says_the_action_is_under_way_before_it_is_done(self):
+        viewer_handle = TextsRecorded()
+        ActionOverlay(viewer_handle).show_started(PhysicsAction.RAISE_TORSO)
+        assert (
+            "raise_torso"
+            in " ".join(str(part) for part in viewer_handle.texts[-1]).lower()
+        )
+
+    def test_a_run_without_a_window_has_no_overlay(self):
+        assert ActionOverlay.of(headless=True, simulation=None) is None
+
+
+class TextsRecorded:
+    """
+    Stands in for the viewer window's handle, recording the texts it is asked to show.
+    """
+
+    def __init__(self):
+        self.texts = []
+
+    def set_texts(self, texts):
+        self.texts.append(texts if isinstance(texts, tuple) else tuple(texts[0]))
 
 
 # %% pacing
