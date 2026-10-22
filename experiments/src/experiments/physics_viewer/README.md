@@ -51,7 +51,7 @@ after it (or for `--duration`, counted from the end of the action):
 | `open_grippers` | The grippers of both arms open |
 | `close_grippers` | The grippers of both arms close |
 | `go_to_the_counter` | The base drives to the spot in front of the counter (from 1.1 m to 1.85 m) |
-| `pick_up_milk` | The robot drives to the counter and picks the milk carton up with its right arm (`pr2_at_the_counter`; see below) |
+| `pick_up_milk` | The robot drives to the counter (to 1.75 m) and picks the milk carton up head-on with its right arm (`pr2_at_the_counter`; see below) |
 | `pick_up_cube` | Tracy picks the cube up off its table with its left arm (`tracy_at_the_table`) |
 
 ```bash
@@ -69,18 +69,21 @@ to hide MuJoCo's side panels and give the scene the whole window.
 
 ### Picking up the milk
 
-Driving to the counter works under physics: the base ends within a centimetre of the spot. Picking up
-the milk is performed, but the carton does not end up in the gripper: it is pushed over (it ends lying
-on the counter, 5.6 cm lower), and the bowl is knocked along with it. The window reports the objects
-that moved next to the joints. The same plan lifts the carton in the kinematic simulation the demos use.
+The PR2 drives to 1.75 m in front of the counter and lifts the milk carton about 9 cm, grasping it
+head-on (the first of the 12 grasps the carton offers). Two things had to be right for this:
 
-What the physics shows: the gripper opens to 8.8 cm for a carton 6.4 cm across, so the approach has
-1.2 cm to spare on each side, and the arm tracks the plan less precisely than that; the fingers clip
-the carton, and it is pushed out of the way as they close. Stiffer arm servos (up to 16 times), a
-stiffer contact (a time constant of 2 ms, an elliptic friction cone) and sliding friction up to 6 did not
-change this. Of the 12 grasps the milk offers, only 1, 2 and 3 are reachable by the right arm even
-kinematically, and the plan turns the wrist by 4.4 rad on the way. semantic_digital_twin and coraplex
-set up only the Tracy robot for picking things up under physics.
+- The integrator. With the Runge-Kutta integrator the simulation used before, the pads touch the
+  carton for a few milliseconds at a time with 150 to 170 N, and the carton is squeezed out forward
+  and pushed over. With MuJoCo's implicit integrator (`SimulationOptions.integrator`) the same grasp
+  holds it.
+- The grasp. The grasp the plan took before (the second, diagonal to the carton) needs the gripper's
+  full opening, and from 1.85 m it still pushes the carton over. The head-on grasp is not reachable
+  from 1.85 m.
+
+What did not help under the Runge-Kutta integrator: grasping 5 cm lower to 3 cm higher, gripper force
+limits from 0.2 to 3.0, sliding friction up to 6, a softer or stiffer coupling of the finger joints, a
+servo on every finger joint, stiffer arm servos and stiffer contacts. The cereal box, held the same
+way, is lifted too with the implicit integrator at the gripper's default force.
 
 ### Tracy picks up a cube
 

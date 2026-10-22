@@ -203,7 +203,15 @@ class RestingFurniture:
 @dataclass(frozen=True)
 class SimulationOptions:
     """
-    How MuJoCo resolves the contacts of a scene; the defaults are MuJoCo's own.
+    How MuJoCo steps a scene and resolves its contacts; the contact defaults are MuJoCo's
+    own.
+    """
+
+    integrator: mujoco.mjtIntegrator = mujoco.mjtIntegrator.mjINT_IMPLICITFAST
+    """
+    How a step advances the motion: the implicit integrator stays stable under the stiff
+    contacts of a gripper's pads, where the Runge-Kutta one lets the pads chatter and
+    squeeze a held object out.
     """
 
     cone: mujoco.mjtCone = mujoco.mjtCone.mjCONE_PYRAMIDAL
@@ -229,6 +237,7 @@ class SimulationOptions:
         :return: What the simulation is built with.
         """
         return {
+            "integrator": self.integrator,
             "cone": self.cone,
             "impratio": self.impedance_ratio,
             "noslip_iterations": self.no_slip_iterations,

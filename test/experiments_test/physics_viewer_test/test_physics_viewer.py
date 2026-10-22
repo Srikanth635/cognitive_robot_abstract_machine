@@ -335,9 +335,6 @@ class TestMilk:
         before = viewer.object_positions(world)
         assert viewer.objects_moved_since(before, world) == ()
 
-    @pytest.mark.xfail(
-        reason="the PR2's fingers push the milk carton over as they close on it under physics"
-    )
     def test_the_milk_is_lifted_off_the_counter(self):
         run = self.run_action(PhysicsAction.PICK_UP_MILK)
         [moved] = [moved for moved in run.moved_objects if moved.body == "milk.stl"]
