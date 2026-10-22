@@ -11,8 +11,10 @@ from enum import Enum
 from pathlib import Path
 
 import semantic_digital_twin
+from coraplex.testing import setup_world
 from krrood.patterns.path_enumeration import PathEnumeration
 from semantic_digital_twin.adapters.mjcf import MJCFParser
+from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.robots.tracy import Tracy
@@ -47,14 +49,20 @@ class MjcfFile(PathEnumeration):
     A set of cups.
     """
 
-    KITCHEN = DIRECTORY / "kitchen-small.xml"
+
+class UrdfFile(PathEnumeration):
     """
-    A small kitchen.
+    The URDF files of semantic_digital_twin's resources the scenes are read from.
     """
 
-    APARTMENT = DIRECTORY / "apartment.xml"
+    DIRECTORY = Path(semantic_digital_twin.__file__).parents[2] / "resources" / "urdf"
     """
-    An apartment.
+    The directory holding the files.
+    """
+
+    APARTMENT = DIRECTORY / "apartment.urdf"
+    """
+    An apartment with its walls, floor and furniture.
     """
 
 
@@ -86,6 +94,32 @@ class MjcfScene(SceneWorld):
 
     def build(self) -> World:
         return MJCFParser(str(self.file)).parse()
+
+
+@dataclass(frozen=True)
+class UrdfScene(SceneWorld):
+    """
+    A scene described in a URDF file.
+    """
+
+    file: Path
+    """
+    The file describing the scene.
+    """
+
+    def build(self) -> World:
+        return URDFParser.from_file(str(self.file)).parse()
+
+
+@dataclass(frozen=True)
+class DemoWorld(SceneWorld):
+    """
+    The world the demos perform their plans in: the PR2 in the apartment, with a milk
+    carton and a cereal box.
+    """
+
+    def build(self) -> World:
+        return setup_world()
 
 
 @dataclass(frozen=True)
@@ -128,14 +162,14 @@ class PhysicsScene(Enum):
     A set of cups.
     """
 
-    KITCHEN = MjcfScene(MjcfFile.KITCHEN)
-    """
-    A small kitchen.
-    """
-
-    APARTMENT = MjcfScene(MjcfFile.APARTMENT)
+    APARTMENT = UrdfScene(UrdfFile.APARTMENT)
     """
     An apartment.
+    """
+
+    PR2_IN_APARTMENT = DemoWorld()
+    """
+    The PR2 in the apartment with a milk carton and a cereal box, as the demos have it.
     """
 
     PR2 = RobotOnTheFloor(PR2)
