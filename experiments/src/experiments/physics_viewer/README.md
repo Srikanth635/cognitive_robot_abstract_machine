@@ -16,6 +16,7 @@ python -m experiments.physics_viewer SCENE [--action ACTION] [--speed FACTOR] [-
 | `apartment` | The apartment, with its walls, floor and furniture |
 | `pr2_in_apartment` | The PR2 in the apartment, where the demos have it stand |
 | `pr2_at_the_counter` | The PR2 at the kitchen counter, with a milk carton, a cereal box, a bowl and a cup on it |
+| `tracy_at_the_table` | Tracy at its table, with a 5 cm cube on it, under stiff contacts |
 | `pr2` | The PR2 on the floor |
 | `tracy` | The Tracy robot on the floor |
 
@@ -50,7 +51,8 @@ after it (or for `--duration`, counted from the end of the action):
 | `open_grippers` | The grippers of both arms open |
 | `close_grippers` | The grippers of both arms close |
 | `go_to_the_counter` | The base drives to the spot in front of the counter (from 1.1 m to 1.85 m) |
-| `pick_up_milk` | The robot drives to the counter and picks the milk carton up with its right arm |
+| `pick_up_milk` | The robot drives to the counter and picks the milk carton up with its right arm (`pr2_at_the_counter`; see below) |
+| `pick_up_cube` | Tracy picks the cube up off its table with its left arm (`tracy_at_the_table`) |
 
 ```bash
 python -m experiments.physics_viewer pr2_at_the_counter --action raise_torso --speed 4
@@ -79,3 +81,19 @@ stiffer contact (a time constant of 2 ms, an elliptic friction cone) and sliding
 change this. Of the 12 grasps the milk offers, only 1, 2 and 3 are reachable by the right arm even
 kinematically, and the plan turns the wrist by 4.4 rad on the way. semantic_digital_twin and coraplex
 set up only the Tracy robot for picking things up under physics.
+
+### Tracy picks up a cube
+
+Tracy, which is set up for it, does lift the cube under physics:
+
+```bash
+python -m experiments.physics_viewer tracy_at_the_table --action pick_up_cube --speed 3
+```
+
+The scene is built as the Tracy montessori demo builds its own: every body is as solid as the cube (a
+contact time constant of 2 ms), MuJoCo uses the elliptic friction cone, an impedance ratio of 10 and 10
+passes against slip, and the arms start parked. The cube is 5 cm, which the 8.5 cm gripper takes with
+room to spare, and it stands on the table where Tracy reaches it. Of the 12 grasps the cube offers,
+2 to 10 are reachable by the left arm in the kinematic simulation, and of those 3 and 6 lift the
+cube under physics (to 0.98 and 0.99 m, from 0.905); the others push it about or miss. The action
+takes the sixth, which is a measurement and not a rule.
