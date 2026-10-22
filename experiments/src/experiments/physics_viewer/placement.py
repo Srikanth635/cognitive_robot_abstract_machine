@@ -7,6 +7,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import mujoco
+from semantic_digital_twin.spatial_types.spatial_types import Pose
+from typing_extensions import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from semantic_digital_twin.world import World
 
 
 @dataclass(frozen=True)
@@ -29,6 +34,18 @@ class Position:
     """
     The distance along the world's z axis, in meters.
     """
+
+    def pose_in(self, world: World, heading: float = 0.0) -> Pose:
+        """
+        :param world: The world the position is in.
+        :param heading: The angle, in radians, the pose is turned by around the vertical
+            axis from the world's x axis.
+        :return: The pose at this position in the world, upright and turned by the
+            heading.
+        """
+        return Pose.from_xyz_rpy(
+            self.x, self.y, self.z, yaw=heading, reference_frame=world.root
+        )
 
 
 @dataclass(frozen=True)

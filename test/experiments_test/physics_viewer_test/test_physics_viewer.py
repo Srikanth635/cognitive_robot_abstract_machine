@@ -11,6 +11,7 @@ import time
 from datetime import timedelta
 
 import mujoco
+import numpy as np
 import pytest
 from semantic_digital_twin.adapters.mjcf import MJCFParser
 from semantic_digital_twin.adapters.multi_sim import MujocoSim
@@ -26,14 +27,25 @@ from semantic_digital_twin.spatial_types.spatial_types import (
     HomogeneousTransformationMatrix,
 )
 from semantic_digital_twin.world import World
+from semantic_digital_twin.semantic_annotations.semantic_annotations import (
+    PouringCup,
+    Sponge,
+    Tool,
+    Whisk,
+)
 from semantic_digital_twin.world_description.connections import ActiveConnection1DOF
+from semantic_digital_twin.world_description.world_entity import Body
 
-from experiments.physics_viewer.actions import PhysicsAction
-from experiments.physics_viewer.exceptions import HeadlessRunWithoutDuration, NoSuchBody
+from experiments.physics_viewer.actions import KitchenSpot, PhysicsAction, SceneBody
+from experiments.physics_viewer.exceptions import (
+    HeadlessRunWithoutDuration,
+    NoSuchBody,
+    NoToolInHand,
+)
 from experiments.physics_viewer.overlay import ActionOverlay
 from experiments.physics_viewer.paced_simulation import RealTimeMujocoSim
 from experiments.physics_viewer.placement import Position, ViewerCamera
-from experiments.physics_viewer.viewer import MovedJoint, MovedObject
+from experiments.physics_viewer.viewer import MovedJoint, MovedObject, PhysicsRun
 from experiments.physics_viewer.scenes import (
     MjcfFile,
     PhysicsScene,
@@ -196,12 +208,14 @@ class TestObjects:
     def test_every_object_of_the_scene_is_in_its_world(self):
         world = self.scene.value.build()
         names = {body.name.name for body in world.bodies}
-        assert {placed.mesh for placed in self.scene.value.scene.objects} <= names
+        assert {placed.mesh for placed in self.scene.value.scene.scene.objects} <= names
 
     def test_an_object_with_an_annotation_has_it(self):
         world = self.scene.value.build()
         annotated = [
-            placed for placed in self.scene.value.scene.objects if placed.annotation
+            placed
+            for placed in self.scene.value.scene.scene.objects
+            if placed.annotation
         ]
         assert annotated
         assert all(
@@ -214,14 +228,14 @@ class TestObjects:
         run = PhysicsViewer(
             scene=scene, headless=True, duration=timedelta(seconds=2), speed=100.0
         ).run()
-        for placed in scene.value.scene.objects:
+        for placed in scene.value.scene.scene.objects:
             height = float(run.world.get_body_by_name(placed.mesh).global_pose.z)
             assert height == pytest.approx(placed.position.z, abs=0.01)
 
     def test_the_robot_stands_where_the_scene_puts_it(self):
         world = self.scene.value.build()
         [robot] = world.get_semantic_annotations_by_type(AbstractRobot)
-        position = self.scene.value.position
+        position = self.scene.value.scene.position
         assert float(robot.root.global_pose.x) == pytest.approx(position.x)
         assert float(robot.root.global_pose.y) == pytest.approx(position.y)
 
@@ -341,6 +355,191 @@ class TestMilk:
         assert moved.after.z > moved.before.z + 0.05
 
 
+# %% one demonstration of each kind of action
+
+
+def demonstrated(
+    action: PhysicsAction, scene: PhysicsScene = PhysicsScene.PR2_AT_THE_COUNTER
+) -> PhysicsRun:
+    """
+    :return: The run of the action in the scene, stepped half a second after it.
+    """
+    return PhysicsViewer(
+        scene=scene,
+        headless=True,
+        duration=timedelta(seconds=0.5),
+        speed=1000.0,
+        action=action,
+    ).run()
+
+
+def robot_of(run: PhysicsRun) -> AbstractRobot:
+    """
+    :return: The robot of the run's world.
+    """
+    [robot] = run.world.get_semantic_annotations_by_type(AbstractRobot)
+    return robot
+
+
+def heading_of(body: Body) -> float:
+    """
+    :return: The angle, in radians, the body is turned by from the world's x axis.
+    """
+    rotation = body.global_pose.to_np()
+    return float(np.arctan2(rotation[1, 0], rotation[0, 0]))
+
+
+def moved_milk(run: PhysicsRun) -> MovedObject:
+    """
+    :return: How the milk carton moved in the run.
+    """
+    [moved] = [item for item in run.moved_objects if item.body == SceneBody.MILK]
+    return moved
+
+
+class TestTurningTowardsABody:
+    def test_looking_at_the_milk_turns_only_the_head(self):
+        run = demonstrated(PhysicsAction.LOOK_AT_MILK)
+        assert {moved.joint for moved in run.moved_joints} == {
+            PR2Joint.HEAD_PAN,
+            PR2Joint.HEAD_TILT,
+        }
+
+    @pytest.mark.parametrize(
+        "action", [PhysicsAction.FACE_THE_CUP, PhysicsAction.FACE_AND_LOOK_AT_THE_CUP]
+    )
+    def test_facing_the_cup_turns_the_base_towards_it(self, action):
+        run = demonstrated(action)
+        base = robot_of(run).root.global_pose
+        cup = run.world.get_body_by_name(SceneBody.CUP).global_pose
+        towards_the_cup = np.arctan2(
+            float(cup.y) - float(base.y), float(cup.x) - float(base.x)
+        )
+        assert heading_of(robot_of(run).root) == pytest.approx(
+            towards_the_cup, abs=0.02
+        )
+
+    def test_facing_and_looking_at_the_cup_also_tilts_the_head(self):
+        run = demonstrated(PhysicsAction.FACE_AND_LOOK_AT_THE_CUP)
+        assert PR2Joint.HEAD_TILT in {moved.joint for moved in run.moved_joints}
+
+
+class TestArms:
+    def test_moving_the_arm_brings_the_hand_to_the_position(self):
+        run = demonstrated(PhysicsAction.MOVE_ARM)
+        hand = robot_of(run).right_arm.end_effector.tool_frame.global_pose
+        target = KitchenSpot.IN_FRONT_OF_THE_RIGHT_SHOULDER.value
+        assert [float(hand.x), float(hand.y), float(hand.z)] == pytest.approx(
+            [target.x, target.y, target.z], abs=0.02
+        )
+
+    def test_parking_the_arms_folds_them_back_after_the_hand_reached_out(self):
+        run = demonstrated(PhysicsAction.PARK_ARMS)
+        for arm in robot_of(run).all_arms:
+            parked = arm.get_joint_state_by_type(StaticJointState.PARK)
+            positions = [connection.position for connection in parked.connections]
+            assert positions == pytest.approx(parked.target_values, abs=0.05)
+
+
+class TestGraspingTheMilk:
+    @pytest.mark.parametrize(
+        "action", [PhysicsAction.REACH_FOR_MILK, PhysicsAction.GRASP_MILK]
+    )
+    def test_taking_the_milk_without_lifting_it_leaves_it_standing(self, action):
+        run = demonstrated(action)
+        assert SceneBody.MILK not in {moved.body for moved in run.moved_objects}
+
+    def test_picking_up_the_milk_after_turning_towards_it_lifts_it(self):
+        moved = moved_milk(demonstrated(PhysicsAction.MOVE_AND_PICK_UP_MILK))
+        assert moved.after.z > moved.before.z + 0.05
+
+
+class TestPuttingTheMilkDown:
+    @pytest.mark.parametrize(
+        "action",
+        [
+            PhysicsAction.PLACE_MILK,
+            PhysicsAction.PICK_AND_PLACE_MILK,
+            PhysicsAction.MOVE_AND_PLACE_MILK,
+            PhysicsAction.TRANSPORT_MILK,
+        ],
+    )
+    def test_the_milk_ends_standing_at_the_free_spot(self, action):
+        moved = moved_milk(demonstrated(action))
+        spot = KitchenSpot.FREE_SPOT_ON_THE_COUNTER.value
+        assert [moved.after.x, moved.after.y] == pytest.approx(
+            [spot.x, spot.y], abs=0.03
+        )
+        assert moved.after.z == pytest.approx(moved.before.z, abs=0.01)
+
+
+def drawer_joint(run: PhysicsRun) -> ActiveConnection1DOF:
+    """
+    :return: The joint the drawer slides along, the first one above its handle.
+    """
+    body = run.world.get_body_by_name(SceneBody.DRAWER_HANDLE)
+    while not isinstance(body.parent_connection, ActiveConnection1DOF):
+        body = body.parent_connection.parent
+    return body.parent_connection
+
+
+class TestDrawer:
+    @pytest.mark.parametrize(
+        "action", [PhysicsAction.OPEN_DRAWER, PhysicsAction.MOVE_AND_OPEN_DRAWER]
+    )
+    def test_opening_the_drawer_pulls_it_all_the_way_out(self, action):
+        joint = drawer_joint(demonstrated(action))
+        assert joint.position == pytest.approx(
+            joint.dof.limits.upper.position, abs=0.02
+        )
+
+    def test_closing_the_drawer_pushes_it_back_in(self):
+        joint = drawer_joint(demonstrated(PhysicsAction.CLOSE_DRAWER))
+        assert joint.position == pytest.approx(
+            joint.dof.limits.lower.position, abs=0.02
+        )
+
+
+class TestToolsInHand:
+    @pytest.mark.parametrize(
+        ("scene", "tool_type"),
+        [
+            (PhysicsScene.PR2_HOLDING_A_CUP, PouringCup),
+            (PhysicsScene.PR2_HOLDING_A_WHISK, Whisk),
+            (PhysicsScene.PR2_HOLDING_A_SPONGE, Sponge),
+        ],
+    )
+    def test_the_scene_puts_its_tool_in_the_right_hand(self, scene, tool_type):
+        world = scene.value.build()
+        [robot] = world.get_semantic_annotations_by_type(AbstractRobot)
+        tool_frame = robot.right_arm.end_effector.tool_frame
+        held = [
+            tool
+            for tool in world.get_semantic_annotations_by_type(Tool)
+            if tool.root.parent_connection.parent is tool_frame
+        ]
+        assert [type(tool) for tool in held] == [tool_type]
+
+    def test_a_tool_action_with_an_empty_hand_is_refused(self):
+        with pytest.raises(NoToolInHand):
+            demonstrated(PhysicsAction.POUR_INTO_BOWL)
+
+    @pytest.mark.parametrize(
+        ("action", "scene"),
+        [
+            (PhysicsAction.POUR_INTO_BOWL, PhysicsScene.PR2_HOLDING_A_CUP),
+            (PhysicsAction.WIPE_COUNTER, PhysicsScene.PR2_HOLDING_A_SPONGE),
+        ],
+    )
+    def test_working_with_the_tool_leaves_the_counter_as_it_was(self, action, scene):
+        assert demonstrated(action, scene).moved_objects == ()
+
+    def test_stirring_in_the_bowl_leaves_it_upright(self):
+        run = demonstrated(PhysicsAction.MIX_IN_BOWL, PhysicsScene.PR2_HOLDING_A_WHISK)
+        bowl = run.world.get_body_by_name(SceneBody.BOWL).global_pose.to_np()
+        assert bowl[2, 2] == pytest.approx(1.0, abs=0.01)
+
+
 # %% Tracy at its table
 
 
@@ -408,7 +607,7 @@ class TestCamera:
 
     def test_the_counter_scene_looks_at_the_robot_and_the_objects_on_the_counter(self):
         camera = PhysicsScene.PR2_AT_THE_COUNTER.value.initial_camera()
-        scene = PhysicsScene.PR2_AT_THE_COUNTER.value
+        scene = PhysicsScene.PR2_AT_THE_COUNTER.value.scene
         xs = [placed.position.x for placed in scene.scene.objects] + [scene.position.x]
         assert min(xs) <= camera.lookat.x <= max(xs)
 

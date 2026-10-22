@@ -22,10 +22,14 @@ from experiments.physics_viewer.placement import Position, ViewerCamera
 from experiments.tool_based_actions.simple_demo.demo_world import (
     BOWL_COLOR,
     CUP_COLOR,
+    MIX_MOUNT,
+    POUR_MOUNT,
+    attach_sponge,
     parse_object,
 )
+from coraplex.testing import attach_tool
 from semantic_digital_twin.robots.pr2 import PR2
-from semantic_digital_twin.robots.robot_parts import AbstractRobot
+from semantic_digital_twin.robots.robot_parts import AbstractRobot, Arm
 from semantic_digital_twin.robots.tracy import Tracy
 from semantic_digital_twin.spatial_types.spatial_types import (
     HomogeneousTransformationMatrix,
@@ -35,6 +39,9 @@ from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Bowl,
     Milk,
     PouringCup,
+    Sponge,
+    Tool,
+    Whisk,
 )
 from semantic_digital_twin.semantic_annotations.mixins import HasGraspCandidates
 from semantic_digital_twin.world import World
@@ -542,6 +549,128 @@ class SolidSurfaces(SceneWorld):
         return self.options
 
 
+# %% tools held in the hand
+
+
+class HandheldTool(ABC):
+    """
+    A tool a robot holds fixed in its hand, for the actions that work with a tool.
+    """
+
+    @abstractmethod
+    def attach_to(self, world: World, arm: Arm) -> Tool:
+        """
+        Fix the tool in the hand of an arm.
+
+        :param world: The world the arm is in.
+        :param arm: The arm whose hand holds the tool.
+        :return: The tool, annotated as what it is.
+        """
+
+
+@dataclass(frozen=True)
+class MeshTool(HandheldTool):
+    """
+    A tool shaped by one of the demos' meshes.
+    """
+
+    mesh: str
+    """
+    The file of the tool's mesh, among the demos' objects.
+    """
+
+    body: str
+    """
+    The name the tool's body is given, apart from the bodies the scene has already.
+    """
+
+    color: Color | None
+    """
+    The color the mesh is dyed; ``None`` keeps the mesh's own.
+    """
+
+    mount: dict[str, float]
+    """
+    Where the tool sits relative to the tool frame of the hand, as the demos mount it.
+    """
+
+    annotation: type[Tool]
+    """
+    What the tool is.
+    """
+
+    def attach_to(self, world: World, arm: Arm) -> Tool:
+        tool_world = parse_object(self.mesh, self.color)
+        tool_world.root.name = PrefixedName(self.body)
+        tool = self.annotation(root=attach_tool(world, arm, tool_world, self.mount))
+        with world.modify_world():
+            world.add_semantic_annotation(tool)
+        return tool
+
+
+@dataclass(frozen=True)
+class BoxSponge(HandheldTool):
+    """
+    The sponge of the wiping demo: a small box.
+    """
+
+    def attach_to(self, world: World, arm: Arm) -> Tool:
+        sponge = Sponge(root=attach_sponge(world, arm))
+        with world.modify_world():
+            world.add_semantic_annotation(sponge)
+        return sponge
+
+
+class KitchenTool(Enum):
+    """
+    The tools the PR2 holds for the tool-based actions at the counter.
+    """
+
+    CUP = MeshTool("jeroen_cup.stl", "held_cup", CUP_COLOR, POUR_MOUNT, PouringCup)
+    """
+    A cup to pour from.
+    """
+
+    WHISK = MeshTool("whisk.stl", "whisk", None, MIX_MOUNT, Whisk)
+    """
+    A whisk to mix with.
+    """
+
+    SPONGE = BoxSponge()
+    """
+    A sponge to wipe with.
+    """
+
+
+@dataclass(frozen=True)
+class ToolInHand(SceneWorld):
+    """
+    A scene whose robot holds a tool in its right hand.
+    """
+
+    scene: SceneWorld
+    """
+    The scene, with the robot in it.
+    """
+
+    tool: KitchenTool
+    """
+    The tool the robot holds.
+    """
+
+    def build(self) -> World:
+        world = self.scene.build()
+        [robot] = world.get_semantic_annotations_by_type(AbstractRobot)
+        self.tool.value.attach_to(world, robot.right_arm)
+        return world
+
+    def initial_camera(self) -> ViewerCamera | None:
+        return self.scene.initial_camera()
+
+    def simulation_options(self) -> SimulationOptions:
+        return self.scene.simulation_options()
+
+
 class ObjectColor(Enum):
     """
     The colors of the objects whose meshes carry none, as the demos dye theirs.
@@ -593,35 +722,57 @@ class PhysicsScene(Enum):
     The PR2 in the apartment, where the demos have it stand.
     """
 
-    PR2_AT_THE_COUNTER = RobotInScene(
-        ObjectsInScene(
-            UrdfScene(UrdfFile.APARTMENT),
-            (
-                PlacedObject(
-                    "milk.stl",
-                    Position(2.37, 2.0, 1.0345),
-                    ObjectColor.MILK.value,
-                    Milk,
-                ),
-                PlacedObject(
-                    "breakfast_cereal.stl",
-                    Position(2.37, 1.8, 1.0487),
-                    ObjectColor.CEREAL.value,
-                ),
-                PlacedObject("bowl.stl", Position(2.4, 2.4, 0.979), BOWL_COLOR, Bowl),
-                PlacedObject(
-                    "jeroen_cup.stl", Position(2.4, 2.6, 0.947), CUP_COLOR, PouringCup
+    PR2_AT_THE_COUNTER = SolidSurfaces(
+        RobotInScene(
+            ObjectsInScene(
+                UrdfScene(UrdfFile.APARTMENT),
+                (
+                    PlacedObject(
+                        "milk.stl",
+                        Position(2.37, 2.0, 1.0345),
+                        ObjectColor.MILK.value,
+                        Milk,
+                    ),
+                    PlacedObject(
+                        "breakfast_cereal.stl",
+                        Position(2.37, 1.8, 1.0487),
+                        ObjectColor.CEREAL.value,
+                    ),
+                    PlacedObject(
+                        "bowl.stl", Position(2.4, 2.4, 0.979), BOWL_COLOR, Bowl
+                    ),
+                    PlacedObject(
+                        "jeroen_cup.stl",
+                        Position(2.6, 2.75, 0.947),
+                        CUP_COLOR,
+                        PouringCup,
+                    ),
                 ),
             ),
-        ),
-        PR2,
-        Position(1.1, 2.2),
-        ViewerCamera(
-            Position(2.2, 2.2, 1.0), distance=2.5, azimuth=65.0, elevation=-25.0
-        ),
+            PR2,
+            Position(1.1, 2.2),
+            ViewerCamera(
+                Position(2.2, 2.2, 1.0), distance=2.5, azimuth=65.0, elevation=-25.0
+            ),
+        )
     )
     """
     The PR2 at the kitchen counter, with a milk carton, a cereal box, a bowl and a cup on it.
+    """
+
+    PR2_HOLDING_A_CUP = ToolInHand(PR2_AT_THE_COUNTER, KitchenTool.CUP)
+    """
+    The PR2 at the kitchen counter, holding a cup in its right hand.
+    """
+
+    PR2_HOLDING_A_WHISK = ToolInHand(PR2_AT_THE_COUNTER, KitchenTool.WHISK)
+    """
+    The PR2 at the kitchen counter, holding a whisk in its right hand.
+    """
+
+    PR2_HOLDING_A_SPONGE = ToolInHand(PR2_AT_THE_COUNTER, KitchenTool.SPONGE)
+    """
+    The PR2 at the kitchen counter, holding a sponge in its right hand.
     """
 
     TRACY_AT_THE_TABLE = SolidSurfaces(

@@ -15,7 +15,10 @@ python -m experiments.physics_viewer SCENE [--action ACTION] [--speed FACTOR] [-
 | `cups` | A set of cups |
 | `apartment` | The apartment, with its walls, floor and furniture |
 | `pr2_in_apartment` | The PR2 in the apartment, where the demos have it stand |
-| `pr2_at_the_counter` | The PR2 at the kitchen counter, with a milk carton, a cereal box, a bowl and a cup on it |
+| `pr2_at_the_counter` | The PR2 at the kitchen counter, with a milk carton, a cereal box, a bowl and a cup on it, under stiff contacts |
+| `pr2_holding_a_cup` | The same, with a cup in the PR2's right hand |
+| `pr2_holding_a_whisk` | The same, with a whisk in the PR2's right hand |
+| `pr2_holding_a_sponge` | The same, with a sponge in the PR2's right hand |
 | `tracy_at_the_table` | Tracy at its table, with a 5 cm cube on it, under stiff contacts |
 | `pr2` | The PR2 on the floor |
 | `tracy` | The Tracy robot on the floor |
@@ -45,18 +48,51 @@ are no textures to show: none of these meshes carries a texture image.
 a second to settle, the plan is performed by the robot's own servos, and the window stays open
 after it (or for `--duration`, counted from the end of the action):
 
-| Action | What happens |
-| --- | --- |
-| `raise_torso` | The torso moves up to its highest position |
-| `open_grippers` | The grippers of both arms open |
-| `close_grippers` | The grippers of both arms close |
-| `go_to_the_counter` | The base drives to the spot in front of the counter (from 1.1 m to 1.85 m) |
-| `pick_up_milk` | The robot drives to the counter (to 1.75 m) and picks the milk carton up head-on with its right arm (`pr2_at_the_counter`; see below) |
-| `pick_up_cube` | Tracy picks the cube up off its table with its left arm (`tracy_at_the_table`) |
+There is one demonstration of each kind of action coraplex offers, apart from cutting, detecting
+objects and taking a lift. Each is a sequence of coraplex actions (the third column) with every
+parameter given; the scene is `pr2_at_the_counter` unless the table names another.
+
+| Action | What happens | coraplex actions | Scene |
+| --- | --- | --- | --- |
+| `raise_torso` | The torso moves up to its highest position | `MoveTorsoAction` | |
+| `open_grippers` | The grippers of both arms open | `SetGripperAction` | |
+| `close_grippers` | The grippers of both arms close | `SetGripperAction` | |
+| `park_arms` | The right hand reaches out, then both arms fold back | `MoveManipulatorAction`, `ParkArmsAction` | |
+| `move_arm` | The torso rises and the right hand moves to a point in front of the robot | `MoveTorsoAction`, `MoveManipulatorAction` | |
+| `look_at_milk` | The head turns to look at the milk carton | `LookAtAction` | |
+| `face_the_cup` | The base turns on the spot to face the cup | `FaceAtAction` | |
+| `face_and_look_at_the_cup` | The base turns to face the cup and the head looks at it | `FaceAndLookAtAction` | |
+| `go_to_the_counter` | The base drives to the spot in front of the counter (from 1.1 m to 1.85 m) | `NavigateAction` | |
+| `reach_for_milk` | The robot drives to the counter and moves its open right hand around the milk | `NavigateAction`, `SetGripperAction`, `ReachAction` | |
+| `grasp_milk` | The robot drives to the counter and grasps the milk where it stands | `NavigateAction`, `GraspingAction` | |
+| `pick_up_milk` | The robot drives to the counter (to 1.75 m) and picks the milk carton up head-on (see below) | `NavigateAction`, `PickUpAction` | |
+| `place_milk` | The robot picks the milk up and puts it down 20 cm along the counter | `NavigateAction`, `PickUpAction`, `PlaceAction` | |
+| `pick_and_place_milk` | The same, in one action | `NavigateAction`, `PickAndPlaceAction` | |
+| `move_and_pick_up_milk` | The robot drives to the counter, turns towards the milk and picks it up | `MoveAndPickUpAction` | |
+| `move_and_place_milk` | The robot picks the milk up, drives along the counter and puts it down there | `MoveAndPickUpAction`, `MoveAndPlaceAction` | |
+| `transport_milk` | The same, carrying the milk with the arms parked | `TransportAction` | |
+| `open_drawer` | The robot drives to the drawer below the counter and pulls it open | `MoveTorsoAction`, `ParkArmsAction`, `NavigateAction`, `OpenAction` | |
+| `close_drawer` | The robot pulls the drawer open and pushes it shut again | the same, then `CloseAction` | |
+| `move_and_open_drawer` | The robot drives to the drawer, turns towards its handle and pulls it open | `MoveTorsoAction`, `ParkArmsAction`, `MoveAndOpenAction` | |
+| `pour_into_bowl` | The robot pours from the cup in its hand into the bowl (there is no liquid; only the cup moves) | `SetGripperAction`, `ParkArmsAction`, `MoveTorsoAction`, `NavigateAction`, `PouringAction` | `pr2_holding_a_cup` |
+| `mix_in_bowl` | The robot stirs in the bowl with the whisk in its hand | the same, ending in `MixingAction` | `pr2_holding_a_whisk` |
+| `wipe_counter` | The robot wipes a free stretch of the counter with the sponge in its hand | the same, ending in `WipingAction` | `pr2_holding_a_sponge` |
+| `pick_up_cube` | Tracy picks the cube up off its table with its left arm | `PickUpAction` | `tracy_at_the_table` |
 
 ```bash
 python -m experiments.physics_viewer pr2_at_the_counter --action raise_torso --speed 4
 ```
+
+```bash
+python -m experiments.physics_viewer pr2_holding_a_cup --action pour_into_bowl --speed 4
+```
+
+The counter scenes have stiff contacts (an elliptic friction cone and passes against slip, as
+Tracy's scene has): without them a held carton creeps down between the pads while it is carried
+and slips out, and the taps of the sink turn by themselves over a long run. The tools are fixed
+in the hand, as the tool demos mount them, so only the actions are under physics, not the grip on
+the tool. Stirring pushes the light bowl about 13 cm along the counter, upright, which is why
+the cup stands further back than the bowl.
 
 The physics, and the plan with it, run no faster than the clock times `--speed`. At 1 raising the
 torso takes as long as the real torso, about half a minute.
