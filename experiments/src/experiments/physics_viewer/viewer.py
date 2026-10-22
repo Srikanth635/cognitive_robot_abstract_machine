@@ -184,7 +184,10 @@ class PhysicsViewer:
             raise HeadlessRunWithoutDuration()
         world = self.scene.value.build()
         simulation = RealTimeMujocoSim(
-            world=world, speed=self.speed, headless=self.headless
+            world=world,
+            speed=self.speed,
+            headless=self.headless,
+            **self.scene.value.simulation_options().keywords(),
         )
         simulation.start_stepped_simulation()
         overlay = ActionOverlay.of(self.headless, simulation)
