@@ -420,7 +420,7 @@ class PhysicsScene(Enum):
             ),
         ),
         PR2,
-        Position(1.85, 2.2),
+        Position(1.1, 2.2),
         ViewerCamera(
             Position(2.2, 2.2, 1.0), distance=2.5, azimuth=65.0, elevation=-25.0
         ),
