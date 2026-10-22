@@ -50,6 +50,12 @@ class RunFile(StrEnum):
     the run appends to.
     """
 
+    START_REQUEST = "start_request"
+    """
+    A marker that is written to ask a performance of the run, which waits for it, to
+    begin.
+    """
+
 
 class EnvironmentField(StrEnum):
     """
@@ -137,6 +143,25 @@ class RunDirectory:
         :return: The sink appending to the run's log.
         """
         return JsonLinesSink(path=self.directory / RunFile.EVENTS)
+
+    @property
+    def start_requested(self) -> bool:
+        """
+        :return: Whether a start of the run's performance has been requested.
+        """
+        return (self.directory / RunFile.START_REQUEST).is_file()
+
+    def request_start(self) -> None:
+        """
+        Ask the run's performance, if it waits for it, to begin.
+        """
+        (self.directory / RunFile.START_REQUEST).touch()
+
+    def clear_start_request(self) -> None:
+        """
+        Forget a start requested earlier.
+        """
+        (self.directory / RunFile.START_REQUEST).unlink(missing_ok=True)
 
     def environment(self) -> RunEnvironment:
         """

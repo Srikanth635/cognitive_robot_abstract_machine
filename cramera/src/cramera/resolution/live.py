@@ -10,6 +10,7 @@ import logging
 import signal
 import subprocess
 import sys
+import time
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -18,6 +19,7 @@ from cramera.live.runner import start
 from typing_extensions import Any, Callable, Sequence
 
 from cramera.resolution import configure_console_logging, paths
+from cramera.resolution.exceptions import NoPerformanceWaiting
 from cramera.resolution.events import NeemKind, reporting_execution
 from cramera.resolution.neem import NeemRecorder, NeemRecording, NoNeemRecorder
 from cramera.resolution.resolver.execution import PouringExecution
@@ -47,6 +49,11 @@ class LiveArgument(StrEnum):
     Precedes the directory of the resolution run to perform.
     """
 
+    WAIT_FOR_START = "--wait-for-start"
+    """
+    Has the performance wait, once the viewer can follow it, until a start is requested.
+    """
+
 
 # %% performing a run
 
@@ -68,11 +75,25 @@ class ResolvedRun:
     The database the NEEM of the performance is kept in; none is kept without one.
     """
 
+    waits_for_start: bool = False
+    """
+    Whether the performance waits, once the viewer can follow it, until a start is
+    requested for the run.
+    """
+
+    start_poll_seconds: float = 0.2
+    """
+    How often a performance that waits looks for a requested start.
+    """
+
     def run(self) -> None:
         """
         Perform the run's resolved action in the simulation, serving the world and the
         plan to cramera's viewer, keep the plan as a NEEM when there is a database, and
         report the performance to the run's log.
+
+        A performance that waits for a start begins once one is requested, so the time it
+        waited is part of the seconds its log reports.
         """
         logger.info("performing run: %s", self.directory)
         run = RunDirectory(directory=self.directory)
@@ -80,11 +101,23 @@ class ResolvedRun:
         with reporting_execution(sink, run.name):
             execution = PouringExecution.of_run(run, self.recorder(sink.path, run.name))
             viewer = start(execution.world)
+            if self.waits_for_start:
+                self.wait_for_start(run)
             execution.perform(
                 observe_plan=lambda root: root.plan.node_callbacks.append(
                     viewer.plan_callback(root.plan)
                 )
             )
+
+    def wait_for_start(self, run: RunDirectory) -> None:
+        """
+        Return once a start of the run's performance has been requested.
+
+        :param run: The run waiting to be performed.
+        """
+        logger.info("waiting for a start: press Start in the viewer")
+        while not run.start_requested:
+            time.sleep(self.start_poll_seconds)
 
     def recorder(self, events: Path, run: str) -> NeemRecorder:
         """
@@ -109,8 +142,13 @@ class ResolvedRun:
             description="Perform a resolution run in cramera's live viewer.",
         )
         parser.add_argument(LiveArgument.RUN, type=Path, required=True)
+        parser.add_argument(LiveArgument.WAIT_FOR_START, action="store_true")
         parsed = parser.parse_args(list(arguments))
-        return cls(directory=parsed.run, neem_database=paths.neem_database_path())
+        return cls(
+            directory=parsed.run,
+            neem_database=paths.neem_database_path(),
+            waits_for_start=parsed.wait_for_start,
+        )
 
 
 def main() -> None:
@@ -146,6 +184,12 @@ class LiveRunLauncher:
     The process constructor; a stub in tests, so nothing starts a real process.
     """
 
+    waits_for_start: bool = True
+    """
+    Whether the performance waits, once the viewer can follow it, until a start is
+    requested, so that the viewer is there to watch it.
+    """
+
     termination_timeout_seconds: float = 5.0
     """
     How long the previous process is given to exit after being asked to, before it is
@@ -157,6 +201,11 @@ class LiveRunLauncher:
     The process started last.
     """
 
+    _run: RunDirectory | None = field(default=None, init=False, repr=False)
+    """
+    The run the process started last performs.
+    """
+
     def launch(self, run: RunDirectory) -> None:
         """
         Perform a resolution run in the background, from the environment it started
@@ -166,15 +215,34 @@ class LiveRunLauncher:
         :param run: The run to perform.
         """
         self._stop_running_process()
+        run.clear_start_request()
         log_directory = paths.data_dir()
         log_directory.mkdir(parents=True, exist_ok=True)
         arguments: list[str] = [LiveArgument.RUN, str(run.directory)]
+        if self.waits_for_start:
+            arguments.append(LiveArgument.WAIT_FOR_START)
         with (log_directory / "live_run.log").open("w") as log_file:
             self._process = self.spawn(
                 [sys.executable, "-m", LiveModule.PERFORM_RUN, *arguments],
                 stdout=log_file,
                 stderr=subprocess.STDOUT,
             )
+        self._run = run
+
+    def request_start(self) -> None:
+        """
+        Ask the performance that waits to begin.
+
+        :raises NoPerformanceWaiting: When the process started last is not running, or
+            was not set to wait.
+        """
+        if (
+            self._run is None
+            or not self.waits_for_start
+            or self._process.poll() is not None
+        ):
+            raise NoPerformanceWaiting()
+        self._run.request_start()
 
     def _stop_running_process(self) -> None:
         """

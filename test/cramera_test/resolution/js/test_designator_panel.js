@@ -24,6 +24,7 @@ const ROUTES = {
   run: '/api/resolution/run?name=run-1&scene=simple_pouring',
   resolve: '/api/resolution/resolve',
   execute: '/api/resolution/execute',
+  start: '/api/resolution/start',
 };
 
 // %% a page to mount the panel into
@@ -125,7 +126,7 @@ function loadPanel(options) {
     '#resolution-answer', '#resolution-query', '#resolution-resolve', '#resolution-execute',
     '#resolution-designators', '#resolution-runs', '#resolution-phase-structure',
     '#resolution-perspectives', '#resolution-adjustment', '#resolution-tab-designators',
-    '#resolution-tab-runs', '.query-box',
+    '#resolution-tab-runs', '.query-box', '#resolution-start',
   ].forEach(function (name) { elements[name] = element(); });
 
   const root = { innerHTML: '', querySelector(selector) { return elements[selector]; } };
@@ -155,6 +156,11 @@ function loadPanel(options) {
     if (url === ROUTES.execute) {
       return answer(settings.executeFails
         ? { ok: false, error: 'UnknownRun: no run of that name is kept' }
+        : { ok: true });
+    }
+    if (url === ROUTES.start) {
+      return answer(settings.startFails
+        ? { ok: false, error: 'NoPerformanceWaiting: no performance is waiting to start' }
         : { ok: true });
     }
     throw new Error('Unexpected fetch: ' + url);
@@ -576,6 +582,17 @@ test('Execute performs the run that was resolved', async function () {
   assert.ok(panel.elements['#resolution-answer'].innerHTML.includes('executing run run-1'));
 });
 
+test('Execute leaves the performance waiting for a start, and says how to give it', async function () {
+  const panel = await mounted();
+  resolve(panel, 'the(PouringAction)()');
+  await settle();
+  panel.elements['#resolution-execute'].listeners.click();
+  await settle();
+  const answer = panel.elements['#resolution-answer'].innerHTML;
+  assert.ok(answer.includes('Live'));
+  assert.ok(answer.includes('Start'));
+});
+
 test('Execute performs nothing before a run is shown', async function () {
   const panel = await mounted();
   panel.elements['#resolution-execute'].listeners.click();
@@ -601,4 +618,69 @@ test('asking to execute twice at once performs the run once', async function () 
   panel.elements['#resolution-execute'].listeners.click();
   await settle();
   assert.strictEqual(post(panel, ROUTES.execute).length, 1);
+});
+
+// %% starting what waits
+async function executed(options) {
+  const panel = await mounted(options);
+  resolve(panel, 'the(PouringAction)()');
+  await settle();
+  panel.elements['#resolution-execute'].listeners.click();
+  await settle();
+  return panel;
+}
+
+test('Start is not offered before a run is executed', async function () {
+  const panel = await mounted();
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, 'none');
+});
+
+test('Start is offered once the run is executing', async function () {
+  const panel = await executed();
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, '');
+});
+
+test('Start is not offered when the execution fails', async function () {
+  const panel = await executed({ executeFails: true });
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, 'none');
+});
+
+test('Start asks the server to start the performance that waits', async function () {
+  const panel = await executed();
+  panel.elements['#resolution-start'].listeners.click();
+  await settle();
+  assert.deepStrictEqual(bodyOf(post(panel, ROUTES.start)[0]), {});
+});
+
+test('once started, the performance says so and Start goes away', async function () {
+  const panel = await executed();
+  panel.elements['#resolution-start'].listeners.click();
+  await settle();
+  assert.ok(panel.elements['#resolution-answer'].innerHTML.includes('performing run run-1'));
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, 'none');
+});
+
+test('a start that fails says why and stays offered', async function () {
+  const panel = await executed({ startFails: true });
+  panel.elements['#resolution-start'].listeners.click();
+  await settle();
+  assert.ok(panel.elements['#resolution-answer'].innerHTML.includes('NoPerformanceWaiting'));
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, '');
+});
+
+test('executing again offers Start again', async function () {
+  const panel = await executed();
+  panel.elements['#resolution-start'].listeners.click();
+  await settle();
+  panel.elements['#resolution-execute'].listeners.click();
+  await settle();
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, '');
+});
+
+test('asking to start twice at once starts once', async function () {
+  const panel = await executed();
+  panel.elements['#resolution-start'].listeners.click();
+  panel.elements['#resolution-start'].listeners.click();
+  await settle();
+  assert.strictEqual(post(panel, ROUTES.start).length, 1);
 });

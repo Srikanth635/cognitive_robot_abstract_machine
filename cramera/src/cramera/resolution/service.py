@@ -265,6 +265,15 @@ class ResolutionService:
         self.launcher.launch(self.runs.named(request.get(ExecuteRequestKey.RUN) or ""))
         return {PayloadKey.OK: True}
 
+    def start_performance(self) -> dict[str, Any]:
+        """
+        Have the performance that waits for it begin.
+
+        :raises NoPerformanceWaiting: When no performance is waiting.
+        """
+        self.launcher.request_start()
+        return {PayloadKey.OK: True}
+
     def kept_runs(self) -> dict[str, Any]:
         """
         :return: A summary of every run kept, the newest first.

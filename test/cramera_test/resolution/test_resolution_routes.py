@@ -29,7 +29,7 @@ from semantic_digital_twin.robots.robot_parts import Arm
 from typing_extensions import Any
 
 from cramera.resolution import paths
-from cramera.resolution.exceptions import EmptyInstruction
+from cramera.resolution.exceptions import EmptyInstruction, NoPerformanceWaiting
 from cramera.resolution.payload import PayloadKey
 from cramera.resolution.resolver.action_vocabulary import (
     VocabularyKey,
@@ -433,14 +433,18 @@ class TestGeneratingKnowledge:
 
 class LauncherRecordingTheRuns:
     """
-    A launcher that only records the runs it is asked to perform.
+    A launcher that only records the runs it is asked to perform and to start.
     """
 
     def __init__(self):
         self.performed = []
+        self.starts = 0
 
     def launch(self, run):
         self.performed.append(run.directory)
+
+    def request_start(self):
+        self.starts += 1
 
 
 class TestPerformingARun:
@@ -464,3 +468,14 @@ class TestPerformingARun:
         served.service.launcher = LauncherRecordingTheRuns()
         payload = served.post(Route.EXECUTE, {})
         assert payload[PayloadKey.ERROR].startswith(UnknownRun.__name__)
+
+    def test_a_performance_that_waits_is_started(self, served):
+        served.service.launcher = LauncherRecordingTheRuns()
+        payload = served.post(Route.START, {})
+        assert payload[PayloadKey.OK] is True
+        assert served.service.launcher.starts == 1
+
+    def test_a_start_with_nothing_waiting_is_reported(self, served):
+        payload = served.post(Route.START, {})
+        assert payload[PayloadKey.OK] is False
+        assert payload[PayloadKey.ERROR].startswith(NoPerformanceWaiting.__name__)

@@ -57,6 +57,11 @@ class ResolutionRoute(StrEnum):
     Performs a resolution run in the simulation.
     """
 
+    START = "/api/resolution/start"
+    """
+    Starts the performance of a run that waits for it.
+    """
+
     VIEW = "/api/resolution/view"
     """
     One of the views of the knowledge: the hypothesis graph, the ontology graph or the
@@ -161,6 +166,8 @@ class ResolutionRoutes:
             self._answer(
                 lambda: self.server.resolution.execute_run(self._request_body())
             )
+        elif route == ResolutionRoute.START:
+            self._answer(self.server.resolution.start_performance)
         else:
             return False
         return True

@@ -111,6 +111,10 @@ class ServiceRecordingItsCalls(ResolutionService):
         self.calls.append(("execute_run", (request,)))
         return {PayloadKey.OK: True}
 
+    def start_performance(self):
+        self.calls.append(("start_performance", ()))
+        return {PayloadKey.OK: True}
+
 
 class ServiceRefusingEveryRequest(ResolutionService):
     """
@@ -187,6 +191,12 @@ class TestRoutesRunTheService:
         with serving_with(service) as address:
             answered(Request(address + route, data=json.dumps(body).encode()))
         assert service.calls == [(operation, (body,))]
+
+    def test_the_start_route_asks_the_service_to_start_what_waits(self):
+        service = ServiceRecordingItsCalls()
+        with serving_with(service) as address:
+            answered(Request(address + Route.START, data=b"{}"))
+        assert service.calls == [("start_performance", ())]
 
     def test_what_the_service_answers_is_what_the_route_answers(self):
         with serving_with(ServiceRecordingItsCalls()) as address:

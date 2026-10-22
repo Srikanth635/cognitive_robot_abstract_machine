@@ -22,6 +22,7 @@
     run: '/api/resolution/run',
     resolve: '/api/resolution/resolve',
     execute: '/api/resolution/execute',
+    start: '/api/resolution/start',
   });
 
   Panels.define('resolution-designators', function (root, bus) {
@@ -35,6 +36,7 @@
       '  <div class="query-actions">' +
       '    <button id="resolution-resolve" class="primary" title="Resolve the query in the box with llm_reasoner in this scene">Resolve</button>' +
       '    <button id="resolution-execute" title="Perform the resolved designator in the simulation, under the live viewer" disabled>Execute</button>' +
+      '    <button id="resolution-start" class="primary" style="display:none" title="Begin the pour that is waiting in the simulation — click the 3D scene\'s Live button first to watch it">▶ Start</button>' +
       '  </div>' +
       '  <div class="knowledge-choices">' +
       '    <div id="resolution-phase-structure" class="perspectives" title="The phase structure Resolve consults; untick it to leave it out"></div>' +
@@ -56,12 +58,14 @@
     const queryEl = root.querySelector('#resolution-query');
     const resolveBtn = root.querySelector('#resolution-resolve');
     const executeBtn = root.querySelector('#resolution-execute');
+    const startBtn = root.querySelector('#resolution-start');
     const designatorsEl = root.querySelector('#resolution-designators');
     const runsEl = root.querySelector('#resolution-runs');
     const phaseStructureEl = root.querySelector('#resolution-phase-structure');
     const perspectivesEl = root.querySelector('#resolution-perspectives');
     const adjustmentEl = root.querySelector('#resolution-adjustment');
     executeBtn.disabled = true;  // nothing to execute before a run is shown
+    startBtn.style.display = 'none';  // nothing waits to start before a run is executed
 
     // ---- the box suggests the action designators and their parameters -------------------
     let vocabulary = [];  // what the server offers to complete
@@ -271,21 +275,25 @@
     }
 
     // ---- performing the run shown ------------------------------------------------------
-    // Execute performs the shown run in the simulation; the 3D scene panel already polls the
-    // live viewer's bridge and shows its own Live button the moment it answers.
+    // Execute brings the simulation up from the shown run's initial environment under the live
+    // viewer and leaves it waiting: the 3D scene panel already polls the viewer's bridge and
+    // shows its own Live button the moment it answers, and the pour begins when Start is
+    // pressed, so there is something to watch.
     let executing = false;
     async function execute() {
       if (!shownRun || executing) return;
       executing = true;
       executeBtn.textContent = '…';
       executeBtn.disabled = true;
+      startBtn.style.display = 'none';
       try {
         const payload = await postJson(ROUTES.execute, { run: shownRun });
         if (payload.ok) {
           answerEl.innerHTML = '<div class="goal">executing run ' + view.esc(shownRun) + '</div>' +
             '<p class="hint-txt">Starting the simulation from the run\'s initial environment ' +
-            'under the live viewer. Once it comes up, the 3D scene\'s own Live button will ' +
-            'appear — click it to watch.</p>';
+            'under the live viewer. It then waits: once the 3D scene\'s Live button appears, ' +
+            'click it, then press Start here and the pour begins.</p>';
+          startBtn.style.display = '';
         } else {
           failure('execution failed', '', payload.error || 'execution failed');
         }
@@ -297,7 +305,29 @@
       executeBtn.disabled = false;
     }
 
+    // Start has the waiting simulation begin the pour.
+    let starting = false;
+    async function startPouring() {
+      if (!shownRun || starting) return;
+      starting = true;
+      try {
+        const payload = await postJson(ROUTES.start, {});
+        if (payload.ok) {
+          answerEl.innerHTML = '<div class="goal">performing run ' + view.esc(shownRun) + '</div>' +
+            '<p class="hint-txt">The pour has begun. It takes a few seconds; the live viewer ' +
+            'shows it as it happens. Stop the recording there to keep it as an episode.</p>';
+          startBtn.style.display = 'none';
+        } else {
+          failure('start failed', '', payload.error || 'start failed');
+        }
+      } catch (error) {
+        failure('start failed', '', String(error));
+      }
+      starting = false;
+    }
+
     executeBtn.addEventListener('click', execute);
+    startBtn.addEventListener('click', startPouring);
 
     loadDesignators();
     loadRuns();

@@ -101,8 +101,11 @@ The panels are in `web/panels/resolution`:
   designators as chips that copy their query into a box (one the scene cannot resolve is
   dimmed, says what the scene lacks, and can still be copied; Resolve then refuses it), the
   knowledge to consult, Resolve, what the resolver chose, why, what it rests on and the pours
-  it tried, the runs kept, and Execute. The box suggests the action designators and, inside
-  one's argument list, their parameters, through the EQL box's own suggestion menu. A page
+  it tried, the runs kept, and Execute, which brings the simulation up under the live viewer
+  and leaves it waiting: click the 3D scene's Live button, then press *Start* and the pour
+  begins, so there is something to watch (stop the recording in the viewer afterwards to keep
+  it as an episode, and play it back at any speed). The box suggests the action designators
+  and, inside one's argument list, their parameters, through the EQL box's own suggestion menu. A page
   opened with `?run=<name>` shows that run.
 - The graph panel has three more tabs, *Hypothesis Graph*, *Ontology Graph* and *Designator*
   (`web/panels/graph/knowledge_views.js`), that draw the knowledge a resolution consulted. A
@@ -119,7 +122,8 @@ The routes, all under `/api/resolution/`, answer JSON, and an error as
 | `POST resolve` | Resolves a designator query in a scene |
 | `GET run?name=&scene=` | Shows a kept run as it was made |
 | `POST hypothesis` | Generates hypothesis knowledge for an instruction |
-| `POST execute` | Performs a kept run in the simulation under the live viewer |
+| `POST execute` | Brings the simulation of a kept run up under the live viewer, waiting to be started |
+| `POST start` | Has the waiting simulation begin the pour |
 | `GET view?name=&scene=` | The hypothesis, ontology or designator view |
 
 Under `CRAMERA_DATA` (default `~/.cramera`) it keeps `runs/`, `hypotheses/` and the NEEM

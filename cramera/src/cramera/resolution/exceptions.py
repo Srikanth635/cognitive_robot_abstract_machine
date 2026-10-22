@@ -84,3 +84,16 @@ class TargetInsideSceneArchive(DataclassException):
 
     def suggest_correction(self) -> str:
         return "write the converted archive outside the one it is converted from"
+
+
+@dataclass
+class NoPerformanceWaiting(DataclassException):
+    """
+    A performance was asked to start, and none is waiting for it.
+    """
+
+    def error_message(self) -> str:
+        return "no performance is waiting to start"
+
+    def suggest_correction(self) -> str:
+        return "press Execute on a run first, and start it while it is waiting"
