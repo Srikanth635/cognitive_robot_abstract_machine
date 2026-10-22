@@ -21,3 +21,21 @@ class HeadlessRunWithoutDuration(DataclassException):
 
     def suggest_correction(self) -> str:
         return "give the run a duration"
+
+
+@dataclass
+class NoSuchBody(DataclassException):
+    """
+    An action names a body the scene it is performed in does not have.
+    """
+
+    body: str
+    """
+    The name of the body that is missing.
+    """
+
+    def error_message(self) -> str:
+        return f"the scene has no graspable body named {self.body!r}"
+
+    def suggest_correction(self) -> str:
+        return "perform the action in the scene that holds the body"

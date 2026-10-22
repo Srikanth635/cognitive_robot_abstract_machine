@@ -20,6 +20,7 @@ from semantic_digital_twin.datastructures.definitions import (
 )
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.robots.pr2 import PR2, PR2Joint
+from semantic_digital_twin.semantic_annotations.mixins import HasGraspCandidates
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.spatial_types.spatial_types import (
     HomogeneousTransformationMatrix,
@@ -27,13 +28,18 @@ from semantic_digital_twin.spatial_types.spatial_types import (
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import ActiveConnection1DOF
 
-from experiments.physics_viewer.exceptions import HeadlessRunWithoutDuration
 from experiments.physics_viewer.actions import PhysicsAction
+from experiments.physics_viewer.exceptions import HeadlessRunWithoutDuration, NoSuchBody
 from experiments.physics_viewer.overlay import ActionOverlay
 from experiments.physics_viewer.paced_simulation import RealTimeMujocoSim
 from experiments.physics_viewer.placement import Position, ViewerCamera
 from experiments.physics_viewer.viewer import MovedJoint, MovedObject
-from experiments.physics_viewer.scenes import MjcfFile, PhysicsScene, UrdfFile
+from experiments.physics_viewer.scenes import (
+    MjcfFile,
+    PhysicsScene,
+    SimulationOptions,
+    UrdfFile,
+)
 from experiments.physics_viewer.viewer import PhysicsViewer
 
 # %% what the tests compile
@@ -336,6 +342,58 @@ class TestMilk:
         run = self.run_action(PhysicsAction.PICK_UP_MILK)
         [moved] = [moved for moved in run.moved_objects if moved.body == "milk.stl"]
         assert moved.after.z > moved.before.z + 0.05
+
+
+# %% Tracy at its table
+
+
+class TestTracyAtTheTable:
+    scene = PhysicsScene.TRACY_AT_THE_TABLE
+
+    def run_action(self, action: PhysicsAction, seconds: float = 0.5):
+        return PhysicsViewer(
+            scene=self.scene,
+            headless=True,
+            duration=timedelta(seconds=seconds),
+            speed=1000.0,
+            action=action,
+        ).run()
+
+    def test_the_cube_is_in_the_world_and_can_be_grasped(self):
+        world = self.scene.value.build()
+        cube = world.get_body_by_name("cube")
+        annotated = [
+            annotation
+            for annotation in world.get_semantic_annotations_by_type(HasGraspCandidates)
+            if annotation.root == cube
+        ]
+        assert len(annotated) == 1
+
+    def test_the_cube_rests_on_the_table_under_physics(self):
+        run = PhysicsViewer(
+            scene=self.scene, headless=True, duration=timedelta(seconds=1), speed=1000.0
+        ).run()
+        table_top = float(run.world.get_body_by_name("table").global_pose.z)
+        edge = self.scene.value.scene.objects[0].edge
+        height = float(run.world.get_body_by_name("cube").global_pose.z)
+        assert height == pytest.approx(table_top + edge / 2, abs=0.01)
+
+    def test_the_scene_asks_for_stiff_contacts_and_elliptic_friction_cones(self):
+        options = self.scene.value.simulation_options()
+        assert options.cone == mujoco.mjtCone.mjCONE_ELLIPTIC
+        assert options.impedance_ratio > 1.0
+
+    def test_a_scene_without_contact_settings_leaves_what_mujoco_defaults_to(self):
+        assert PhysicsScene.CUBE.value.simulation_options() == SimulationOptions()
+
+    def test_tracy_lifts_the_cube_off_the_table_under_physics(self):
+        run = self.run_action(PhysicsAction.PICK_UP_CUBE)
+        [moved] = [item for item in run.moved_objects if item.body == "cube"]
+        assert moved.after.z > moved.before.z + 0.05
+
+    def test_a_pick_up_of_a_body_the_scene_does_not_have_is_refused(self):
+        with pytest.raises(NoSuchBody):
+            self.run_action(PhysicsAction.PICK_UP_MILK)
 
 
 # %% the first view of a scene

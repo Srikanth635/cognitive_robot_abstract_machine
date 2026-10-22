@@ -7,9 +7,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import timedelta
 from enum import Enum
 from pathlib import Path
 
+import mujoco
 import semantic_digital_twin
 from krrood.patterns.path_enumeration import PathEnumeration
 from semantic_digital_twin.adapters.mjcf import MJCFParser
@@ -34,10 +36,20 @@ from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Milk,
     PouringCup,
 )
+from semantic_digital_twin.semantic_annotations.mixins import HasGraspCandidates
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connection_properties import JointDynamics
 from semantic_digital_twin.world_description.connections import ActiveConnection1DOF
-from semantic_digital_twin.world_description.geometry import Color, Mesh
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.world_description.connections import Connection6DoF
+from semantic_digital_twin.world_description.contact import (
+    ContactFriction,
+    ContactImpedance,
+    ContactParameters,
+    ContactStiffness,
+)
+from semantic_digital_twin.world_description.geometry import Box, Color, Mesh, Scale
+from semantic_digital_twin.world_description.shape_collection import ShapeCollection
 from semantic_digital_twin.world_description.world_entity import SemanticAnnotation
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Iterable
@@ -185,6 +197,44 @@ class RestingFurniture:
                 connection.dynamics = self.dynamics
 
 
+# %% how a scene is simulated
+
+
+@dataclass(frozen=True)
+class SimulationOptions:
+    """
+    How MuJoCo resolves the contacts of a scene; the defaults are MuJoCo's own.
+    """
+
+    cone: mujoco.mjtCone = mujoco.mjtCone.mjCONE_PYRAMIDAL
+    """
+    The friction cone: the elliptic one is the exact one, where the pyramid only
+    approximates it and lets a squeezed object creep between the pads of a gripper.
+    """
+
+    impedance_ratio: float = 1.0
+    """
+    How much harder sliding is than pressing in; at 1 a held object slides out of a firm
+    grip under its own weight.
+    """
+
+    no_slip_iterations: int = 0
+    """
+    The passes spent removing the slip soft contacts leave, so a held object stays where
+    the pads hold it.
+    """
+
+    def keywords(self) -> dict[str, object]:
+        """
+        :return: What the simulation is built with.
+        """
+        return {
+            "cone": self.cone,
+            "impratio": self.impedance_ratio,
+            "noslip_iterations": self.no_slip_iterations,
+        }
+
+
 # %% how a scene's world is made
 
 
@@ -205,6 +255,12 @@ class SceneWorld(ABC):
             MuJoCo puts it.
         """
         return None
+
+    def simulation_options(self) -> SimulationOptions:
+        """
+        :return: How the scene's contacts are resolved.
+        """
+        return SimulationOptions()
 
 
 @dataclass(frozen=True)
@@ -283,10 +339,24 @@ class RobotInScene(SceneWorld):
         return world
 
 
-@dataclass(frozen=True)
-class PlacedObject:
+class SceneObject(ABC):
     """
     An object lying in a scene.
+    """
+
+    @abstractmethod
+    def add_to(self, world: World) -> None:
+        """
+        Put the object into a world, free to move under physics.
+
+        :param world: The world.
+        """
+
+
+@dataclass(frozen=True)
+class PlacedObject(SceneObject):
+    """
+    An object from a mesh file, lying in a scene.
     """
 
     mesh: str
@@ -310,6 +380,86 @@ class PlacedObject:
     What the object is, for the actions that look for it.
     """
 
+    def add_to(self, world: World) -> None:
+        world.merge_world_at_pose(
+            parse_object(self.mesh, self.color),
+            HomogeneousTransformationMatrix.from_xyz_rpy(
+                self.position.x,
+                self.position.y,
+                self.position.z,
+                reference_frame=world.root,
+            ),
+        )
+        if self.annotation is not None:
+            with world.modify_world():
+                world.add_semantic_annotation(
+                    self.annotation(root=world.get_body_by_name(self.mesh))
+                )
+
+
+@dataclass(frozen=True)
+class CubeOnTheTable(SceneObject):
+    """
+    A cube standing on the table a robot is bolted to, which anything may grasp.
+    """
+
+    edge: float
+    """
+    The length of the cube's edges, in meters.
+    """
+
+    x: float
+    """
+    How far in front of the robot the cube stands.
+    """
+
+    y: float
+    """
+    Where the cube stands sideways.
+    """
+
+    color: Color
+    """
+    The color of the cube.
+    """
+
+    table: str = "table"
+    """
+    The name of the body whose origin is the table's work surface.
+    """
+
+    resting_clearance: float = 0.001
+    """
+    The gap left between the cube and the table, so it rests rather than intersects.
+    """
+
+    name: str = "cube"
+    """
+    The name of the cube's body.
+    """
+
+    def add_to(self, world: World) -> None:
+        top = float(world.get_body_by_name(self.table).global_pose.z)
+        scale = Scale(self.edge, self.edge, self.edge)
+        cube = Body(
+            name=PrefixedName(self.name),
+            collision=ShapeCollection([Box(scale=scale, color=self.color)]),
+            visual=ShapeCollection([Box(scale=scale, color=self.color)]),
+        )
+        with world.modify_world():
+            world.add_kinematic_structure_entity(cube)
+            world.add_connection(
+                Connection6DoF.create_with_dofs(
+                    world=world,
+                    parent=world.root,
+                    child=cube,
+                    parent_T_connection_expression=HomogeneousTransformationMatrix.from_xyz_rpy(
+                        self.x, self.y, top + self.edge / 2 + self.resting_clearance
+                    ),
+                )
+            )
+            world.add_semantic_annotation(HasGraspCandidates(root=cube))
+
 
 @dataclass(frozen=True)
 class ObjectsInScene(SceneWorld):
@@ -322,7 +472,7 @@ class ObjectsInScene(SceneWorld):
     The scene the objects lie in.
     """
 
-    objects: tuple[PlacedObject, ...]
+    objects: tuple[SceneObject, ...]
     """
     The objects.
     """
@@ -330,21 +480,57 @@ class ObjectsInScene(SceneWorld):
     def build(self) -> World:
         world = self.scene.build()
         for placed in self.objects:
-            world.merge_world_at_pose(
-                parse_object(placed.mesh, placed.color),
-                HomogeneousTransformationMatrix.from_xyz_rpy(
-                    placed.position.x,
-                    placed.position.y,
-                    placed.position.z,
-                    reference_frame=world.root,
-                ),
-            )
-            if placed.annotation is not None:
-                with world.modify_world():
-                    world.add_semantic_annotation(
-                        placed.annotation(root=world.get_body_by_name(placed.mesh))
-                    )
+            placed.add_to(world)
         return world
+
+    def initial_camera(self) -> ViewerCamera | None:
+        return self.scene.initial_camera()
+
+    def simulation_options(self) -> SimulationOptions:
+        return self.scene.simulation_options()
+
+
+@dataclass(frozen=True)
+class SolidSurfaces(SceneWorld):
+    """
+    A scene whose bodies are as solid as what a gripper holds: nothing may sink into them,
+    where MuJoCo's soft defaults let a firmly held object sink several millimetres into
+    the pads.
+    """
+
+    scene: SceneWorld
+    """
+    The scene.
+    """
+
+    options: SimulationOptions = SimulationOptions(
+        cone=mujoco.mjtCone.mjCONE_ELLIPTIC, impedance_ratio=10.0, no_slip_iterations=10
+    )
+    """
+    How the contacts are resolved: the friction cone, and the passes against slip, that keep
+    a held object where the pads hold it.
+    """
+
+    time_constant: timedelta = timedelta(milliseconds=2)
+    """
+    The time a contact takes to resolve a penetration: two physics steps, as stiff as a
+    simulation stepping every millisecond stays stable at.
+    """
+
+    def build(self) -> World:
+        world = self.scene.build()
+        ContactParameters(
+            friction=ContactFriction(),
+            stiffness=ContactStiffness(time_constant=self.time_constant),
+            impedance=ContactImpedance(minimum=0.99, maximum=0.999, width=0.001),
+        ).apply_to(world.bodies_with_collision)
+        return world
+
+    def initial_camera(self) -> ViewerCamera | None:
+        return self.scene.initial_camera()
+
+    def simulation_options(self) -> SimulationOptions:
+        return self.options
 
 
 class ObjectColor(Enum):
@@ -427,6 +613,25 @@ class PhysicsScene(Enum):
     )
     """
     The PR2 at the kitchen counter, with a milk carton, a cereal box, a bowl and a cup on it.
+    """
+
+    TRACY_AT_THE_TABLE = SolidSurfaces(
+        ObjectsInScene(
+            RobotInScene(
+                MjcfScene(MjcfFile.FLOOR),
+                Tracy,
+                view=ViewerCamera(
+                    Position(0.45, 0.05, 1.0),
+                    distance=1.6,
+                    azimuth=120.0,
+                    elevation=-25.0,
+                ),
+            ),
+            (CubeOnTheTable(edge=0.05, x=0.55, y=0.1, color=Color(0.8, 0.3, 0.1)),),
+        )
+    )
+    """
+    Tracy at its table, with a cube on it.
     """
 
     PR2 = RobotInScene(MjcfScene(MjcfFile.FLOOR), PR2)
