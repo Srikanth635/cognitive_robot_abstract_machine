@@ -31,20 +31,29 @@ class ActionOverlay:
         """
         self.write(f"{action.name.lower()}: performing", "")
 
-    def show_done(self, action: PhysicsAction, moved: Sequence[object]) -> None:
+    def show_done(
+        self,
+        action: PhysicsAction,
+        moved: Sequence[object],
+        moved_objects: Sequence[object] = (),
+    ) -> None:
         """
-        Say that an action is done, and which joints it moved from where to where.
+        Say that an action is done, and which joints and objects it moved from where to
+        where.
 
         :param action: The action.
         :param moved: The joints it moved, each with its name and where it was and is.
+        :param moved_objects: The objects that moved, each with its name and where it
+            was and is.
         """
-        self.write(
-            f"{action.name.lower()}: done",
-            "\n".join(
-                f"{joint.joint}: {joint.before:.3f} -> {joint.after:.3f}"
-                for joint in moved
-            ),
-        )
+        joints = [
+            f"{joint.joint}: {joint.before:.3f} -> {joint.after:.3f}" for joint in moved
+        ]
+        objects = [
+            f"{item.body}: moved {item.distance:.2f} m (z {item.before.z:.3f} -> {item.after.z:.3f})"
+            for item in moved_objects
+        ]
+        self.write(f"{action.name.lower()}: done", "\n".join([*joints, *objects]))
 
     def write(self, heading: str, body: str) -> None:
         """
