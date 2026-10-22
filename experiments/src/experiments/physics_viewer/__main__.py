@@ -12,6 +12,7 @@ from datetime import timedelta
 
 from typing_extensions import Sequence
 
+from experiments.physics_viewer.actions import PhysicsAction
 from experiments.physics_viewer.scenes import PhysicsScene
 from experiments.physics_viewer.viewer import PhysicsViewer
 
@@ -26,6 +27,12 @@ def parse_arguments(arguments: Sequence[str]) -> PhysicsViewer:
         "scene",
         choices=[scene.name.lower() for scene in PhysicsScene],
         help="the scene to put under physics",
+    )
+    parser.add_argument(
+        "--action",
+        choices=[action.name.lower() for action in PhysicsAction],
+        default=None,
+        help="an action the robot performs first, under physics",
     )
     parser.add_argument(
         "--headless",
@@ -46,6 +53,11 @@ def parse_arguments(arguments: Sequence[str]) -> PhysicsViewer:
         scene=PhysicsScene.from_command_line(parsed.scene),
         headless=parsed.headless,
         speed=parsed.speed,
+        action=(
+            None
+            if parsed.action is None
+            else PhysicsAction.from_command_line(parsed.action)
+        ),
         duration=(
             None if parsed.duration is None else timedelta(seconds=parsed.duration)
         ),
