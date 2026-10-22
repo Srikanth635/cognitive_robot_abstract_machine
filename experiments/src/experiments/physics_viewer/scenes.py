@@ -16,6 +16,7 @@ from semantic_digital_twin.adapters.mjcf import MJCFParser
 from semantic_digital_twin.adapters.multi_sim import ContactCategories, MujocoGeom
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.datastructures.definitions import StaticJointState
+from experiments.physics_viewer.placement import Position, ViewerCamera
 from experiments.tool_based_actions.simple_demo.demo_world import (
     BOWL_COLOR,
     CUP_COLOR,
@@ -198,6 +199,13 @@ class SceneWorld(ABC):
         :return: A new world of the scene.
         """
 
+    def initial_camera(self) -> ViewerCamera | None:
+        """
+        :return: Where the window's camera is first put, or ``None`` to leave it where
+            MuJoCo puts it.
+        """
+        return None
+
 
 @dataclass(frozen=True)
 class MjcfScene(SceneWorld):
@@ -233,28 +241,6 @@ class UrdfScene(SceneWorld):
 
 
 @dataclass(frozen=True)
-class Position:
-    """
-    A position in a world, in meters.
-    """
-
-    x: float = 0.0
-    """
-    The distance along the world's x axis, in meters.
-    """
-
-    y: float = 0.0
-    """
-    The distance along the world's y axis, in meters.
-    """
-
-    z: float = 0.0
-    """
-    The distance along the world's z axis, in meters.
-    """
-
-
-@dataclass(frozen=True)
 class RobotInScene(SceneWorld):
     """
     A robot spawned into another scene, at a position on the floor, with its arms parked.
@@ -274,6 +260,14 @@ class RobotInScene(SceneWorld):
     """
     Where the robot stands.
     """
+
+    view: ViewerCamera | None = None
+    """
+    Where the window's camera is first put.
+    """
+
+    def initial_camera(self) -> ViewerCamera | None:
+        return self.view
 
     def build(self) -> World:
         world = self.scene.build()
@@ -353,6 +347,22 @@ class ObjectsInScene(SceneWorld):
         return world
 
 
+class ObjectColor(Enum):
+    """
+    The colors of the objects whose meshes carry none, as the demos dye theirs.
+    """
+
+    MILK = Color(0.75, 0.85, 1.0)
+    """
+    A pale blue, for the milk carton.
+    """
+
+    CEREAL = Color(0.95, 0.75, 0.2)
+    """
+    A yellow, for the cereal box.
+    """
+
+
 # %% the scenes
 
 
@@ -392,8 +402,17 @@ class PhysicsScene(Enum):
         ObjectsInScene(
             UrdfScene(UrdfFile.APARTMENT),
             (
-                PlacedObject("milk.stl", Position(2.37, 2.0, 1.0345), annotation=Milk),
-                PlacedObject("breakfast_cereal.stl", Position(2.37, 1.8, 1.0487)),
+                PlacedObject(
+                    "milk.stl",
+                    Position(2.37, 2.0, 1.0345),
+                    ObjectColor.MILK.value,
+                    Milk,
+                ),
+                PlacedObject(
+                    "breakfast_cereal.stl",
+                    Position(2.37, 1.8, 1.0487),
+                    ObjectColor.CEREAL.value,
+                ),
                 PlacedObject("bowl.stl", Position(2.4, 2.4, 0.979), BOWL_COLOR, Bowl),
                 PlacedObject(
                     "jeroen_cup.stl", Position(2.4, 2.6, 0.947), CUP_COLOR, PouringCup
@@ -402,6 +421,9 @@ class PhysicsScene(Enum):
         ),
         PR2,
         Position(1.85, 2.2),
+        ViewerCamera(
+            Position(2.2, 2.2, 1.0), distance=2.5, azimuth=65.0, elevation=-25.0
+        ),
     )
     """
     The PR2 at the kitchen counter, with a milk carton, a cereal box, a bowl and a cup on it.

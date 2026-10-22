@@ -4,6 +4,7 @@ Stepping a scene under MuJoCo physics at a chosen speed, in a window or without 
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -11,13 +12,39 @@ from coraplex.datastructures.dataclasses import Context
 from coraplex.execution_environment import PhysicallySimulatedRobot
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import ActiveConnection1DOF
 
 from experiments.physics_viewer.actions import PhysicsAction
 from experiments.physics_viewer.exceptions import HeadlessRunWithoutDuration
+from experiments.physics_viewer.overlay import ActionOverlay
 from experiments.physics_viewer.paced_simulation import RealTimeMujocoSim
 from experiments.physics_viewer.scenes import PhysicsScene
 
+logger = logging.getLogger(__name__)
+
 # %% what a run did
+
+
+@dataclass(frozen=True)
+class MovedJoint:
+    """
+    A joint an action moved.
+    """
+
+    joint: str
+    """
+    The name of the joint.
+    """
+
+    before: float
+    """
+    Where the joint was before the action, in radians or meters.
+    """
+
+    after: float
+    """
+    Where the joint was after the action, in radians or meters.
+    """
 
 
 @dataclass(frozen=True)
@@ -39,6 +66,11 @@ class PhysicsRun:
     world: World
     """
     The world as the physics left it.
+    """
+
+    moved_joints: tuple[MovedJoint, ...] = ()
+    """
+    The joints the action moved; none without an action.
     """
 
 
@@ -93,6 +125,12 @@ class PhysicsViewer:
     How long a scene is left to come to rest before an action starts.
     """
 
+    reported_movement: float = 0.01
+    """
+    How far a joint has to have moved, in radians or meters, for the action to be said to
+    have moved it.
+    """
+
     def run(self) -> PhysicsRun:
         """
         Perform the action, if there is one, then step the scene's physics, frame by
@@ -107,9 +145,14 @@ class PhysicsViewer:
             world=world, speed=self.speed, headless=self.headless
         )
         simulation.start_stepped_simulation()
+        overlay = ActionOverlay.of(self.headless, simulation)
+        camera = self.scene.value.initial_camera()
+        if camera is not None and not self.headless:
+            camera.apply(simulation.simulator.renderer.cam)
+        moved = ()
         try:
             if self.action is not None:
-                self.perform(simulation, world)
+                moved = self.perform(simulation, world, overlay)
             frames = self.step_until_over(simulation)
         finally:
             simulation.stop_simulation()
@@ -117,22 +160,69 @@ class PhysicsViewer:
             frames=frames,
             simulated_seconds=frames * self.frame.total_seconds(),
             world=world,
+            moved_joints=moved,
         )
 
-    def perform(self, simulation: RealTimeMujocoSim, world: World) -> None:
+    def perform(
+        self,
+        simulation: RealTimeMujocoSim,
+        world: World,
+        overlay: ActionOverlay | None,
+    ) -> tuple[MovedJoint, ...]:
         """
-        Let the scene settle, then have the robot perform the action under physics.
+        Let the scene settle, then have the robot perform the action under physics, and say
+        which joints it moved.
 
         :param simulation: The simulation, started.
         :param world: The world being simulated.
+        :param overlay: What writes into the window, if there is one.
+        :return: The joints the action moved.
         """
         [robot] = world.get_semantic_annotations_by_type(AbstractRobot)
         simulation.step_simulation(self.settling)
         plan = self.action.value.build(
             Context(world=world, robot=robot, evaluate_conditions=False)
         )
+        if overlay is not None:
+            overlay.show_started(self.action)
+        before = self.joint_positions(world)
         with PhysicallySimulatedRobot(simulation=simulation):
             plan.perform()
+        moved = self.joints_moved_since(before, world)
+        logger.info("%s: moved %d joints", self.action.name.lower(), len(moved))
+        for joint in moved:
+            logger.info("  %s: %.3f -> %.3f", joint.joint, joint.before, joint.after)
+        if overlay is not None:
+            overlay.show_done(self.action, moved)
+        return moved
+
+    @staticmethod
+    def joint_positions(world: World) -> dict[str, float]:
+        """
+        :return: Where every joint a servo drives is, by its name; the passive ones, such as
+            a tap handle or the motor of a gripper, move with whatever touches them.
+        """
+        driven = {dof for actuator in world.actuators for dof in actuator.dofs}
+        return {
+            connection.name.name: float(connection.position)
+            for connection in world.connections
+            if isinstance(connection, ActiveConnection1DOF) and connection.dof in driven
+        }
+
+    def joints_moved_since(
+        self, before: dict[str, float], world: World
+    ) -> tuple[MovedJoint, ...]:
+        """
+        :param before: Where the joints were, by their names.
+        :param world: The world they are in.
+        :return: The joints that have moved at least :attr:`reported_movement` since.
+        """
+        after = self.joint_positions(world)
+        return tuple(
+            MovedJoint(joint, before[joint], position)
+            for joint, position in after.items()
+            if abs(position - before[joint]) >= self.reported_movement
+        )
 
     def step_until_over(self, simulation: RealTimeMujocoSim) -> int:
         """

@@ -56,3 +56,9 @@ python -m experiments.physics_viewer pr2_at_the_counter --action raise_torso --s
 
 The physics, and the plan with it, run no faster than the clock times `--speed`. At 1 raising the
 torso takes as long as the real torso, about half a minute.
+
+The window opens on a view of the scene where it has one: at the counter, from the side, with the
+PR2 and the objects on the counter in view. While an action runs the window says so at the top left,
+and when it is done it lists the joints it moved, from where to where (`torso_lift_joint: 0.011 ->
+0.290`); the same lines go to the log. Only joints a servo drives are listed. Press Tab in the window
+to hide MuJoCo's side panels and give the scene the whole window.
