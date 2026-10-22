@@ -203,7 +203,7 @@ class PhysicsAction(Enum):
     """
 
     PICK_UP_MILK = PickUpPlan(
-        "milk.stl", ArmSide.RIGHT, 1, NavigationPlan(Position(1.85, 2.2))
+        "milk.stl", ArmSide.RIGHT, 0, NavigationPlan(Position(1.75, 2.2))
     )
     """
     The robot drives to the counter and picks up the milk carton with its right arm.
