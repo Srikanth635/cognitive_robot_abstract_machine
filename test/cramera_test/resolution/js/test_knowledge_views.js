@@ -150,12 +150,17 @@ function loadViews(options) {
   global.SceneContext = {
     withScene(url) { return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'scene=simple_pouring'; },
   };
+  const channels = [];
+  global.BroadcastChannel = settings.noChannel ? undefined : class {
+    constructor(channelName) { this.channelName = channelName; this.posted = []; channels.push(this); }
+    postMessage(message) { this.posted.push(message); }
+  };
   global.window = {};
   new Function(fs.readFileSync(path.join(GRAPH_PANEL, 'knowledge_views.js'), 'utf8'))();
   global.window.KnowledgeViews.attach(graphRoot, bus);
   return {
     bus, ownTabs, cramerasTabs, wrapEl, tabsEl, liveBadge, wrapElements, requests, emitted,
-    calls, publish, graphRoot,
+    calls, publish, graphRoot, channels,
     select(id) { selectCallback(id); },
   };
 }
@@ -500,4 +505,49 @@ test('a view the server refuses says why', async function () {
 test('a server that cannot be reached says so', async function () {
   const page = await opened({ unreachable: true });
   assert.ok(page.wrapElements['#resolution-knowledge-empty'].textContent.includes('Could not load this view'));
+});
+
+// %% hypotheses across windows
+// The graph panel pops out into a window of its own, which is not the one Resolve is pressed
+// in, so a generated hypothesis is announced to the other windows of the viewer.
+test('a generated hypothesis is announced to the other windows on a channel of its own', async function () {
+  const page = await opened();
+  page.publish('hypothesis:generated', hypothesisPayload('New'));
+  const [channel] = page.channels;
+  assert.deepStrictEqual(channel.posted, [hypothesisPayload('New')]);
+});
+
+test('a payload that is not ok is not announced', async function () {
+  const page = await opened();
+  page.publish('hypothesis:generated', { ok: false, error: 'x' });
+  assert.deepStrictEqual(page.channels[0].posted, []);
+});
+
+test('a hypothesis another window announced replaces what is shown, as one generated here does', async function () {
+  const page = await opened();
+  page.channels[0].onmessage({ data: hypothesisPayload('Elsewhere') });
+  await settle();
+  const builds = callsNamed(page, 'build');
+  assert.strictEqual(builds[1].payload.nodes[0].label, 'Elsewhere');
+  assert.strictEqual(page.requests.length, 1);
+});
+
+test('a hypothesis another window announced is not announced again', async function () {
+  const page = await opened();
+  page.channels[0].onmessage({ data: hypothesisPayload('Elsewhere') });
+  assert.deepStrictEqual(page.channels[0].posted, []);
+});
+
+test('a message that is not an ok payload changes nothing', async function () {
+  const page = await opened();
+  page.channels[0].onmessage({ data: { ok: false } });
+  await settle();
+  assert.strictEqual(callsNamed(page, 'build').length, 1);
+});
+
+test('a browser without broadcast channels shows what is generated here all the same', async function () {
+  const page = await opened({ noChannel: true });
+  page.publish('hypothesis:generated', hypothesisPayload('New'));
+  await settle();
+  assert.strictEqual(callsNamed(page, 'build')[1].payload.nodes[0].label, 'New');
 });

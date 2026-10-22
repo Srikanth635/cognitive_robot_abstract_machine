@@ -47,6 +47,7 @@ Panels.define('graph', function (root, bus) {
     '    <span id="gnav-path"></span>' +
     '  </div>' +
     '  <div class="legend" id="legend"></div>' +
+    '  <button id="graph-pop-out" class="pop-out" title="Open the graph panel, with all its tabs, alone in a window of its own — drag it onto another screen and press F11 for full screen">⧉ Pop out</button>' +
     '</div>';
 
   const emptyEl = root.querySelector('#graph-empty');
@@ -80,6 +81,11 @@ Panels.define('graph', function (root, bus) {
   } else {
     window.addEventListener('resize', refitWhenSettled);
   }
+
+  // %% pop out
+  root.querySelector('#graph-pop-out').addEventListener('click', function () {
+    window.open(SceneContext.popOutUrl(SceneContext.LAYOUT_GRAPH), 'cramera-graph');
+  });
 
   // %% zoom controls
   // one step in and its exact inverse out, so clicking + then − lands where it started

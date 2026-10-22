@@ -23,6 +23,8 @@
   'use strict';
 
   const VIEW_ROUTE = '/api/resolution/view';
+  //: the channel the windows of one viewer announce a generated hypothesis on
+  const HYPOTHESIS_CHANNEL = 'cramera-hypothesis';
 
   const VIEW = Object.freeze({
     hypothesis: 'hypothesis',
@@ -189,14 +191,27 @@
     });
 
     // ---- a freshly generated hypothesis replaces what is shown --------------------------
-    bus.on('hypothesis:generated', function (payload) {
-      if (!payload || !payload.ok) return;
+    function replaceHypothesis(payload) {
       Object.keys(base).forEach(function (view) { delete base[view]; });
       base[VIEW.hypothesis] = payload;
       hypothesisDrawn = false;
       if (open) showView(open);
       else tabOf[VIEW.hypothesis].classList.add('fresh');
+    }
+
+    // the window the graph panel was popped out into is not the one Resolve was pressed in
+    const channel = typeof BroadcastChannel === 'function'
+      ? new BroadcastChannel(HYPOTHESIS_CHANNEL) : null;
+    bus.on('hypothesis:generated', function (payload) {
+      if (!payload || !payload.ok) return;
+      replaceHypothesis(payload);
+      if (channel) channel.postMessage(payload);
     });
+    if (channel) {
+      channel.onmessage = function (message) {
+        if (message.data && message.data.ok) replaceHypothesis(message.data);
+      };
+    }
   }
 
   window.KnowledgeViews = { attach: attach };

@@ -140,6 +140,15 @@ reader refuses, are left out). Write it again after `cram_viz`'s bundles are reg
 python -m cramera.resolution.scene_conversion cram_viz/scenes cramera/scenes
 ```
 
+## Pop out panels
+
+The 3D scene and the graph panel, with all its tabs, each have a *Pop out* button that opens
+the panel alone in a window of its own, for a second screen (`?layout=scene` and
+`?layout=graph`; press F11 in the window for full screen). The windows are independent: a
+node clicked in a popped-out graph is not described by the EQL panel of the other window.
+The one thing the windows share is a generated hypothesis, which every window of the viewer
+draws in its Hypothesis Graph tab as soon as it is generated.
+
 ## Package structure
 
 The frontend mounts independent panels through `web/core/registry.js` and an event

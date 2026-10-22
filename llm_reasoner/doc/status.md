@@ -748,6 +748,9 @@ panels, `config.js` lays them out, a new `core/panel-tabs.js` with `panel-groups
 frame between panels as tabs, the graph panel hands its root to `panels/graph/knowledge_views.js`,
 and `cramera` depends on `llm_reasoner`. The resolution routes are served only where `rclpy`
 is importable (coraplex needs it), so a `cramera` without ROS is served as before.
+The graph panel, with its knowledge tabs, can be popped out into a window of its own like the
+scene (`?layout=graph`, `SceneContext.poppedOutGraph`); a generated hypothesis reaches the
+popped-out window over a `BroadcastChannel`, other events stay in their window.
 Runs and hypotheses kept before the merge store the old class paths and cannot be read by
 the viewer's resolution views; `llm_reasoner_viz` reads only their logs and still shows them.
 What follows is the history of the spike and of the phases, under the add-on's names.

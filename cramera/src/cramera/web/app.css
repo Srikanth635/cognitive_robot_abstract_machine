@@ -694,7 +694,10 @@ body.graph-full-open{overflow:hidden}
    and the popped-out scene window (index.html?layout=scene) */
 :root.scene-only .topbar{display:none}
 :root.scene-only .split{position:absolute;inset:0}
-/* the window the scene was popped out into has nothing left to pop out; embeds keep it */
+/* the window the graph panel was popped out into shows it alone, as the scene's does */
+:root.graph-only .topbar{display:none}
+:root.graph-only .split{position:absolute;inset:0}
+/* the window the scene or the graph panel was popped out into has nothing left to pop out; embeds keep it */
 :root.popped-out .pop-out{display:none}
 
 /* shared busy indicator: a spinner + elapsed time, used while a live scene comes up */

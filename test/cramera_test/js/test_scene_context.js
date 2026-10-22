@@ -126,3 +126,48 @@ test('the pop-out url without an active scene lets the viewer pick its default',
   loadWithSearch('');
   assert.strictEqual(window.SceneContext.popOutUrl(), 'index.html?layout=scene');
 });
+
+// %% the graph panel's pop-out
+// The graph panel, with its knowledge tabs, pops out into a window of its own the same way
+// the scene does, with ?layout=graph.
+test('?layout=graph is the popped-out graph window', function () {
+  loadWithSearch('?scene=g1-warehouse&layout=graph');
+  assert.strictEqual(window.SceneContext.poppedOutGraph(), true);
+});
+
+test('a page without ?layout=graph is not the popped-out graph window', function () {
+  loadWithSearch('?scene=g1-warehouse');
+  assert.strictEqual(window.SceneContext.poppedOutGraph(), false);
+});
+
+test('the popped-out graph window does not show the scene alone', function () {
+  loadWithSearch('?layout=graph');
+  assert.strictEqual(window.SceneContext.sceneOnly(false), false);
+  assert.strictEqual(window.SceneContext.poppedOut(), false);
+});
+
+test('the popped-out scene window is not the graph window', function () {
+  loadWithSearch('?layout=scene');
+  assert.strictEqual(window.SceneContext.poppedOutGraph(), false);
+});
+
+test('the graph pop-out url opens the active scene with the graph panel alone', function () {
+  loadWithSearch('?scene=g1-warehouse');
+  assert.strictEqual(
+    window.SceneContext.popOutUrl(window.SceneContext.LAYOUT_GRAPH),
+    'index.html?scene=g1-warehouse&layout=graph'
+  );
+});
+
+test('the graph pop-out url without an active scene lets the viewer pick its default', function () {
+  loadWithSearch('');
+  assert.strictEqual(
+    window.SceneContext.popOutUrl(window.SceneContext.LAYOUT_GRAPH), 'index.html?layout=graph'
+  );
+});
+
+test('the class the stylesheet styles for the graph alone is the one SceneContext names', function () {
+  loadWithSearch('');
+  const stylesheet = BrowserSource.read(path.join(WEB, 'app.css'));
+  assert.ok(stylesheet.indexOf(':root.' + window.SceneContext.GRAPH_ONLY_CLASS + ' ') >= 0);
+});
