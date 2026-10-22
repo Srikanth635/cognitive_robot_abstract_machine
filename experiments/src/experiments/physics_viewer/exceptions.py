@@ -39,3 +39,21 @@ class NoSuchBody(DataclassException):
 
     def suggest_correction(self) -> str:
         return "perform the action in the scene that holds the body"
+
+
+@dataclass
+class NoToolInHand(DataclassException):
+    """
+    A tool-based action is performed with an arm whose hand holds no tool.
+    """
+
+    arm: str
+    """
+    The name of the arm whose hand is empty.
+    """
+
+    def error_message(self) -> str:
+        return f"the hand of {self.arm} holds no tool"
+
+    def suggest_correction(self) -> str:
+        return "perform the action in a scene that puts a tool in that hand"
