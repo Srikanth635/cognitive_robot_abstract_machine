@@ -13,7 +13,11 @@ import numpy as np
 import pytest
 
 import semantic_digital_twin
-from semantic_digital_twin.adapters.usd.builder import UsdBuilder, UsdCustomDataKey
+from semantic_digital_twin.adapters.usd.builder import (
+    UsdBuilder,
+    UsdCustomDataKey,
+    UsdPhysxAttribute,
+)
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import (
     HomogeneousTransformationMatrix,
@@ -625,3 +629,99 @@ def test_a_drives_velocity_servo_drives_its_joint_by_velocity(tmp_path):
         driven.translation_gains.damping
     )
     assert drive_api.GetTargetVelocityAttr().Get() == 0.0
+
+
+# %% articulations
+
+
+def _arm_chain_world() -> World:
+    """
+    :return: A world with a static base and an arm of two links on two hinges.
+    """
+    world = World()
+    with world.modify_world():
+        root = Body(name=PrefixedName("world"))
+        world.add_body(root)
+        base = Body(name=PrefixedName("base"))
+        base.collision = _box(base, Scale(0.4, 0.4, 0.1))
+        world.add_connection(FixedConnection(parent=root, child=base))
+        parent = base
+        for name in ("upper_arm", "forearm"):
+            link = Body(name=PrefixedName(name))
+            link.collision = _box(link, Scale(0.2, 0.02, 0.02))
+            dof = DegreeOfFreedom(
+                name=PrefixedName(f"{name}_joint"),
+                limits=DegreeOfFreedomLimits.from_position_range_and_speed(
+                    lower_position=-1.0, upper_position=1.0
+                ),
+            )
+            world.add_degree_of_freedom(dof)
+            world.add_connection(
+                RevoluteConnection(
+                    name=PrefixedName(f"{name}_joint"),
+                    parent=parent,
+                    child=link,
+                    parent_T_connection_expression=HomogeneousTransformationMatrix.from_xyz_rpy(
+                        x=0.2, reference_frame=parent
+                    ),
+                    axis=Vector3.Z(reference_frame=link),
+                    raw_dof=dof,
+                )
+            )
+            parent = link
+    return world
+
+
+def articulation_roots(stage: Usd.Stage) -> list:
+    return [
+        prim for prim in stage.Traverse() if prim.HasAPI(UsdPhysics.ArticulationRootAPI)
+    ]
+
+
+def test_bodies_joined_by_several_joints_are_one_articulation(tmp_path):
+    world = _arm_chain_world()
+    stage = built(world, tmp_path)
+    [root] = articulation_roots(stage)
+    [anchoring] = [
+        UsdPhysics.Joint(prim)
+        for prim in stage.Traverse()
+        if prim.IsA(UsdPhysics.FixedJoint)
+        and root.GetPath() in UsdPhysics.Joint(prim).GetBody1Rel().GetTargets()
+    ]
+    base = world.get_body_by_name("base")
+    assert anchoring.GetBody0Rel().GetTargets() == [prim_of(stage, base).GetPath()]
+
+
+def test_the_first_joint_of_an_articulation_hangs_from_its_anchor(tmp_path):
+    world = _arm_chain_world()
+    stage = built(world, tmp_path)
+    [root] = articulation_roots(stage)
+    first_joint = joint_of(stage, world.get_connection_by_name("upper_arm_joint"))
+    assert first_joint.GetBody0Rel().GetTargets() == [root.GetPath()]
+
+
+def test_an_articulations_anchor_stands_where_its_static_parent_is(tmp_path):
+    world = _arm_chain_world()
+    stage = built(world, tmp_path)
+    [root] = articulation_roots(stage)
+    base = prim_of(stage, world.get_body_by_name("base"))
+    assert world_transform(root) == world_transform(base)
+
+
+def test_an_articulation_does_not_collide_with_itself(tmp_path):
+    stage = built(_arm_chain_world(), tmp_path)
+    [root] = articulation_roots(stage)
+    assert root.GetAttribute(UsdPhysxAttribute.SELF_COLLISIONS).Get() is False
+
+
+def test_bodies_on_single_joints_are_no_articulation(tmp_path):
+    stage = built(_hinge_world().world, tmp_path)
+    assert articulation_roots(stage) == []
+
+
+def test_a_servoed_drive_with_its_base_is_one_articulation(tmp_path):
+    driven = _driven_base_world()
+    stage = built(driven.world, tmp_path)
+    [root] = articulation_roots(stage)
+    first_joint = drive_joint_of(stage, driven.drive.x)
+    assert first_joint.GetBody0Rel().GetTargets() == [root.GetPath()]

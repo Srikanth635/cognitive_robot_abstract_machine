@@ -84,6 +84,29 @@ class UsdStagePath(StrEnum):
     """
 
 
+class UsdPhysxSchema(StrEnum):
+    """
+    The PhysX schemas the builder applies by name, readable without PhysX's own USD
+    module.
+    """
+
+    ARTICULATION = "PhysxArticulationAPI"
+    """
+    PhysX's settings for an articulation.
+    """
+
+
+class UsdPhysxAttribute(StrEnum):
+    """
+    The attributes of PhysX schemas the builder writes by name.
+    """
+
+    SELF_COLLISIONS = "physxArticulation:enabledSelfCollisions"
+    """
+    Whether the links of an articulation collide with each other.
+    """
+
+
 # %% converters
 
 
@@ -205,18 +228,23 @@ class UsdBuilder(MultiSimBuilder):
     root can move, and is a static collider otherwise. Connections become joints between
     those prims, and servos become the drives of their joints.
 
+    Moving bodies joined to each other by two joints or more, such as a robot, are one
+    PhysX articulation, which keeps a chain of light and heavy links steady: it hangs
+    from a light body of its own fixed to the static body it stands on, and its links do
+    not collide with each other.
+
     .. note::
         Angular quantities on a USD joint are in degrees: its limits, its drive's target,
         and its drive's stiffness and damping, which are per degree.
     """
 
-    drive_link_mass: float = 0.01
+    added_link_mass: float = 0.01
     """
-    The mass, in kilograms, of each body a wheeled drive's base moves across the floor
-    through.
+    The mass, in kilograms, of each body the builder adds: those a wheeled drive's base
+    moves across the floor through, and the anchor of each articulation.
     """
 
-    drive_link_inertia: float = 1e-4
+    added_link_inertia: float = 1e-4
     """
     The moment of inertia, in kilogram square metres, of each of those bodies about each
     of its axes.
@@ -246,6 +274,12 @@ class UsdBuilder(MultiSimBuilder):
     The joint a servo of each degree of freedom drives.
     """
 
+    _articulation_tops: set[Body] = field(init=False, default_factory=set)
+    """
+    The topmost body of each articulation, the one joined to the static body it stands
+    on.
+    """
+
     _taken_names: set[str] = field(init=False, default_factory=set)
     """
     The prim names given so far, kept apart from each other.
@@ -264,6 +298,7 @@ class UsdBuilder(MultiSimBuilder):
         scene.CreateGravityDirectionAttr(Gf.Vec3f(0.0, 0.0, -1.0))
         scene.CreateGravityMagnitudeAttr(9.81)
         UsdGeom.Scope.Define(self._stage, UsdStagePath.JOINTS.value)
+        self._articulation_tops = self._find_articulation_tops()
 
     def _end_build(self, file_path: str):
         self._stage.Save()
@@ -416,7 +451,7 @@ class UsdBuilder(MultiSimBuilder):
         joint = self._define_axis_joint(
             name=connection.name.name,
             turns=turns,
-            parent_path=self._body_paths[connection.parent],
+            parent_path=self._parent_path(connection),
             parent_T_joint=child_T_joint * self._reference_origins[connection.child],
             child_path=self._body_paths[connection.child],
             child_T_joint=child_T_joint,
@@ -451,7 +486,7 @@ class UsdBuilder(MultiSimBuilder):
         world_T_odom = Gf.Matrix4d(
             drive.parent_T_connection_expression.to_np().T.tolist()
         ) * self._world_pose(drive.parent)
-        parent_path = self._body_paths[drive.parent]
+        parent_path = self._parent_path(drive)
         parent_T_odom = Gf.Matrix4d(
             drive.parent_T_connection_expression.to_np().T.tolist()
         )
@@ -502,12 +537,96 @@ class UsdBuilder(MultiSimBuilder):
         :param pose: Where the body is in the world.
         :return: The body's prim.
         """
-        prim = self._define_body_prim(f"{name}_link", pose)
+        return self._define_added_link(f"{name}_link", pose)
+
+    def _define_added_link(self, name: str, pose: Gf.Matrix4d) -> Usd.Prim:
+        """
+        Write a light moving body the world does not have.
+
+        :param name: The body's name.
+        :param pose: Where the body is in the world.
+        :return: The body's prim.
+        """
+        prim = self._define_body_prim(name, pose)
         UsdPhysics.RigidBodyAPI.Apply(prim)
         mass = UsdPhysics.MassAPI.Apply(prim)
-        mass.CreateMassAttr(self.drive_link_mass)
-        mass.CreateDiagonalInertiaAttr(Gf.Vec3f(self.drive_link_inertia))
+        mass.CreateMassAttr(self.added_link_mass)
+        mass.CreateDiagonalInertiaAttr(Gf.Vec3f(self.added_link_inertia))
         return prim
+
+    # %% articulations
+
+    def _find_articulation_tops(self) -> set[Body]:
+        """
+        :return: The topmost body of every group of moving bodies joined to each other
+            by two joints or more, the group standing on a static body.
+        """
+        joints_below: Dict[Body, int] = {}
+        for body in self.world.bodies:
+            if not self._moves(body):
+                continue
+            top = body
+            while self._moves(top.parent_connection.parent) and not isinstance(
+                top.parent_connection, Connection6DoF
+            ):
+                top = top.parent_connection.parent
+            joints_below[top] = joints_below.get(top, 0) + self._joint_count(
+                body.parent_connection
+            )
+        return {
+            top
+            for top, joints in joints_below.items()
+            if joints >= 2 and not isinstance(top.parent_connection, Connection6DoF)
+        }
+
+    def _joint_count(self, connection: Connection) -> int:
+        """
+        :param connection: A connection of the world.
+        :return: How many joints that move the stage writes for it.
+        """
+        if isinstance(connection, (RevoluteConnection, PrismaticConnection)):
+            return 1
+        if isinstance(connection, WheeledDrive):
+            return len(MujocoConnectionJoints.of(connection, self.world).axes)
+        return 0
+
+    def _parent_path(self, connection: Connection) -> Sdf.Path:
+        """
+        :param connection: A connection whose joint is being written.
+        :return: The prim the joint is attached to: the parent's, or, for the first
+            joint of an articulation, the articulation's anchor.
+        """
+        if connection.child not in self._articulation_tops:
+            return self._body_paths[connection.parent]
+        return self._define_articulation_anchor(connection.parent, connection.child)
+
+    def _define_articulation_anchor(self, stand: Body, top: Body) -> Sdf.Path:
+        """
+        Write the light body an articulation hangs from, standing where the static body
+        it stands on is and fixed to it, as the articulation's root.
+
+        :param stand: The static body the articulation stands on.
+        :param top: The articulation's topmost body.
+        :return: The anchor's prim.
+        """
+        pose = self._world_pose(stand)
+        prim = self._define_added_link(f"{top.name.name}_anchor", pose)
+        UsdPhysics.ArticulationRootAPI.Apply(prim)
+        prim.AddAppliedSchema(UsdPhysxSchema.ARTICULATION.value)
+        prim.CreateAttribute(
+            UsdPhysxAttribute.SELF_COLLISIONS.value, Sdf.ValueTypeNames.Bool
+        ).Set(False)
+        joint = UsdPhysics.FixedJoint.Define(
+            self._stage, self._joint_path(f"{top.name.name}_anchor")
+        )
+        self._connect(
+            joint, f"{top.name.name}_anchor", self._body_paths[stand], prim.GetPath()
+        )
+        joint.CreateLocalPos0Attr(Gf.Vec3f(0.0, 0.0, 0.0))
+        joint.CreateLocalRot0Attr(Gf.Quatf(1.0))
+        joint.CreateLocalPos1Attr(Gf.Vec3f(0.0, 0.0, 0.0))
+        joint.CreateLocalRot1Attr(Gf.Quatf(1.0))
+        return prim.GetPath()
 
     def _define_axis_joint(
         self,

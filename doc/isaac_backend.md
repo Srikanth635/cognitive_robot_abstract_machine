@@ -65,13 +65,29 @@ angular drive are per degree, so radians are converted at the boundary.
   bodies, position and velocity servos as drives, and a servoed wheeled drive as a slide, a
   slide and a hinge through two light bodies of its own. The PR2 at the counter builds in
   under three seconds; written as `.usdc`, the scene is about 5 MB.
-- **Not yet written** (needs `PhysxSchema`, which comes with Isaac Sim):
+- **Articulations.** Moving bodies joined by two joints or more are one articulation,
+  hanging from a light anchor fixed to the static body they stand on, with self-collisions
+  off. Written as separate rigid bodies instead, the PR2 drifted 4 m in 3 s under Isaac
+  Sim 6.0 (its drive's light links against a heavy base); as an articulation its driven
+  joints hold within 0.03 of the world's values, and the objects stay on the counter.
+- **Not yet written:**
   - a degree of freedom shared by several joints (the PR2 gripper's fingers) is written
     as independent joints, only the one named after it driven; it needs PhysX's mimic
     joint API;
-  - robots are written as joints between rigid bodies, not as articulations
-    (`ArticulationRootAPI`);
-  - joint armature, friction and damping, and contact stiffness and friction.
+  - joint armature, friction and damping (the furniture's doors swing open), and contact
+    stiffness and friction.
+
+## Checking a stage in Isaac Sim
+
+Isaac Sim 6.0 is installed standalone in `~/isaacsim`, with its own Python 3.12. A stage
+written in `new-cram-env` is checked with Isaac's Python, headless, started from a clean
+environment so that neither ROS nor `new-cram-env` mixes into it:
+
+```bash
+env -i HOME=$HOME USER=$USER PATH=/usr/bin:/bin LANG=C.UTF-8 ~/isaacsim/python.sh SCRIPT.py
+```
+
+The first start builds Isaac's caches and takes a few minutes; later starts take seconds.
 
 ## Open points
 
