@@ -16,6 +16,7 @@ from typing_extensions import Any, ClassVar, Dict, Union
 from semantic_digital_twin.adapters.multi_sim import (
     BodyConverter,
     BoxConverter,
+    ContactCategories,
     ConnectionPrismaticConverter,
     ConnectionRevoluteConverter,
     CylinderConverter,
@@ -24,12 +25,14 @@ from semantic_digital_twin.adapters.multi_sim import (
     MujocoConnectionJoints,
     MultiSimBuilder,
     MultiSimCamera,
+    MujocoGeom,
     MultiSimLight,
     ShapeConverter,
     SphereConverter,
 )
 from semantic_digital_twin.adapters.usd.exceptions import UnsupportedUsdConnectionError
 from semantic_digital_twin.adapters.usd.parser import UsdGeomPrimType
+from semantic_digital_twin.world_description.connection_properties import JointDynamics
 from semantic_digital_twin.world_description.connections import (
     Connection6DoF,
     FixedConnection,
@@ -83,6 +86,11 @@ class UsdStagePath(StrEnum):
     The scope holding every joint.
     """
 
+    COLLISION_GROUPS = "/World/collisionGroups"
+    """
+    The scope holding the groups of shapes that do not collide with each other.
+    """
+
 
 class UsdPhysxSchema(StrEnum):
     """
@@ -95,6 +103,21 @@ class UsdPhysxSchema(StrEnum):
     PhysX's settings for an articulation.
     """
 
+    JOINT_AXIS = "PhysxJointAxisAPI"
+    """
+    PhysX's settings for one axis of a joint, applied under the name of its drive axis.
+    """
+
+    MIMIC_JOINT = "PhysxMimicJointAPI"
+    """
+    PhysX's coupling of one joint's degree of freedom to another's, applied once per
+    degree of freedom under the name of its axis.
+
+    .. note::
+        Isaac Sim 6.0 marks it deprecated in favour of the Newton schema's mimic API,
+        and still reads it.
+    """
+
 
 class UsdPhysxAttribute(StrEnum):
     """
@@ -105,6 +128,76 @@ class UsdPhysxAttribute(StrEnum):
     """
     Whether the links of an articulation collide with each other.
     """
+
+
+class UsdJointAxisProperty(StrEnum):
+    """
+    The properties of PhysX's joint axis schema, which resist a joint's motion within an
+    articulation.
+    """
+
+    STATIC_FRICTION_EFFORT = "staticFrictionEffort"
+    """
+    The largest force or torque friction holds a still joint against.
+    """
+
+    DYNAMIC_FRICTION_EFFORT = "dynamicFrictionEffort"
+    """
+    The force or torque friction resists a moving joint with.
+    """
+
+    VISCOUS_FRICTION_COEFFICIENT = "viscousFrictionCoefficient"
+    """
+    The force or torque friction adds per unit of the joint's speed, per degree for a
+    turning joint.
+    """
+
+    ARMATURE = "armature"
+    """
+    The inertia added to the joint, as that of a motor driving it.
+    """
+
+    def on(self, instance: str) -> str:
+        """
+        :param instance: The drive axis the schema is applied under.
+        :return: The property's name on that axis.
+        """
+        return f"physxJointAxis:{instance}:{self.value}"
+
+
+class UsdMimicJointProperty(StrEnum):
+    """
+    The properties of PhysX's mimic joint schema, which couples a joint's position to a
+    reference joint's by ``position + gearing * reference position + offset = 0``.
+    """
+
+    REFERENCE_JOINT = "referenceJoint"
+    """
+    The joint whose position is mimicked.
+    """
+
+    REFERENCE_JOINT_AXIS = "referenceJointAxis"
+    """
+    The axis of the reference joint's degree of freedom.
+    """
+
+    GEARING = "gearing"
+    """
+    How far the joint moves per unit the reference joint moves, negated.
+    """
+
+    OFFSET = "offset"
+    """
+    Where the joint is when the reference joint is at zero, negated, in degrees or
+    metres.
+    """
+
+    def on(self, axis: str) -> str:
+        """
+        :param axis: The axis of the degree of freedom the schema is applied to.
+        :return: The property's name on that degree of freedom.
+        """
+        return f"physxMimicJoint:{axis}:{self.value}"
 
 
 # %% converters
@@ -215,6 +308,64 @@ class DrivenJoint:
     """
 
 
+@dataclass(frozen=True)
+class ShapeContactCategories:
+    """
+    The contact categories a shape offers and accepts, as the MuJoCo simulation has
+    them.
+    """
+
+    offered: ContactCategories
+    """
+    The categories the shape offers when it presses into another.
+    """
+
+    accepted: ContactCategories
+    """
+    The categories the shape accepts pressing into it.
+    """
+
+    @classmethod
+    def of(cls, shape: Shape) -> ShapeContactCategories:
+        """
+        :param shape: A shape.
+        :return: The categories the shape is declared in, or MuJoCo's default ones.
+        """
+        geom = shape.get_simulator_property_of_type(MujocoGeom) or MujocoGeom()
+        return cls(offered=geom.contact_type, accepted=geom.contact_affinity)
+
+    def collides_with(self, other: ShapeContactCategories) -> bool:
+        """
+        :param other: The categories of another shape.
+        :return: Whether a shape of these categories collides with one of the other's.
+        """
+        return bool(self.offered & other.accepted) or bool(
+            other.offered & self.accepted
+        )
+
+
+@dataclass(frozen=True)
+class AxisJoint:
+    """
+    A joint that turns about or slides along one axis, written for a connection.
+    """
+
+    connection: Union[RevoluteConnection, PrismaticConnection]
+    """
+    The connection it was written for.
+    """
+
+    path: Sdf.Path
+    """
+    The joint's prim.
+    """
+
+    turns: bool
+    """
+    Whether the joint turns about its axis rather than slides along it.
+    """
+
+
 # %% the builder
 
 
@@ -228,10 +379,14 @@ class UsdBuilder(MultiSimBuilder):
     root can move, and is a static collider otherwise. Connections become joints between
     those prims, and servos become the drives of their joints.
 
-    Moving bodies joined to each other by two joints or more, such as a robot, are one
-    PhysX articulation, which keeps a chain of light and heavy links steady: it hangs
-    from a light body of its own fixed to the static body it stands on, and its links do
-    not collide with each other.
+    Moving bodies joined to each other by two joints or more, such as a robot, or by a
+    joint with friction, damping or armature, are one PhysX articulation, which keeps a
+    chain of light and heavy links steady and is where PhysX applies joint friction: it
+    hangs from a light body of its own fixed to the static body it stands on, and its
+    links do not collide with each other.
+
+    Shapes keep the contact categories the MuJoCo simulation gives them: those of
+    categories that do not collide are kept apart by collision groups.
 
     .. note::
         Angular quantities on a USD joint are in degrees: its limits, its drive's target,
@@ -274,6 +429,18 @@ class UsdBuilder(MultiSimBuilder):
     The joint a servo of each degree of freedom drives.
     """
 
+    _shapes_by_categories: Dict[ShapeContactCategories, list[Sdf.Path]] = field(
+        init=False, default_factory=dict
+    )
+    """
+    The collision shapes written so far, by the contact categories they are in.
+    """
+
+    _axis_joints: list[AxisJoint] = field(init=False, default_factory=list)
+    """
+    Every joint written for a revolute or prismatic connection.
+    """
+
     _articulation_tops: set[Body] = field(init=False, default_factory=set)
     """
     The topmost body of each articulation, the one joined to the static body it stands
@@ -301,6 +468,9 @@ class UsdBuilder(MultiSimBuilder):
         self._articulation_tops = self._find_articulation_tops()
 
     def _end_build(self, file_path: str):
+        for axis_joint in self._axis_joints:
+            self._mimic_shared_degree_of_freedom(axis_joint)
+        self._write_collision_groups()
         self._stage.Save()
 
     def _build_body(self, body: Body):
@@ -354,6 +524,9 @@ class UsdBuilder(MultiSimBuilder):
         if not is_collidable:
             return
         UsdPhysics.CollisionAPI.Apply(prim)
+        self._shapes_by_categories.setdefault(
+            ShapeContactCategories.of(shape), []
+        ).append(path)
         if isinstance(shape, Mesh):
             approximation = (
                 UsdPhysics.Tokens.convexHull
@@ -433,8 +606,8 @@ class UsdBuilder(MultiSimBuilder):
         Write a joint that turns about, or slides along, the connection's axis.
 
         The joint frame on the child is where the connection puts the joint, turned so
-        that its x axis is the connection's axis; on the parent it is the same frame with
-        the joint at zero, so the joint reads the position the world has.
+        that its x axis is the connection's axis; on the parent it is the same frame
+        with the joint at zero, so the joint reads the position the world has.
 
         :param connection: The connection to write.
         """
@@ -456,11 +629,16 @@ class UsdBuilder(MultiSimBuilder):
             child_path=self._body_paths[connection.child],
             child_T_joint=child_T_joint,
         )
+        if connection.dynamics != JointDynamics():
+            self._resist_motion(joint.GetPrim(), connection.dynamics, turns)
         lower, upper = joint_props[UsdRevoluteJointConverter.range_str]
         if lower != upper:
             to_usd = math.degrees if turns else float
             joint.CreateLowerLimitAttr(to_usd(lower))
             joint.CreateUpperLimitAttr(to_usd(upper))
+        self._axis_joints.append(
+            AxisJoint(connection=connection, path=joint.GetPath(), turns=turns)
+        )
         driven_joint = DrivenJoint(
             path=joint.GetPath(), turns=turns, position=float(connection.position)
         )
@@ -468,6 +646,105 @@ class UsdBuilder(MultiSimBuilder):
             self._driven_joints[connection.raw_dof] = driven_joint
         else:
             self._driven_joints.setdefault(connection.raw_dof, driven_joint)
+
+    def _resist_motion(
+        self, joint: Usd.Prim, dynamics: JointDynamics, turns: bool
+    ) -> None:
+        """
+        Resist a joint's motion as its dynamics have it: dry friction holds it still up
+        to a force or torque, damping slows it in proportion to its speed, and armature
+        adds inertia.
+
+        :param joint: The joint's prim.
+        :param dynamics: The joint's dynamics.
+        :param turns: Whether the joint turns rather than slides.
+        """
+        instance = UsdPhysics.Tokens.angular if turns else UsdPhysics.Tokens.linear
+        joint.AddAppliedSchema(f"{UsdPhysxSchema.JOINT_AXIS.value}:{instance}")
+        per_usd_unit = math.pi / 180 if turns else 1.0
+        for prop, value in (
+            (UsdJointAxisProperty.STATIC_FRICTION_EFFORT, dynamics.dry_friction),
+            (UsdJointAxisProperty.DYNAMIC_FRICTION_EFFORT, dynamics.dry_friction),
+            (
+                UsdJointAxisProperty.VISCOUS_FRICTION_COEFFICIENT,
+                dynamics.damping * per_usd_unit,
+            ),
+            (UsdJointAxisProperty.ARMATURE, dynamics.armature),
+        ):
+            joint.CreateAttribute(
+                prop.on(instance), Sdf.ValueTypeNames.Float, custom=False
+            ).Set(float(value))
+
+    def _write_collision_groups(self) -> None:
+        """
+        Keep shapes of contact categories that do not collide apart, each category's
+        shapes a collision group that filters out the groups it does not collide with;
+        where every category collides with every other, nothing is written.
+        """
+        categories = list(self._shapes_by_categories)
+        if all(a.collides_with(b) for a in categories for b in categories):
+            return
+        groups = {}
+        for category in categories:
+            path = Sdf.Path(UsdStagePath.COLLISION_GROUPS.value).AppendChild(
+                self._prim_name(
+                    f"contact_categories_{int(category.offered)}_{int(category.accepted)}"
+                )
+            )
+            group = UsdPhysics.CollisionGroup.Define(self._stage, path)
+            group.GetCollidersCollectionAPI().CreateIncludesRel().SetTargets(
+                self._shapes_by_categories[category]
+            )
+            groups[category] = group
+        for category, group in groups.items():
+            group.CreateFilteredGroupsRel().SetTargets(
+                [
+                    groups[other].GetPath()
+                    for other in categories
+                    if not category.collides_with(other)
+                ]
+            )
+
+    def _mimic_shared_degree_of_freedom(self, follower: AxisJoint) -> None:
+        """
+        Couple a joint to the joint a servo of its degree of freedom drives, if it shares
+        that degree of freedom with it: the world has each at its own multiple of the
+        degree of freedom, plus its own offset.
+
+        :param follower: The joint to couple.
+        """
+        primary_path = self._driven_joints[follower.connection.raw_dof].path
+        if follower.path == primary_path:
+            return
+        [primary] = [
+            axis_joint
+            for axis_joint in self._axis_joints
+            if axis_joint.path == primary_path
+        ]
+        ratio = follower.connection.multiplier / primary.connection.multiplier
+        offset = follower.connection.offset - ratio * primary.connection.offset
+        axis = UsdPhysics.Tokens.rotX
+        prim = self._stage.GetPrimAtPath(follower.path)
+        prim.AddAppliedSchema(f"{UsdPhysxSchema.MIMIC_JOINT.value}:{axis}")
+        prim.CreateRelationship(
+            UsdMimicJointProperty.REFERENCE_JOINT.on(axis), custom=False
+        ).SetTargets([primary_path])
+        prim.CreateAttribute(
+            UsdMimicJointProperty.REFERENCE_JOINT_AXIS.on(axis),
+            Sdf.ValueTypeNames.Token,
+            custom=False,
+            variability=Sdf.VariabilityUniform,
+        ).Set(axis)
+        prim.CreateAttribute(
+            UsdMimicJointProperty.GEARING.on(axis),
+            Sdf.ValueTypeNames.Float,
+            custom=False,
+        ).Set(-ratio)
+        prim.CreateAttribute(
+            UsdMimicJointProperty.OFFSET.on(axis),
+            Sdf.ValueTypeNames.Float,
+            custom=False,
+        ).Set(-(math.degrees(offset) if follower.turns else offset))
 
     def _build_wheeled_drive(self, drive: WheeledDrive) -> None:
         """
@@ -562,6 +839,7 @@ class UsdBuilder(MultiSimBuilder):
             by two joints or more, the group standing on a static body.
         """
         joints_below: Dict[Body, int] = {}
+        resisting: set[Body] = set()
         for body in self.world.bodies:
             if not self._moves(body):
                 continue
@@ -573,11 +851,26 @@ class UsdBuilder(MultiSimBuilder):
             joints_below[top] = joints_below.get(top, 0) + self._joint_count(
                 body.parent_connection
             )
+            if self._resists_motion(body.parent_connection):
+                resisting.add(top)
         return {
             top
             for top, joints in joints_below.items()
-            if joints >= 2 and not isinstance(top.parent_connection, Connection6DoF)
+            if (joints >= 2 or top in resisting)
+            and not isinstance(top.parent_connection, Connection6DoF)
         }
+
+    @staticmethod
+    def _resists_motion(connection: Connection) -> bool:
+        """
+        :param connection: A connection of the world.
+        :return: Whether the stage writes friction, damping or armature for its joint,
+            which PhysX applies only within an articulation.
+        """
+        return (
+            isinstance(connection, (RevoluteConnection, PrismaticConnection))
+            and connection.dynamics != JointDynamics()
+        )
 
     def _joint_count(self, connection: Connection) -> int:
         """

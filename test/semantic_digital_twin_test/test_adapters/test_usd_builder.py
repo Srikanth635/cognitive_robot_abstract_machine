@@ -13,10 +13,14 @@ import numpy as np
 import pytest
 
 import semantic_digital_twin
+from semantic_digital_twin.adapters.multi_sim import ContactCategories, MujocoGeom
 from semantic_digital_twin.adapters.usd.builder import (
     UsdBuilder,
     UsdCustomDataKey,
+    UsdJointAxisProperty,
+    UsdMimicJointProperty,
     UsdPhysxAttribute,
+    UsdPhysxSchema,
 )
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import (
@@ -25,6 +29,7 @@ from semantic_digital_twin.spatial_types.spatial_types import (
 )
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connection_properties import (
+    JointDynamics,
     ServoGains,
     VelocityServoGains,
 )
@@ -725,3 +730,269 @@ def test_a_servoed_drive_with_its_base_is_one_articulation(tmp_path):
     [root] = articulation_roots(stage)
     first_joint = drive_joint_of(stage, driven.drive.x)
     assert first_joint.GetBody0Rel().GetTargets() == [root.GetPath()]
+
+
+# %% joints that follow another
+
+
+@dataclass
+class FollowingHingesWorld:
+    """
+    A world with a hinge and two hinges following it through the one degree of freedom
+    they share.
+    """
+
+    world: World
+    """
+    The world itself.
+    """
+
+    hinge: RevoluteConnection
+    """
+    The hinge named after the shared degree of freedom.
+    """
+
+    mirrored: RevoluteConnection
+    """
+    A hinge turning the other way.
+    """
+
+    geared: RevoluteConnection
+    """
+    A hinge turning half as far, and offset.
+    """
+
+
+def _following_hinges_world() -> FollowingHingesWorld:
+    world = World()
+    with world.modify_world():
+        root = Body(name=PrefixedName("world"))
+        world.add_body(root)
+        base = Body(name=PrefixedName("base"))
+        base.collision = _box(base, Scale(0.4, 0.4, 0.1))
+        world.add_connection(FixedConnection(parent=root, child=base))
+        dof = DegreeOfFreedom(
+            name=PrefixedName("hinge"),
+            limits=DegreeOfFreedomLimits.from_position_range_and_speed(
+                lower_position=-1.0, upper_position=1.0
+            ),
+        )
+        world.add_degree_of_freedom(dof)
+        hinges = {}
+        for index, (name, multiplier, offset) in enumerate(
+            (("hinge", 1.0, 0.0), ("mirrored", -1.0, 0.0), ("geared", 0.5, 0.1))
+        ):
+            arm = Body(name=PrefixedName(f"{name}_arm"))
+            arm.collision = _box(arm, Scale(0.2, 0.02, 0.02))
+            hinges[name] = RevoluteConnection(
+                name=PrefixedName(name),
+                parent=base,
+                child=arm,
+                parent_T_connection_expression=HomogeneousTransformationMatrix.from_xyz_rpy(
+                    z=0.1 * (index + 1), reference_frame=base
+                ),
+                axis=Vector3.Z(reference_frame=arm),
+                raw_dof=dof,
+                multiplier=multiplier,
+                offset=offset,
+            )
+            world.add_connection(hinges[name])
+    return FollowingHingesWorld(
+        world=world,
+        hinge=hinges["hinge"],
+        mirrored=hinges["mirrored"],
+        geared=hinges["geared"],
+    )
+
+
+def authored_api_schemas(prim: Usd.Prim) -> list[str]:
+    """
+    :return: The API schemas authored on the prim, including those of plugins usd-core
+        does not have, such as PhysX's.
+    """
+    list_op = prim.GetMetadata("apiSchemas")
+    return [] if list_op is None else list(list_op.GetAddedOrExplicitItems())
+
+
+def mimicking(joint: UsdPhysics.Joint):
+    """
+    :return: The PhysX mimic relationship authored on the joint's turning degree of
+        freedom.
+    """
+    prim = joint.GetPrim()
+    axis = UsdPhysics.Tokens.rotX
+    return (
+        prim.GetRelationship(
+            UsdMimicJointProperty.REFERENCE_JOINT.on(axis)
+        ).GetTargets(),
+        prim.GetAttribute(UsdMimicJointProperty.GEARING.on(axis)).Get(),
+        prim.GetAttribute(UsdMimicJointProperty.OFFSET.on(axis)).Get(),
+    )
+
+
+def test_a_joint_following_another_mimics_it(tmp_path):
+    following = _following_hinges_world()
+    stage = built(following.world, tmp_path)
+    joint = joint_of(stage, following.mirrored)
+    assert f"{UsdPhysxSchema.MIMIC_JOINT}:{UsdPhysics.Tokens.rotX}" in (
+        authored_api_schemas(joint.GetPrim())
+    )
+    references, _, _ = mimicking(joint)
+    assert references == [joint_of(stage, following.hinge).GetPath()]
+
+
+def test_the_joint_named_after_the_shared_degree_of_freedom_mimics_nothing(tmp_path):
+    following = _following_hinges_world()
+    stage = built(following.world, tmp_path)
+    assert authored_api_schemas(joint_of(stage, following.hinge).GetPrim()) == []
+
+
+@pytest.mark.parametrize("name", ["mirrored", "geared"])
+def test_a_mimicking_joint_turns_by_its_multiplier_and_offset(tmp_path, name):
+    following = _following_hinges_world()
+    stage = built(following.world, tmp_path)
+    follower = getattr(following, name)
+    _, gearing, offset = mimicking(joint_of(stage, follower))
+    reference = 0.4
+    position = -gearing * reference - math.radians(offset)
+    assert position == pytest.approx(
+        follower.multiplier * reference + follower.offset, abs=1e-6
+    )
+
+
+# %% joint friction
+
+
+def _hinge_world_with_dynamics() -> HingeWorld:
+    hinge_world = _hinge_world()
+    with hinge_world.world.modify_world():
+        hinge_world.hinge.dynamics = JointDynamics(
+            armature=0.05, dry_friction=1.0, damping=0.5
+        )
+    return hinge_world
+
+
+def joint_axis_value(joint: UsdPhysics.Joint, instance: str, prop) -> float:
+    return joint.GetPrim().GetAttribute(prop.on(instance)).Get()
+
+
+def test_a_joints_dry_friction_resists_it_as_physx_friction_effort(tmp_path):
+    hinge_world = _hinge_world_with_dynamics()
+    stage = built(hinge_world.world, tmp_path)
+    joint = joint_of(stage, hinge_world.hinge)
+    dry_friction = hinge_world.hinge.dynamics.dry_friction
+    for prop in (
+        UsdJointAxisProperty.STATIC_FRICTION_EFFORT,
+        UsdJointAxisProperty.DYNAMIC_FRICTION_EFFORT,
+    ):
+        assert joint_axis_value(
+            joint, UsdPhysics.Tokens.angular, prop
+        ) == pytest.approx(dry_friction)
+
+
+def test_a_turning_joints_damping_is_viscous_friction_per_degree(tmp_path):
+    hinge_world = _hinge_world_with_dynamics()
+    stage = built(hinge_world.world, tmp_path)
+    joint = joint_of(stage, hinge_world.hinge)
+    viscous = joint_axis_value(
+        joint,
+        UsdPhysics.Tokens.angular,
+        UsdJointAxisProperty.VISCOUS_FRICTION_COEFFICIENT,
+    )
+    assert viscous == pytest.approx(hinge_world.hinge.dynamics.damping * math.pi / 180)
+
+
+def test_a_joints_armature_carries_over(tmp_path):
+    hinge_world = _hinge_world_with_dynamics()
+    stage = built(hinge_world.world, tmp_path)
+    joint = joint_of(stage, hinge_world.hinge)
+    armature = joint_axis_value(
+        joint, UsdPhysics.Tokens.angular, UsdJointAxisProperty.ARMATURE
+    )
+    assert armature == pytest.approx(hinge_world.hinge.dynamics.armature)
+
+
+def test_a_joint_without_dynamics_gets_no_physx_joint_axis(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    schemas = authored_api_schemas(joint_of(stage, hinge_world.hinge).GetPrim())
+    assert not any(schema.startswith(UsdPhysxSchema.JOINT_AXIS) for schema in schemas)
+
+
+def test_a_single_joint_with_friction_is_an_articulation(tmp_path):
+    hinge_world = _hinge_world_with_dynamics()
+    stage = built(hinge_world.world, tmp_path)
+    [root] = articulation_roots(stage)
+    joint = joint_of(stage, hinge_world.hinge)
+    assert joint.GetBody0Rel().GetTargets() == [root.GetPath()]
+
+
+# %% contact categories
+
+
+def _furniture_world() -> World:
+    """
+    :return: A world whose two cabinets are in a contact category of their own that does
+        not collide with itself, next to a free box in the default category.
+    """
+    hinge_world = _hinge_world()
+    world = hinge_world.world
+    with world.modify_world():
+        for name in ("cabinet", "drawer"):
+            body = Body(name=PrefixedName(name))
+            body.collision = _box(body, Scale(0.3, 0.3, 0.3))
+            for shape in body.collision:
+                shape.add_simulator_property(
+                    MujocoGeom(
+                        contact_type=ContactCategories(2),
+                        contact_affinity=ContactCategories.DEFAULT,
+                    )
+                )
+            world.add_connection(FixedConnection(parent=world.root, child=body))
+    return world
+
+
+def collision_groups(stage: Usd.Stage) -> list:
+    return [
+        UsdPhysics.CollisionGroup(prim)
+        for prim in stage.Traverse()
+        if prim.IsA(UsdPhysics.CollisionGroup)
+    ]
+
+
+def group_of(stage: Usd.Stage, body: Body) -> UsdPhysics.CollisionGroup:
+    [shape] = [
+        prim
+        for prim in Usd.PrimRange(prim_of(stage, body))
+        if prim.HasAPI(UsdPhysics.CollisionAPI)
+    ]
+    [group] = [
+        group
+        for group in collision_groups(stage)
+        if shape.GetPath()
+        in group.GetCollidersCollectionAPI().GetIncludesRel().GetTargets()
+    ]
+    return group
+
+
+def test_shapes_of_a_category_that_does_not_accept_itself_do_not_collide(tmp_path):
+    world = _furniture_world()
+    stage = built(world, tmp_path)
+    cabinet = group_of(stage, world.get_body_by_name("cabinet"))
+    drawer = group_of(stage, world.get_body_by_name("drawer"))
+    assert cabinet.GetPath() == drawer.GetPath()
+    assert cabinet.GetPath() in cabinet.GetFilteredGroupsRel().GetTargets()
+
+
+def test_shapes_of_their_own_category_still_collide_with_default_shapes(tmp_path):
+    world = _furniture_world()
+    stage = built(world, tmp_path)
+    cabinet = group_of(stage, world.get_body_by_name("cabinet"))
+    free_box = group_of(stage, world.get_body_by_name("free.box"))
+    assert free_box.GetPath() not in cabinet.GetFilteredGroupsRel().GetTargets()
+    assert cabinet.GetPath() not in free_box.GetFilteredGroupsRel().GetTargets()
+
+
+def test_a_world_of_default_shapes_needs_no_collision_groups(tmp_path):
+    stage = built(_hinge_world().world, tmp_path)
+    assert collision_groups(stage) == []
