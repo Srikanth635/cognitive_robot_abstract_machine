@@ -4336,31 +4336,31 @@ class MultiSim(ABC):
         return self.simulator.state == SimulatorState.RUNNING
 
 
-class MujocoSim(MultiSim):
-    simulator_class: ClassVar[Type[BaseSimulator]] = MujocoSimulator
-    synchronizer_class: ClassVar[Type[MultiSimSynchronizer]] = MujocoSynchronizer
-    builder_class: ClassVar[Type[MultiSimBuilder]] = MujocoBuilder
-    simulator: MujocoSimulator
-    synchronizer: MujocoSynchronizer
+class SteppedSimulation(ABC):
+    """
+    A physically simulated world a controller steps forward between its own ticks, so
+    that the controller and the physics run in lockstep.
+    """
 
+    world: World
+    """
+    The simulated world.
+    """
+
+    @abstractmethod
     def start_stepped_simulation(self) -> None:
         """
         Start the simulation without a physics thread: the physics advances only in
         :meth:`step_simulation`, so a controller can drive the world between steps, in
-        lockstep with the physics, and reads the world back after every step rather
-        than at the synchronizer's throttled rate.
+        lockstep with the physics, and reads the world back after every step.
 
         Every servo is handed the position its joint currently holds in the world, so
         nothing rushes towards zero the moment the physics starts.
 
         :raises SimulationAlreadyRunningError: If the simulation is already running.
         """
-        if self.simulator.state == SimulatorState.RUNNING:
-            raise SimulationAlreadyRunningError(self.world.root.name.name)
-        self.synchronizer.sync_rate_hz = MujocoSynchronizer.UNTHROTTLED_SYNC_RATE_HZ
-        self.simulator.start(simulate_in_thread=False, render_in_thread=False)
-        self.synchronizer.command_actuators_from_world_state()
 
+    @abstractmethod
     def step_simulation(self, duration: timedelta) -> None:
         """
         Advance the physics of a simulation started with
@@ -4369,8 +4369,35 @@ class MujocoSim(MultiSim):
         :param duration: How much simulated time to advance.
         :raises SimulationNotStartedError: If the simulation is not running.
         """
+
+    @abstractmethod
+    def servo_positions(self, servo_names: list[str]) -> dict[str, float]:
+        """
+        :param servo_names: The names of the servos.
+        :return: How far each servo has driven its joint, by the servo's name.
+        """
+
+
+class MujocoSim(MultiSim, SteppedSimulation):
+    simulator_class: ClassVar[Type[BaseSimulator]] = MujocoSimulator
+    synchronizer_class: ClassVar[Type[MultiSimSynchronizer]] = MujocoSynchronizer
+    builder_class: ClassVar[Type[MultiSimBuilder]] = MujocoBuilder
+    simulator: MujocoSimulator
+    synchronizer: MujocoSynchronizer
+
+    def start_stepped_simulation(self) -> None:
+        if self.simulator.state == SimulatorState.RUNNING:
+            raise SimulationAlreadyRunningError(self.world.root.name.name)
+        self.synchronizer.sync_rate_hz = MujocoSynchronizer.UNTHROTTLED_SYNC_RATE_HZ
+        self.simulator.start(simulate_in_thread=False, render_in_thread=False)
+        self.synchronizer.command_actuators_from_world_state()
+
+    def step_simulation(self, duration: timedelta) -> None:
         if self.simulator.state != SimulatorState.RUNNING:
             raise SimulationNotStartedError(self.world.root.name.name)
         for _ in range(round(duration.total_seconds() / self.simulator.step_size)):
             self.simulator.step()
         self.simulator.render()
+
+    def servo_positions(self, servo_names: list[str]) -> dict[str, float]:
+        return self.simulator.get_actuators_lengths(servo_names).result

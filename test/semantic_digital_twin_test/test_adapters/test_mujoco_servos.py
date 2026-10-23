@@ -240,6 +240,32 @@ def test_a_servoed_joint_is_driven_towards_the_world_state_not_teleported():
     assert world.state[pendulum.hinge.raw_dof.id].position == set_point
 
 
+def test_the_servo_positions_are_where_each_servos_joint_is():
+    """
+    A controller stepping the simulation reads back how far each servo has driven its
+    joint, by the servo's name.
+    """
+    pendulum = _servoed_pendulum_world()
+    world = pendulum.world
+    with world.modify_world():
+        world.state[pendulum.hinge.raw_dof.id].position = 0.4
+    world.notify_state_change()
+    [servo] = world.actuators
+
+    simulation = MujocoSim(world=world, headless=True)
+    simulation.start_stepped_simulation()
+    try:
+        simulation.step_simulation(timedelta(seconds=1))
+        positions = simulation.servo_positions([servo.name.name])
+        joint_position = simulation.simulator.get_joint_value(
+            pendulum.hinge.name.name
+        ).result
+    finally:
+        simulation.stop_simulation()
+
+    assert positions == {servo.name.name: pytest.approx(joint_position)}
+
+
 @pytest.mark.skipif(
     not runs_in_continuous_integration(), reason="MuJoCo tests only run in CI"
 )
