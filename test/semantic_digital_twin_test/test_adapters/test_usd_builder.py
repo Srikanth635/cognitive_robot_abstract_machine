@@ -20,6 +20,7 @@ from semantic_digital_twin.adapters.usd.builder import (
     UsdJointAxisProperty,
     UsdMimicJointProperty,
     UsdPhysxAttribute,
+    UsdPhysxForceMode,
     UsdPhysxSchema,
 )
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
@@ -49,6 +50,7 @@ from semantic_digital_twin.world_description.inertial_properties import Inertial
 from semantic_digital_twin.world_description.shape_collection import ShapeCollection
 from semantic_digital_twin.world_description.world_entity import (
     Body,
+    GravityCompensation,
     PositionServo,
     VelocityServo,
 )
@@ -396,7 +398,14 @@ def test_a_hinge_becomes_a_revolute_joint_between_its_bodies(tmp_path):
     stage = built(hinge_world.world, tmp_path)
     joint = joint_of(stage, hinge_world.hinge)
     assert joint.GetPrim().IsA(UsdPhysics.RevoluteJoint)
-    assert joint.GetBody0Rel().GetTargets() == [
+    [anchor] = joint.GetBody0Rel().GetTargets()
+    [anchoring] = [
+        UsdPhysics.Joint(prim)
+        for prim in stage.Traverse()
+        if prim.IsA(UsdPhysics.FixedJoint)
+        and anchor in UsdPhysics.Joint(prim).GetBody1Rel().GetTargets()
+    ]
+    assert anchoring.GetBody0Rel().GetTargets() == [
         prim_of(stage, hinge_world.hinge.parent).GetPath()
     ]
     assert joint.GetBody1Rel().GetTargets() == [
@@ -719,9 +728,14 @@ def test_an_articulation_does_not_collide_with_itself(tmp_path):
     assert root.GetAttribute(UsdPhysxAttribute.SELF_COLLISIONS).Get() is False
 
 
-def test_bodies_on_single_joints_are_no_articulation(tmp_path):
-    stage = built(_hinge_world().world, tmp_path)
-    assert articulation_roots(stage) == []
+def test_a_body_on_a_single_joint_is_an_articulation_of_its_own(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    roots = articulation_roots(stage)
+    for connection in (hinge_world.hinge, hinge_world.slide):
+        [body0] = joint_of(stage, connection).GetBody0Rel().GetTargets()
+        assert body0 in [root.GetPath() for root in roots]
+    assert len(roots) == 2
 
 
 def test_a_servoed_drive_with_its_base_is_one_articulation(tmp_path):
@@ -922,9 +936,8 @@ def test_a_joint_without_dynamics_gets_no_physx_joint_axis(tmp_path):
 def test_a_single_joint_with_friction_is_an_articulation(tmp_path):
     hinge_world = _hinge_world_with_dynamics()
     stage = built(hinge_world.world, tmp_path)
-    [root] = articulation_roots(stage)
-    joint = joint_of(stage, hinge_world.hinge)
-    assert joint.GetBody0Rel().GetTargets() == [root.GetPath()]
+    [body0] = joint_of(stage, hinge_world.hinge).GetBody0Rel().GetTargets()
+    assert body0 in [root.GetPath() for root in articulation_roots(stage)]
 
 
 # %% contact categories
@@ -1022,3 +1035,76 @@ def test_a_moving_body_with_shapes_keeps_the_mass_physx_derives_from_them(tmp_pa
     hinge_world = _hinge_world()
     stage = built(hinge_world.world, tmp_path)
     assert not prim_of(stage, hinge_world.hinge.child).HasAPI(UsdPhysics.MassAPI)
+
+
+# %% weight the simulation carries
+
+
+def test_a_body_whose_weight_is_carried_accelerates_up_by_that_part_of_gravity(
+    tmp_path,
+):
+    hinge_world = _hinge_world()
+    compensation = GravityCompensation(fraction=0.5)
+    hinge_world.hinge.child.add_simulator_property(compensation)
+    stage = built(hinge_world.world, tmp_path)
+    prim = prim_of(stage, hinge_world.hinge.child)
+    assert UsdPhysxSchema.FORCE.value in authored_api_schemas(prim)
+    assert tuple(prim.GetAttribute(UsdPhysxAttribute.FORCE).Get()) == pytest.approx(
+        (0.0, 0.0, compensation.fraction * UsdBuilder().gravity)
+    )
+    assert (
+        prim.GetAttribute(UsdPhysxAttribute.FORCE_MODE).Get()
+        == UsdPhysxForceMode.ACCELERATION
+    )
+    assert prim.GetAttribute(UsdPhysxAttribute.FORCE_IN_WORLD_FRAME).Get()
+
+
+def test_a_body_carrying_its_own_weight_gets_no_force(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    prim = prim_of(stage, hinge_world.hinge.child)
+    assert UsdPhysxSchema.FORCE.value not in authored_api_schemas(prim)
+
+
+# %% what each prim stands for in the world
+
+
+def test_every_body_prim_carries_its_bodys_id(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    prim = prim_of(stage, hinge_world.free_box)
+    assert prim.GetCustomDataByKey(UsdCustomDataKey.ID) == str(hinge_world.free_box.id)
+
+
+def test_a_joint_named_after_its_degree_of_freedom_measures_it(tmp_path):
+    following = _following_hinges_world()
+    stage = built(following.world, tmp_path)
+    prim = joint_of(stage, following.hinge).GetPrim()
+    dof_id = str(following.hinge.raw_dof.id)
+    assert (
+        prim.GetCustomDataByKey(UsdCustomDataKey.MEASURED_DEGREE_OF_FREEDOM) == dof_id
+    )
+    assert (
+        prim.GetCustomDataByKey(UsdCustomDataKey.COMMANDED_DEGREE_OF_FREEDOM) == dof_id
+    )
+
+
+def test_a_joint_following_another_measures_nothing(tmp_path):
+    following = _following_hinges_world()
+    stage = built(following.world, tmp_path)
+    prim = joint_of(stage, following.mirrored).GetPrim()
+    assert prim.GetCustomDataByKey(UsdCustomDataKey.MEASURED_DEGREE_OF_FREEDOM) is None
+
+
+def test_a_drives_joint_measures_its_axis_and_is_commanded_through_its_velocity(
+    tmp_path,
+):
+    driven = _driven_base_world()
+    stage = built(driven.world, tmp_path)
+    prim = drive_joint_of(stage, driven.drive.x).GetPrim()
+    assert prim.GetCustomDataByKey(UsdCustomDataKey.MEASURED_DEGREE_OF_FREEDOM) == str(
+        driven.drive.x.id
+    )
+    assert prim.GetCustomDataByKey(UsdCustomDataKey.COMMANDED_DEGREE_OF_FREEDOM) == str(
+        driven.drive.x_velocity.id
+    )
