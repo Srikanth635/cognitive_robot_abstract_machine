@@ -78,9 +78,19 @@ angular drive are per degree, so radians are converted at the boundary.
   become `PhysxJointAxisAPI` under the drive axis name (`angular`, `linear`; PhysX ignores
   the per-axis names), and its joint becomes part of an articulation, where PhysX applies
   them. The MuJoCo contact categories of the shapes become collision groups.
+- **Bodies with nothing to weigh.** A moving body with neither shapes nor an inertial gets
+  the minimum mass and inertia the MuJoCo builder bounds bodies by (1 g, 1e-6 kg m²); 24
+  bodies of the counter scene were massless to PhysX before, among them the PR2's camera
+  frames.
+- **Isaac Sim 6.0's own API**, checked in `isaac-cram-env`: an `Articulation` view of the
+  PR2's root lists its 48 joints under the builder's joint names, reads positions and sets
+  targets in radians and metres, and `SimulationManager.step` advances 2 s of the counter
+  scene in about 4 s on the CPU.
 - **Open in the counter scene:**
-  - the apartment's two-joint "fancy" doors flip over within 0.3 s under PhysX, with the
-    coupling between their joints hard, compliant or removed;
+  - the apartment's two-joint "fancy" doors flip over, or become NaN, within 0.3 s under
+    PhysX, whether the coupling between their joints is hard, compliant or removed, and
+    whether their first joint has friction, limits or a heavier link; the robot and the
+    objects on the counter are unaffected;
   - the furniture friction the physics viewer's scenes give (1.0) holds a drawer under
     MuJoCo but lets `cabinet8_drawer_bottom` creep 13 cm in 3 s under PhysX; a thousand
     times that holds it.

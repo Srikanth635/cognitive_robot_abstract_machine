@@ -996,3 +996,29 @@ def test_shapes_of_their_own_category_still_collide_with_default_shapes(tmp_path
 def test_a_world_of_default_shapes_needs_no_collision_groups(tmp_path):
     stage = built(_hinge_world().world, tmp_path)
     assert collision_groups(stage) == []
+
+
+# %% bodies with nothing to weigh
+
+
+def test_a_moving_body_without_shapes_or_inertial_gets_the_minimum_mass(tmp_path):
+    hinge_world = _hinge_world()
+    world = hinge_world.world
+    with world.modify_world():
+        frame = Body(name=PrefixedName("camera_frame"))
+        world.add_connection(
+            FixedConnection(parent=hinge_world.hinge.child, child=frame)
+        )
+    stage = built(world, tmp_path)
+    mass = UsdPhysics.MassAPI(prim_of(stage, frame))
+    builder = UsdBuilder()
+    assert mass.GetMassAttr().Get() == pytest.approx(builder.minimum_mass)
+    assert list(mass.GetDiagonalInertiaAttr().Get()) == pytest.approx(
+        [builder.minimum_inertia] * 3
+    )
+
+
+def test_a_moving_body_with_shapes_keeps_the_mass_physx_derives_from_them(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    assert not prim_of(stage, hinge_world.hinge.child).HasAPI(UsdPhysics.MassAPI)
