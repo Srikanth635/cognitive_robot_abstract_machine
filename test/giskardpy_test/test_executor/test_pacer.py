@@ -7,7 +7,6 @@ from time import perf_counter
 import numpy as np
 
 import pytest
-from typing_extensions import Dict, List
 
 from giskardpy.data_types.exceptions import NonPositiveRealTimeFactorError
 from giskardpy.executor import (
@@ -22,7 +21,7 @@ from giskardpy.motion_statechart.graph_node import EndMotion
 from giskardpy.motion_statechart.monitors.payload_monitors import CountSeconds
 from giskardpy.motion_statechart.motion_statechart import MotionStatechart
 from giskardpy.qp.qp_controller_config import QPControllerConfig
-from semantic_digital_twin.adapters.multi_sim import MujocoSim
+from semantic_digital_twin.adapters.multi_sim import MujocoSim, SteppedSimulation
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.specifications.robots import RobotSpecification
@@ -190,25 +189,13 @@ class JointThatStopsAfterAWhile:
 
 
 @dataclass
-class ActuatorLengthsRead:
-    """
-    What a simulator answers a bulk read of actuator lengths with.
-    """
-
-    result: Dict[str, float]
-    """
-    The length read per actuator name.
-    """
-
-
-@dataclass
-class SimulationOfSettlingJoints:
+class SimulationOfSettlingJoints(SteppedSimulation):
     """
     Stands in for a stepped simulation, reporting joints that come to a standstill
     without any physics being computed.
     """
 
-    joints: Dict[str, JointThatStopsAfterAWhile]
+    joints: dict[str, JointThatStopsAfterAWhile]
     """
     The joints it reports, by name.
     """
@@ -233,12 +220,10 @@ class SimulationOfSettlingJoints:
             world.actuators.append(servo)
         return world
 
-    @property
-    def simulator(self) -> SimulationOfSettlingJoints:
+    def start_stepped_simulation(self) -> None:
         """
-        :return: Itself, since it answers the reads a simulator would.
+        Nothing to start: the stand-in computes no physics.
         """
-        return self
 
     def step_simulation(self, duration: timedelta) -> None:
         """
@@ -248,19 +233,15 @@ class SimulationOfSettlingJoints:
         for joint in self.joints.values():
             joint.step()
 
-    def get_actuators_lengths(self, actuator_names: List[str]) -> ActuatorLengthsRead:
+    def servo_positions(self, servo_names: list[str]) -> dict[str, float]:
         """
-        :param actuator_names: The servos to read, each named after its joint.
+        :param servo_names: The servos to read, each named after its joint.
         :return: Where the joint of each of them stands.
         """
-        return ActuatorLengthsRead(
-            result={
-                actuator_name: self.joints[
-                    actuator_name.removesuffix("_servo")
-                ].position
-                for actuator_name in actuator_names
-            }
-        )
+        return {
+            servo_name: self.joints[servo_name.removesuffix("_servo")].position
+            for servo_name in servo_names
+        }
 
 
 def settling_pacer(
