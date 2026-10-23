@@ -16,7 +16,7 @@ import pytest
 
 pytest.importorskip("isaacsim")
 
-from semantic_digital_twin.adapters.isaac.application import IsaacApplication
+from physics_simulators.isaac_application import IsaacApplication
 
 IsaacApplication(headless=True).start()
 

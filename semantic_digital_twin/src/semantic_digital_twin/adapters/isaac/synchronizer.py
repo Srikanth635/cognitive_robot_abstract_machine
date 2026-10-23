@@ -9,18 +9,23 @@ from uuid import UUID
 
 import numpy as np
 import omni.usd
+from physics_simulators.isaac_simulator import BodyPose, IsaacSimulator
+from pxr import Usd
 from scipy.spatial.transform import Rotation
+from typing_extensions import Any
 
 from semantic_digital_twin.adapters.isaac.exceptions import (
     ServoWithoutJointError,
     WorldStructureChangedUnderIsaacError,
 )
-from semantic_digital_twin.adapters.isaac.simulator import IsaacSimulator
 from semantic_digital_twin.adapters.multi_sim import (
     MujocoConnectionJoints,
     MultiSimSynchronizer,
 )
 from semantic_digital_twin.adapters.usd.builder import UsdCustomDataKey
+from semantic_digital_twin.spatial_types.spatial_types import (
+    HomogeneousTransformationMatrix,
+)
 from semantic_digital_twin.world_description.connections import (
     ActiveConnection1DOF,
     Connection6DoF,
@@ -33,6 +38,7 @@ from semantic_digital_twin.world_description.world_modification import (
     AddKinematicStructureEntityModification,
 )
 from semantic_digital_twin.world_description.world_entity import (
+    Connection,
     PositionServo,
     VelocityServo,
 )
@@ -119,12 +125,6 @@ class IsaacSynchronizer(MultiSimSynchronizer):
     commands.
     """
 
-    _world_joint_positions: dict[str, float] = field(init=False, default_factory=dict)
-    """
-    Where the world has each joint of the stage that stands for one of its connections
-    or drive axes when the simulation starts, by the path of its prim.
-    """
-
     _free_bodies: list[FreeBody] = field(init=False, default_factory=list)
     """
     Every body of the stage free to move.
@@ -152,73 +152,139 @@ class IsaacSynchronizer(MultiSimSynchronizer):
         simulation where the world is: PhysX starts every articulation with its joints at
         zero.
         """
-        degrees_of_freedom = {
-            str(degree_of_freedom.id): degree_of_freedom
-            for degree_of_freedom in self._world.degrees_of_freedom
-        }
-        bodies = {str(body.id): body for body in self._world.bodies}
-        connections = {
-            connection.name.name: connection for connection in self._world.connections
-        }
-        drive_degrees_of_freedom = {
-            degree_of_freedom.id
-            for connection in self._world.connections
-            if isinstance(connection, WheeledDrive)
-            for degree_of_freedom in connection.dofs
-        }
-        drive_axes = {
-            degree_of_freedom.name.name: degree_of_freedom
-            for degree_of_freedom in self._world.degrees_of_freedom
-            if degree_of_freedom.id in drive_degrees_of_freedom
-        }
-        for prim in omni.usd.get_context().get_stage().Traverse():
-            path = str(prim.GetPath())
-            name = prim.GetCustomDataByKey(UsdCustomDataKey.NAME.value)
-            if path in self.simulator.joint_paths:
-                if isinstance(connections.get(name), ActiveConnection1DOF):
-                    self._world_joint_positions[path] = float(
-                        connections[name].position
-                    )
-                elif name in drive_axes:
-                    self._world_joint_positions[path] = float(
-                        self._world.state[drive_axes[name].id].position
-                    )
-            measured = prim.GetCustomDataByKey(
-                UsdCustomDataKey.MEASURED_DEGREE_OF_FREEDOM.value
-            )
-            if measured is not None:
-                degree_of_freedom = degrees_of_freedom[measured]
-                connection = connections.get(
-                    prim.GetCustomDataByKey(UsdCustomDataKey.NAME.value)
-                )
-                is_axis_joint = isinstance(connection, ActiveConnection1DOF)
-                self._measuring_joints.append(
-                    MeasuringJoint(
-                        path=path,
-                        degree_of_freedom=degree_of_freedom,
-                        multiplier=connection.multiplier if is_axis_joint else 1.0,
-                        offset=connection.offset if is_axis_joint else 0.0,
-                        odometry=degree_of_freedom.id in drive_degrees_of_freedom,
-                    )
-                )
-            commanded = prim.GetCustomDataByKey(
-                UsdCustomDataKey.COMMANDED_DEGREE_OF_FREEDOM.value
-            )
-            if commanded is not None:
-                self._commanded_joints[degrees_of_freedom[commanded].id] = path
-            body = bodies.get(prim.GetCustomDataByKey(UsdCustomDataKey.ID.value))
-            if body is not None and isinstance(body.parent_connection, Connection6DoF):
-                self._free_bodies.append(FreeBody(path, body.parent_connection))
+        prims = list(omni.usd.get_context().get_stage().Traverse())
+        self._measuring_joints = self._measuring_joints_on(prims)
+        self._commanded_joints = self._commanded_joints_on(prims)
+        self._free_bodies = self._free_bodies_on(prims)
         self.simulator.track_bodies([free_body.path for free_body in self._free_bodies])
-        self.simulator.set_joint_positions(self._world_joint_positions)
+        self.simulator.set_joint_positions(self._world_joint_positions_on(prims))
         self.simulator.set_body_poses(
             {
-                free_body.path: free_body.connection.child.global_pose.to_np()
+                free_body.path: self._body_pose_of(
+                    free_body.connection.child.global_pose
+                )
                 for free_body in self._free_bodies
             }
         )
         self._connected = True
         self.read_back()
+
+    # %% what the stage stands for in the world
+
+    def _measuring_joints_on(self, prims: list[Usd.Prim]) -> list[MeasuringJoint]:
+        """
+        :param prims: The prims of the stage.
+        :return: Every joint among them that measures a degree of freedom of the world.
+        """
+        degrees_of_freedom = self._degrees_of_freedom_by_id()
+        connections = self._connections_by_name()
+        odometry = self._drive_degrees_of_freedom()
+        measuring_joints = []
+        for prim in prims:
+            measured = prim.GetCustomDataByKey(
+                UsdCustomDataKey.MEASURED_DEGREE_OF_FREEDOM.value
+            )
+            if measured is None:
+                continue
+            degree_of_freedom = degrees_of_freedom[measured]
+            connection = connections.get(
+                prim.GetCustomDataByKey(UsdCustomDataKey.NAME.value)
+            )
+            is_axis_joint = isinstance(connection, ActiveConnection1DOF)
+            measuring_joints.append(
+                MeasuringJoint(
+                    path=str(prim.GetPath()),
+                    degree_of_freedom=degree_of_freedom,
+                    multiplier=connection.multiplier if is_axis_joint else 1.0,
+                    offset=connection.offset if is_axis_joint else 0.0,
+                    odometry=degree_of_freedom.id in odometry,
+                )
+            )
+        return measuring_joints
+
+    def _commanded_joints_on(self, prims: list[Usd.Prim]) -> dict[UUID, str]:
+        """
+        :param prims: The prims of the stage.
+        :return: The path of the joint among them a servo drives, by the id of the
+            degree of freedom the servo commands.
+        """
+        degrees_of_freedom = self._degrees_of_freedom_by_id()
+        commanded_joints = {}
+        for prim in prims:
+            commanded = prim.GetCustomDataByKey(
+                UsdCustomDataKey.COMMANDED_DEGREE_OF_FREEDOM.value
+            )
+            if commanded is None:
+                continue
+            commanded_joints[degrees_of_freedom[commanded].id] = str(prim.GetPath())
+        return commanded_joints
+
+    def _free_bodies_on(self, prims: list[Usd.Prim]) -> list[FreeBody]:
+        """
+        :param prims: The prims of the stage.
+        :return: Every body among them that is free to move.
+        """
+        bodies = {str(body.id): body for body in self._world.bodies}
+        free_bodies = []
+        for prim in prims:
+            body = bodies.get(prim.GetCustomDataByKey(UsdCustomDataKey.ID.value))
+            if body is None or not isinstance(body.parent_connection, Connection6DoF):
+                continue
+            free_bodies.append(FreeBody(str(prim.GetPath()), body.parent_connection))
+        return free_bodies
+
+    def _world_joint_positions_on(self, prims: list[Usd.Prim]) -> dict[str, float]:
+        """
+        :param prims: The prims of the stage.
+        :return: Where the world has each joint among them that stands for one of its
+            connections or drive axes, by the path of its prim.
+        """
+        connections = self._connections_by_name()
+        drive_degrees_of_freedom = self._drive_degrees_of_freedom()
+        drive_axes = {
+            degree_of_freedom.name.name: degree_of_freedom
+            for degree_of_freedom in self._world.degrees_of_freedom
+            if degree_of_freedom.id in drive_degrees_of_freedom
+        }
+        positions = {}
+        for prim in prims:
+            path = str(prim.GetPath())
+            if path not in self.simulator.joint_paths:
+                continue
+            name = prim.GetCustomDataByKey(UsdCustomDataKey.NAME.value)
+            if isinstance(connections.get(name), ActiveConnection1DOF):
+                positions[path] = float(connections[name].position)
+            elif name in drive_axes:
+                positions[path] = float(self._world.state[drive_axes[name].id].position)
+        return positions
+
+    def _degrees_of_freedom_by_id(self) -> dict[str, DegreeOfFreedom]:
+        """
+        :return: Every degree of freedom of the world, by its id as the stage writes it.
+        """
+        return {
+            str(degree_of_freedom.id): degree_of_freedom
+            for degree_of_freedom in self._world.degrees_of_freedom
+        }
+
+    def _connections_by_name(self) -> dict[str, Connection]:
+        """
+        :return: Every connection of the world, by its name.
+        """
+        return {
+            connection.name.name: connection for connection in self._world.connections
+        }
+
+    def _drive_degrees_of_freedom(self) -> set[UUID]:
+        """
+        :return: The ids of the degrees of freedom of the world's wheeled drives.
+        """
+        return {
+            degree_of_freedom.id
+            for connection in self._world.connections
+            if isinstance(connection, WheeledDrive)
+            for degree_of_freedom in connection.dofs
+        }
 
     # %% world to simulation
 
@@ -305,8 +371,8 @@ class IsaacSynchronizer(MultiSimSynchronizer):
                     moved = True
                     self._known_positions[degree_of_freedom.id] = position
             if moved:
-                body_poses[free_body.path] = (
-                    free_body.connection.child.global_pose.to_np()
+                body_poses[free_body.path] = self._body_pose_of(
+                    free_body.connection.child.global_pose
                 )
         self.simulator.set_body_poses(body_poses)
 
@@ -342,13 +408,17 @@ class IsaacSynchronizer(MultiSimSynchronizer):
             finally:
                 self._state_callback.resume()
 
-    def _place(self, free_body: FreeBody, world_T_body: np.ndarray) -> None:
+    def _place(self, free_body: FreeBody, pose: BodyPose) -> None:
         """
         Write a free body's pose into the degrees of freedom of its connection.
 
         :param free_body: The body.
-        :param world_T_body: Its pose in the world.
+        :param pose: Its pose in the world.
         """
+        w, x, y, z = pose.orientation
+        world_T_body = HomogeneousTransformationMatrix.from_xyz_quaternion(
+            *pose.position, quat_w=w, quat_x=x, quat_y=y, quat_z=z
+        ).to_np()
         connection = free_body.connection
         world_T_parent = connection.parent.global_pose.to_np()
         parent_T_connection = connection.parent_T_connection_expression.to_np()
@@ -387,7 +457,7 @@ class IsaacSynchronizer(MultiSimSynchronizer):
 
     # %% structure
 
-    def on_model_change(self, **kwargs):
+    def on_model_change(self, **kwargs: Any) -> None:
         for modification in self._world._model_manager.model_modification_blocks[-1]:
             if isinstance(modification, AddKinematicStructureEntityModification):
                 name = modification.kinematic_structure_entity.name.name
@@ -408,6 +478,17 @@ class IsaacSynchronizer(MultiSimSynchronizer):
             for servo in self._world.actuators
             for degree_of_freedom in servo.dofs
         }
+
+    @staticmethod
+    def _body_pose_of(pose: HomogeneousTransformationMatrix) -> BodyPose:
+        """
+        :param pose: A body's pose in the world.
+        :return: The pose as Isaac Sim takes it.
+        """
+        x, y, z, w = pose.quaternion.to_np()
+        return BodyPose(
+            position=pose.position.to_np()[:3], orientation=np.array([w, x, y, z])
+        )
 
     def _known(self, degree_of_freedom: DegreeOfFreedom, position: float) -> bool:
         """

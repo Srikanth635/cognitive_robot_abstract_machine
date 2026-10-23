@@ -6,6 +6,8 @@ from krrood.exceptions import DataclassException
 
 from semantic_digital_twin.exceptions import ParsingError
 
+# %% parsing and writing USD stages
+
 
 @dataclass
 class UnsupportedUsdPhysicsJointTypeError(ParsingError):

@@ -8,13 +8,14 @@ from __future__ import annotations
 import math
 import tempfile
 from datetime import timedelta
+from enum import StrEnum
 from pathlib import Path
 
 from physics_simulators.base_simulator import BaseSimulator, SimulatorState
-from typing_extensions import ClassVar, Type
+from physics_simulators.isaac_simulator import IsaacSimulator
+from typing_extensions import Any, ClassVar, Type
 
 from semantic_digital_twin.adapters.isaac.exceptions import DurationNotWholeStepsError
-from semantic_digital_twin.adapters.isaac.simulator import IsaacSimulator
 from semantic_digital_twin.adapters.isaac.synchronizer import IsaacSynchronizer
 from semantic_digital_twin.adapters.multi_sim import (
     MultiSim,
@@ -28,6 +29,27 @@ from semantic_digital_twin.exceptions import (
     SimulationNotStartedError,
 )
 from semantic_digital_twin.world import World
+
+# %% where the stage is written
+
+
+class TemporaryStage(StrEnum):
+    """
+    Where a world's stage is written when no file is given for it.
+    """
+
+    DIRECTORY_PREFIX = "isaacsim_"
+    """
+    The start of the name of the temporary directory the stage is written into.
+    """
+
+    FILE_NAME = "scene.usdc"
+    """
+    The name of the stage's file, in USD's binary format.
+    """
+
+
+# %% the simulation
 
 
 class IsaacSim(MultiSim, SteppedSimulation):
@@ -47,8 +69,8 @@ class IsaacSim(MultiSim, SteppedSimulation):
         headless: bool = True,
         step_size: float = 1.0 / 200.0,
         file_path: Path | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """
         :param world: The world to simulate.
         :param headless: Whether the simulation runs without a window.
@@ -60,8 +82,10 @@ class IsaacSim(MultiSim, SteppedSimulation):
         """
         self._stage_directory = None
         if file_path is None:
-            self._stage_directory = tempfile.TemporaryDirectory(prefix="isaacsim_")
-            file_path = Path(self._stage_directory.name) / "scene.usdc"
+            self._stage_directory = tempfile.TemporaryDirectory(
+                prefix=TemporaryStage.DIRECTORY_PREFIX
+            )
+            file_path = Path(self._stage_directory.name) / TemporaryStage.FILE_NAME
         super().__init__(
             world=world,
             headless=headless,

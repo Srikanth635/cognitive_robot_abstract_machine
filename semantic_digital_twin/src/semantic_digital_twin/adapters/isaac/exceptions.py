@@ -8,6 +8,8 @@ from dataclasses import dataclass
 
 from krrood.exceptions import DataclassException
 
+# %% what a simulation under Isaac Sim refuses
+
 
 @dataclass
 class WorldStructureChangedUnderIsaacError(DataclassException):

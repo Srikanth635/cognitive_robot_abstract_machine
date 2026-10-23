@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from isaacsim import SimulationApp
 from typing_extensions import ClassVar
 
+# %% the application
+
 
 @dataclass
 class IsaacApplication:
@@ -35,9 +37,3 @@ class IsaacApplication:
         if IsaacApplication._running is None:
             IsaacApplication._running = SimulationApp({"headless": self.headless})
         return IsaacApplication._running
-
-    def update(self) -> None:
-        """
-        Let the running application handle one frame of its window.
-        """
-        self.start().update()
