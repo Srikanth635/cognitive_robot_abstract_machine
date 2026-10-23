@@ -393,6 +393,18 @@ class UsdBuilder(MultiSimBuilder):
         and its drive's stiffness and damping, which are per degree.
     """
 
+    minimum_mass: float = 1e-3
+    """
+    The mass, in kilograms, of a moving body that has neither shapes nor an inertial, so
+    that PhysX can move it.
+    """
+
+    minimum_inertia: float = 1e-6
+    """
+    The moment of inertia, in kilogram square metres, of such a body about each of its
+    axes.
+    """
+
     added_link_mass: float = 0.01
     """
     The mass, in kilograms, of each body the builder adds: those a wheeled drive's base
@@ -486,6 +498,10 @@ class UsdBuilder(MultiSimBuilder):
             return
         UsdPhysics.RigidBodyAPI.Apply(prim)
         if UsdBodyConverter.mass_str not in body_props:
+            if not body.collision.shapes:
+                mass = UsdPhysics.MassAPI.Apply(prim)
+                mass.CreateMassAttr(self.minimum_mass)
+                mass.CreateDiagonalInertiaAttr(Gf.Vec3f(self.minimum_inertia))
             return
         mass = UsdPhysics.MassAPI.Apply(prim)
         mass.CreateMassAttr(float(body_props[UsdBodyConverter.mass_str]))
