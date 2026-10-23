@@ -6,20 +6,39 @@ free bodies.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 import numpy as np
 import omni.timeline
 import omni.usd
 from isaacsim.core.experimental.prims import Articulation, RigidPrim
 from isaacsim.core.simulation_manager import SimulationManager
-from physics_simulators.base_simulator import BaseSimulator
 from pxr import UsdPhysics
-from scipy.spatial.transform import Rotation
-from typing_extensions import ClassVar
+from typing_extensions import Iterable
 
-from semantic_digital_twin.adapters.isaac.application import IsaacApplication
+from physics_simulators.base_simulator import BaseSimulator
+from physics_simulators.isaac_application import IsaacApplication
 
-# %% joints as Isaac Sim indexes them
+# %% where PhysX simulates
+
+
+class PhysicsDevice(StrEnum):
+    """
+    The device PhysX simulates on.
+    """
+
+    CPU = "cpu"
+    """
+    The processor.
+    """
+
+    CUDA = "cuda"
+    """
+    The NVIDIA graphics card.
+    """
+
+
+# %% joints and bodies as Isaac Sim indexes them
 
 
 @dataclass(frozen=True)
@@ -36,6 +55,55 @@ class ArticulatedJoint:
     index: int
     """
     The joint's index among the articulation's degrees of freedom.
+    """
+
+
+@dataclass
+class JointsOfArticulation:
+    """
+    Some of the joints of one articulation, as Isaac Sim reads and writes them together.
+    """
+
+    articulation: Articulation
+    """
+    The articulation the joints belong to.
+    """
+
+    paths: list[str]
+    """
+    The paths of the joints' prims.
+    """
+
+    indices: list[int]
+    """
+    The joints' indices among the articulation's degrees of freedom, in the order of
+    :attr:`paths`.
+    """
+
+    def values_of(self, values: dict[str, float]) -> np.ndarray:
+        """
+        :param values: A value for each of these joints and possibly others, by their
+            paths.
+        :return: The values of these joints, in the order of :attr:`paths`, as Isaac Sim
+            takes them.
+        """
+        return np.array([[values[path] for path in self.paths]])
+
+
+@dataclass(frozen=True)
+class BodyPose:
+    """
+    Where a free body is in the world.
+    """
+
+    position: np.ndarray
+    """
+    The position of the body's origin, in metres.
+    """
+
+    orientation: np.ndarray
+    """
+    The body's orientation as a unit quaternion, in the order w, x, y, z.
     """
 
 
@@ -56,13 +124,10 @@ class IsaacSimulator(BaseSimulator):
     The stage to simulate.
     """
 
-    device: str = field(default="cpu", kw_only=True)
+    device: PhysicsDevice = field(default=PhysicsDevice.CPU, kw_only=True)
     """
     The device PhysX simulates on.
     """
-
-    name: ClassVar[str] = "Isaac Sim"
-    ext: ClassVar[str] = "usdc"
 
     _joints: dict[str, ArticulatedJoint] = field(init=False, default_factory=dict)
     """
@@ -79,13 +144,12 @@ class IsaacSimulator(BaseSimulator):
     The paths of the free bodies' prims, in the order of :attr:`_bodies`.
     """
 
-    def start_callback(self):
-        application = IsaacApplication(headless=self.headless)
-        application.start()
+    def start_callback(self) -> None:
+        application = IsaacApplication(headless=self.headless).start()
         context = omni.usd.get_context()
         context.open_stage(self.file_path)
         application.update()
-        SimulationManager.setup_simulation(dt=self.step_size, device=self.device)
+        SimulationManager.setup_simulation(dt=self.step_size, device=self.device.value)
         omni.timeline.get_timeline_interface().play()
         application.update()
         for prim in context.get_stage().Traverse():
@@ -102,10 +166,10 @@ class IsaacSimulator(BaseSimulator):
         """
         return set(self._joints)
 
-    def step_callback(self):
+    def step_callback(self) -> None:
         self.advance(1)
 
-    def stop(self):
+    def stop(self) -> None:
         omni.timeline.get_timeline_interface().stop()
         super().stop()
 
@@ -131,22 +195,15 @@ class IsaacSimulator(BaseSimulator):
 
     # %% joints
 
-    def joint_positions(self, paths: list[str]) -> dict[str, float]:
+    def joint_positions(self, paths: Iterable[str]) -> dict[str, float]:
         """
         :param paths: The paths of joints of the stage's articulations.
         :return: The position of each joint, by its path.
         """
-        positions_by_articulation = {}
         positions = {}
-        for path in paths:
-            joint = self._joints[path]
-            if joint.articulation not in positions_by_articulation:
-                positions_by_articulation[joint.articulation] = (
-                    joint.articulation.get_dof_positions().numpy()[0]
-                )
-            positions[path] = float(
-                positions_by_articulation[joint.articulation][joint.index]
-            )
+        for joints in self._group_by_articulation(paths):
+            values = joints.articulation.get_dof_positions(dof_indices=joints.indices)
+            positions.update(zip(joints.paths, map(float, values.numpy()[0])))
         return positions
 
     def set_joint_positions(self, positions: dict[str, float]) -> None:
@@ -155,81 +212,73 @@ class IsaacSimulator(BaseSimulator):
 
         :param positions: The position of each joint, by its path.
         """
-        for articulation, indices, values in self._by_articulation(positions):
-            articulation.set_dof_positions(values, dof_indices=indices)
+        for joints in self._group_by_articulation(positions):
+            joints.articulation.set_dof_positions(
+                joints.values_of(positions), dof_indices=joints.indices
+            )
 
     def set_joint_position_targets(self, targets: dict[str, float]) -> None:
         """
         :param targets: The position each joint's drive drives it towards, by its path.
         """
-        for articulation, indices, values in self._by_articulation(targets):
-            articulation.set_dof_position_targets(values, dof_indices=indices)
+        for joints in self._group_by_articulation(targets):
+            joints.articulation.set_dof_position_targets(
+                joints.values_of(targets), dof_indices=joints.indices
+            )
 
     def set_joint_velocity_targets(self, targets: dict[str, float]) -> None:
         """
         :param targets: The velocity each joint's drive drives it at, by its path.
         """
-        for articulation, indices, values in self._by_articulation(targets):
-            articulation.set_dof_velocity_targets(values, dof_indices=indices)
+        for joints in self._group_by_articulation(targets):
+            joints.articulation.set_dof_velocity_targets(
+                joints.values_of(targets), dof_indices=joints.indices
+            )
 
-    def _by_articulation(
-        self, values: dict[str, float]
-    ) -> list[tuple[Articulation, list[int], np.ndarray]]:
+    def _group_by_articulation(
+        self, paths: Iterable[str]
+    ) -> list[JointsOfArticulation]:
         """
-        :param values: A value for each of some joints, by their paths.
-        :return: For each articulation those joints belong to: the articulation, the
-            joints' indices in it, and their values as Isaac Sim takes them.
+        :param paths: The paths of joints of the stage's articulations.
+        :return: The joints, grouped by the articulation they belong to.
         """
-        grouped: dict[Articulation, tuple[list[int], list[float]]] = {}
-        for path, value in values.items():
+        grouped: dict[Articulation, JointsOfArticulation] = {}
+        for path in paths:
             joint = self._joints[path]
-            indices, joint_values = grouped.setdefault(joint.articulation, ([], []))
-            indices.append(joint.index)
-            joint_values.append(value)
-        return [
-            (articulation, indices, np.array([joint_values]))
-            for articulation, (indices, joint_values) in grouped.items()
-        ]
+            joints = grouped.setdefault(
+                joint.articulation, JointsOfArticulation(joint.articulation, [], [])
+            )
+            joints.paths.append(path)
+            joints.indices.append(joint.index)
+        return list(grouped.values())
 
     # %% free bodies
 
-    def body_poses(self) -> dict[str, np.ndarray]:
+    def body_poses(self) -> dict[str, BodyPose]:
         """
-        :return: The pose of every tracked free body in the world, as a 4 by 4 matrix, by
-            the path of its prim.
+        :return: The pose of every tracked free body, by the path of its prim.
         """
         if self._bodies is None:
             return {}
         positions, orientations = self._bodies.get_world_poses()
-        poses = {}
-        for path, position, wxyz in zip(
-            self._body_paths, positions.numpy(), orientations.numpy()
-        ):
-            pose = np.eye(4)
-            pose[:3, :3] = Rotation.from_quat(wxyz, scalar_first=True).as_matrix()
-            pose[:3, 3] = position
-            poses[path] = pose
-        return poses
+        return {
+            path: BodyPose(position, orientation)
+            for path, position, orientation in zip(
+                self._body_paths, positions.numpy(), orientations.numpy()
+            )
+        }
 
-    def set_body_poses(self, poses: dict[str, np.ndarray]) -> None:
+    def set_body_poses(self, poses: dict[str, BodyPose]) -> None:
         """
         Put free bodies where they are given, without moving them there through the
         physics.
 
-        :param poses: The pose of each body in the world, as a 4 by 4 matrix, by the
-            path of its prim.
+        :param poses: The pose of each body, by the path of its prim.
         """
         if not poses:
             return
-        indices = [self._body_paths.index(path) for path in poses]
-        matrices = list(poses.values())
         self._bodies.set_world_poses(
-            positions=np.array([matrix[:3, 3] for matrix in matrices]),
-            orientations=np.array(
-                [
-                    Rotation.from_matrix(matrix[:3, :3]).as_quat(scalar_first=True)
-                    for matrix in matrices
-                ]
-            ),
-            indices=indices,
+            positions=np.array([pose.position for pose in poses.values()]),
+            orientations=np.array([pose.orientation for pose in poses.values()]),
+            indices=[self._body_paths.index(path) for path in poses],
         )

@@ -10,8 +10,9 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 import numpy as np
+from krrood.ormatic.utils import classproperty
 from pxr import Gf, Sdf, Tf, Usd, UsdGeom, UsdPhysics, Vt
-from typing_extensions import Any, ClassVar, Dict, Union
+from typing_extensions import Any
 
 from semantic_digital_twin.adapters.multi_sim import (
     BodyConverter,
@@ -258,8 +259,8 @@ class UsdBodyConverter(BodyConverter):
     """
 
     def _post_convert(
-        self, entity: Body, body_props: Dict[str, Any], **kwargs
-    ) -> Dict[str, Any]:
+        self, entity: Body, body_props: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
         return body_props
 
 
@@ -270,10 +271,12 @@ class UsdShapeConverter(ShapeConverter):
     prim that draws it.
     """
 
-    prim_type: ClassVar[UsdGeomPrimType]
-    """
-    The kind of USD geometry prim a shape of this kind becomes.
-    """
+    @classproperty
+    def prim_type(cls) -> UsdGeomPrimType:
+        """
+        :return: The kind of USD geometry prim a shape of this kind becomes.
+        """
+        raise NotImplementedError
 
     prim_type_str: str = "prim_type"
     """
@@ -281,30 +284,38 @@ class UsdShapeConverter(ShapeConverter):
     """
 
     def _post_convert(
-        self, entity: Shape, shape_props: Dict[str, Any], **kwargs
-    ) -> Dict[str, Any]:
+        self, entity: Shape, shape_props: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
         shape_props[self.prim_type_str] = self.prim_type
         return shape_props
 
 
 @dataclass
 class UsdBoxConverter(UsdShapeConverter, BoxConverter):
-    prim_type: ClassVar[UsdGeomPrimType] = UsdGeomPrimType.CUBE
+    @classproperty
+    def prim_type(cls) -> UsdGeomPrimType:
+        return UsdGeomPrimType.CUBE
 
 
 @dataclass
 class UsdSphereConverter(UsdShapeConverter, SphereConverter):
-    prim_type: ClassVar[UsdGeomPrimType] = UsdGeomPrimType.SPHERE
+    @classproperty
+    def prim_type(cls) -> UsdGeomPrimType:
+        return UsdGeomPrimType.SPHERE
 
 
 @dataclass
 class UsdCylinderConverter(UsdShapeConverter, CylinderConverter):
-    prim_type: ClassVar[UsdGeomPrimType] = UsdGeomPrimType.CYLINDER
+    @classproperty
+    def prim_type(cls) -> UsdGeomPrimType:
+        return UsdGeomPrimType.CYLINDER
 
 
 @dataclass
 class UsdMeshConverter(UsdShapeConverter, MeshConverter):
-    prim_type: ClassVar[UsdGeomPrimType] = UsdGeomPrimType.MESH
+    @classproperty
+    def prim_type(cls) -> UsdGeomPrimType:
+        return UsdGeomPrimType.MESH
 
 
 @dataclass
@@ -314,8 +325,8 @@ class UsdRevoluteJointConverter(ConnectionRevoluteConverter):
     """
 
     def _post_convert(
-        self, entity: RevoluteConnection, joint_props: Dict[str, Any], **kwargs
-    ) -> Dict[str, Any]:
+        self, entity: RevoluteConnection, joint_props: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
         return joint_props
 
 
@@ -326,8 +337,8 @@ class UsdPrismaticJointConverter(ConnectionPrismaticConverter):
     """
 
     def _post_convert(
-        self, entity: PrismaticConnection, joint_props: Dict[str, Any], **kwargs
-    ) -> Dict[str, Any]:
+        self, entity: PrismaticConnection, joint_props: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
         return joint_props
 
 
@@ -335,9 +346,9 @@ class UsdPrismaticJointConverter(ConnectionPrismaticConverter):
 
 
 @dataclass(frozen=True)
-class DrivenJoint:
+class TurningOrSlidingJoint:
     """
-    A joint a servo can drive, as the stage has it.
+    A joint of the stage that turns about, or slides along, its axis.
     """
 
     path: Sdf.Path
@@ -348,6 +359,29 @@ class DrivenJoint:
     turns: bool
     """
     Whether the joint turns about its axis rather than slides along it.
+    """
+
+    @property
+    def stage_units_per_world_unit(self) -> float:
+        """
+        :return: How many of the stage's units of the joint's position make one of the
+            world's: degrees per radian when it turns, one when it slides.
+        """
+        return math.degrees(1.0) if self.turns else 1.0
+
+    @property
+    def axis_instance(self) -> str:
+        """
+        :return: The name USD's drive and PhysX's joint axis settings apply under for
+            the joint.
+        """
+        return UsdPhysics.Tokens.angular if self.turns else UsdPhysics.Tokens.linear
+
+
+@dataclass(frozen=True)
+class DrivenJoint(TurningOrSlidingJoint):
+    """
+    A joint a servo can drive, as the stage has it.
     """
 
     position: float
@@ -398,33 +432,15 @@ class ShapeContactCategories:
 
 
 @dataclass(frozen=True)
-class AxisJoint:
+class AxisJoint(TurningOrSlidingJoint):
     """
     A joint that turns about or slides along one axis, written for a connection.
     """
 
-    connection: Union[RevoluteConnection, PrismaticConnection]
+    connection: RevoluteConnection | PrismaticConnection
     """
     The connection it was written for.
     """
-
-    path: Sdf.Path
-    """
-    The joint's prim.
-    """
-
-    turns: bool
-    """
-    Whether the joint turns about its axis rather than slides along it.
-    """
-
-    @property
-    def stage_units_per_world_unit(self) -> float:
-        """
-        :return: How many of the stage's units of the joint's position make one of the
-            world's: degrees per radian when it turns, one when it slides.
-        """
-        return math.degrees(1.0) if self.turns else 1.0
 
 
 # %% the builder
@@ -489,26 +505,26 @@ class UsdBuilder(MultiSimBuilder):
     The stage being written.
     """
 
-    _body_paths: Dict[Body, Sdf.Path] = field(init=False, default_factory=dict)
+    _body_paths: dict[Body, Sdf.Path] = field(init=False, default_factory=dict)
     """
     The prim each body was written as.
     """
 
-    _reference_origins: Dict[Body, Gf.Matrix4d] = field(
+    _reference_origins: dict[Body, Gf.Matrix4d] = field(
         init=False, default_factory=dict
     )
     """
     The pose of each body relative to its parent with every joint at zero.
     """
 
-    _driven_joints: Dict[DegreeOfFreedom, DrivenJoint] = field(
+    _driven_joints: dict[DegreeOfFreedom, DrivenJoint] = field(
         init=False, default_factory=dict
     )
     """
     The joint a servo of each degree of freedom drives.
     """
 
-    _shapes_by_categories: Dict[ShapeContactCategories, list[Sdf.Path]] = field(
+    _shapes_by_categories: dict[ShapeContactCategories, list[Sdf.Path]] = field(
         init=False, default_factory=dict
     )
     """
@@ -531,7 +547,7 @@ class UsdBuilder(MultiSimBuilder):
     The prim names given so far, kept apart from each other.
     """
 
-    def _start_build(self, file_path: str):
+    def _start_build(self, file_path: str) -> None:
         self._stage = Usd.Stage.CreateNew(file_path)
         UsdGeom.SetStageUpAxis(self._stage, UsdGeom.Tokens.z)
         UsdGeom.SetStageMetersPerUnit(self._stage, 1.0)
@@ -546,7 +562,7 @@ class UsdBuilder(MultiSimBuilder):
         UsdGeom.Scope.Define(self._stage, UsdStagePath.JOINTS.value)
         self._articulation_tops = self._find_articulation_tops()
 
-    def _end_build(self, file_path: str):
+    def _end_build(self, file_path: str) -> None:
         for axis_joint in self._axis_joints:
             self._mimic_shared_degree_of_freedom(axis_joint)
         self._write_collision_groups()
@@ -561,7 +577,7 @@ class UsdBuilder(MultiSimBuilder):
             )
         self._stage.Save()
 
-    def _build_body(self, body: Body):
+    def _build_body(self, body: Body) -> None:
         prim = self._define_body_prim(body.name.name, self._world_pose(body))
         prim.SetCustomDataByKey(UsdCustomDataKey.ID.value, str(body.id))
         self._body_paths[body] = prim.GetPath()
@@ -592,14 +608,14 @@ class UsdBuilder(MultiSimBuilder):
         w, x, y, z = map(float, body_props[UsdBodyConverter.inertia_quat_str])
         mass.CreatePrincipalAxesAttr(Gf.Quatf(w, Gf.Vec3f(x, y, z)))
 
-    def _build_region(self, region: Region):
+    def _build_region(self, region: Region) -> None:
         """
         A region has no physics, so the stage leaves it out.
         """
 
     def _build_shape(
         self,
-        parent: Union[Body, Region],
+        parent: Body | Region,
         shape: Shape,
         is_visible: bool,
         is_collidable: bool,
@@ -631,7 +647,7 @@ class UsdBuilder(MultiSimBuilder):
                 approximation
             )
 
-    def _build_connection(self, connection: Connection):
+    def _build_connection(self, connection: Connection) -> None:
         if isinstance(connection, Connection6DoF):
             return
         if isinstance(connection, FixedConnection):
@@ -648,18 +664,18 @@ class UsdBuilder(MultiSimBuilder):
             connection_type=type(connection).__name__,
         )
 
-    def _build_actuator(self, actuator: Actuator):
+    def _build_actuator(self, actuator: Actuator) -> None:
         if not isinstance(actuator, (PositionServo, VelocityServo)):
             return
         for degree_of_freedom in actuator.dofs:
             self._build_drive(self._driven_joints[degree_of_freedom], actuator)
 
-    def _build_camera(self, camera: MultiSimCamera):
+    def _build_camera(self, camera: MultiSimCamera) -> None:
         """
         The stage leaves cameras to the simulator's own viewer.
         """
 
-    def _build_light(self, light: MultiSimLight):
+    def _build_light(self, light: MultiSimLight) -> None:
         """
         The stage leaves lights to the simulator's own viewer.
         """
@@ -694,7 +710,7 @@ class UsdBuilder(MultiSimBuilder):
         joint.CreateLocalRot1Attr(Gf.Quatf(1.0))
 
     def _build_axis_joint(
-        self, connection: Union[RevoluteConnection, PrismaticConnection]
+        self, connection: RevoluteConnection | PrismaticConnection
     ) -> None:
         """
         Write a joint that turns about, or slides along, the connection's axis.
@@ -723,16 +739,14 @@ class UsdBuilder(MultiSimBuilder):
             child_path=self._body_paths[connection.child],
             child_T_joint=child_T_joint,
         )
+        axis_joint = AxisJoint(path=joint.GetPath(), turns=turns, connection=connection)
+        self._axis_joints.append(axis_joint)
         if connection.dynamics != JointDynamics():
-            self._resist_motion(joint.GetPrim(), connection.dynamics, turns)
+            self._resist_motion(axis_joint, connection.dynamics)
         lower, upper = joint_props[UsdRevoluteJointConverter.range_str]
         if lower != upper:
-            to_usd = math.degrees if turns else float
-            joint.CreateLowerLimitAttr(to_usd(lower))
-            joint.CreateUpperLimitAttr(to_usd(upper))
-        self._axis_joints.append(
-            AxisJoint(connection=connection, path=joint.GetPath(), turns=turns)
-        )
+            joint.CreateLowerLimitAttr(lower * axis_joint.stage_units_per_world_unit)
+            joint.CreateUpperLimitAttr(upper * axis_joint.stage_units_per_world_unit)
         driven_joint = DrivenJoint(
             path=joint.GetPath(),
             turns=turns,
@@ -744,31 +758,28 @@ class UsdBuilder(MultiSimBuilder):
         else:
             self._driven_joints.setdefault(connection.raw_dof, driven_joint)
 
-    def _resist_motion(
-        self, joint: Usd.Prim, dynamics: JointDynamics, turns: bool
-    ) -> None:
+    def _resist_motion(self, joint: AxisJoint, dynamics: JointDynamics) -> None:
         """
         Resist a joint's motion as its dynamics have it: dry friction holds it still up
         to a force or torque, damping slows it in proportion to its speed, and armature
         adds inertia.
 
-        :param joint: The joint's prim.
+        :param joint: The joint.
         :param dynamics: The joint's dynamics.
-        :param turns: Whether the joint turns rather than slides.
         """
-        instance = UsdPhysics.Tokens.angular if turns else UsdPhysics.Tokens.linear
-        joint.AddAppliedSchema(f"{UsdPhysxSchema.JOINT_AXIS.value}:{instance}")
-        per_usd_unit = math.pi / 180 if turns else 1.0
+        instance = joint.axis_instance
+        prim = self._stage.GetPrimAtPath(joint.path)
+        prim.AddAppliedSchema(f"{UsdPhysxSchema.JOINT_AXIS.value}:{instance}")
         for prop, value in (
             (UsdJointAxisProperty.STATIC_FRICTION_EFFORT, dynamics.dry_friction),
             (UsdJointAxisProperty.DYNAMIC_FRICTION_EFFORT, dynamics.dry_friction),
             (
                 UsdJointAxisProperty.VISCOUS_FRICTION_COEFFICIENT,
-                dynamics.damping * per_usd_unit,
+                dynamics.damping / joint.stage_units_per_world_unit,
             ),
             (UsdJointAxisProperty.ARMATURE, dynamics.armature),
         ):
-            joint.CreateAttribute(
+            prim.CreateAttribute(
                 prop.on(instance), Sdf.ValueTypeNames.Float, custom=False
             ).Set(float(value))
 
@@ -943,7 +954,7 @@ class UsdBuilder(MultiSimBuilder):
         :return: The topmost body of every group of moving bodies joined by a joint, the
             group standing on a static body.
         """
-        joints_below: Dict[Body, int] = {}
+        joints_below: dict[Body, int] = {}
         for body in self.world.bodies:
             if not self._moves(body):
                 continue
@@ -1024,7 +1035,7 @@ class UsdBuilder(MultiSimBuilder):
         parent_T_joint: Gf.Matrix4d,
         child_path: Sdf.Path,
         child_T_joint: Gf.Matrix4d,
-    ) -> Union[UsdPhysics.RevoluteJoint, UsdPhysics.PrismaticJoint]:
+    ) -> UsdPhysics.RevoluteJoint | UsdPhysics.PrismaticJoint:
         """
         Write a joint that turns about, or slides along, the x axis of its frame.
 
@@ -1050,7 +1061,7 @@ class UsdBuilder(MultiSimBuilder):
         return joint
 
     def _build_drive(
-        self, joint: DrivenJoint, servo: Union[PositionServo, VelocityServo]
+        self, joint: DrivenJoint, servo: PositionServo | VelocityServo
     ) -> None:
         """
         Drive a joint with a servo's gains: a position servo towards where the world has
@@ -1059,21 +1070,21 @@ class UsdBuilder(MultiSimBuilder):
         :param joint: The joint.
         :param servo: The servo driving it.
         """
-        per_usd_unit = math.pi / 180 if joint.turns else 1.0
         drive = UsdPhysics.DriveAPI.Apply(
-            self._stage.GetPrimAtPath(joint.path),
-            UsdPhysics.Tokens.angular if joint.turns else UsdPhysics.Tokens.linear,
+            self._stage.GetPrimAtPath(joint.path), joint.axis_instance
         )
         drive.CreateTypeAttr(UsdPhysics.Tokens.force)
-        drive.CreateDampingAttr(servo.gains.damping * per_usd_unit)
+        drive.CreateDampingAttr(servo.gains.damping / joint.stage_units_per_world_unit)
         drive.CreateMaxForceAttr(servo.gains.torque_limit)
         if isinstance(servo, VelocityServo):
             drive.CreateStiffnessAttr(0.0)
             drive.CreateTargetVelocityAttr(0.0)
             return
-        drive.CreateStiffnessAttr(servo.gains.stiffness * per_usd_unit)
+        drive.CreateStiffnessAttr(
+            servo.gains.stiffness / joint.stage_units_per_world_unit
+        )
         drive.CreateTargetPositionAttr(
-            math.degrees(joint.position) if joint.turns else joint.position
+            joint.position * joint.stage_units_per_world_unit
         )
 
     def _connect(
@@ -1172,7 +1183,7 @@ class UsdBuilder(MultiSimBuilder):
         return unique
 
     def _define_geometry(
-        self, path: Sdf.Path, shape: Shape, shape_props: Dict[str, Any]
+        self, path: Sdf.Path, shape: Shape, shape_props: dict[str, Any]
     ) -> UsdGeom.Gprim:
         """
         Write the geometry prim that draws a shape, placed on its body.

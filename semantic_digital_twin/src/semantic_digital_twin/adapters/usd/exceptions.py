@@ -3,9 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from krrood.exceptions import DataclassException
-from typing_extensions import List
 
 from semantic_digital_twin.exceptions import ParsingError
+
+# %% parsing and writing USD stages
 
 
 @dataclass
@@ -28,7 +29,7 @@ class UnsupportedUsdPhysicsJointTypeError(ParsingError):
     The unsupported joint prim's USD type name.
     """
 
-    supported_types: List[str] = field(kw_only=True, default_factory=list)
+    supported_types: list[str] = field(kw_only=True, default_factory=list)
     """
     The joint types that can be mapped to connections.
     """
@@ -91,7 +92,7 @@ class UnsupportedUsdGeometryTypeError(ParsingError):
     The unsupported geometry prim's USD type name.
     """
 
-    supported_types: List[str] = field(kw_only=True, default_factory=list)
+    supported_types: list[str] = field(kw_only=True, default_factory=list)
     """
     The geometry types that can be mapped to shapes.
     """

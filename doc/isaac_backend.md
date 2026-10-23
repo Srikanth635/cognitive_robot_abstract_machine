@@ -9,12 +9,19 @@ lockstep with the controller.
 `semantic_digital_twin/adapters/multi_sim.py` separates a simulator-independent layer from
 its only implementation, MuJoCo:
 
-| Layer | Generic | MuJoCo |
-| --- | --- | --- |
-| Write the world to a scene file | `MultiSimBuilder` | `MujocoBuilder` (MJCF) |
-| Load and step the scene | `physics_simulators.BaseSimulator` | `MujocoSimulator` |
-| Keep world and simulator in step | `MultiSimSynchronizer` | `MujocoSynchronizer` |
-| Tie the three together | `MultiSim` | `MujocoSim` |
+| Layer | Generic | MuJoCo | Isaac Sim |
+| --- | --- | --- | --- |
+| Write the world to a scene file | `MultiSimBuilder` | `MujocoBuilder` (MJCF) | `UsdBuilder` (`adapters/usd/builder.py`) |
+| Load and step the scene | `physics_simulators.BaseSimulator` | `physics_simulators.mujoco_simulator.MujocoSimulator` | `physics_simulators.isaac_simulator.IsaacSimulator` |
+| Keep world and simulator in step | `MultiSimSynchronizer` | `MujocoSynchronizer` | `IsaacSynchronizer` (`adapters/isaac/synchronizer.py`) |
+| Tie the three together | `MultiSim` | `MujocoSim` | `IsaacSim` (`adapters/isaac/simulation.py`) |
+
+`physics_simulators.isaac_application.IsaacApplication` holds the one Isaac Sim
+application a process runs; every other Isaac module needs it started before it is
+imported. `IsaacSimulator` reads and writes joints and bodies with plain methods rather
+than `MujocoSimulator`'s `@simulator_callback`s, since it is only stepped in lockstep. The
+builder and synchronizer reuse `MujocoConnectionJoints` and `MujocoGeom`, whose drive axes,
+servo controls and contact categories are not MuJoCo's alone.
 
 The stepped API that coraplex and giskard use is not part of the generic layer:
 `start_stepped_simulation` and `step_simulation` exist only on `MujocoSim`, and
@@ -30,7 +37,7 @@ The stepped API that coraplex and giskard use is not part of the generic layer:
    under MuJoCo is unchanged; this is testable now.
 2. **USD builder.** `IsaacBuilder(MultiSimBuilder)` writes the world as a USD stage with
    `pxr` (UsdGeom, UsdPhysics, PhysxSchema). Testable with `usd-core`, without Isaac.
-3. **Isaac simulator.** `IsaacSimulator(BaseSimulator)` in `semantic_digital_twin/adapters/isaac`
+3. **Isaac simulator.** `IsaacSimulator(BaseSimulator)` in `physics_simulators/isaac_simulator.py`
    loads the stage into Isaac Sim and steps PhysX; needs Isaac Sim (Python 3.12, 6.x).
 4. **Isaac synchronizer and `IsaacSim(MultiSim)`**, implementing the interface of step 1.
 5. **Physics viewer under Isaac**: the scenes and the action plans are reused; the window,
@@ -100,9 +107,9 @@ angular drive are per degree, so radians are converted at the boundary.
   moves more than 0.1 mm in 3 s, as under MuJoCo, the fancy doors included, with no
   non-finite PhysX result. Dry friction reaches PhysX in newton metres: a hinge holds a flap
   whose weight turns it with half its friction, and lets one fall that turns it with twice.
-- **Steps 3 and 4 done** in `adapters/isaac`: `IsaacApplication` (the one `SimulationApp`
-  of the process), `IsaacSimulator`, `IsaacSynchronizer` and `IsaacSim(MultiSim,
-  SteppedSimulation)`. The builder tags each prim with the id of its body and each driven
+- **Steps 3 and 4 done**: `IsaacApplication` (the one `SimulationApp` of the process) and
+  `IsaacSimulator` in `physics_simulators`, `IsaacSynchronizer` and `IsaacSim(MultiSim,
+  SteppedSimulation)` in `adapters/isaac`. The builder tags each prim with the id of its body and each driven
   joint with the degrees of freedom it measures and is commanded through, which is how the
   synchronizer finds them. As under MuJoCo, servoed joints keep the world's set point, and
   joints without a servo, a drive's odometry and free bodies are read back; the world puts
