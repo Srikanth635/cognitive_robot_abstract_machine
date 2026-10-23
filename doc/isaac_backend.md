@@ -69,13 +69,21 @@ angular drive are per degree, so radians are converted at the boundary.
 - **Articulations.** Moving bodies joined by joints are one articulation, hanging from an
   anchor fixed to the static body they stand on, with self-collisions off; a body on a
   single joint is one too, since Isaac Sim reads and drives joints only through
-  articulations. Written as separate rigid bodies instead, the PR2 drifted 4 m in 3 s under Isaac
-  Sim 6.0 (its drive's light links against a heavy base); as an articulation its driven
-  joints hold within 0.03 of the world's values, and the objects stay on the counter.
+  articulations. The fixed joint to the static body carries `ArticulationRootAPI`, which
+  gives the articulation a fixed base; on the anchor body instead, the base floated, held
+  only by that joint, and with 10 g anchors the fancy doors pressed against their cabinet
+  flipped or went NaN and the PR2 blew up when it turned. Written as separate rigid bodies,
+  the PR2 drifted 4 m in 3 s.
+  Since the first joint hangs from the anchor rather than from the static body, the
+  articulation's topmost body is kept from colliding with that body by
+  `UsdPhysics.FilteredPairsAPI`, as a joint keeps the bodies it joins apart; without it,
+  Tracy's left shoulder rubbed on its mount and stopped 0.45 rad short of its set point.
 - **Joints sharing a degree of freedom** (the PR2 gripper's fingers) mimic the joint named
   after it through `PhysxMimicJointAPI` (deprecated in Isaac Sim 6.0 for the Newton
   schema's mimic API, still read). Commanding only the right gripper's primary finger to
-  0.436 rad brings all four finger joints to 0.437 rad.
+  0.436 rad brings all four finger joints to 0.437 rad. PhysX reads the gearing in the
+  stage's units of both joints, so a sliding joint following a turning one, as the fancy
+  doors' frames do, is geared in metres per degree.
 - **Joint friction and contact categories.** A joint's dry friction, damping and armature
   become `PhysxJointAxisAPI` under the drive axis name (`angular`, `linear`; PhysX ignores
   the per-axis names), and its joint becomes part of an articulation, where PhysX applies
@@ -88,14 +96,10 @@ angular drive are per degree, so radians are converted at the boundary.
   PR2's root lists its 48 joints under the builder's joint names, reads positions and sets
   targets in radians and metres, and `SimulationManager.step` advances 2 s of the counter
   scene in about 4 s on the CPU.
-- **Open in the counter scene:**
-  - the apartment's two-joint "fancy" doors flip over, or become NaN, within 0.3 s under
-    PhysX, whether the coupling between their joints is hard, compliant or removed, and
-    whether their first joint has friction, limits or a heavier link; the robot and the
-    objects on the counter are unaffected;
-  - the furniture friction the physics viewer's scenes give (1.0) holds a drawer under
-    MuJoCo but lets `cabinet8_drawer_bottom` creep 13 cm in 3 s under PhysX; a thousand
-    times that holds it.
+- **The counter scene's furniture**, with fixed-base articulations: none of its 38 joints
+  moves more than 0.1 mm in 3 s, as under MuJoCo, the fancy doors included, with no
+  non-finite PhysX result. Dry friction reaches PhysX in newton metres: a hinge holds a flap
+  whose weight turns it with half its friction, and lets one fall that turns it with twice.
 - **Steps 3 and 4 done** in `adapters/isaac`: `IsaacApplication` (the one `SimulationApp`
   of the process), `IsaacSimulator`, `IsaacSynchronizer` and `IsaacSim(MultiSim,
   SteppedSimulation)`. The builder tags each prim with the id of its body and each driven
@@ -109,18 +113,26 @@ angular drive are per degree, so radians are converted at the boundary.
   - a step of 1/200 s, which divides giskard's 10 ms tick; at 1/240 s a tick advanced 2
     steps, 8.3 ms, and the base controller overshot and diverged. `step_simulation` refuses
     a duration that is not a whole number of steps;
-  - drive links and anchors of 1 kg: at 10 g, against the PR2's 271 kg, turning the base
-    blew it up.
-- **Coraplex plans through `IsaacSim`**, against `MujocoSim` on the same plan:
+  - fixed-base articulations: with a floating base, turning the base blew the PR2 up.
+- **Every physics viewer demo through `IsaacSim`**, headless, each in its scene, after 1 s
+  of settling as the viewer does, against `MujocoSim` on the same plan: all 24 finish under
+  both, with no non-finite value, the same simulated time within 0.4 s, the base where
+  MuJoCo puts it within 3 mm, and the same mean servo error within 0.003.
 
-  | Plan | Isaac Sim 6.0 | MuJoCo |
+  | Demo | Isaac Sim 6.0 | MuJoCo |
   | --- | --- | --- |
-  | hold still, 3 s | mean servo error 0.0030 | 0.0030 |
-  | `raise_torso` | torso 0.2887 of 0.2904, 22.2 s simulated | 0.2900, 22.1 s |
-  | `go_to_the_counter` | base at x 1.852 of 1.85, 2.8 s simulated | 1.852, 2.8 s |
-  | `pick_up_milk` | milk lifted 9.1 cm | 9.5 cm |
+  | `raise_torso` | torso 0.2897 of 0.2904 | 0.2900 |
+  | `pick_up_milk`, `move_and_pick_up_milk` | milk lifted 9.3, 9.6 cm | 9.5, 9.7 cm |
+  | `place_milk`, `pick_and_place_milk`, `move_and_place_milk`, `transport_milk` | milk moved 19.8 to 19.9 cm along the counter | 18.8 to 19.4 cm |
+  | `open_drawer`, `move_and_open_drawer` | drawer open 0.441 m | 0.447, 0.448 m |
+  | `close_drawer` | drawer shut | shut |
+  | `mix_in_bowl` | the whisk pushes the bowl 13.5 cm | 13.0 cm |
+  | `pick_up_cube` (Tracy) | cube lifted 8.4 cm | 8.5 cm |
 
-  The objects on the counter move less than 7 mm while the robot holds still.
+  `open_grippers`, `close_grippers`, `park_arms`, `move_arm`, `look_at_milk`,
+  `face_the_cup`, `face_and_look_at_the_cup`, `go_to_the_counter`, `reach_for_milk`,
+  `grasp_milk`, `pour_into_bowl` and `wipe_counter` move only the robot, and its joints and
+  base end where MuJoCo's do.
 - **Not yet written:** contact stiffness and friction; rendering a window.
 
 ## Checking a stage in Isaac Sim
@@ -140,7 +152,6 @@ The first start builds Isaac's caches and takes a few minutes; later starts take
 - CRAM and Isaac Sim run in one process in `isaac-cram-env`, a copy of `new-cram-env` with
   `isaacsim[all,extscache]==6.0.0.1` pip-installed; `typing_extensions` is raised to 4.16
   over Isaac Sim's pin of 4.12, which CRAM needs.
-- The fancy doors and the drawer creep above.
 - The physics viewer under Isaac (step 5).
 - `usd-core` (in semantic_digital_twin's `datasets` extra) for builder tests without Isaac;
   it must not be installed next to Isaac Sim, which ships its own USD.

@@ -692,34 +692,47 @@ def articulation_roots(stage: Usd.Stage) -> list:
     ]
 
 
+def articulation_anchors(stage: Usd.Stage) -> list:
+    """
+    :return: The paths of the bodies the articulations' roots hold.
+    """
+    return [
+        target
+        for root in articulation_roots(stage)
+        for target in UsdPhysics.Joint(root).GetBody1Rel().GetTargets()
+    ]
+
+
 def test_bodies_joined_by_several_joints_are_one_articulation(tmp_path):
     world = _arm_chain_world()
     stage = built(world, tmp_path)
     [root] = articulation_roots(stage)
-    [anchoring] = [
-        UsdPhysics.Joint(prim)
-        for prim in stage.Traverse()
-        if prim.IsA(UsdPhysics.FixedJoint)
-        and root.GetPath() in UsdPhysics.Joint(prim).GetBody1Rel().GetTargets()
-    ]
     base = world.get_body_by_name("base")
-    assert anchoring.GetBody0Rel().GetTargets() == [prim_of(stage, base).GetPath()]
+    assert UsdPhysics.Joint(root).GetBody0Rel().GetTargets() == [
+        prim_of(stage, base).GetPath()
+    ]
+
+
+def test_an_articulation_is_rooted_in_a_fixed_joint_so_its_base_is_fixed(tmp_path):
+    stage = built(_arm_chain_world(), tmp_path)
+    [root] = articulation_roots(stage)
+    assert root.IsA(UsdPhysics.FixedJoint)
 
 
 def test_the_first_joint_of_an_articulation_hangs_from_its_anchor(tmp_path):
     world = _arm_chain_world()
     stage = built(world, tmp_path)
-    [root] = articulation_roots(stage)
+    [anchor] = articulation_anchors(stage)
     first_joint = joint_of(stage, world.get_connection_by_name("upper_arm_joint"))
-    assert first_joint.GetBody0Rel().GetTargets() == [root.GetPath()]
+    assert first_joint.GetBody0Rel().GetTargets() == [anchor]
 
 
 def test_an_articulations_anchor_stands_where_its_static_parent_is(tmp_path):
     world = _arm_chain_world()
     stage = built(world, tmp_path)
-    [root] = articulation_roots(stage)
+    [anchor] = articulation_anchors(stage)
     base = prim_of(stage, world.get_body_by_name("base"))
-    assert world_transform(root) == world_transform(base)
+    assert world_transform(stage.GetPrimAtPath(anchor)) == world_transform(base)
 
 
 def test_an_articulation_does_not_collide_with_itself(tmp_path):
@@ -731,19 +744,30 @@ def test_an_articulation_does_not_collide_with_itself(tmp_path):
 def test_a_body_on_a_single_joint_is_an_articulation_of_its_own(tmp_path):
     hinge_world = _hinge_world()
     stage = built(hinge_world.world, tmp_path)
-    roots = articulation_roots(stage)
+    anchors = articulation_anchors(stage)
     for connection in (hinge_world.hinge, hinge_world.slide):
         [body0] = joint_of(stage, connection).GetBody0Rel().GetTargets()
-        assert body0 in [root.GetPath() for root in roots]
-    assert len(roots) == 2
+        assert body0 in anchors
+    assert len(anchors) == 2
+
+
+def test_an_articulations_top_body_does_not_collide_with_the_body_it_stands_on(
+    tmp_path,
+):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    arm = prim_of(stage, hinge_world.hinge.child)
+    base = prim_of(stage, hinge_world.hinge.parent)
+    filtered = UsdPhysics.FilteredPairsAPI(arm).GetFilteredPairsRel().GetTargets()
+    assert filtered == [base.GetPath()]
 
 
 def test_a_servoed_drive_with_its_base_is_one_articulation(tmp_path):
     driven = _driven_base_world()
     stage = built(driven.world, tmp_path)
-    [root] = articulation_roots(stage)
+    [anchor] = articulation_anchors(stage)
     first_joint = drive_joint_of(stage, driven.drive.x)
-    assert first_joint.GetBody0Rel().GetTargets() == [root.GetPath()]
+    assert first_joint.GetBody0Rel().GetTargets() == [anchor]
 
 
 # %% joints that follow another
@@ -819,6 +843,93 @@ def _following_hinges_world() -> FollowingHingesWorld:
     )
 
 
+@dataclass
+class InsetDoorWorld:
+    """
+    A world with a door inset in a cabinet: as the door turns open on the hinge at its
+    edge, the shapeless frame the hinge is on slides out of the cabinet with it.
+    """
+
+    world: World
+    """
+    The world itself.
+    """
+
+    hinge: RevoluteConnection
+    """
+    The joint the door turns on, named after the degree of freedom it shares with the
+    frame's joint.
+    """
+
+    frame_joint: PrismaticConnection
+    """
+    The joint the frame slides out of the cabinet along, by a fraction of the door's
+    turn.
+    """
+
+
+def _inset_door_world() -> InsetDoorWorld:
+    world = World()
+    dynamics = JointDynamics(armature=0.0, dry_friction=1.0, damping=0.5)
+    with world.modify_world():
+        root = Body(name=PrefixedName("world"))
+        world.add_body(root)
+        cabinet = Body(name=PrefixedName("cabinet"))
+        cabinet.collision = _box(cabinet, Scale(0.5, 0.5, 0.8))
+        world.add_connection(
+            FixedConnection(
+                parent=root,
+                child=cabinet,
+                parent_T_connection_expression=HomogeneousTransformationMatrix.from_xyz_rpy(
+                    z=0.4, reference_frame=root
+                ),
+            )
+        )
+        opening = DegreeOfFreedom(
+            name=PrefixedName("door_joint"),
+            limits=DegreeOfFreedomLimits.from_position_range_and_speed(
+                lower_position=0.0, upper_position=math.pi / 2
+            ),
+        )
+        world.add_degree_of_freedom(opening)
+        frame = Body(name=PrefixedName("door_frame"))
+        frame_joint = PrismaticConnection(
+            name=PrefixedName("door_frame_joint"),
+            parent=cabinet,
+            child=frame,
+            parent_T_connection_expression=HomogeneousTransformationMatrix.from_xyz_rpy(
+                x=0.262, y=-0.2, reference_frame=cabinet
+            ),
+            axis=Vector3.X(reference_frame=frame),
+            raw_dof=opening,
+            multiplier=0.01,
+            dynamics=dynamics,
+        )
+        world.add_connection(frame_joint)
+        door = Body(name=PrefixedName("door"))
+        door.collision = ShapeCollection(
+            [
+                Box(
+                    origin=HomogeneousTransformationMatrix.from_xyz_rpy(
+                        y=0.2, reference_frame=door
+                    ),
+                    scale=Scale(0.02, 0.4, 0.6),
+                )
+            ],
+            reference_frame=door,
+        )
+        hinge = RevoluteConnection(
+            name=PrefixedName("door_joint"),
+            parent=frame,
+            child=door,
+            axis=-Vector3.Z(reference_frame=door),
+            raw_dof=opening,
+            dynamics=dynamics,
+        )
+        world.add_connection(hinge)
+    return InsetDoorWorld(world=world, hinge=hinge, frame_joint=frame_joint)
+
+
 def authored_api_schemas(prim: Usd.Prim) -> list[str]:
     """
     :return: The API schemas authored on the prim, including those of plugins usd-core
@@ -871,6 +982,20 @@ def test_a_mimicking_joint_turns_by_its_multiplier_and_offset(tmp_path, name):
     position = -gearing * reference - math.radians(offset)
     assert position == pytest.approx(
         follower.multiplier * reference + follower.offset, abs=1e-6
+    )
+
+
+def test_a_sliding_joint_following_a_turning_one_slides_by_its_multiplier_per_radian(
+    tmp_path,
+):
+    inset_door = _inset_door_world()
+    stage = built(inset_door.world, tmp_path)
+    frame_joint = inset_door.frame_joint
+    _, gearing, offset = mimicking(joint_of(stage, frame_joint))
+    reference = 0.4
+    position = -gearing * math.degrees(reference) - offset
+    assert position == pytest.approx(
+        frame_joint.multiplier * reference + frame_joint.offset, abs=1e-6
     )
 
 
@@ -937,7 +1062,7 @@ def test_a_single_joint_with_friction_is_an_articulation(tmp_path):
     hinge_world = _hinge_world_with_dynamics()
     stage = built(hinge_world.world, tmp_path)
     [body0] = joint_of(stage, hinge_world.hinge).GetBody0Rel().GetTargets()
-    assert body0 in [root.GetPath() for root in articulation_roots(stage)]
+    assert body0 in articulation_anchors(stage)
 
 
 # %% contact categories

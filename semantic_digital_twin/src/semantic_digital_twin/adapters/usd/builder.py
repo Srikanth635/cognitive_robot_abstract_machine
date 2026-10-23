@@ -418,6 +418,14 @@ class AxisJoint:
     Whether the joint turns about its axis rather than slides along it.
     """
 
+    @property
+    def stage_units_per_world_unit(self) -> float:
+        """
+        :return: How many of the stage's units of the joint's position make one of the
+            world's: degrees per radian when it turns, one when it slides.
+        """
+        return math.degrees(1.0) if self.turns else 1.0
+
 
 # %% the builder
 
@@ -435,8 +443,8 @@ class UsdBuilder(MultiSimBuilder):
     Moving bodies joined by joints, such as a robot or a drawer, are one PhysX
     articulation each, which keeps a chain of light and heavy links steady, is where PhysX
     applies joint friction, and is how Isaac Sim reads and drives joints: it hangs from a
-    light body of its own fixed to the static body it stands on, and its links do not
-    collide with each other.
+    body of its own, fixed to the static body it stands on by the articulation's root
+    joint, so its base is fixed, and its links do not collide with each other.
 
     Shapes keep the contact categories the MuJoCo simulation gives them: those of
     categories that do not collide are kept apart by collision groups.
@@ -458,13 +466,13 @@ class UsdBuilder(MultiSimBuilder):
     axes.
     """
 
-    added_link_mass: float = 1.0
+    added_link_mass: float = 0.01
     """
     The mass, in kilograms, of each body the builder adds: those a wheeled drive's base
     moves across the floor through, and the anchor of each articulation.
     """
 
-    added_link_inertia: float = 1e-2
+    added_link_inertia: float = 1e-4
     """
     The moment of inertia, in kilogram square metres, of each of those bodies about each
     of its axes.
@@ -798,7 +806,8 @@ class UsdBuilder(MultiSimBuilder):
         """
         Couple a joint to the joint a servo of its degree of freedom drives, if it shares
         that degree of freedom with it: the world has each at its own multiple of the
-        degree of freedom, plus its own offset.
+        degree of freedom, plus its own offset. PhysX reads the coupling in the stage's
+        units of both joints.
 
         :param follower: The joint to couple.
         """
@@ -828,12 +837,16 @@ class UsdBuilder(MultiSimBuilder):
             UsdMimicJointProperty.GEARING.on(axis),
             Sdf.ValueTypeNames.Float,
             custom=False,
-        ).Set(-ratio)
+        ).Set(
+            -ratio
+            * follower.stage_units_per_world_unit
+            / primary.stage_units_per_world_unit
+        )
         prim.CreateAttribute(
             UsdMimicJointProperty.OFFSET.on(axis),
             Sdf.ValueTypeNames.Float,
             custom=False,
-        ).Set(-(math.degrees(offset) if follower.turns else offset))
+        ).Set(-offset * follower.stage_units_per_world_unit)
 
     def _build_wheeled_drive(self, drive: WheeledDrive) -> None:
         """
@@ -971,8 +984,10 @@ class UsdBuilder(MultiSimBuilder):
 
     def _define_articulation_anchor(self, stand: Body, top: Body) -> Sdf.Path:
         """
-        Write the light body an articulation hangs from, standing where the static body
-        it stands on is and fixed to it, as the articulation's root.
+        Write the body an articulation hangs from, standing where the static body it
+        stands on is, and the fixed joint between the two as the articulation's root,
+        which fixes the articulation's base. The articulation's topmost body does not
+        collide with the static body, as it would not if its joint joined them directly.
 
         :param stand: The static body the articulation stands on.
         :param top: The articulation's topmost body.
@@ -980,14 +995,15 @@ class UsdBuilder(MultiSimBuilder):
         """
         pose = self._world_pose(stand)
         prim = self._define_added_link(f"{top.name.name}_anchor", pose)
-        UsdPhysics.ArticulationRootAPI.Apply(prim)
-        prim.AddAppliedSchema(UsdPhysxSchema.ARTICULATION.value)
-        prim.CreateAttribute(
-            UsdPhysxAttribute.SELF_COLLISIONS.value, Sdf.ValueTypeNames.Bool
-        ).Set(False)
         joint = UsdPhysics.FixedJoint.Define(
             self._stage, self._joint_path(f"{top.name.name}_anchor")
         )
+        joint_prim = joint.GetPrim()
+        UsdPhysics.ArticulationRootAPI.Apply(joint_prim)
+        joint_prim.AddAppliedSchema(UsdPhysxSchema.ARTICULATION.value)
+        joint_prim.CreateAttribute(
+            UsdPhysxAttribute.SELF_COLLISIONS.value, Sdf.ValueTypeNames.Bool
+        ).Set(False)
         self._connect(
             joint, f"{top.name.name}_anchor", self._body_paths[stand], prim.GetPath()
         )
@@ -995,6 +1011,9 @@ class UsdBuilder(MultiSimBuilder):
         joint.CreateLocalRot0Attr(Gf.Quatf(1.0))
         joint.CreateLocalPos1Attr(Gf.Vec3f(0.0, 0.0, 0.0))
         joint.CreateLocalRot1Attr(Gf.Quatf(1.0))
+        UsdPhysics.FilteredPairsAPI.Apply(
+            self._stage.GetPrimAtPath(self._body_paths[top])
+        ).CreateFilteredPairsRel().AddTarget(self._body_paths[stand])
         return prim.GetPath()
 
     def _define_axis_joint(
