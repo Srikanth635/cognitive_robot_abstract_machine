@@ -46,6 +46,7 @@ from semantic_digital_twin.world_description.world_entity import (
     Actuator,
     Body,
     Connection,
+    GravityCompensation,
     PositionServo,
     Region,
     VelocityServo,
@@ -63,6 +64,22 @@ class UsdCustomDataKey(StrEnum):
     """
     The name, in the world, of the body, connection or degree of freedom the prim stands
     for.
+    """
+
+    ID = "semantic_digital_twin:id"
+    """
+    The id of the body a prim stands for.
+    """
+
+    MEASURED_DEGREE_OF_FREEDOM = "semantic_digital_twin:measured_degree_of_freedom"
+    """
+    The id of the degree of freedom whose position a joint's position is.
+    """
+
+    COMMANDED_DEGREE_OF_FREEDOM = "semantic_digital_twin:commanded_degree_of_freedom"
+    """
+    The id of the degree of freedom a servo commands a joint through: the measured one
+    itself, or, for a wheeled drive's joint, the velocity the drive is commanded with.
     """
 
 
@@ -118,6 +135,11 @@ class UsdPhysxSchema(StrEnum):
         and still reads it.
     """
 
+    FORCE = "PhysxForceAPI"
+    """
+    A force or acceleration PhysX applies to a rigid body at every step.
+    """
+
 
 class UsdPhysxAttribute(StrEnum):
     """
@@ -127,6 +149,32 @@ class UsdPhysxAttribute(StrEnum):
     SELF_COLLISIONS = "physxArticulation:enabledSelfCollisions"
     """
     Whether the links of an articulation collide with each other.
+    """
+
+    FORCE = "physxForce:force"
+    """
+    The force, or the acceleration, applied to a rigid body.
+    """
+
+    FORCE_MODE = "physxForce:mode"
+    """
+    Whether :attr:`FORCE` is a force or an acceleration.
+    """
+
+    FORCE_IN_WORLD_FRAME = "physxForce:worldFrameEnabled"
+    """
+    Whether :attr:`FORCE` is stated in the world's frame rather than the body's.
+    """
+
+
+class UsdPhysxForceMode(StrEnum):
+    """
+    What the vector of :attr:`UsdPhysxAttribute.FORCE` is.
+    """
+
+    ACCELERATION = "acceleration"
+    """
+    An acceleration, applied whatever the body's mass.
     """
 
 
@@ -307,6 +355,11 @@ class DrivenJoint:
     Where the world holds the joint, in radians or metres.
     """
 
+    measured: DegreeOfFreedom
+    """
+    The degree of freedom whose position the joint's position is.
+    """
+
 
 @dataclass(frozen=True)
 class ShapeContactCategories:
@@ -379,11 +432,11 @@ class UsdBuilder(MultiSimBuilder):
     root can move, and is a static collider otherwise. Connections become joints between
     those prims, and servos become the drives of their joints.
 
-    Moving bodies joined to each other by two joints or more, such as a robot, or by a
-    joint with friction, damping or armature, are one PhysX articulation, which keeps a
-    chain of light and heavy links steady and is where PhysX applies joint friction: it
-    hangs from a light body of its own fixed to the static body it stands on, and its
-    links do not collide with each other.
+    Moving bodies joined by joints, such as a robot or a drawer, are one PhysX
+    articulation each, which keeps a chain of light and heavy links steady, is where PhysX
+    applies joint friction, and is how Isaac Sim reads and drives joints: it hangs from a
+    light body of its own fixed to the static body it stands on, and its links do not
+    collide with each other.
 
     Shapes keep the contact categories the MuJoCo simulation gives them: those of
     categories that do not collide are kept apart by collision groups.
@@ -405,16 +458,22 @@ class UsdBuilder(MultiSimBuilder):
     axes.
     """
 
-    added_link_mass: float = 0.01
+    added_link_mass: float = 1.0
     """
     The mass, in kilograms, of each body the builder adds: those a wheeled drive's base
     moves across the floor through, and the anchor of each articulation.
     """
 
-    added_link_inertia: float = 1e-4
+    added_link_inertia: float = 1e-2
     """
     The moment of inertia, in kilogram square metres, of each of those bodies about each
     of its axes.
+    """
+
+    gravity: float = 9.81
+    """
+    The acceleration, in metres per square second, with which gravity pulls every body
+    down.
     """
 
     _stage: Usd.Stage = field(init=False)
@@ -475,7 +534,7 @@ class UsdBuilder(MultiSimBuilder):
         self._stage.SetDefaultPrim(world_prim)
         scene = UsdPhysics.Scene.Define(self._stage, UsdStagePath.PHYSICS_SCENE.value)
         scene.CreateGravityDirectionAttr(Gf.Vec3f(0.0, 0.0, -1.0))
-        scene.CreateGravityMagnitudeAttr(9.81)
+        scene.CreateGravityMagnitudeAttr(self.gravity)
         UsdGeom.Scope.Define(self._stage, UsdStagePath.JOINTS.value)
         self._articulation_tops = self._find_articulation_tops()
 
@@ -483,10 +542,20 @@ class UsdBuilder(MultiSimBuilder):
         for axis_joint in self._axis_joints:
             self._mimic_shared_degree_of_freedom(axis_joint)
         self._write_collision_groups()
+        for commanded, driven_joint in self._driven_joints.items():
+            prim = self._stage.GetPrimAtPath(driven_joint.path)
+            prim.SetCustomDataByKey(
+                UsdCustomDataKey.MEASURED_DEGREE_OF_FREEDOM.value,
+                str(driven_joint.measured.id),
+            )
+            prim.SetCustomDataByKey(
+                UsdCustomDataKey.COMMANDED_DEGREE_OF_FREEDOM.value, str(commanded.id)
+            )
         self._stage.Save()
 
     def _build_body(self, body: Body):
         prim = self._define_body_prim(body.name.name, self._world_pose(body))
+        prim.SetCustomDataByKey(UsdCustomDataKey.ID.value, str(body.id))
         self._body_paths[body] = prim.GetPath()
         if body.parent_connection is None:
             return
@@ -497,6 +566,7 @@ class UsdBuilder(MultiSimBuilder):
         if not self._moves(body):
             return
         UsdPhysics.RigidBodyAPI.Apply(prim)
+        self._carry_weight(body, prim)
         if UsdBodyConverter.mass_str not in body_props:
             if not body.collision.shapes:
                 mass = UsdPhysics.MassAPI.Apply(prim)
@@ -656,7 +726,10 @@ class UsdBuilder(MultiSimBuilder):
             AxisJoint(connection=connection, path=joint.GetPath(), turns=turns)
         )
         driven_joint = DrivenJoint(
-            path=joint.GetPath(), turns=turns, position=float(connection.position)
+            path=joint.GetPath(),
+            turns=turns,
+            position=float(connection.position),
+            measured=connection.raw_dof,
         )
         if connection.name.name == connection.raw_dof.name.name:
             self._driven_joints[connection.raw_dof] = driven_joint
@@ -817,7 +890,10 @@ class UsdBuilder(MultiSimBuilder):
             )
             if axis.commanded is not None:
                 self._driven_joints[axis.commanded] = DrivenJoint(
-                    path=joint.GetPath(), turns=axis.turns, position=position
+                    path=joint.GetPath(),
+                    turns=axis.turns,
+                    position=position,
+                    measured=axis.measured,
                 )
             parent_path = child_path
             parent_T_odom = Gf.Matrix4d(1.0)
@@ -851,11 +927,10 @@ class UsdBuilder(MultiSimBuilder):
 
     def _find_articulation_tops(self) -> set[Body]:
         """
-        :return: The topmost body of every group of moving bodies joined to each other
-            by two joints or more, the group standing on a static body.
+        :return: The topmost body of every group of moving bodies joined by a joint, the
+            group standing on a static body.
         """
         joints_below: Dict[Body, int] = {}
-        resisting: set[Body] = set()
         for body in self.world.bodies:
             if not self._moves(body):
                 continue
@@ -867,26 +942,11 @@ class UsdBuilder(MultiSimBuilder):
             joints_below[top] = joints_below.get(top, 0) + self._joint_count(
                 body.parent_connection
             )
-            if self._resists_motion(body.parent_connection):
-                resisting.add(top)
         return {
             top
             for top, joints in joints_below.items()
-            if (joints >= 2 or top in resisting)
-            and not isinstance(top.parent_connection, Connection6DoF)
+            if joints >= 1 and not isinstance(top.parent_connection, Connection6DoF)
         }
-
-    @staticmethod
-    def _resists_motion(connection: Connection) -> bool:
-        """
-        :param connection: A connection of the world.
-        :return: Whether the stage writes friction, damping or armature for its joint,
-            which PhysX applies only within an articulation.
-        """
-        return (
-            isinstance(connection, (RevoluteConnection, PrismaticConnection))
-            and connection.dynamics != JointDynamics()
-        )
 
     def _joint_count(self, connection: Connection) -> int:
         """
@@ -1029,6 +1089,33 @@ class UsdBuilder(MultiSimBuilder):
                 return True
             connection = connection.parent.parent_connection
         return False
+
+    def _carry_weight(self, body: Body, prim: Usd.Prim) -> None:
+        """
+        Carry the part of a moving body's weight that its :class:`GravityCompensation`
+        states, as an acceleration up against gravity.
+
+        :param body: A moving body of the world.
+        :param prim: The body's prim.
+        """
+        compensation = body.get_simulator_property_of_type(GravityCompensation)
+        if compensation is None:
+            return
+        prim.AddAppliedSchema(UsdPhysxSchema.FORCE.value)
+        prim.CreateAttribute(
+            UsdPhysxAttribute.FORCE.value, Sdf.ValueTypeNames.Vector3f, custom=False
+        ).Set(Gf.Vec3f(0.0, 0.0, compensation.fraction * self.gravity))
+        prim.CreateAttribute(
+            UsdPhysxAttribute.FORCE_MODE.value,
+            Sdf.ValueTypeNames.Token,
+            custom=False,
+            variability=Sdf.VariabilityUniform,
+        ).Set(UsdPhysxForceMode.ACCELERATION.value)
+        prim.CreateAttribute(
+            UsdPhysxAttribute.FORCE_IN_WORLD_FRAME.value,
+            Sdf.ValueTypeNames.Bool,
+            custom=False,
+        ).Set(True)
 
     def _define_body_prim(self, name: str, pose: Gf.Matrix4d) -> Usd.Prim:
         """

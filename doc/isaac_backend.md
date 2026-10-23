@@ -30,8 +30,8 @@ The stepped API that coraplex and giskard use is not part of the generic layer:
    under MuJoCo is unchanged; this is testable now.
 2. **USD builder.** `IsaacBuilder(MultiSimBuilder)` writes the world as a USD stage with
    `pxr` (UsdGeom, UsdPhysics, PhysxSchema). Testable with `usd-core`, without Isaac.
-3. **Isaac simulator.** `IsaacSimulator(BaseSimulator)` in `physics_simulators` loads the
-   stage into Isaac Sim and steps PhysX; needs Isaac Sim (Python 3.12, 6.x).
+3. **Isaac simulator.** `IsaacSimulator(BaseSimulator)` in `semantic_digital_twin/adapters/isaac`
+   loads the stage into Isaac Sim and steps PhysX; needs Isaac Sim (Python 3.12, 6.x).
 4. **Isaac synchronizer and `IsaacSim(MultiSim)`**, implementing the interface of step 1.
 5. **Physics viewer under Isaac**: the scenes and the action plans are reused; the window,
    pacing and simulation settings get an Isaac version. The grasps are tuned anew for PhysX.
@@ -49,6 +49,7 @@ The stepped API that coraplex and giskard use is not part of the generic layer:
 | A degree of freedom shared by several joints (mimic) | `PhysxSchema.PhysxMimicJointAPI` |
 | `PositionServo` gains | `UsdPhysics.DriveAPI`: stiffness, damping, max force |
 | Robot | `UsdPhysics.ArticulationRootAPI` on its root |
+| `GravityCompensation` | `PhysxForceAPI`: an upward acceleration of that fraction of gravity, in the world's frame |
 | `ContactParameters` friction | `UsdPhysics.MaterialAPI` |
 
 USD angular joints are in degrees: limits, positions, and the stiffness and damping of an
@@ -65,9 +66,10 @@ angular drive are per degree, so radians are converted at the boundary.
   bodies, position and velocity servos as drives, and a servoed wheeled drive as a slide, a
   slide and a hinge through two light bodies of its own. The PR2 at the counter builds in
   under three seconds; written as `.usdc`, the scene is about 5 MB.
-- **Articulations.** Moving bodies joined by two joints or more are one articulation,
-  hanging from a light anchor fixed to the static body they stand on, with self-collisions
-  off. Written as separate rigid bodies instead, the PR2 drifted 4 m in 3 s under Isaac
+- **Articulations.** Moving bodies joined by joints are one articulation, hanging from an
+  anchor fixed to the static body they stand on, with self-collisions off; a body on a
+  single joint is one too, since Isaac Sim reads and drives joints only through
+  articulations. Written as separate rigid bodies instead, the PR2 drifted 4 m in 3 s under Isaac
   Sim 6.0 (its drive's light links against a heavy base); as an articulation its driven
   joints hold within 0.03 of the world's values, and the objects stay on the counter.
 - **Joints sharing a degree of freedom** (the PR2 gripper's fingers) mimic the joint named
@@ -94,7 +96,32 @@ angular drive are per degree, so radians are converted at the boundary.
   - the furniture friction the physics viewer's scenes give (1.0) holds a drawer under
     MuJoCo but lets `cabinet8_drawer_bottom` creep 13 cm in 3 s under PhysX; a thousand
     times that holds it.
-- **Not yet written:** contact stiffness and friction.
+- **Steps 3 and 4 done** in `adapters/isaac`: `IsaacApplication` (the one `SimulationApp`
+  of the process), `IsaacSimulator`, `IsaacSynchronizer` and `IsaacSim(MultiSim,
+  SteppedSimulation)`. The builder tags each prim with the id of its body and each driven
+  joint with the degrees of freedom it measures and is commanded through, which is how the
+  synchronizer finds them. As under MuJoCo, servoed joints keep the world's set point, and
+  joints without a servo, a drive's odometry and free bodies are read back; the world puts
+  a drive's odometry only when the simulation starts. PhysX starts articulations with every
+  joint at zero, so the synchronizer puts every joint and free body where the world has it.
+- **What made the PR2 behave as under MuJoCo:**
+  - gravity compensation: without it the torso servo stopped 17 mm below its set point;
+  - a step of 1/200 s, which divides giskard's 10 ms tick; at 1/240 s a tick advanced 2
+    steps, 8.3 ms, and the base controller overshot and diverged. `step_simulation` refuses
+    a duration that is not a whole number of steps;
+  - drive links and anchors of 1 kg: at 10 g, against the PR2's 271 kg, turning the base
+    blew it up.
+- **Coraplex plans through `IsaacSim`**, against `MujocoSim` on the same plan:
+
+  | Plan | Isaac Sim 6.0 | MuJoCo |
+  | --- | --- | --- |
+  | hold still, 3 s | mean servo error 0.0030 | 0.0030 |
+  | `raise_torso` | torso 0.2887 of 0.2904, 22.2 s simulated | 0.2900, 22.1 s |
+  | `go_to_the_counter` | base at x 1.852 of 1.85, 2.8 s simulated | 1.852, 2.8 s |
+  | `pick_up_milk` | milk lifted 9.1 cm | 9.5 cm |
+
+  The objects on the counter move less than 7 mm while the robot holds still.
+- **Not yet written:** contact stiffness and friction; rendering a window.
 
 ## Checking a stage in Isaac Sim
 
@@ -110,8 +137,11 @@ The first start builds Isaac's caches and takes a few minutes; later starts take
 
 ## Open points
 
-- The Python environment Isaac Sim 6.x is installed in, and how the repository's packages
-  are installed next to it (Isaac Sim pins its own numpy, torch and USD).
+- CRAM and Isaac Sim run in one process in `isaac-cram-env`, a copy of `new-cram-env` with
+  `isaacsim[all,extscache]==6.0.0.1` pip-installed; `typing_extensions` is raised to 4.16
+  over Isaac Sim's pin of 4.12, which CRAM needs.
+- The fancy doors and the drawer creep above.
+- The physics viewer under Isaac (step 5).
 - `usd-core` (in semantic_digital_twin's `datasets` extra) for builder tests without Isaac;
   it must not be installed next to Isaac Sim, which ships its own USD.
 - Tests that need Isaac Sim are skipped when it is not installed, so CI runs without it.
