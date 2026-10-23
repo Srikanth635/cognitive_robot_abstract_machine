@@ -70,12 +70,21 @@ angular drive are per degree, so radians are converted at the boundary.
   off. Written as separate rigid bodies instead, the PR2 drifted 4 m in 3 s under Isaac
   Sim 6.0 (its drive's light links against a heavy base); as an articulation its driven
   joints hold within 0.03 of the world's values, and the objects stay on the counter.
-- **Not yet written:**
-  - a degree of freedom shared by several joints (the PR2 gripper's fingers) is written
-    as independent joints, only the one named after it driven; it needs PhysX's mimic
-    joint API;
-  - joint armature, friction and damping (the furniture's doors swing open), and contact
-    stiffness and friction.
+- **Joints sharing a degree of freedom** (the PR2 gripper's fingers) mimic the joint named
+  after it through `PhysxMimicJointAPI` (deprecated in Isaac Sim 6.0 for the Newton
+  schema's mimic API, still read). Commanding only the right gripper's primary finger to
+  0.436 rad brings all four finger joints to 0.437 rad.
+- **Joint friction and contact categories.** A joint's dry friction, damping and armature
+  become `PhysxJointAxisAPI` under the drive axis name (`angular`, `linear`; PhysX ignores
+  the per-axis names), and its joint becomes part of an articulation, where PhysX applies
+  them. The MuJoCo contact categories of the shapes become collision groups.
+- **Open in the counter scene:**
+  - the apartment's two-joint "fancy" doors flip over within 0.3 s under PhysX, with the
+    coupling between their joints hard, compliant or removed;
+  - the furniture friction the physics viewer's scenes give (1.0) holds a drawer under
+    MuJoCo but lets `cabinet8_drawer_bottom` creep 13 cm in 3 s under PhysX; a thousand
+    times that holds it.
+- **Not yet written:** contact stiffness and friction.
 
 ## Checking a stage in Isaac Sim
 
