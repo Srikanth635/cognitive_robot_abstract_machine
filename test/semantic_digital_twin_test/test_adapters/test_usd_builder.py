@@ -1,0 +1,627 @@
+"""
+Tests for writing a world as a USD stage, the scene a PhysX simulator such as Isaac Sim
+loads.
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+import semantic_digital_twin
+from semantic_digital_twin.adapters.usd.builder import UsdBuilder, UsdCustomDataKey
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import (
+    HomogeneousTransformationMatrix,
+    Vector3,
+)
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connection_properties import (
+    ServoGains,
+    VelocityServoGains,
+)
+from semantic_digital_twin.world_description.connections import (
+    Connection6DoF,
+    FixedConnection,
+    OmniDrive,
+    PrismaticConnection,
+    RevoluteConnection,
+)
+from semantic_digital_twin.world_description.degree_of_freedom import (
+    DegreeOfFreedom,
+    DegreeOfFreedomLimits,
+)
+from semantic_digital_twin.world_description.geometry import Box, Mesh, Scale
+from semantic_digital_twin.world_description.inertial_properties import Inertial
+from semantic_digital_twin.world_description.shape_collection import ShapeCollection
+from semantic_digital_twin.world_description.world_entity import (
+    Body,
+    PositionServo,
+    VelocityServo,
+)
+
+from .usd_stages import PXR_AVAILABLE
+
+if PXR_AVAILABLE:
+    from pxr import Gf, Usd, UsdGeom, UsdPhysics
+
+pytestmark = pytest.mark.skipif(
+    not PXR_AVAILABLE, reason="usd-core (pxr) not installed"
+)
+
+# %% worlds to build
+
+
+def _box(body: Body, scale: Scale) -> ShapeCollection:
+    return ShapeCollection(
+        [
+            Box(
+                origin=HomogeneousTransformationMatrix(reference_frame=body),
+                scale=scale,
+            )
+        ],
+        reference_frame=body,
+    )
+
+
+@dataclass
+class HingeWorld:
+    """
+    A world with a static base, an arm on a servoed hinge, a carriage on a servoed slide
+    and a free box, and the handles a test needs.
+    """
+
+    world: World
+    """
+    The world itself.
+    """
+
+    base: Body
+    """
+    The base, fixed to the world's root.
+    """
+
+    hinge: RevoluteConnection
+    """
+    The hinge the arm turns on.
+    """
+
+    slide: PrismaticConnection
+    """
+    The slide the carriage moves along.
+    """
+
+    free_box: Body
+    """
+    A box free to move, one metre above the root.
+    """
+
+    hinge_gains: ServoGains
+    """
+    The gains of the hinge's servo.
+    """
+
+    slide_gains: ServoGains
+    """
+    The gains of the slide's servo.
+    """
+
+
+def _hinge_world(hinge_position: float = 0.0) -> HingeWorld:
+    world = World()
+    hinge_gains = ServoGains(stiffness=50.0, damping=5.0, torque_limit=2.0)
+    slide_gains = ServoGains(stiffness=400.0, damping=40.0, torque_limit=100.0)
+    with world.modify_world():
+        root = Body(name=PrefixedName("world"))
+        world.add_body(root)
+        base = Body(name=PrefixedName("base"))
+        base.collision = _box(base, Scale(0.4, 0.4, 0.1))
+        world.add_connection(FixedConnection(parent=root, child=base))
+
+        arm = Body(name=PrefixedName("arm"))
+        arm.collision = _box(arm, Scale(0.2, 0.02, 0.02))
+        hinge_dof = DegreeOfFreedom(
+            name=PrefixedName("hinge"),
+            limits=DegreeOfFreedomLimits.from_position_range_and_speed(
+                lower_position=-1.0, upper_position=1.0
+            ),
+        )
+        world.add_degree_of_freedom(hinge_dof)
+        hinge = RevoluteConnection(
+            name=PrefixedName("hinge"),
+            parent=base,
+            child=arm,
+            parent_T_connection_expression=HomogeneousTransformationMatrix.from_xyz_rpy(
+                x=0.1, z=0.2, reference_frame=base
+            ),
+            axis=Vector3.Y(reference_frame=arm),
+            raw_dof=hinge_dof,
+        )
+        world.add_connection(hinge)
+
+        carriage = Body(name=PrefixedName("carriage"))
+        carriage.collision = _box(carriage, Scale(0.05, 0.05, 0.05))
+        slide_dof = DegreeOfFreedom(
+            name=PrefixedName("slide"),
+            limits=DegreeOfFreedomLimits.from_position_range_and_speed(
+                lower_position=0.0, upper_position=0.3
+            ),
+        )
+        world.add_degree_of_freedom(slide_dof)
+        slide = PrismaticConnection(
+            name=PrefixedName("slide"),
+            parent=base,
+            child=carriage,
+            parent_T_connection_expression=HomogeneousTransformationMatrix.from_xyz_rpy(
+                y=0.3, reference_frame=base
+            ),
+            axis=Vector3.X(reference_frame=carriage),
+            raw_dof=slide_dof,
+        )
+        world.add_connection(slide)
+
+        free_box = Body(name=PrefixedName("free.box"))
+        free_box.collision = _box(free_box, Scale(0.1, 0.2, 0.3))
+        free_box.inertial = Inertial(mass=0.5)
+        world.add_connection(
+            Connection6DoF.create_with_dofs(
+                world=world,
+                parent=root,
+                child=free_box,
+                parent_T_connection_expression=HomogeneousTransformationMatrix.from_xyz_rpy(
+                    z=1.0, reference_frame=root
+                ),
+            )
+        )
+
+        for name, dof, gains in (
+            ("hinge_servo", hinge_dof, hinge_gains),
+            ("slide_servo", slide_dof, slide_gains),
+        ):
+            servo = PositionServo(name=PrefixedName(name), gains=gains)
+            servo.add_dof(dof)
+            world.add_actuator(servo)
+    with world.modify_world():
+        world.state[hinge_dof.id].position = hinge_position
+    world.notify_state_change()
+    return HingeWorld(
+        world=world,
+        base=base,
+        hinge=hinge,
+        slide=slide,
+        free_box=free_box,
+        hinge_gains=hinge_gains,
+        slide_gains=slide_gains,
+    )
+
+
+def built(world: World, tmp_path: Path) -> Usd.Stage:
+    """
+    :return: The stage the builder wrote for the world, opened from its file.
+    """
+    file_path = tmp_path / "scene.usda"
+    UsdBuilder().build_world(world=world, file_path=str(file_path))
+    return Usd.Stage.Open(str(file_path))
+
+
+def prim_of(stage: Usd.Stage, body: Body) -> Usd.Prim:
+    """
+    :return: The prim the builder made of the body.
+    """
+    [prim] = [
+        prim
+        for prim in stage.Traverse()
+        if prim.GetCustomDataByKey(UsdCustomDataKey.NAME) == body.name.name
+    ]
+    return prim
+
+
+def joint_of(stage: Usd.Stage, connection) -> UsdPhysics.Joint:
+    """
+    :return: The joint the builder made of the connection.
+    """
+    [prim] = [
+        prim
+        for prim in stage.Traverse()
+        if prim.IsA(UsdPhysics.Joint)
+        and prim.GetCustomDataByKey(UsdCustomDataKey.NAME) == connection.name.name
+    ]
+    return UsdPhysics.Joint(prim)
+
+
+def world_transform(prim: Usd.Prim) -> Gf.Matrix4d:
+    return UsdGeom.Xformable(prim).ComputeLocalToWorldTransform(Usd.TimeCode.Default())
+
+
+def joint_frame_in_world(stage: Usd.Stage, joint: UsdPhysics.Joint, side: int):
+    """
+    :return: The rotation matrix and position of the joint's frame in the world, as
+        seen from body0 (side 0) or body1 (side 1).
+    """
+    body_relationship = joint.GetBody0Rel() if side == 0 else joint.GetBody1Rel()
+    local_position = (
+        joint.GetLocalPos0Attr() if side == 0 else joint.GetLocalPos1Attr()
+    ).Get()
+    local_rotation = (
+        joint.GetLocalRot0Attr() if side == 0 else joint.GetLocalRot1Attr()
+    ).Get()
+    body = stage.GetPrimAtPath(body_relationship.GetTargets()[0])
+    body_to_world = Gf.Transform(world_transform(body))
+    body_rotation = np.array(Gf.Matrix3d(body_to_world.GetRotation())).T
+    local = np.array(Gf.Matrix3d(Gf.Rotation(Gf.Quatd(local_rotation)))).T
+    position = np.array(body_to_world.GetTranslation()) + body_rotation @ np.array(
+        local_position
+    )
+    return body_rotation @ local, position
+
+
+# %% the stage
+
+
+def test_the_stage_simulates_gravity_pulling_down(tmp_path):
+    stage = built(_hinge_world().world, tmp_path)
+    [scene] = [prim for prim in stage.Traverse() if prim.IsA(UsdPhysics.Scene)]
+    physics_scene = UsdPhysics.Scene(scene)
+    assert tuple(physics_scene.GetGravityDirectionAttr().Get()) == (0.0, 0.0, -1.0)
+    assert UsdGeom.GetStageUpAxis(stage) == UsdGeom.Tokens.z
+    assert UsdGeom.GetStageMetersPerUnit(stage) == 1.0
+
+
+def test_every_body_keeps_its_name_on_its_prim(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    for body in (hinge_world.base, hinge_world.free_box):
+        assert prim_of(stage, body).IsValid()
+
+
+# %% bodies
+
+
+def test_a_body_is_placed_where_the_world_has_it(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    translation = world_transform(
+        prim_of(stage, hinge_world.free_box)
+    ).ExtractTranslation()
+    expected = hinge_world.free_box.global_pose.to_np()[:3, 3]
+    assert list(translation) == pytest.approx(list(expected))
+
+
+def test_a_free_body_is_a_rigid_body_without_a_joint(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    box = prim_of(stage, hinge_world.free_box)
+    assert box.HasAPI(UsdPhysics.RigidBodyAPI)
+    joined = [
+        prim
+        for prim in stage.Traverse()
+        if prim.IsA(UsdPhysics.Joint)
+        and box.GetPath() in UsdPhysics.Joint(prim).GetBody1Rel().GetTargets()
+    ]
+    assert joined == []
+
+
+def test_a_body_fixed_to_the_root_does_not_move(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    assert not prim_of(stage, hinge_world.base).HasAPI(UsdPhysics.RigidBodyAPI)
+
+
+def test_a_body_on_a_joint_moves(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    assert prim_of(stage, hinge_world.hinge.child).HasAPI(UsdPhysics.RigidBodyAPI)
+
+
+def test_a_body_with_an_inertial_has_its_mass(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    mass = UsdPhysics.MassAPI(prim_of(stage, hinge_world.free_box)).GetMassAttr().Get()
+    assert mass == pytest.approx(hinge_world.free_box.inertial.mass)
+
+
+# %% shapes
+
+
+def test_a_box_is_a_unit_cube_scaled_to_the_boxs_size(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    [cube] = [
+        prim
+        for prim in Usd.PrimRange(prim_of(stage, hinge_world.free_box))
+        if prim.IsA(UsdGeom.Cube)
+    ]
+    scale = Gf.Transform(
+        world_transform(cube) * world_transform(cube.GetParent()).GetInverse()
+    ).GetScale()
+    size = UsdGeom.Cube(cube).GetSizeAttr().Get()
+    [box] = hinge_world.free_box.collision.shapes
+    assert [size * factor for factor in scale] == pytest.approx(
+        list(box.scale.to_np()[:3])
+    )
+
+
+def test_a_collision_shape_collides(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    [cube] = [
+        prim
+        for prim in Usd.PrimRange(prim_of(stage, hinge_world.free_box))
+        if prim.IsA(UsdGeom.Cube)
+    ]
+    assert cube.HasAPI(UsdPhysics.CollisionAPI)
+
+
+def test_a_mesh_of_a_moving_body_collides_as_its_convex_hull(tmp_path):
+    hinge_world = _hinge_world()
+    world = hinge_world.world
+    milk = Path(semantic_digital_twin.__file__).parents[2] / "resources" / "stl"
+    mesh = Mesh(
+        filename=str(milk / "milk.stl"),
+        origin=HomogeneousTransformationMatrix(reference_frame=hinge_world.free_box),
+    )
+    with world.modify_world():
+        hinge_world.free_box.collision = ShapeCollection(
+            [mesh], reference_frame=hinge_world.free_box
+        )
+    stage = built(world, tmp_path)
+    [mesh_prim] = [
+        prim
+        for prim in Usd.PrimRange(prim_of(stage, hinge_world.free_box))
+        if prim.IsA(UsdGeom.Mesh)
+    ]
+    assert len(UsdGeom.Mesh(mesh_prim).GetPointsAttr().Get()) == len(mesh.mesh.vertices)
+    approximation = UsdPhysics.MeshCollisionAPI(mesh_prim).GetApproximationAttr().Get()
+    assert approximation == UsdPhysics.Tokens.convexHull
+
+
+# %% joints
+
+
+def test_a_hinge_becomes_a_revolute_joint_between_its_bodies(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    joint = joint_of(stage, hinge_world.hinge)
+    assert joint.GetPrim().IsA(UsdPhysics.RevoluteJoint)
+    assert joint.GetBody0Rel().GetTargets() == [
+        prim_of(stage, hinge_world.hinge.parent).GetPath()
+    ]
+    assert joint.GetBody1Rel().GetTargets() == [
+        prim_of(stage, hinge_world.hinge.child).GetPath()
+    ]
+
+
+def test_a_revolute_joints_limits_are_in_degrees(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    joint = UsdPhysics.RevoluteJoint(joint_of(stage, hinge_world.hinge).GetPrim())
+    limits = hinge_world.hinge.dof.limits
+    assert joint.GetLowerLimitAttr().Get() == pytest.approx(
+        math.degrees(limits.lower.position)
+    )
+    assert joint.GetUpperLimitAttr().Get() == pytest.approx(
+        math.degrees(limits.upper.position)
+    )
+
+
+def test_a_prismatic_joints_limits_are_in_metres(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    joint = UsdPhysics.PrismaticJoint(joint_of(stage, hinge_world.slide).GetPrim())
+    limits = hinge_world.slide.dof.limits
+    assert joint.GetLowerLimitAttr().Get() == pytest.approx(limits.lower.position)
+    assert joint.GetUpperLimitAttr().Get() == pytest.approx(limits.upper.position)
+
+
+def test_a_joint_turns_about_the_connections_axis(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    joint = joint_of(stage, hinge_world.hinge)
+    rotation, _ = joint_frame_in_world(stage, joint, side=1)
+    child_rotation = hinge_world.hinge.child.global_pose.to_np()[:3, :3]
+    axis_in_world = child_rotation @ hinge_world.hinge.axis.to_np()[:3]
+    assert list(rotation[:, 0]) == pytest.approx(list(axis_in_world), abs=1e-6)
+
+
+@pytest.mark.parametrize("hinge_position", [0.0, 0.3])
+def test_the_joint_holds_the_position_the_world_has(tmp_path, hinge_position):
+    hinge_world = _hinge_world(hinge_position)
+    stage = built(hinge_world.world, tmp_path)
+    joint = joint_of(stage, hinge_world.hinge)
+    parent_rotation, parent_position = joint_frame_in_world(stage, joint, side=0)
+    child_rotation, child_position = joint_frame_in_world(stage, joint, side=1)
+    relative = parent_rotation.T @ child_rotation
+    angle_about_x = math.atan2(relative[2, 1], relative[1, 1])
+    assert list(child_position) == pytest.approx(list(parent_position), abs=1e-6)
+    assert list(relative[:, 0]) == pytest.approx([1.0, 0.0, 0.0], abs=1e-6)
+    assert angle_about_x == pytest.approx(hinge_position, abs=1e-6)
+
+
+def test_a_body_fixed_to_a_moving_body_is_held_by_a_fixed_joint(tmp_path):
+    hinge_world = _hinge_world()
+    world = hinge_world.world
+    with world.modify_world():
+        tip = Body(name=PrefixedName("tip"))
+        tip.collision = _box(tip, Scale(0.02, 0.02, 0.02))
+        world.add_connection(
+            FixedConnection(
+                parent=hinge_world.hinge.child,
+                child=tip,
+                parent_T_connection_expression=HomogeneousTransformationMatrix.from_xyz_rpy(
+                    x=0.1, reference_frame=hinge_world.hinge.child
+                ),
+            )
+        )
+    stage = built(world, tmp_path)
+    joined = [
+        UsdPhysics.Joint(prim)
+        for prim in stage.Traverse()
+        if prim.IsA(UsdPhysics.FixedJoint)
+        and prim_of(stage, tip).GetPath()
+        in UsdPhysics.Joint(prim).GetBody1Rel().GetTargets()
+    ]
+    assert len(joined) == 1
+    assert prim_of(stage, tip).HasAPI(UsdPhysics.RigidBodyAPI)
+
+
+# %% servos
+
+
+def test_a_hinges_servo_drives_it_with_its_gains_per_degree(tmp_path):
+    hinge_world = _hinge_world(hinge_position=0.3)
+    stage = built(hinge_world.world, tmp_path)
+    joint = joint_of(stage, hinge_world.hinge).GetPrim()
+    drive = UsdPhysics.DriveAPI(joint, UsdPhysics.Tokens.angular)
+    gains = hinge_world.hinge_gains
+    assert drive.GetStiffnessAttr().Get() == pytest.approx(
+        gains.stiffness * math.pi / 180
+    )
+    assert drive.GetDampingAttr().Get() == pytest.approx(gains.damping * math.pi / 180)
+    assert drive.GetMaxForceAttr().Get() == pytest.approx(gains.torque_limit)
+    assert drive.GetTargetPositionAttr().Get() == pytest.approx(math.degrees(0.3))
+
+
+def test_a_slides_servo_drives_it_with_its_gains_per_metre(tmp_path):
+    hinge_world = _hinge_world()
+    stage = built(hinge_world.world, tmp_path)
+    joint = joint_of(stage, hinge_world.slide).GetPrim()
+    drive = UsdPhysics.DriveAPI(joint, UsdPhysics.Tokens.linear)
+    gains = hinge_world.slide_gains
+    assert drive.GetStiffnessAttr().Get() == pytest.approx(gains.stiffness)
+    assert drive.GetDampingAttr().Get() == pytest.approx(gains.damping)
+    assert drive.GetMaxForceAttr().Get() == pytest.approx(gains.torque_limit)
+
+
+# %% a base on an omnidirectional drive
+
+
+@dataclass
+class DrivenBaseWorld:
+    """
+    A world with a base on a servoed omnidirectional drive, standing away from where the
+    drive starts.
+    """
+
+    world: World
+    """
+    The world itself.
+    """
+
+    drive: OmniDrive
+    """
+    The drive the base moves across the floor with.
+    """
+
+    translation_gains: VelocityServoGains
+    """
+    The gains of the servos driving the base along its x and y.
+    """
+
+
+def _driven_base_world() -> DrivenBaseWorld:
+    world = World()
+    translation_gains = VelocityServoGains(damping=200.0, torque_limit=1000.0)
+    rotation_gains = VelocityServoGains(damping=50.0, torque_limit=500.0)
+    with world.modify_world():
+        root = Body(name=PrefixedName("world"))
+        world.add_body(root)
+        base = Body(name=PrefixedName("base"))
+        base.collision = _box(base, Scale(0.5, 0.5, 0.2))
+        drive = OmniDrive.create_with_dofs(
+            world=world, parent=root, child=base, name=PrefixedName("odom_T_base")
+        )
+        world.add_connection(drive)
+        for dof, gains in (
+            (drive.x_velocity, translation_gains),
+            (drive.y_velocity, translation_gains),
+            (drive.yaw, rotation_gains),
+        ):
+            servo = VelocityServo(
+                name=PrefixedName(f"{dof.name.name}_servo"), gains=gains
+            )
+            servo.add_dof(dof)
+            world.add_actuator(servo)
+    with world.modify_world():
+        world.state[drive.x.id].position = 0.5
+        world.state[drive.y.id].position = -0.2
+        world.state[drive.yaw.id].position = 0.3
+    world.notify_state_change()
+    return DrivenBaseWorld(
+        world=world, drive=drive, translation_gains=translation_gains
+    )
+
+
+def drive_joint_of(stage: Usd.Stage, degree_of_freedom: DegreeOfFreedom):
+    """
+    :return: The joint the builder made for a degree of freedom of a drive.
+    """
+    [prim] = [
+        prim
+        for prim in stage.Traverse()
+        if prim.IsA(UsdPhysics.Joint)
+        and prim.GetCustomDataByKey(UsdCustomDataKey.NAME)
+        == degree_of_freedom.name.name
+    ]
+    return UsdPhysics.Joint(prim)
+
+
+def test_a_servoed_drive_moves_its_base_through_a_slide_a_slide_and_a_hinge(tmp_path):
+    driven = _driven_base_world()
+    stage = built(driven.world, tmp_path)
+    drive = driven.drive
+    kinds = [
+        drive_joint_of(stage, dof).GetPrim().GetTypeName()
+        for dof in (drive.x, drive.y, drive.yaw)
+    ]
+    assert kinds == [
+        "PhysicsPrismaticJoint",
+        "PhysicsPrismaticJoint",
+        "PhysicsRevoluteJoint",
+    ]
+    assert drive_joint_of(stage, drive.yaw).GetBody1Rel().GetTargets() == [
+        prim_of(stage, drive.child).GetPath()
+    ]
+
+
+def test_the_drives_joints_hold_where_the_world_has_the_base(tmp_path):
+    driven = _driven_base_world()
+    stage = built(driven.world, tmp_path)
+    drive = driven.drive
+    readings = []
+    for dof in (drive.x, drive.y):
+        joint = drive_joint_of(stage, dof)
+        parent_rotation, parent_position = joint_frame_in_world(stage, joint, side=0)
+        _, child_position = joint_frame_in_world(stage, joint, side=1)
+        readings.append(
+            float(parent_rotation[:, 0] @ (child_position - parent_position))
+        )
+    joint = drive_joint_of(stage, drive.yaw)
+    parent_rotation, _ = joint_frame_in_world(stage, joint, side=0)
+    child_rotation, _ = joint_frame_in_world(stage, joint, side=1)
+    relative = parent_rotation.T @ child_rotation
+    readings.append(math.atan2(relative[2, 1], relative[1, 1]))
+    state = driven.world.state
+    assert readings == pytest.approx(
+        [
+            state[drive.x.id].position,
+            state[drive.y.id].position,
+            state[drive.yaw.id].position,
+        ],
+        abs=1e-6,
+    )
+
+
+def test_a_drives_velocity_servo_drives_its_joint_by_velocity(tmp_path):
+    driven = _driven_base_world()
+    stage = built(driven.world, tmp_path)
+    joint = drive_joint_of(stage, driven.drive.x).GetPrim()
+    drive_api = UsdPhysics.DriveAPI(joint, UsdPhysics.Tokens.linear)
+    assert drive_api.GetStiffnessAttr().Get() == 0.0
+    assert drive_api.GetDampingAttr().Get() == pytest.approx(
+        driven.translation_gains.damping
+    )
+    assert drive_api.GetTargetVelocityAttr().Get() == 0.0

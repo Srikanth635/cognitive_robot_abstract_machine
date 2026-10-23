@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from krrood.exceptions import DataclassException
 from typing_extensions import List
 
 from semantic_digital_twin.exceptions import ParsingError
@@ -105,3 +106,32 @@ class UnsupportedUsdGeometryTypeError(ParsingError):
         if not self.supported_types:
             return ""
         return f"Use one of the supported types: {', '.join(sorted(self.supported_types))}."
+
+
+@dataclass
+class UnsupportedUsdConnectionError(DataclassException):
+    """
+    Raised when a world holds a connection of a kind the USD builder does not write a
+    joint for.
+
+    Leaving it out would let the body it connects fall or float free under physics.
+    """
+
+    connection_name: str
+    """
+    The name of the unsupported connection.
+    """
+
+    connection_type: str
+    """
+    The name of the unsupported connection's class.
+    """
+
+    def error_message(self) -> str:
+        return (
+            f"The connection '{self.connection_name}' is a {self.connection_type}, "
+            f"which the USD builder does not write a joint for."
+        )
+
+    def suggest_correction(self) -> str:
+        return "Build the world for a simulator that supports this kind of connection."

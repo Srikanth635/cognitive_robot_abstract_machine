@@ -1860,6 +1860,14 @@ class DriveAxis:
     world drives it.
     """
 
+    @property
+    def turns(self) -> bool:
+        """
+        :return: Whether the joint turns about its direction rather than slides along
+            it.
+        """
+        return self.joint_type == mujoco.mjtJoint.mjJNT_HINGE
+
 
 DriveType = TypeVar("DriveType", bound=WheeledDrive)
 """
