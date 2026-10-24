@@ -136,3 +136,57 @@ class UnsupportedUsdConnectionError(DataclassException):
 
     def suggest_correction(self) -> str:
         return "Build the world for a simulator that supports this kind of connection."
+
+
+@dataclass
+class UnsupportedFollowingModeError(DataclassException):
+    """
+    Raised when a world holds a camera or light that follows its body in a way other
+    than fixed to it, which the USD builder does not write.
+    """
+
+    element_name: str
+    """
+    The name of the camera or light.
+    """
+
+    mode: str
+    """
+    How the camera or light follows its body, by MuJoCo's name for it.
+    """
+
+    def error_message(self) -> str:
+        return (
+            f"'{self.element_name}' follows its body as {self.mode}; the USD builder "
+            f"writes cameras and lights fixed to their body only."
+        )
+
+    def suggest_correction(self) -> str:
+        return "Fix the camera or light to its body, or build the world for MuJoCo."
+
+
+@dataclass
+class UnplacedSimulatorElementError(DataclassException):
+    """
+    Raised when a world holds a camera or light of a kind that does not say where it is
+    or how it looks, which the USD builder therefore cannot write.
+    """
+
+    element_name: str
+    """
+    The name of the camera or light.
+    """
+
+    element_type: str
+    """
+    The name of its class.
+    """
+
+    def error_message(self) -> str:
+        return (
+            f"'{self.element_name}' is a {self.element_type}, which says nothing of "
+            f"where it is or how it looks."
+        )
+
+    def suggest_correction(self) -> str:
+        return "Describe it as a MujocoCamera or a MujocoLight."

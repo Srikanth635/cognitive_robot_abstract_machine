@@ -18,10 +18,16 @@ its only implementation, MuJoCo:
 
 `physics_simulators.isaac_application.IsaacApplication` holds the one Isaac Sim
 application a process runs; every other Isaac module needs it started before it is
-imported. `IsaacSimulator` reads and writes joints and bodies with plain methods rather
-than `MujocoSimulator`'s `@simulator_callback`s, since it is only stepped in lockstep. The
-builder and synchronizer reuse `MujocoConnectionJoints` and `MujocoGeom`, whose drive axes,
-servo controls and contact categories are not MuJoCo's alone.
+imported. As `MujocoSim` does, `IsaacSim` steps through `BaseSimulator.step`, one physics
+step at a time, and then calls `render`; with a window the simulator's renderer is an
+`IsaacRenderer`, which redraws Isaac Sim's window without stepping the physics again.
+`IsaacSimulator` refuses to start on a simulation or render thread
+(`physics_simulators.exceptions.SteppedOnAnotherThreadError`), since Isaac Sim steps only
+on the thread that started it. It reads and writes joints and bodies with plain methods
+rather than `MujocoSimulator`'s `@simulator_callback`s, since it is only stepped in
+lockstep, and is tested on its own in `test/physics_simulators_test/test_isaac_simulator.py`.
+The builder and synchronizer reuse `MujocoConnectionJoints` and `MujocoGeom`, whose drive
+axes, servo controls and contact categories are not MuJoCo's alone.
 
 The stepped API that coraplex and giskard use is not part of the generic layer:
 `start_stepped_simulation` and `step_simulation` exist only on `MujocoSim`, and
@@ -58,6 +64,8 @@ The stepped API that coraplex and giskard use is not part of the generic layer:
 | Robot | `UsdPhysics.ArticulationRootAPI` on its root |
 | `GravityCompensation` | `PhysxForceAPI`: an upward acceleration of that fraction of gravity, in the world's frame |
 | `ContactParameters` friction | `UsdPhysics.MaterialAPI` |
+| `MujocoLight` on a body | a `DistantLight` if directional, else a point `SphereLight` shaped into its cone, under the body's prim; strength from the brightest diffuse channel |
+| `MujocoCamera` on a body | a `UsdGeom.Camera` under the body's prim, focal length from its vertical field of view, seeing from 1 cm |
 
 USD angular joints are in degrees: limits, positions, and the stiffness and damping of an
 angular drive are per degree, so radians are converted at the boundary.
@@ -140,7 +148,8 @@ angular drive are per degree, so radians are converted at the boundary.
   `face_the_cup`, `face_and_look_at_the_cup`, `go_to_the_counter`, `reach_for_milk`,
   `grasp_milk`, `pour_into_bowl` and `wipe_counter` move only the robot, and its joints and
   base end where MuJoCo's do.
-- **Not yet written:** contact stiffness and friction; rendering a window.
+- **Not yet written:** contact stiffness and friction; cameras and lights that track their
+  body rather than being fixed to it.
 
 ## Checking a stage in Isaac Sim
 
@@ -164,7 +173,8 @@ isaac_viewer/run.sh view pr2_at_the_counter go_to_the_counter
 isaac_viewer/run.sh record pr2_at_the_counter pick_up_milk recordings/pick_up_milk
 ```
 
-Both light the stage, which the builder writes without lights, and put up the cameras of
+Both add light from every direction, and a sun where the world brings no lights of its
+own (the kitchen scenes do not; the MJCF scenes do), and put up the cameras of
 `isaac_viewer/scene_cameras.py`: three standing in the room, placed relative to where the
 robot starts (behind it to the left and to the right, and beyond the counter facing it),
 and one on the robot's default camera, looking where it looks with its field of view.

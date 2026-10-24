@@ -17,7 +17,11 @@ import numpy as np
 from isaacsim.core.rendering_manager import ViewportManager
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdLux
 
-from semantic_digital_twin.adapters.usd.builder import UsdCustomDataKey, UsdStagePath
+from semantic_digital_twin.adapters.usd.builder import (
+    UsdBuilder,
+    UsdCustomDataKey,
+    UsdStagePath,
+)
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.spatial_types.spatial_types import Vector3
 
@@ -61,7 +65,9 @@ class WatchingPrimName(StrEnum):
 @dataclass(frozen=True)
 class SceneLighting:
     """
-    The lights a stage is watched under; the stage the builder writes has none.
+    The lights a stage is watched under, beside the lights of the world it was written
+    for: light from every direction, and a sun where the world brings no light of its
+    own.
     """
 
     sky_intensity: float = 1000.0
@@ -88,10 +94,15 @@ class SceneLighting:
         """
         :param stage: The stage to light.
         """
+        lit_by_the_world = any(
+            prim.HasAPI(UsdLux.LightAPI) for prim in stage.Traverse()
+        )
         lights = Sdf.Path(UsdStagePath.WORLD).AppendChild(WatchingPrimName.LIGHTS)
         UsdLux.DomeLight.Define(
             stage, lights.AppendChild(WatchingPrimName.SKY)
         ).CreateIntensityAttr(self.sky_intensity)
+        if lit_by_the_world:
+            return
         sun = UsdLux.DistantLight.Define(
             stage, lights.AppendChild(WatchingPrimName.SUN)
         )
@@ -158,6 +169,20 @@ class CameraMount(ABC):
         :return: The camera's prim.
         """
 
+    @staticmethod
+    def _see_from_near(camera: UsdGeom.Camera) -> None:
+        """
+        Let a camera see things as near as the cameras the builder writes do; a USD
+        camera sees nothing nearer than a metre unless told otherwise.
+
+        :param camera: The camera.
+        """
+        camera.CreateClippingRangeAttr(
+            Gf.Vec2f(
+                UsdBuilder().camera_near_clip, camera.GetClippingRangeAttr().Get()[1]
+            )
+        )
+
 
 @dataclass(frozen=True)
 class FixedView(CameraMount):
@@ -186,7 +211,9 @@ class FixedView(CameraMount):
             .AppendChild(WatchingPrimName.CAMERAS)
             .AppendChild(name)
         )
-        UsdGeom.Camera.Define(stage, path).CreateFocalLengthAttr(self.focal_length)
+        camera = UsdGeom.Camera.Define(stage, path)
+        camera.CreateFocalLengthAttr(self.focal_length)
+        self._see_from_near(camera)
         world_T_robot = robot.root.global_pose.to_np()
         ViewportManager.set_camera_view(
             str(path),
@@ -208,6 +235,7 @@ class RobotCameraView(CameraMount):
         body_path = self._prim_of_body(stage, str(robot_camera.root.id))
         path = body_path.AppendChild(WatchingPrimName.ROBOT_CAMERA)
         camera = UsdGeom.Camera.Define(stage, path)
+        self._see_from_near(camera)
         aperture = camera.GetHorizontalApertureAttr().Get()
         camera.CreateFocalLengthAttr(
             aperture

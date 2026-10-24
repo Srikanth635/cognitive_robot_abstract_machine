@@ -93,6 +93,36 @@ def test_advancing_by_part_of_a_physics_step_is_refused():
         simulation.stop_simulation()
 
 
+def test_every_physics_step_goes_through_the_simulators_step(monkeypatch):
+    simulation = started(_hinge_world().world)
+    pre_step_calls = []
+    monkeypatch.setattr(
+        simulation.simulator,
+        "pre_step_callback",
+        lambda: pre_step_calls.append(simulation.simulator.current_number_of_steps),
+    )
+    try:
+        simulation.step_simulation(
+            timedelta(seconds=simulation.simulator.step_size * 3)
+        )
+    finally:
+        simulation.stop_simulation()
+    assert len(pre_step_calls) == 3
+
+
+def test_stepping_the_simulation_draws_it_once(monkeypatch):
+    simulation = started(_hinge_world().world)
+    draws = []
+    monkeypatch.setattr(simulation.simulator, "render", lambda: draws.append(True))
+    try:
+        simulation.step_simulation(
+            timedelta(seconds=simulation.simulator.step_size * 3)
+        )
+    finally:
+        simulation.stop_simulation()
+    assert len(draws) == 1
+
+
 # %% articulations
 
 

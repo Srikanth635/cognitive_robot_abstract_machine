@@ -12,11 +12,17 @@ import numpy as np
 import omni.timeline
 import omni.usd
 from isaacsim.core.experimental.prims import Articulation, RigidPrim
+from isaacsim.core.rendering_manager import RenderingManager
 from isaacsim.core.simulation_manager import SimulationManager
 from pxr import UsdPhysics
 from typing_extensions import Iterable
 
-from physics_simulators.base_simulator import BaseSimulator
+from physics_simulators.base_simulator import (
+    BaseSimulator,
+    SimulatorConstraints,
+    SimulatorRenderer,
+)
+from physics_simulators.exceptions import SteppedOnAnotherThreadError
 from physics_simulators.isaac_application import IsaacApplication
 
 # %% where PhysX simulates
@@ -107,6 +113,21 @@ class BodyPose:
     """
 
 
+# %% Isaac Sim's window
+
+
+class IsaacRenderer(SimulatorRenderer):
+    """
+    Isaac Sim's window, redrawn on request without stepping the physics again.
+    """
+
+    def is_running(self) -> bool:
+        return super().is_running() and IsaacApplication().start().is_running()
+
+    def sync(self) -> None:
+        RenderingManager.render()
+
+
 # %% the simulator
 
 
@@ -117,6 +138,8 @@ class IsaacSimulator(BaseSimulator):
     reads and writes its joints and free bodies by the paths of their prims.
 
     Joint positions and targets are in radians and metres, poses in the world's frame.
+    Isaac Sim steps and draws only on the thread that started it, so the simulator is
+    started stepped, and stepped from that thread.
     """
 
     file_path: str = field(default="", kw_only=True)
@@ -144,6 +167,28 @@ class IsaacSimulator(BaseSimulator):
     The paths of the free bodies' prims, in the order of :attr:`_bodies`.
     """
 
+    def start(
+        self,
+        simulate_in_thread: bool = True,
+        render_in_thread: bool = False,
+        constraints: SimulatorConstraints | None = None,
+        time_out_in_seconds: float = 10.0,
+    ) -> None:
+        """
+        :meth:`BaseSimulator.start`, refusing to step or draw on a thread of its own.
+
+        :raises SteppedOnAnotherThreadError: If a simulation or render thread is asked
+            for.
+        """
+        if simulate_in_thread or render_in_thread:
+            raise SteppedOnAnotherThreadError(type(self).__name__)
+        super().start(
+            simulate_in_thread=False,
+            render_in_thread=False,
+            constraints=constraints,
+            time_out_in_seconds=time_out_in_seconds,
+        )
+
     def start_callback(self) -> None:
         application = IsaacApplication(headless=self.headless).start()
         context = omni.usd.get_context()
@@ -158,6 +203,7 @@ class IsaacSimulator(BaseSimulator):
             articulation = Articulation(str(prim.GetPath()))
             for index, joint_path in enumerate(articulation.dof_paths[0]):
                 self._joints[joint_path] = ArticulatedJoint(articulation, index)
+        self._renderer = SimulatorRenderer() if self.headless else IsaacRenderer()
 
     @property
     def joint_paths(self) -> set[str]:
@@ -167,7 +213,8 @@ class IsaacSimulator(BaseSimulator):
         return set(self._joints)
 
     def step_callback(self) -> None:
-        self.advance(1)
+        SimulationManager.step(steps=1)
+        self._current_number_of_steps += 1
 
     def stop(self) -> None:
         omni.timeline.get_timeline_interface().stop()
@@ -176,15 +223,6 @@ class IsaacSimulator(BaseSimulator):
     @property
     def current_simulation_time(self) -> float:
         return self.current_number_of_steps * self.step_size
-
-    def advance(self, steps: int) -> None:
-        """
-        Advance the physics.
-
-        :param steps: How many steps of :attr:`step_size` to advance.
-        """
-        SimulationManager.step(steps=steps)
-        self._current_number_of_steps += steps
 
     def track_bodies(self, paths: list[str]) -> None:
         """
