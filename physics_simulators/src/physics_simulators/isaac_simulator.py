@@ -9,11 +9,13 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 import numpy as np
+import omni.replicator.core as replicator
 import omni.timeline
 import omni.usd
 from isaacsim.core.experimental.prims import Articulation, RigidPrim
 from isaacsim.core.rendering_manager import RenderingManager
 from isaacsim.core.simulation_manager import SimulationManager
+from omni.replicator.core.scripts.annotators import Annotator
 from pxr import UsdPhysics
 from typing_extensions import Iterable
 
@@ -113,6 +115,42 @@ class BodyPose:
     """
 
 
+# %% pictures
+
+
+class ReplicatorAnnotator(StrEnum):
+    """
+    What Isaac Sim's Replicator reads off a camera.
+    """
+
+    COLOUR = "rgb"
+    """
+    The picture, in red, green, blue and alpha.
+    """
+
+
+@dataclass(frozen=True)
+class CameraPicture:
+    """
+    A camera's picture at one size.
+    """
+
+    camera_path: str
+    """
+    The path of the camera's prim.
+    """
+
+    height: int
+    """
+    The picture's height, in pixels.
+    """
+
+    width: int
+    """
+    The picture's width, in pixels.
+    """
+
+
 # %% Isaac Sim's window
 
 
@@ -165,6 +203,31 @@ class IsaacSimulator(BaseSimulator):
     _body_paths: list[str] = field(init=False, default_factory=list)
     """
     The paths of the free bodies' prims, in the order of :attr:`_bodies`.
+    """
+
+    frames_to_warm_up_a_camera: int = field(default=20, kw_only=True)
+    """
+    How many times the stage is drawn when a camera is first captured, so its picture is
+    there and lit.
+    """
+
+    frames_to_draw_a_picture: int = field(default=3, kw_only=True)
+    """
+    How many times the stage is drawn before a camera's picture shows how the stage is
+    now; Replicator hands out the picture of an earlier drawing until then.
+    """
+
+    _annotators: dict[CameraPicture, Annotator] = field(
+        init=False, default_factory=dict
+    )
+    """
+    What reads each camera's picture, by the camera and the picture's size.
+    """
+
+    _drawn_at_step: int | None = field(init=False, default=None)
+    """
+    The step the stage was last drawn at, so that pictures taken in one step share one
+    drawing; ``None`` before the first.
     """
 
     def start(
@@ -289,6 +352,33 @@ class IsaacSimulator(BaseSimulator):
             joints.paths.append(path)
             joints.indices.append(joint.index)
         return list(grouped.values())
+
+    # %% cameras
+
+    def capture_rgb(self, camera_path: str, height: int, width: int) -> np.ndarray:
+        """
+        :param camera_path: The path of a camera's prim.
+        :param height: The picture's height, in pixels.
+        :param width: The picture's width, in pixels.
+        :return: What the camera sees now, in red, green and blue, one byte each.
+        """
+        picture = CameraPicture(str(camera_path), height, width)
+        if picture not in self._annotators:
+            render_product = replicator.create.render_product(
+                picture.camera_path, (width, height)
+            )
+            annotator = replicator.AnnotatorRegistry.get_annotator(
+                ReplicatorAnnotator.COLOUR
+            )
+            annotator.attach([render_product])
+            self._annotators[picture] = annotator
+            for _ in range(self.frames_to_warm_up_a_camera):
+                RenderingManager.render()
+        if self._drawn_at_step != self.current_number_of_steps:
+            for _ in range(self.frames_to_draw_a_picture):
+                RenderingManager.render()
+            self._drawn_at_step = self.current_number_of_steps
+        return np.asarray(self._annotators[picture].get_data())[:, :, :3]
 
     # %% free bodies
 

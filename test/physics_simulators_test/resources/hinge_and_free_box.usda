@@ -37,9 +37,24 @@ def Xform "World"
     )
     {
         double size = 0.1
+        color3f[] primvars:displayColor = [(0.8, 0.1, 0.1)]
         float physics:mass = 1
         double3 xformOp:translate = (2, 0, 1)
         uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def DomeLight "sky"
+    {
+        float inputs:intensity = 1000
+    }
+
+    def Camera "camera"
+    {
+        float2 clippingRange = (0.01, 1000)
+        float focalLength = 24
+        double3 xformOp:rotateXYZ = (90, 0, 0)
+        double3 xformOp:translate = (2, -1, 1)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
     }
 
     def Scope "joints"

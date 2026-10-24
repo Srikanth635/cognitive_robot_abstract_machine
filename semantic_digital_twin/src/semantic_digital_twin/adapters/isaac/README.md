@@ -15,6 +15,13 @@ its only implementation, MuJoCo:
 | Load and step the scene | `physics_simulators.BaseSimulator` | `physics_simulators.mujoco_simulator.MujocoSimulator` | `physics_simulators.isaac_simulator.IsaacSimulator` |
 | Keep world and simulator in step | `MultiSimSynchronizer` | `MujocoSynchronizer` | `IsaacSynchronizer` (`adapters/isaac/synchronizer.py`) |
 | Tie the three together | `MultiSim` | `MujocoSim` | `IsaacSim` (`adapters/isaac/simulation.py`) |
+| Record videos | | `MujocoVideoRecorder` (`adapters/mujoco_video_recording.py`) | `IsaacVideoRecorder` (`adapters/isaac/video_recording.py`) |
+| Step at the pace of the clock | | `RealTimeMujocoSim` (`experiments/physics_viewer/paced_simulation.py`) | `RealTimeIsaacSim` (`experiments/physics_viewer/isaac/paced_simulation.py`) |
+| View a scene and an action | `SteppedSceneViewer` | `PhysicsViewer` (`python -m experiments.physics_viewer`) | `IsaacPhysicsViewer` (`python -m experiments.physics_viewer.isaac`) |
+
+The MuJoCo builder, synchronizer and simulation share `multi_sim.py`, which the rest of
+CRAM imports; the Isaac ones are a package beside it, since importing Isaac Sim's modules
+needs Isaac Sim installed and its application running.
 
 `physics_simulators.isaac_application.IsaacApplication` holds the one Isaac Sim
 application a process runs; every other Isaac module needs it started before it is
@@ -165,31 +172,31 @@ The first start builds Isaac's caches and takes a few minutes; later starts take
 
 ## Watching and recording a run
 
-`isaac_viewer/run.sh` runs a physics viewer scene's action under Isaac Sim with this
-checkout's packages, in `isaac-cram-env`:
+In `isaac-cram-env`, from a checkout whose packages are installed or first on
+`PYTHONPATH`, the physics viewer's scenes and actions run under Isaac Sim as they do under
+MuJoCo, with a camera to show first and a directory to record into:
 
 ```bash
-isaac_viewer/run.sh view pr2_at_the_counter go_to_the_counter
-isaac_viewer/run.sh record pr2_at_the_counter pick_up_milk recordings/pick_up_milk
+python -m experiments.physics_viewer.isaac pr2_at_the_counter --action go_to_the_counter
+python -m experiments.physics_viewer.isaac pr2_at_the_counter --action pick_up_milk --headless --duration 1.5 --record recordings/pick_up_milk
 ```
 
 Both add light from every direction, and a sun where the world brings no lights of its
 own (the kitchen scenes do not; the MJCF scenes do), and put up the cameras of
-`isaac_viewer/scene_cameras.py`: three standing in the room, placed relative to where the
-robot starts (behind it to the left and to the right, and beyond the counter facing it),
-and one on the robot's default camera, looking where it looks with its field of view.
-`view` shows one of them in a window at real-time speed (the window's camera menu switches
-between them); `record` renders them headless with Replicator, writes one H.264 video per
-camera, and `player.html`, a page that plays the four in step, one at a time or side by
-side, at 1, 2, 4 or 8 times speed. Recording `pick_up_milk` from the four cameras at
-1280 by 720 and 25 frames a second takes about a minute on an RTX 4070.
+`experiments/physics_viewer/isaac/cameras.py`: three standing in the room, placed relative
+to where the robot starts (behind it to the left and to the right, and beyond the counter
+facing it), and one on the robot's default camera, looking where it looks with its field
+of view. With a window, it shows one of them (the window's camera menu switches between
+them); with `--record`, `IsaacVideoRecorder` takes a frame of every camera for each
+twenty-fifth of a simulated second, through `IsaacSimulator.capture_rgb`, and the viewer
+writes one video per camera and `player.html`, a page that plays the four in step, one at
+a time or side by side, at 1, 2, 4 or 8 times speed.
 
 ## Open points
 
 - CRAM and Isaac Sim run in one process in `isaac-cram-env`, a copy of `new-cram-env` with
   `isaacsim[all,extscache]==6.0.0.1` pip-installed; `typing_extensions` is raised to 4.16
   over Isaac Sim's pin of 4.12, which CRAM needs.
-- The physics viewer under Isaac (step 5).
 - `usd-core` (in semantic_digital_twin's `datasets` extra) for builder tests without Isaac;
   it must not be installed next to Isaac Sim, which ships its own USD.
 - Tests that need Isaac Sim are skipped when it is not installed, so CI runs without it.

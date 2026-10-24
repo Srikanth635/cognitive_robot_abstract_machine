@@ -136,3 +136,24 @@ room to spare, and it stands on the table where Tracy reaches it. Of the 12 gras
 2 to 10 are reachable by the left arm in the kinematic simulation, and of those 3 and 6 lift the
 cube under physics (to 0.98 and 0.99 m, from 0.905); the others push it about or miss. The action
 takes the sixth, which is a measurement and not a rule.
+
+## Under Isaac Sim
+
+The same scenes and actions run under NVIDIA Isaac Sim's PhysX instead of MuJoCo, in the
+Python environment Isaac Sim is installed in beside these packages:
+
+```bash
+python -m experiments.physics_viewer.isaac SCENE [--action ACTION] [--speed FACTOR] [--duration SECONDS] [--headless] [--camera CAMERA] [--record DIRECTORY]
+```
+
+Three cameras stand in the room (`behind_left`, `behind_right`, `across_the_counter`) and
+one rides on the robot's own camera (`robot_camera`); `--camera` picks the one the window
+shows first. `--record DIRECTORY` writes a video of every camera and `player.html`, a page
+that plays them one at a time or side by side, at 1, 2, 4 or 8 times speed:
+
+```bash
+python -m experiments.physics_viewer.isaac pr2_at_the_counter --action pick_up_milk --headless --duration 1.5 --record recordings/pick_up_milk
+```
+
+How the world is written and simulated under Isaac Sim is described in
+`semantic_digital_twin/adapters/isaac/README.md`.
