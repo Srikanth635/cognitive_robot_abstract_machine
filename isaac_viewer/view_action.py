@@ -3,7 +3,9 @@
 an action under Isaac Sim's PhysX, in a window, in real time.
 
 Run it through ``run.sh`` next to this file, which sets up the Python environment Isaac
-Sim and the repository's packages run in together.
+Sim and the repository's packages run in together. Every camera of
+:class:`scene_cameras.SceneCamera` is put up; the window's camera menu switches between
+them.
 """
 
 from __future__ import annotations
@@ -23,16 +25,16 @@ from typing_extensions import Any, Sequence
 
 IsaacApplication(headless=False).start()
 
-import numpy as np
-from coraplex.datastructures.dataclasses import Context
-from coraplex.execution_environment import PhysicallySimulatedRobot
 from experiments.physics_viewer.actions import PhysicsAction
 from experiments.physics_viewer.scenes import PhysicsScene
 from isaacsim.core.rendering_manager import RenderingManager, ViewportManager
 from omni.kit.viewport.utility import capture_viewport_to_file, get_active_viewport
+from pxr import Sdf
+from scene_cameras import SceneCamera
+from watched_run import WatchedRun
 
 from semantic_digital_twin.adapters.isaac.simulation import IsaacSim
-from semantic_digital_twin.robots.robot_parts import AbstractRobot
+from semantic_digital_twin.world import World
 
 # %% the command line
 
@@ -50,6 +52,12 @@ def parse_arguments(arguments: Sequence[str]) -> IsaacWindowRun:
         "action", help="an action the scene's robot performs, such as go_to_the_counter"
     )
     parser.add_argument(
+        "--camera",
+        choices=[camera.name.lower() for camera in SceneCamera],
+        default=SceneCamera.BEHIND_RIGHT.name.lower(),
+        help="the camera the window shows first",
+    )
+    parser.add_argument(
         "--hold",
         type=float,
         default=30.0,
@@ -65,23 +73,13 @@ def parse_arguments(arguments: Sequence[str]) -> IsaacWindowRun:
     return IsaacWindowRun(
         scene=PhysicsScene.from_command_line(parsed.scene),
         action=PhysicsAction.from_command_line(parsed.action),
+        camera=SceneCamera[parsed.camera.upper()],
         hold=timedelta(seconds=parsed.hold),
         capture_directory=parsed.capture,
     )
 
 
 # %% names in Isaac Sim's window
-
-
-class ViewportCamera(StrEnum):
-    """
-    The cameras of Isaac Sim's window.
-    """
-
-    PERSPECTIVE = "/OmniverseKit_Persp"
-    """
-    The camera the window shows unless told otherwise.
-    """
 
 
 class Screenshot(StrEnum):
@@ -133,23 +131,18 @@ class RealTimeIsaacSim(IsaacSim):
             time.sleep(ahead)
 
 
-# %% watching an action
+# %% watching an action in the window
 
 
 @dataclass
-class IsaacWindowRun:
+class IsaacWindowRun(WatchedRun):
     """
-    A run that shows the robot of a scene performing an action in Isaac Sim's window.
-    """
-
-    scene: PhysicsScene
-    """
-    The scene the robot acts in.
+    A run shown in Isaac Sim's window.
     """
 
-    action: PhysicsAction
+    camera: SceneCamera = SceneCamera.BEHIND_RIGHT
     """
-    What the robot does.
+    The camera the window shows first.
     """
 
     hold: timedelta = field(default=timedelta(seconds=30))
@@ -160,22 +153,6 @@ class IsaacWindowRun:
     capture_directory: Path | None = None
     """
     Where screenshots before and after the action are saved; ``None`` saves none.
-    """
-
-    settling: timedelta = field(default=timedelta(seconds=1))
-    """
-    The simulated time the scene settles for before the robot acts, as the physics
-    viewer gives it.
-    """
-
-    eye_offset: np.ndarray = field(default_factory=lambda: np.array([-2.2, -1.8, 1.8]))
-    """
-    Where the camera is, in metres from the robot's root.
-    """
-
-    target_offset: np.ndarray = field(default_factory=lambda: np.array([0.6, 0.0, 0.6]))
-    """
-    Where the camera looks, in metres from the robot's root.
     """
 
     frames_to_open_the_window: int = 30
@@ -194,44 +171,23 @@ class IsaacWindowRun:
     How much simulated time each step advances while the window stays open.
     """
 
-    def run(self) -> None:
-        """
-        Open the scene in the window, let it settle, have the robot perform the action,
-        and keep the window open for :attr:`hold`.
-        """
-        world = self.scene.value.build()
-        [robot] = world.get_semantic_annotations_by_type(AbstractRobot)
-        simulation = RealTimeIsaacSim(world=world)
-        simulation.start_stepped_simulation()
-        self._look_at(robot.root.global_pose.to_np()[:3, 3])
+    def _simulation_of(self, world: World) -> IsaacSim:
+        return RealTimeIsaacSim(world=world)
+
+    def _watch_with(self, cameras: dict[SceneCamera, Sdf.Path]) -> None:
+        ViewportManager.set_camera(str(cameras[self.camera]))
         for _ in range(self.frames_to_open_the_window):
             RenderingManager.render()
-        simulation.step_simulation(self.settling)
+
+    def _before_the_action(self) -> None:
         self._capture(Screenshot.BEFORE_THE_ACTION)
-        plan = self.action.value.build(
-            Context(world=world, robot=robot, evaluate_conditions=False)
-        )
-        with PhysicallySimulatedRobot(simulation=simulation):
-            plan.perform()
+
+    def _after_the_action(self, simulation: IsaacSim) -> None:
         self._capture(Screenshot.AFTER_THE_ACTION)
         application = IsaacApplication().start()
         end = time.time() + self.hold.total_seconds()
         while time.time() < end and application.is_running():
             simulation.step_simulation(self.hold_step)
-        simulation.stop_simulation()
-        application.close()
-
-    def _look_at(self, robot_position: np.ndarray) -> None:
-        """
-        Put the window's camera where it shows the robot.
-
-        :param robot_position: Where the robot's root is in the world.
-        """
-        ViewportManager.set_camera_view(
-            ViewportCamera.PERSPECTIVE.value,
-            eye=list(robot_position + self.eye_offset),
-            target=list(robot_position + self.target_offset),
-        )
 
     def _capture(self, screenshot: Screenshot) -> None:
         """
@@ -259,6 +215,7 @@ def main(arguments: Sequence[str] | None = None) -> None:
         given.
     """
     parse_arguments(sys.argv[1:] if arguments is None else arguments).run()
+    IsaacApplication().start().close()
 
 
 if __name__ == "__main__":

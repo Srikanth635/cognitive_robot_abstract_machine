@@ -154,6 +154,26 @@ env -i HOME=$HOME USER=$USER PATH=/usr/bin:/bin LANG=C.UTF-8 ~/isaacsim/python.s
 
 The first start builds Isaac's caches and takes a few minutes; later starts take seconds.
 
+## Watching and recording a run
+
+`isaac_viewer/run.sh` runs a physics viewer scene's action under Isaac Sim with this
+checkout's packages, in `isaac-cram-env`:
+
+```bash
+isaac_viewer/run.sh view pr2_at_the_counter go_to_the_counter
+isaac_viewer/run.sh record pr2_at_the_counter pick_up_milk recordings/pick_up_milk
+```
+
+Both light the stage, which the builder writes without lights, and put up the cameras of
+`isaac_viewer/scene_cameras.py`: three standing in the room, placed relative to where the
+robot starts (behind it to the left and to the right, and beyond the counter facing it),
+and one on the robot's default camera, looking where it looks with its field of view.
+`view` shows one of them in a window at real-time speed (the window's camera menu switches
+between them); `record` renders them headless with Replicator, writes one H.264 video per
+camera, and `player.html`, a page that plays the four in step, one at a time or side by
+side, at 1, 2, 4 or 8 times speed. Recording `pick_up_milk` from the four cameras at
+1280 by 720 and 25 frames a second takes about a minute on an RTX 4070.
+
 ## Open points
 
 - CRAM and Isaac Sim run in one process in `isaac-cram-env`, a copy of `new-cram-env` with
