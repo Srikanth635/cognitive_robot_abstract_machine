@@ -9,11 +9,20 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
+import mujoco
 import numpy as np
 import pytest
 
 import semantic_digital_twin
-from semantic_digital_twin.adapters.multi_sim import ContactCategories, MujocoGeom
+from semantic_digital_twin.adapters.multi_sim import (
+    ContactCategories,
+    MujocoCamera,
+    MujocoGeom,
+    MujocoLight,
+)
+from semantic_digital_twin.adapters.usd.exceptions import (
+    UnsupportedFollowingModeError,
+)
 from semantic_digital_twin.adapters.usd.builder import (
     UsdBuilder,
     UsdCustomDataKey,
@@ -58,7 +67,7 @@ from semantic_digital_twin.world_description.world_entity import (
 from .usd_stages import PXR_AVAILABLE
 
 if PXR_AVAILABLE:
-    from pxr import Gf, Usd, UsdGeom, UsdPhysics
+    from pxr import Gf, Usd, UsdGeom, UsdLux, UsdPhysics
 
 pytestmark = pytest.mark.skipif(
     not PXR_AVAILABLE, reason="usd-core (pxr) not installed"
@@ -1233,3 +1242,107 @@ def test_a_drives_joint_measures_its_axis_and_is_commanded_through_its_velocity(
     assert prim.GetCustomDataByKey(UsdCustomDataKey.COMMANDED_DEGREE_OF_FREEDOM) == str(
         driven.drive.x_velocity.id
     )
+
+
+# %% the world's lights and cameras
+
+
+def children_of_type(stage: Usd.Stage, body: Body, schema: type) -> list:
+    """
+    :return: The prims under the body's prim that are of the schema's type.
+    """
+    return [
+        schema(child)
+        for child in prim_of(stage, body).GetChildren()
+        if child.IsA(schema)
+    ]
+
+
+def test_a_directional_light_shines_along_its_direction_as_a_distant_light(tmp_path):
+    hinge_world = _hinge_world()
+    root = hinge_world.world.root
+    light = MujocoLight(
+        name="sun",
+        body=root,
+        directional=True,
+        direction=[0.0, 0.6, -0.8],
+        diffuse=[0.8, 0.8, 0.8],
+    )
+    root.add_simulator_property(light)
+    stage = built(hinge_world.world, tmp_path)
+    [sun] = children_of_type(stage, root, UsdLux.DistantLight)
+    shining = world_transform(sun.GetPrim()).TransformDir(Gf.Vec3d(0.0, 0.0, -1.0))
+    assert list(shining.GetNormalized()) == pytest.approx(light.direction, abs=1e-6)
+    assert sun.GetIntensityAttr().Get() == pytest.approx(
+        UsdBuilder().directional_light_intensity * max(light.diffuse)
+    )
+
+
+def test_a_light_that_is_not_directional_is_a_spot_light_at_its_position(tmp_path):
+    hinge_world = _hinge_world()
+    root = hinge_world.world.root
+    light = MujocoLight(
+        name="lamp",
+        body=root,
+        directional=False,
+        position=[0.2, 0.0, 2.0],
+        direction=[0.0, 0.0, -1.0],
+        diffuse=[0.4, 0.4, 0.4],
+        cutoff=30.0,
+    )
+    root.add_simulator_property(light)
+    stage = built(hinge_world.world, tmp_path)
+    [lamp] = children_of_type(stage, root, UsdLux.SphereLight)
+    assert list(world_transform(lamp.GetPrim()).ExtractTranslation()) == pytest.approx(
+        light.position
+    )
+    assert UsdLux.ShapingAPI(lamp.GetPrim()).GetShapingConeAngleAttr().Get() == (
+        pytest.approx(light.cutoff)
+    )
+    assert lamp.GetIntensityAttr().Get() == pytest.approx(
+        UsdBuilder().spot_light_intensity * max(light.diffuse)
+    )
+
+
+@pytest.mark.parametrize("cast_shadow", [True, False])
+def test_a_light_casts_shadows_as_the_world_says(tmp_path, cast_shadow):
+    hinge_world = _hinge_world()
+    root = hinge_world.world.root
+    root.add_simulator_property(
+        MujocoLight(name="sun", body=root, directional=True, cast_shadow=cast_shadow)
+    )
+    stage = built(hinge_world.world, tmp_path)
+    [sun] = children_of_type(stage, root, UsdLux.DistantLight)
+    assert UsdLux.ShadowAPI(sun.GetPrim()).GetShadowEnableAttr().Get() is cast_shadow
+
+
+def test_a_camera_looks_from_its_place_on_its_body_with_its_field_of_view(tmp_path):
+    hinge_world = _hinge_world()
+    arm = hinge_world.hinge.child
+    camera = MujocoCamera(name="eye", body=arm, position=[0.1, 0.0, 0.2], fovy=60.0)
+    arm.add_simulator_property(camera)
+    stage = built(hinge_world.world, tmp_path)
+    [eye] = children_of_type(stage, arm, UsdGeom.Camera)
+    local = UsdGeom.Xformable(eye).GetLocalTransformation()
+    vertical_field_of_view = 2 * math.degrees(
+        math.atan(
+            eye.GetVerticalApertureAttr().Get() / (2 * eye.GetFocalLengthAttr().Get())
+        )
+    )
+    assert list(local.ExtractTranslation()) == pytest.approx(camera.position)
+    assert vertical_field_of_view == pytest.approx(camera.fovy)
+    assert eye.GetClippingRangeAttr().Get()[0] == pytest.approx(
+        UsdBuilder().camera_near_clip
+    )
+
+
+def test_a_light_that_follows_its_body_other_than_fixed_to_it_is_refused(tmp_path):
+    hinge_world = _hinge_world()
+    root = hinge_world.world.root
+    root.add_simulator_property(
+        MujocoLight(
+            name="tracking", body=root, mode=mujoco.mjtCamLight.mjCAMLIGHT_TRACK
+        )
+    )
+    with pytest.raises(UnsupportedFollowingModeError):
+        built(hinge_world.world, tmp_path)

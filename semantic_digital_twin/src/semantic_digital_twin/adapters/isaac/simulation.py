@@ -104,7 +104,7 @@ class IsaacSim(MultiSim, SteppedSimulation):
     def step_simulation(self, duration: timedelta) -> None:
         """
         :meth:`SteppedSimulation.step_simulation`, advancing only by whole physics
-        steps.
+        steps; the world reads the simulation back once they are done.
 
         :raises DurationNotWholeStepsError: If the duration is not a whole number of
             physics steps.
@@ -116,7 +116,9 @@ class IsaacSim(MultiSim, SteppedSimulation):
             raise DurationNotWholeStepsError(
                 duration.total_seconds(), self.simulator.step_size
             )
-        self.simulator.advance(round(steps))
+        for _ in range(round(steps)):
+            self.simulator.step()
+        self.simulator.render()
         self.synchronizer.read_back()
 
     def servo_positions(self, servo_names: list[str]) -> dict[str, float]:
