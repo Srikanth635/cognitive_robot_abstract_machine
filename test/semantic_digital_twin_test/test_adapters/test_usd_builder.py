@@ -23,8 +23,8 @@ from semantic_digital_twin.adapters.multi_sim import (
 from semantic_digital_twin.adapters.usd.exceptions import (
     UnsupportedFollowingModeError,
 )
-from semantic_digital_twin.adapters.usd.builder import (
-    UsdBuilder,
+from semantic_digital_twin.adapters.usd.builder import UsdBuilder
+from semantic_digital_twin.adapters.usd.stage import (
     UsdCustomDataKey,
     UsdJointAxisProperty,
     UsdMimicJointProperty,

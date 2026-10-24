@@ -87,7 +87,11 @@ angular drive are per degree, so radians are converted at the boundary.
   bodies, boxes, spheres, cylinders and meshes, revolute, prismatic and fixed joints, free
   bodies, position and velocity servos as drives, and a servoed wheeled drive as a slide, a
   slide and a hinge through two light bodies of its own. The PR2 at the counter builds in
-  under three seconds; written as `.usdc`, the scene is about 5 MB.
+  under three seconds; written as `.usdc`, the scene is about 5 MB. The builder hands each
+  part of the world to a writer of its own, all sharing one `WorldStage` (`usd/stage.py`):
+  `BodyWriter` (`usd/bodies.py`), `ContactGroupWriter` (`usd/contacts.py`), `JointWriter`
+  for joints, drives and articulations (`usd/joints.py`) and `AppearanceWriter` for cameras
+  and lights (`usd/appearance.py`).
 - **Articulations.** Moving bodies joined by joints are one articulation, hanging from an
   anchor fixed to the static body they stand on, with self-collisions off; a body on a
   single joint is one too, since Isaac Sim reads and drives joints only through
