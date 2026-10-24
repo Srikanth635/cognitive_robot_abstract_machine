@@ -11,6 +11,7 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 pytest.importorskip("isaacsim")
@@ -50,6 +51,11 @@ class StagePrim(StrEnum):
     BOX = "/World/box"
     """
     A box free to fall.
+    """
+
+    CAMERA = "/World/camera"
+    """
+    A camera looking at the box from a metre away.
     """
 
 
@@ -153,3 +159,19 @@ def test_a_free_body_falls_as_gravity_pulls_it(gravity, simulator):
     step_for(simulator, seconds)
     fallen = height - simulator.body_poses()[StagePrim.BOX].position[2]
     assert fallen == pytest.approx(gravity * seconds**2 / 2, abs=0.02)
+
+
+# %% cameras
+
+
+def test_a_camera_shows_the_stage_at_the_size_asked_for(simulator):
+    picture = simulator.capture_rgb(StagePrim.CAMERA, height=120, width=160)
+    assert picture.shape == (120, 160, 3)
+    assert picture.std() > 0
+
+
+def test_a_cameras_picture_follows_the_physics(simulator):
+    before = simulator.capture_rgb(StagePrim.CAMERA, height=120, width=160)
+    step_for(simulator, 0.5)
+    after = simulator.capture_rgb(StagePrim.CAMERA, height=120, width=160)
+    assert np.abs(after.astype(int) - before.astype(int)).mean() > 1.0

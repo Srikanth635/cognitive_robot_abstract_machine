@@ -1,15 +1,18 @@
 """
-Stepping a scene under MuJoCo physics at a chosen speed, in a window or without one.
+Stepping a scene under a simulator's physics at a chosen speed, in a window or without
+one: what every simulator's viewer shares, and the viewer for MuJoCo.
 """
 
 from __future__ import annotations
 
 import logging
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 
 from coraplex.datastructures.dataclasses import Context
 from coraplex.execution_environment import PhysicallySimulatedRobot
+from semantic_digital_twin.adapters.multi_sim import MultiSim, SteppedSimulation
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
@@ -120,13 +123,14 @@ class PhysicsRun:
 
 
 @dataclass
-class PhysicsViewer:
+class SteppedSceneViewer(ABC):
     """
-    Puts a scene under MuJoCo physics and steps it frame by frame, as fast as real time
-    times the speed, until its duration is over or its window is closed.
+    Puts a scene under a simulator's physics and steps it frame by frame, as fast as real
+    time times the speed, until its duration is over or its window is closed; what the
+    simulation is, and what is shown of it, is left to each simulator's viewer.
 
-    A scene free-running in MuJoCo is stepped as fast as the machine can, which shows a
-    dropped cube at rest at once; stepping frame by frame at the pace of the clock shows
+    A scene free-running in a simulator is stepped as fast as the machine can, which shows
+    a dropped cube at rest at once; stepping frame by frame at the pace of the clock shows
     what happens.
     """
 
@@ -183,22 +187,15 @@ class PhysicsViewer:
         if self.headless and self.duration is None:
             raise HeadlessRunWithoutDuration()
         world = self.scene.value.build()
-        simulation = RealTimeMujocoSim(
-            world=world,
-            speed=self.speed,
-            headless=self.headless,
-            **self.scene.value.simulation_options().keywords(),
-        )
+        simulation = self._simulation_of(world)
         simulation.start_stepped_simulation()
-        overlay = ActionOverlay.of(self.headless, simulation)
-        camera = self.scene.value.initial_camera()
-        if camera is not None and not self.headless:
-            camera.apply(simulation.simulator.renderer.cam)
+        overlay = self._start_showing(simulation)
         moved: tuple[tuple[MovedJoint, ...], tuple[MovedObject, ...]] = ((), ())
         try:
             if self.action is not None:
                 moved = self.perform(simulation, world, overlay)
             frames = self.step_until_over(simulation)
+            self._finish_showing()
         finally:
             simulation.stop_simulation()
         return PhysicsRun(
@@ -209,9 +206,32 @@ class PhysicsViewer:
             moved_objects=moved[1],
         )
 
+    @abstractmethod
+    def _simulation_of(self, world: World) -> SteppedSimulation:
+        """
+        :param world: The scene's world.
+        :return: The simulation the world runs in, stepped no faster than real time times
+            :attr:`speed`, not started yet.
+        """
+
+    @abstractmethod
+    def _start_showing(self, simulation: MultiSim) -> ActionOverlay | None:
+        """
+        Prepare what is shown of the started simulation.
+
+        :param simulation: The simulation, started.
+        :return: What writes the action into the window, if anything does.
+        """
+
+    def _finish_showing(self) -> None:
+        """
+        Finish what is shown of the simulation, once its last frame is stepped and before
+        it stops.
+        """
+
     def perform(
         self,
-        simulation: RealTimeMujocoSim,
+        simulation: SteppedSimulation,
         world: World,
         overlay: ActionOverlay | None,
     ) -> tuple[tuple[MovedJoint, ...], tuple[MovedObject, ...]]:
@@ -304,7 +324,7 @@ class PhysicsViewer:
             if abs(position - before[joint]) >= self.reported_movement
         )
 
-    def step_until_over(self, simulation: RealTimeMujocoSim) -> int:
+    def step_until_over(self, simulation: SteppedSimulation) -> int:
         """
         Step the physics frame by frame until the duration is over or the window is
         closed.
@@ -318,7 +338,7 @@ class PhysicsViewer:
             frames += 1
         return frames
 
-    def is_over(self, simulation: RealTimeMujocoSim, frames: int) -> bool:
+    def is_over(self, simulation: MultiSim, frames: int) -> bool:
         """
         :param simulation: The simulation being stepped.
         :param frames: How many frames have been stepped.
@@ -329,3 +349,28 @@ class PhysicsViewer:
         ):
             return True
         return not self.headless and not simulation.simulator.renderer.is_running()
+
+
+# %% MuJoCo
+
+
+@dataclass
+class PhysicsViewer(SteppedSceneViewer):
+    """
+    Puts a scene under MuJoCo physics, writing the action the robot performs into the
+    window.
+    """
+
+    def _simulation_of(self, world: World) -> RealTimeMujocoSim:
+        return RealTimeMujocoSim(
+            world=world,
+            speed=self.speed,
+            headless=self.headless,
+            **self.scene.value.simulation_options().keywords(),
+        )
+
+    def _start_showing(self, simulation: RealTimeMujocoSim) -> ActionOverlay | None:
+        camera = self.scene.value.initial_camera()
+        if camera is not None and not self.headless:
+            camera.apply(simulation.simulator.renderer.cam)
+        return ActionOverlay.of(self.headless, simulation)
