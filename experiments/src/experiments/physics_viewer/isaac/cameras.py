@@ -17,11 +17,8 @@ import numpy as np
 from isaacsim.core.rendering_manager import ViewportManager
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdLux
 
-from semantic_digital_twin.adapters.usd.builder import (
-    UsdBuilder,
-    UsdCustomDataKey,
-    UsdStagePath,
-)
+from semantic_digital_twin.adapters.usd.builder import UsdBuilder
+from semantic_digital_twin.adapters.usd.stage import UsdCustomDataKey, UsdStagePath
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.spatial_types.spatial_types import Vector3
 

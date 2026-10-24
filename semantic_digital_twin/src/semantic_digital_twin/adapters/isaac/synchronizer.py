@@ -22,7 +22,7 @@ from semantic_digital_twin.adapters.multi_sim import (
     MujocoConnectionJoints,
     MultiSimSynchronizer,
 )
-from semantic_digital_twin.adapters.usd.builder import UsdCustomDataKey
+from semantic_digital_twin.adapters.usd.stage import UsdCustomDataKey
 from semantic_digital_twin.spatial_types.spatial_types import (
     HomogeneousTransformationMatrix,
 )
