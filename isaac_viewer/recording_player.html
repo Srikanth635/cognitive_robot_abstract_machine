@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isaac Sim recording</title>
+<style>
+  :root {
+    --background: #f4f5f7;
+    --panel: #ffffff;
+    --text: #1d2330;
+    --muted: #5b6475;
+    --border: #d9dde5;
+    --accent: #2f6fed;
+    --accent-text: #ffffff;
+    --video-background: #000000;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: #14171c;
+      --panel: #1d2128;
+      --text: #e7eaf0;
+      --muted: #9aa3b2;
+      --border: #333a46;
+      --accent: #5b8dff;
+      --accent-text: #0d1117;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1280px; margin: 0 auto; padding: 20px 16px 32px; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); margin: 0 0 16px; }
+  .stage {
+    background: var(--video-background);
+    border-radius: 10px;
+    overflow: hidden;
+    display: grid;
+    gap: 2px;
+    grid-template-columns: 1fr;
+  }
+  .stage.grid { grid-template-columns: 1fr 1fr; }
+  .view { position: relative; display: none; }
+  .view.shown { display: block; }
+  .view video { display: block; width: 100%; height: auto; }
+  .view .label {
+    position: absolute; left: 8px; top: 8px;
+    padding: 2px 8px; border-radius: 6px;
+    background: rgba(0, 0, 0, 0.55); color: #ffffff; font-size: 13px;
+  }
+  .stage:not(.grid) .view .label { display: none; }
+  .controls {
+    margin-top: 12px; padding: 12px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .row .name { color: var(--muted); min-width: 64px; }
+  button {
+    font: inherit; color: var(--text); background: var(--panel);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button[aria-pressed="true"] {
+    background: var(--accent); border-color: var(--accent); color: var(--accent-text);
+  }
+  .timeline { display: flex; align-items: center; gap: 10px; }
+  .timeline input { flex: 1; accent-color: var(--accent); }
+  .time { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 96px; text-align: right; }
+  .hint { color: var(--muted); font-size: 13px; }
+  @media (max-width: 640px) {
+    .stage.grid { grid-template-columns: 1fr; }
+    .row .name { min-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Isaac Sim recording</h1>
+  <p class="subtitle">Recorded headless under Isaac Sim's PhysX; every camera shows the same simulated moment.</p>
+  <div class="stage" id="stage"></div>
+  <div class="controls">
+    <div class="row" id="cameras"><span class="name">Camera</span></div>
+    <div class="row" id="speeds"><span class="name">Speed</span></div>
+    <div class="timeline">
+      <button id="play" type="button">Play</button>
+      <button id="restart" type="button">Restart</button>
+      <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Position in the recording">
+      <span class="time" id="time">0.0 / 0.0 s</span>
+    </div>
+    <div class="hint">Keys: space plays or pauses, 1 to 4 pick a camera, 0 shows all, arrow keys step a second.</div>
+  </div>
+</main>
+<script id="recording" type="application/json">__RECORDING__</script>
+<script>
+  const recording = JSON.parse(document.getElementById("recording").textContent);
+  const speeds = [1, 2, 4, 8];
+  const stage = document.getElementById("stage");
+  const cameraRow = document.getElementById("cameras");
+  const speedRow = document.getElementById("speeds");
+  const playButton = document.getElementById("play");
+  const seek = document.getElementById("seek");
+  const timeText = document.getElementById("time");
+  const allCameras = -1;
+
+  document.getElementById("title").textContent = recording.title;
+  document.title = recording.title;
+
+  const views = recording.cameras.map((camera) => {
+    const view = document.createElement("div");
+    view.className = "view";
+    const video = document.createElement("video");
+    video.src = camera.video;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = camera.label;
+    view.append(video, label);
+    stage.append(view);
+    return { view, video };
+  });
+  const videos = views.map((view) => view.video);
+
+  let selected = 0;
+  let speed = 1;
+
+  function leading() {
+    return videos[selected === allCameras ? 0 : selected];
+  }
+
+  function pressed(row, button) {
+    for (const other of row.querySelectorAll("button")) {
+      other.setAttribute("aria-pressed", String(other === button));
+    }
+  }
+
+  function selectCamera(index) {
+    const time = leading().currentTime;
+    selected = index;
+    stage.classList.toggle("grid", index === allCameras);
+    views.forEach((view, i) => view.view.classList.toggle("shown", index === allCameras || i === index));
+    for (const video of videos) { video.currentTime = time; }
+    pressed(cameraRow, cameraButtons[index === allCameras ? cameraButtons.length - 1 : index]);
+  }
+
+  function selectSpeed(value) {
+    speed = value;
+    for (const video of videos) { video.playbackRate = value; }
+    pressed(speedRow, speedButtons[speeds.indexOf(value)]);
+  }
+
+  function setPlaying(playing) {
+    for (const video of videos) {
+      if (playing) { video.play(); } else { video.pause(); }
+    }
+    playButton.textContent = playing ? "Pause" : "Play";
+  }
+
+  function seekTo(time) {
+    const duration = leading().duration || 0;
+    const clamped = Math.max(0, Math.min(duration, time));
+    for (const video of videos) { video.currentTime = clamped; }
+  }
+
+  const cameraButtons = recording.cameras.map((camera, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = `${index + 1}. ${camera.label}`;
+    button.addEventListener("click", () => selectCamera(index));
+    cameraRow.append(button);
+    return button;
+  });
+  const gridButton = document.createElement("button");
+  gridButton.type = "button";
+  gridButton.textContent = "All cameras";
+  gridButton.addEventListener("click", () => selectCamera(allCameras));
+  cameraRow.append(gridButton);
+  cameraButtons.push(gridButton);
+
+  const speedButtons = speeds.map((value) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = `${value}×`;
+    button.addEventListener("click", () => selectSpeed(value));
+    speedRow.append(button);
+    return button;
+  });
+
+  playButton.addEventListener("click", () => setPlaying(leading().paused));
+  document.getElementById("restart").addEventListener("click", () => { seekTo(0); setPlaying(true); });
+  seek.addEventListener("input", () => seekTo((seek.value / 1000) * (leading().duration || 0)));
+  videos[0].addEventListener("ended", () => { playButton.textContent = "Play"; });
+
+  function keepInStep() {
+    const lead = leading();
+    for (const video of videos) {
+      if (video !== lead && Math.abs(video.currentTime - lead.currentTime) > 0.08) {
+        video.currentTime = lead.currentTime;
+      }
+    }
+    const duration = lead.duration || 0;
+    if (duration > 0 && document.activeElement !== seek) {
+      seek.value = String(Math.round((lead.currentTime / duration) * 1000));
+    }
+    timeText.textContent = `${lead.currentTime.toFixed(1)} / ${duration.toFixed(1)} s`;
+    requestAnimationFrame(keepInStep);
+  }
+  requestAnimationFrame(keepInStep);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.target instanceof HTMLInputElement && event.key !== " ") { return; }
+    if (event.key === " ") { event.preventDefault(); setPlaying(leading().paused); }
+    else if (event.key === "0") { selectCamera(allCameras); }
+    else if (/^[1-9]$/.test(event.key) && Number(event.key) <= views.length) { selectCamera(Number(event.key) - 1); }
+    else if (event.key === "ArrowRight") { seekTo(leading().currentTime + 1); }
+    else if (event.key === "ArrowLeft") { seekTo(leading().currentTime - 1); }
+  });
+
+  selectCamera(0);
+  selectSpeed(1);
+</script>
+</body>
+</html>
