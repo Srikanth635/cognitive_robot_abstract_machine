@@ -2,8 +2,8 @@
 Tests of what the ontology says of kinds of object: a container has an opening, and
 which of the code's classes are containers.
 
-Tests that need CRAM-AICOR or DUL read them from the files named by
-:class:`LinkedOntologyVariable` and are skipped when those are unset, and the test that
+Tests that need CRAM-AICOR or DUL read the pinned copies
+(:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`), and the test that
 reasons needs ``owlready2`` and a Java runtime and is slow.
 """
 

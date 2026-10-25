@@ -21,7 +21,7 @@ from llm_reasoner.knowledge.access import (
     HermitCheck,
     HypothesisRejected,
     HypothesisView,
-    LinkedOntologyVariable,
+    LinkedOntologyTerms,
     pouring,
 )
 from llm_reasoner.clients.base import ScriptedClient
@@ -38,14 +38,6 @@ from cram_viz.hypothesis_knowledge.generation import (
 INSTRUCTION = "pour milk from the carton into the bowl"
 """
 The instruction the tests generate for.
-"""
-
-LINKED_EXCERPTS = [
-    Path(__file__).parents[1] / "llm_reasoner_test" / "linked_ontology_cases" / name
-    for name in ("cram_aicor_excerpt.ttl", "dul_excerpt.owl")
-]
-"""
-Excerpts of CRAM-AICOR and DUL declaring a few terms.
 """
 
 SCRIPTED_ANSWER = (
@@ -154,23 +146,17 @@ class TestModelHypothesisSource:
         source = ModelHypothesisSource(store_directory=tmp_path)
         assert source.client_for_generation().model == GENERATION_MODEL
 
-    def test_open_world_check_is_configured_from_the_environment(
-        self, monkeypatch, tmp_path
-    ):
-        for variable, path in zip(LinkedOntologyVariable, LINKED_EXCERPTS):
-            monkeypatch.setenv(variable, str(path))
+    def test_open_world_check_reasons_over_the_pinned_ontologies(self, tmp_path):
         source = ModelHypothesisSource(
             store_directory=tmp_path, client=ScriptedClient()
         )
-        assert isinstance(source.consistency, HermitCheck)
+        assert source.consistency == HermitCheck.pinned()
 
-    def test_linked_terms_are_read_from_the_environment(self, monkeypatch, tmp_path):
-        for variable, path in zip(LinkedOntologyVariable, LINKED_EXCERPTS):
-            monkeypatch.setenv(variable, str(path))
+    def test_linked_terms_are_the_pinned_ones(self, tmp_path):
         source = ModelHypothesisSource(
             store_directory=tmp_path, client=ScriptedClient(), consistency=None
         )
-        assert source.linked_terms.declares(CRAM_AICOR_NAMESPACE + "Grasping")
+        assert source.linked_terms == LinkedOntologyTerms.pinned()
 
 
 class TestModelHypothesisSourceCredentials:

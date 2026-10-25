@@ -178,21 +178,18 @@ class ModelHypothesisSource(HypothesisSource):
     The acceptance rules a generated hypothesis must meet.
     """
 
-    consistency: Optional[ConsistencyCheck] = field(
-        default_factory=HermitCheck.from_environment
-    )
+    consistency: Optional[ConsistencyCheck] = field(default_factory=HermitCheck.pinned)
     """
-    The open-world check against the ontology, CRAM-AICOR and DUL; configured from the
-    environment variables naming the linked ontologies, and skipped without them.
+    The open-world check against the ontology and the pinned CRAM-AICOR and DUL; none
+    skips it.
     """
 
     linked_terms: Optional[LinkedOntologyTerms] = field(
-        default_factory=LinkedOntologyTerms.from_environment
+        default_factory=LinkedOntologyTerms.pinned
     )
     """
-    The terms CRAM-AICOR and DUL declare, which the concepts of an answer named in their
-    namespaces must be among; read from the environment variables naming the linked
-    ontologies, and unchecked without them.
+    The terms the pinned CRAM-AICOR and DUL declare, which the concepts of an answer
+    named in their namespaces must be among; none leaves them unchecked.
     """
 
     _service: Optional[KnowledgeService] = field(default=None, init=False)

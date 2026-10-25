@@ -6,7 +6,6 @@ recording and storing it.
 
 from __future__ import annotations
 
-import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -39,7 +38,6 @@ from llm_reasoner.knowledge.generation.wire import FragmentDecoder
 from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
-    LinkedOntologyVariable,
     PredictiveManipulationOntologyFile,
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
@@ -49,6 +47,7 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     prehension,
 )
 from llm_reasoner.knowledge.generation.prompts import written_value
+from llm_reasoner.knowledge.ontologies.linked import OntologyFiles
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference, PropertyTerm
 
 from .test_generation import GenerationCase
@@ -258,37 +257,16 @@ class TestContradictionLocaliser:
 # %% HermiT
 
 
-class TestHermitCheckFromEnvironment:
+class TestPinnedHermitCheck:
     """
-    The open-world check is configured by the environment variables naming the linked
-    ontologies.
+    The open-world check reasons over the microworld and the pinned linked ontologies.
     """
 
-    def test_no_check_without_the_linked_ontologies(self, monkeypatch):
-        for variable in LinkedOntologyVariable:
-            monkeypatch.delenv(variable, raising=False)
-        assert HermitCheck.from_environment() is None
-
-    def test_check_covers_the_microworld_and_the_linked_ontologies(
-        self, monkeypatch, tmp_path
-    ):
-        for variable in LinkedOntologyVariable:
-            monkeypatch.setenv(variable, str(tmp_path / variable.lower()))
-        check = HermitCheck.from_environment()
-        assert list(check.background_files) == [
+    def test_check_covers_the_microworld_and_the_pinned_ontologies(self):
+        assert list(HermitCheck.pinned().background_files) == [
             *MICROWORLD_FILES,
-            *(tmp_path / variable.lower() for variable in LinkedOntologyVariable),
+            *OntologyFiles.pinned().paths,
         ]
-
-
-def configured_path(variable: LinkedOntologyVariable) -> Path:
-    """
-    Return the ontology file an environment variable names, or skip when it names none.
-    """
-    location = os.environ.get(variable)
-    if location is None or not Path(location).is_file():
-        pytest.skip(f"set {variable} to the ontology file")
-    return Path(location)
 
 
 @pytest.fixture(scope="module")
@@ -358,8 +336,7 @@ class TestHermitCheck:
             consistency=HermitCheck(
                 background_files=[
                     *MICROWORLD_FILES,
-                    configured_path(LinkedOntologyVariable.CRAM_AICOR_ONTOLOGY),
-                    configured_path(LinkedOntologyVariable.DUL_ONTOLOGY),
+                    *OntologyFiles.pinned().paths,
                 ]
             ),
         )
@@ -378,8 +355,7 @@ class TestHermitCheck:
         check = HermitCheck(
             background_files=[
                 *MICROWORLD_FILES,
-                configured_path(LinkedOntologyVariable.CRAM_AICOR_ONTOLOGY),
-                configured_path(LinkedOntologyVariable.DUL_ONTOLOGY),
+                *OntologyFiles.pinned().paths,
             ]
         )
         assert check.is_consistent(written(chained_structure()))

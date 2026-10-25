@@ -3,9 +3,8 @@
 --frame <frame> --output <directory>``: ask a model for the vocabulary of a perspective,
 and write the proposal as a module and a record of how it was made, for review.
 
-It needs the linked ontologies the environment names (``CRAM_AICOR_ONTOLOGY``,
-``DUL_ONTOLOGY``) and an Anthropic key; with owlready2 installed, HermiT checks every
-answer against the action core, CRAM-AICOR and DUL.
+It needs an Anthropic key; with owlready2 installed, HermiT checks every answer against
+the action core and the pinned CRAM-AICOR and DUL.
 """
 
 from __future__ import annotations
@@ -118,11 +117,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     Ask for the vocabulary, and write the proposed module and its record.
     """
     arguments = arguments_of(sys.argv[1:] if argv is None else argv)
-    linked = OntologyFiles.linked_from_environment()
-    if linked is None:
-        raise SystemExit(
-            "set CRAM_AICOR_ONTOLOGY and DUL_ONTOLOGY to the ontology files"
-        )
+    linked = OntologyFiles.pinned()
     perspective = Perspective(arguments.perspective)
     sink = MemorySink()
     client = ObservedClient.of(

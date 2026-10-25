@@ -309,9 +309,9 @@ class TestCoreHypothesis:
     def test_it_is_admitted_by_the_reasoner_against_the_core_and_the_linked_ontologies(
         self, tmp_path
     ):
-        check = HermitCheck.from_environment()
-        if check is None or HermitCheck.shipped_directory() is None:
-            pytest.skip("needs the linked ontologies and owlready2's HermiT")
+        if HermitCheck.shipped_directory() is None:
+            pytest.skip("needs owlready2's HermiT")
+        check = HermitCheck.pinned()
         backend = core_backend(HypothesisStore(directory=tmp_path), check)
         list(core_query().evaluate(backend=backend))
         assert backend.last_record.consistency == ConsistencyVerdict.CONSISTENT
@@ -555,9 +555,9 @@ class TestPerspectiveHypothesis:
 
     @pytest.mark.slow
     def test_it_is_admitted_by_the_reasoner_with_the_core_it_builds_on(self, tmp_path):
-        check = HermitCheck.from_environment()
-        if check is None or HermitCheck.shipped_directory() is None:
-            pytest.skip("needs the linked ontologies and owlready2's HermiT")
+        if HermitCheck.shipped_directory() is None:
+            pytest.skip("needs owlready2's HermiT")
+        check = HermitCheck.pinned()
         service = service_answering(
             HypothesisStore(directory=tmp_path),
             answer_text(AnswerCase.CORE),

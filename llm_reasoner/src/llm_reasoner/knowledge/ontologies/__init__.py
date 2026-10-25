@@ -5,9 +5,10 @@ The knowledge is described by three families of ontology modules, one Turtle fil
 module: the action perspectives, which describe an action from several points of view
 around an action core, the predictive manipulation microworld, which describes it as
 phases of predictive control, and the physical measurements, which give values of its
-quantities derived from shapes or measured in a physics simulation. Each file imports the
-modules it depends on, and the first module of each of the first two families imports
-the CRAM-AICOR and DOLCE+DnS Ultralite ontologies, whose terms the modules specialise.
+quantities derived from shapes or measured in a physics simulation. Each file imports
+the modules it depends on, and the first module of each of the first two families
+imports the CRAM-AICOR and DOLCE+DnS Ultralite ontologies, whose terms the modules
+specialise.
 """
 
 from __future__ import annotations
@@ -97,24 +98,6 @@ The namespace of the concepts hypotheses introduce because no linked ontology de
 them, such as a category of grasp; kept apart so they never pass for linked terms.
 """
 
-
-class LinkedOntologyVariable(StrEnum):
-    """
-    Environment variables naming the files of the ontologies the microworld links to,
-    which are not part of the package.
-    """
-
-    CRAM_AICOR_ONTOLOGY = "CRAM_AICOR_ONTOLOGY"
-    """
-    Path of the CRAM-AICOR ontology in Turtle.
-    """
-
-    DUL_ONTOLOGY = "DUL_ONTOLOGY"
-    """
-    Path of the DOLCE+DnS Ultralite ontology in RDF/XML.
-    """
-
-
 PARAGRAPH_SEPARATOR = "\n\n"
 """
 What separates the paragraphs of a description.
@@ -140,8 +123,10 @@ The directory, within a family's directory, holding the SHACL shapes of its modu
 class OntologyModuleFile:
     """
     The Turtle file of an ontology module, and what is derived from it: its namespace,
-    its shapes and its generated vocabulary module. A family of modules is a string
-    enumeration of its files' names that says where the family lies.
+    its shapes and its generated vocabulary module.
+
+    A family of modules is a string enumeration of its files' names that says where the
+    family lies.
     """
 
     @property
@@ -319,8 +304,8 @@ class ActionPerspectiveFile(ActionPerspectiveModule, StrEnum):
     @property
     def usable_modules(self) -> set[OntologyModuleFile]:
         """
-        The module and the action core: a perspective describes an action in the
-        core's terms and never in another perspective's.
+        The module and the action core: a perspective describes an action in the core's
+        terms and never in another perspective's.
         """
         return {ActionPerspectiveFile.ACTION_CORE, self}
 
