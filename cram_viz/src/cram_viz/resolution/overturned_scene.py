@@ -11,7 +11,13 @@ from pathlib import Path
 
 from typing_extensions import Any, Dict, List
 
-from cram_viz.resolution.scene_world import SCENE_FILE, SceneKey, SceneWorldBuilder
+from cram_viz.resolution.scene_world import (
+    SCENE_FILE,
+    SceneKey,
+    SceneObject,
+    SceneObjects,
+    SceneWorldBuilder,
+)
 
 HALF_TURN_ABOUT_X = [1.0, 0.0, 0.0, 0.0]
 """
@@ -70,11 +76,10 @@ class OverturnedScene:
         :return: The variant turning that object over.
         :raises ObjectNotInScene: When no object of the scene has that body.
         """
-        scene = json.loads((bundle / SCENE_FILE).read_text())
-        for entry in scene.get(SceneKey.OBJECTS) or []:
-            if Path(entry[SceneKey.MESH]).name == body_name:
-                return cls(bundle=bundle, identifier=entry[SceneKey.IDENTIFIER])
-        raise ObjectNotInScene(identifier=body_name)
+        scene_object = SceneObjects.read(bundle).with_body(body_name)
+        if scene_object is None:
+            raise ObjectNotInScene(identifier=body_name)
+        return cls(bundle=bundle, identifier=scene_object.identifier)
 
     @property
     def body_name(self) -> str:
@@ -82,7 +87,7 @@ class OverturnedScene:
         :return: The name of the body the object has in the scene's world.
         """
         scene = json.loads((self.bundle / SCENE_FILE).read_text())
-        return Path(self.entry_in(scene)[SceneKey.MESH]).name
+        return SceneObject.from_json(self.entry_in(scene)).body_name
 
     def write_to(self, destination: Path) -> Path:
         """
@@ -124,7 +129,7 @@ class OverturnedScene:
         """
         position = list(entry[SceneKey.SPAWN][:SPAWN_POSITION_LENGTH])
         world = SceneWorldBuilder().build(self.bundle)
-        body = world.get_body_by_name(Path(entry[SceneKey.MESH]).name)
+        body = world.get_body_by_name(SceneObject.from_json(entry).body_name)
         box = body.visual.as_bounding_box_collection_in_frame(world.root).bounding_box()
         position[SPAWN_HEIGHT_INDEX] = (
             box.min_z + box.max_z - position[SPAWN_HEIGHT_INDEX]

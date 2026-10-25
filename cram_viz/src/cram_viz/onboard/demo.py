@@ -37,10 +37,13 @@ import runpy
 import shutil
 import sys
 import time
+from pathlib import Path
+
 from typing_extensions import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from cram_viz import configure_console_logging, paths
 from cram_viz.onboard.bundle_urdf import bundle_urdf
+from cram_viz.resolution.scene_world import SCENE_FILE, SceneObjects
 
 if TYPE_CHECKING:
     from coraplex.robot_plans.actions.base import Action
@@ -603,6 +606,9 @@ def build_scene(rec: Recorder, name: str, out_dir: str, step: int) -> Dict[str, 
                 "color": PALETTE[i % len(PALETTE)],
             }
         )
+    # a recording cannot observe what a container holds: the earlier scene's word stands
+    if os.path.isfile(os.path.join(out_dir, SCENE_FILE)):
+        SceneObjects.read(Path(out_dir)).carry_contents_into(objects)
 
     # ---- place target + drag bounds -------------------------------------------
     places = [s["place"] for s in segments if s.get("place")]

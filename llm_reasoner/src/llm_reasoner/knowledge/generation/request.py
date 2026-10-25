@@ -11,9 +11,11 @@ from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any
 
 from llm_reasoner.exceptions import LLMReasonerError
+from llm_reasoner.knowledge.generation.exceptions import MeasurementIsNotGenerated
 from llm_reasoner.knowledge.generation.prompts import written_value
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.ontologies import OntologyModuleFile
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.storage.citation import Citation
 
 
@@ -64,7 +66,12 @@ class HypothesisRequest:
         :param instruction: The action to describe; the class's name when empty.
         :return: The request the match makes.
         :raises UnsupportedFixedValue: When the match fixes a field to a nested match.
+        :raises MeasurementIsNotGenerated: When the match is on a class of a module
+            whose knowledge no language model generates.
         """
+        module_file = Vocabulary().module_file_of(expression._type_)
+        if module_file is not None and not module_file.holds_generated_knowledge:
+            raise MeasurementIsNotGenerated(root_type=expression._type_)
         fixed = {}
         for name, value in expression._kwargs_.items():
             if value is Ellipsis:

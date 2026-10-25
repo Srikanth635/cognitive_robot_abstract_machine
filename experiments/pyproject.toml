@@ -16,6 +16,7 @@ dependencies = [
     "krrood>=26.10.0",
     "probabilistic_model>=26.10.0",
     "llm_reasoner>=26.10.0",
+    "cram_viz",
     "pymysql",
     "random_events>=26.10.0",
     "semantic_digital_twin>=26.10.0",
@@ -33,6 +34,7 @@ version = {attr = "experiments._version.__version__"}
 workspace = [
     "coraplex",
     "cramph",
+    "cram_viz",
     "giskardpy",
     "krrood",
     "krrood_spatial_math",

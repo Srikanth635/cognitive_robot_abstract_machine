@@ -39,8 +39,10 @@ from llm_reasoner.knowledge.ontologies import (
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     LinkedOntologyVariable,
     OntologyModuleFile,
+    PhysicalMeasurementFile,
     PredictiveManipulationOntologyFile,
 )
+from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     action_frame,
@@ -83,6 +85,12 @@ from llm_reasoner.knowledge.ontologies.terms import (
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.representation.rdf import GraphReader
 from llm_reasoner.knowledge.storage.citation import Citation, StoredRoot
+from llm_reasoner.knowledge.storage.exceptions import InvalidMeasurement
+from llm_reasoner.knowledge.storage.measurements import (
+    FlowOnsetQuery,
+    MeasurementStore,
+    StoredFlowOnset,
+)
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 __all__ = [
@@ -99,6 +107,8 @@ __all__ = [
     "CRAM_AICOR_NAMESPACE",
     "described",
     "failures",
+    "flow_onset",
+    "FlowOnsetQuery",
     "DescribedAction",
     "DescribedActions",
     "DescriptionEntity",
@@ -119,6 +129,7 @@ __all__ = [
     "HypothesisView",
     "HYPOTHESIS_CONCEPT_NAMESPACE",
     "image_schemas",
+    "InvalidMeasurement",
     "is_inferred",
     "KNOWLEDGE_ACCESS_VERSION",
     "KnowledgeAccess",
@@ -126,6 +137,7 @@ __all__ = [
     "KnowledgeToolName",
     "KnowledgeService",
     "LinkedOntologyTerms",
+    "MeasurementStore",
     "OBJECT_KINDS_FILE",
     "OBJECT_KINDS_NAMESPACE",
     "ObjectKinds",
@@ -134,6 +146,7 @@ __all__ = [
     "OntologyFiles",
     "OntologyModuleFile",
     "PERSPECTIVE_ROOTS",
+    "PhysicalMeasurementFile",
     "PerspectiveRoot",
     "pouring",
     "PredictiveManipulationOntologyFile",
@@ -145,6 +158,7 @@ __all__ = [
     "SituationFeature",
     "SituationFeatures",
     "SlotRoles",
+    "StoredFlowOnset",
     "StoredRoot",
     "SyntheticHypothesisRelation",
     "Vocabulary",

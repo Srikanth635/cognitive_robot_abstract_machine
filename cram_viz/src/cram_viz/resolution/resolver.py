@@ -23,6 +23,7 @@ from llm_reasoner.knowledge.access import (
     ActionPerspectiveFile,
     Citation,
     KnowledgeService,
+    MeasurementStore,
 )
 from llm_reasoner.observation.events import Component
 from llm_reasoner.observation.observed import ObservedClient
@@ -52,7 +53,7 @@ from cram_viz.resolution.designators import (
 from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunEnvironment
 from cram_viz.resolution.scene_geometry import SceneGeometry
 from cram_viz.resolution.slot_data import SlotData
-from cram_viz.resolution.flow_onset import FlowOnsetKnowledge
+from cram_viz.resolution.flow_onset import MeasuredFlowOnset
 from cram_viz.resolution.trial import SimulatedPouring, TriedPour
 from cram_viz.resolution.hold_measurement import MeasuredHolding
 from cram_viz.resolution.prediction import PourPrediction, PourPredictor
@@ -315,6 +316,12 @@ class DesignatorResolver:
     out, so that the resolver may correct it with them.
     """
 
+    measurements: Optional[MeasurementStore] = None
+    """
+    The physical measurements a pour's flow onset is read from, and onsets derived from
+    a container's shape are kept in; without them a pour's tilt is not checked.
+    """
+
     @classmethod
     def for_viewer(
         cls, source: ModelHypothesisSource, worlds: SceneWorlds
@@ -324,7 +331,8 @@ class DesignatorResolver:
             store.
         :param worlds: The scene worlds the viewer shares with its designator menu.
         :return: A resolver asking the source's model, every run starting from the
-            source's knowledge, the runs kept in the viewer's runs directory.
+            source's knowledge, the runs kept in the viewer's runs directory, its pours'
+            flow onsets read from the checked-in measurements.
         """
         source.load_credentials()
         return cls(
@@ -333,6 +341,7 @@ class DesignatorResolver:
             runs=ResolutionRuns(directory=paths.resolution_runs_dir()),
             worlds=worlds,
             neem_database=paths.neem_database_path(),
+            measurements=MeasurementStore(directory=paths.MEASUREMENTS_PATH),
         )
 
     def reopen(self, name: str) -> ResolutionRun:
@@ -465,15 +474,6 @@ class DesignatorResolver:
             outcome_prediction=prediction,
             max_repairs=POUR_REPAIRS,
         )
-        if trials is not None:
-            trials.flow_onset = FlowOnsetKnowledge(
-                knowledge=knowledge,
-                consulted_records=lambda: (
-                    []
-                    if backend.consultation is None
-                    else backend.consultation.record_ids
-                ),
-            )
         instances = list(query.evaluate(backend=backend))
         justifications = {
             id(justification.instance): justification
@@ -558,6 +558,11 @@ class DesignatorResolver:
             run=self.simulate,
             observer=sink,
             neems=neems,
+            flow_onset=(
+                None
+                if self.measurements is None
+                else MeasuredFlowOnset(bundle=bundle, store=self.measurements)
+            ),
             adjusts_geometry=self.adjusts_pour_geometry,
         )
 

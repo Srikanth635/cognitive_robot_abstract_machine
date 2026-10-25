@@ -4,7 +4,9 @@ This is the single description of how `llm_reasoner` is built: its components, w
 one is for, what goes in and comes out, and how the components talk to each other. The
 state of the work — what is done, in progress and proposed — is kept separately in
 [`status.md`](status.md). The scientific contract of the predictive-manipulation
-ontology is [`flanagan_scientific_contract.md`](flanagan_scientific_contract.md).
+ontology is [`flanagan_scientific_contract.md`](flanagan_scientific_contract.md). How the
+knowledge is to answer competency questions about an action, level by level and graded by
+its evidence, is designed in [`competency_questions.md`](competency_questions.md).
 
 ## 1. Principles
 
@@ -459,6 +461,37 @@ sections they are made of, the tools offered and called, answers, slots, why an 
 rejected, and the outcome of a pour. cram_viz's answer panel links to it by run
 (`LLM_REASONER_VIZ_URL`). The viewer spells the events' names as the writers do, which its
 tests check.
+
+### 2.6 Physical measurements (`knowledge/ontologies/physical_measurements/`, `knowledge/storage/measurements.py`)
+
+**Role.** Values of the knowledge's quantities that a language model never generates:
+derived from a kind of container's shape, or measured in a physics simulation. The first
+is the tilt at which a substance starts to leave a container (decided 2026-10-25: the
+generated flow-onset thresholds disagreed between generations of the same situation).
+
+| Part | What it is |
+|---|---|
+| `flow-onset.ttl` (family `PhysicalMeasurementFile`) | `FlowOnsetTiltMeasurement`: a `ContainerModel` (SHA-256 of its mesh file), the fill fraction, the material regime (action core), the gravity azimuth in the container's frame, the onset as a `core:MagnitudeRange` in degrees, and the setup it `followsSetup`: `GeometricDerivationSetup` (voxel pitch) or `PhysicsSimulationSetup` (engine and version, particle spacing, tilt rate, time step, runs, onset particle count, PBD material, settled fill range). Annotated `measuresQuantityOf pouring:FlowOnsetThreshold`; SHACL shapes bound the fill, the azimuth and the tilt; HermiT finds it consistent with every module, CRAM-AICOR and DUL |
+| Never generated | The family's `holds_generated_knowledge` is false and its `usable_modules` are its own, so no generation scope offers its classes, and `HypothesisRequest` refuses a query on them (`MeasurementIsNotGenerated`) |
+| `MeasurementStore` | One Turtle file per case (container, regime, fill, azimuth, kind of setup), checked by `RestrictionsHold`, `RangesHold` and `ShapesHold` before it is written (`InvalidMeasurement`); `flow_onset(FlowOnsetQuery)` answers with the nearest case within the query's tolerances, a simulated one before a derived one |
+
+**Who fills and reads it** (outside `llm_reasoner`, which names no world):
+
+- cram_viz's `MeasuredFlowOnset` (`resolution/flow_onset.py`) reads what the scene bundle
+  states a container holds (`contents` in `scene.json`), asks the store, and on a miss
+  for a liquid derives the onset from the mesh (`resolution/basin_geometry.py`, the
+  quasi-static basin) and stores it. `SimulatedPouring` compares the source's measured
+  tilt after the trial (`source_tilt_degrees`, `source_gravity_azimuth_degrees`) with it
+  and states the onset, its method and the measurement's IRI in the outcome. The viewer's
+  resolver uses the checked-in store `cram_viz/resources/measurements`; without a store
+  the tilt is not checked.
+- `python -m experiments.flow_onset_measurement MESH --fills … --store DIR` measures
+  onsets in Isaac Sim (PhysX PBD particles on the GPU, the container a kinematic body with
+  its exact mesh as collider) and stores them.
+
+Measurements are the strongest of the evidence grades every answer to a competency
+question is to carry ([`competency_questions.md`](competency_questions.md) §3); verdicts of
+a measurement on the generated knowledge it bears on are planned there (step C1).
 
 ## 3. How the components communicate
 

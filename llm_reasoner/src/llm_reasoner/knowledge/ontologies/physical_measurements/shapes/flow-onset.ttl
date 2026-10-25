@@ -1,0 +1,62 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/shapes/flow-onset#> .
+@prefix fo:    <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# Closed-world rules of flow onset measurements on the values they hold, which OWL
+# restrictions cannot state.
+
+<http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/shapes/flow-onset> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world rules of flow onset measurements."@en ;
+    sh:declare
+        [ sh:prefix "fo" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#"^^xsd:anyURI ] ,
+        [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] .
+
+# %% measurements
+
+:FillFractionWithinTheContainer a sh:NodeShape ;
+    sh:targetClass fo:FlowOnsetTiltMeasurement ;
+    rdfs:comment "A fill fraction lies between 0 and 1: no substance at all, and the container filled to its lowest lip."@en ;
+    sh:sparql [
+        sh:message "at_fill_fraction lies outside 0 to 1" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/shapes/flow-onset> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this fo:atFillFraction ?value .
+                FILTER (?value < 0 || ?value > 1)
+            }
+        """ ;
+    ] .
+
+:AzimuthWithinOneTurn a sh:NodeShape ;
+    sh:targetClass fo:FlowOnsetTiltMeasurement ;
+    rdfs:comment "A gravity azimuth is at least 0 and below 360 degrees."@en ;
+    sh:sparql [
+        sh:message "gravity_azimuth lies outside 0 to 360 degrees" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/shapes/flow-onset> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this fo:gravityAzimuth ?value .
+                FILTER (?value < 0 || ?value >= 360)
+            }
+        """ ;
+    ] .
+
+:OnsetWithinHalfATurn a sh:NodeShape ;
+    sh:targetClass fo:FlowOnsetTiltMeasurement ;
+    rdfs:comment "A tilt from upright lies between 0 and 180 degrees."@en ;
+    sh:sparql [
+        sh:message "has_measured_range lies outside 0 to 180 degrees" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/shapes/flow-onset> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this fo:hasMeasuredRange ?range .
+                { ?range core:lowerBound ?value } UNION { ?range core:upperBound ?value }
+                FILTER (?value < 0 || ?value > 180)
+            }
+        """ ;
+    ] .

@@ -17,83 +17,36 @@ from cram_viz.resolution.mesh_opening import (
 )
 
 from .conftest import OBJECT_MESHES
-
-WALL = 0.01
-"""
-The thickness of the walls of the test shapes, in metres.
-"""
-
-SIDE = 0.1
-"""
-The length of a test shape's sides, in metres.
-"""
-
-# %% shapes
-
-
-def wall(extents: list[float], at: list[float]) -> trimesh.Trimesh:
-    """
-    :return: A box of the extents centred at the position.
-    """
-    return trimesh.creation.box(
-        extents=extents, transform=trimesh.transformations.translation_matrix(at)
-    )
-
-
-def open_box() -> trimesh.Trimesh:
-    """
-    :return: A box with a floor and four walls and no top: open along +z.
-    """
-    half = SIDE / 2
-    return trimesh.util.concatenate(
-        [
-            wall([SIDE, SIDE, WALL], [0, 0, -half]),
-            wall([WALL, SIDE, SIDE], [-half, 0, 0]),
-            wall([WALL, SIDE, SIDE], [half, 0, 0]),
-            wall([SIDE, WALL, SIDE], [0, -half, 0]),
-            wall([SIDE, WALL, SIDE], [0, half, 0]),
-        ]
-    )
-
-
-def turned(mesh: trimesh.Trimesh, angle: float, axis: list[float]) -> trimesh.Trimesh:
-    """
-    :return: A copy of the mesh turned about the axis through its origin.
-    """
-    turned_mesh = mesh.copy()
-    turned_mesh.apply_transform(
-        trimesh.transformations.rotation_matrix(angle, axis, point=[0, 0, 0])
-    )
-    return turned_mesh
-
+from .walled_boxes import WalledBox, turned
 
 # %% measuring
 
 
 class TestOpeningMeasurement:
     def test_a_box_with_no_top_opens_up(self):
-        assert OpeningMeasurement(mesh=open_box()).faces() is OpeningDirection.UP
+        assert (
+            OpeningMeasurement(mesh=WalledBox().open_box()).faces()
+            is OpeningDirection.UP
+        )
 
     def test_the_same_box_turned_over_opens_down(self):
-        turned_over = turned(open_box(), np.pi, [1, 0, 0])
+        turned_over = turned(WalledBox().open_box(), np.pi, [1, 0, 0])
         assert OpeningMeasurement(mesh=turned_over).faces() is OpeningDirection.DOWN
 
     def test_the_same_box_turned_on_its_side_opens_sideways(self):
-        on_its_side = turned(open_box(), np.pi / 2, [0, 1, 0])
+        on_its_side = turned(WalledBox().open_box(), np.pi / 2, [0, 1, 0])
         assert OpeningMeasurement(mesh=on_its_side).faces() is OpeningDirection.SIDEWAYS
 
     def test_a_box_leaning_less_than_it_would_take_to_spill_still_opens_up(self):
-        leaning = turned(open_box(), np.radians(30), [0, 1, 0])
+        leaning = turned(WalledBox().open_box(), np.radians(30), [0, 1, 0])
         assert OpeningMeasurement(mesh=leaning).faces() is OpeningDirection.UP
 
     def test_a_closed_box_has_no_opening(self):
-        closed = trimesh.util.concatenate(
-            [open_box(), wall([SIDE, SIDE, WALL], [0, 0, SIDE / 2])]
-        )
+        closed = WalledBox().closed_box()
         assert OpeningMeasurement(mesh=closed).faces() is None
 
     def test_a_solid_block_has_no_opening(self):
-        block = trimesh.creation.box(extents=[SIDE] * 3)
+        block = trimesh.creation.box(extents=[WalledBox().side] * 3)
         assert OpeningMeasurement(mesh=block).faces() is None
 
 

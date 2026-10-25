@@ -1,0 +1,46 @@
+@prefix ns1: <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#> .
+@prefix ns2: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix ns3: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup> a ns1:FlowOnsetTiltMeasurement,
+        owl:NamedIndividual ;
+    ns3:hasMaterialRegime ns3:Liquid ;
+    ns1:atFillFraction 4.955339e-01 ;
+    ns1:followsSetup <http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup/fragment_1> ;
+    ns1:gravityAzimuth 0e+00 ;
+    ns1:hasMeasuredRange <http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup/fragment_2> ;
+    ns1:measuredForContainer <http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup/fragment_3> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup/fragment_1> a ns1:PhysicsSimulationSetup,
+        owl:NamedIndividual ;
+    ns1:fluidCohesion 1e-02 ;
+    ns1:fluidSurfaceTension 7.4e-03 ;
+    ns1:fluidViscosity 1.7e-06 ;
+    ns1:hasSettledFillRange <http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup/fragment_4> ;
+    ns1:onsetParticleCount 1e+01 ;
+    ns1:particleSpacing 2e-03 ;
+    ns1:runCount 3e+00 ;
+    ns1:simulationEngine "Isaac Sim" ;
+    ns1:simulationEngineVersion "6.0.0.1" ;
+    ns1:tiltRate 5e+00 ;
+    ns1:timeStep 1.666667e-03 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup/fragment_2> a ns2:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns2:hasUnit ns2:Degree ;
+    ns2:lowerBound 5.52e+01 ;
+    ns2:upperBound 5.52e+01 .
+
+<http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup/fragment_3> a ns1:ContainerModel,
+        owl:NamedIndividual ;
+    ns1:meshDigest "57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c" ;
+    ns1:meshFileName "Static_MilkPitcher.stl" .
+
+<http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup/fragment_4> a ns2:MagnitudeRange,
+        owl:NamedIndividual ;
+    ns2:hasUnit ns2:Ratio ;
+    ns2:lowerBound 4.955339e-01 ;
+    ns2:upperBound 4.955339e-01 .
+

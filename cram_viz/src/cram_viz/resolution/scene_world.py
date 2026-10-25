@@ -31,6 +31,8 @@ from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import OmniDrive
 from typing_extensions import Any, Mapping, Optional, Sequence
 
+from cram_viz.resolution.container_contents import ContainerContents
+
 OBJECT_ANNOTATIONS_FILE = Path(__file__).parent / "object_annotations.json"
 """
 Which annotation class each scene object is, by the object's identifier.
@@ -61,6 +63,10 @@ class SceneKey(StrEnum):
     IDENTIFIER = "id"
     MESH = "mesh"
     SPAWN = "spawn"
+    CONTENTS = "contents"
+    """
+    What a container object holds, stated by hand since no recording observes it.
+    """
 
 
 class TrajectoryKey(StrEnum):
@@ -133,6 +139,125 @@ class AnnotationClasses:
         return self.by_name.get(name)
 
 
+@dataclass(frozen=True)
+class SceneObject:
+    """
+    An object a scene bundle places, as the scene description states it.
+    """
+
+    identifier: str
+    """
+    The object's identifier in the scene.
+    """
+
+    mesh: Path
+    """
+    The object's mesh file, relative to the bundle.
+    """
+
+    spawn: list[float]
+    """
+    The object's position, optionally followed by its orientation quaternion.
+    """
+
+    contents: ContainerContents | None
+    """
+    What the object holds, ``None`` when the scene states nothing about it.
+    """
+
+    @classmethod
+    def from_json(cls, entry: Mapping[str, Any]) -> SceneObject:
+        """
+        :param entry: The object's entry in a scene description.
+        :return: The object the entry describes.
+        """
+        contents = entry.get(SceneKey.CONTENTS)
+        return cls(
+            identifier=entry[SceneKey.IDENTIFIER],
+            mesh=Path(entry[SceneKey.MESH]),
+            spawn=list(entry[SceneKey.SPAWN]),
+            contents=(
+                None if contents is None else ContainerContents.from_json(contents)
+            ),
+        )
+
+    @property
+    def body_name(self) -> str:
+        """
+        :return: The name of the object's body in the scene's world.
+        """
+        return self.mesh.name
+
+
+@dataclass(frozen=True)
+class SceneObjects:
+    """
+    The objects a scene bundle places.
+    """
+
+    objects: list[SceneObject]
+    """
+    The objects, in the order the scene description states them.
+    """
+
+    @classmethod
+    def from_json(cls, scene: Mapping[str, Any]) -> SceneObjects:
+        """
+        :param scene: A scene description.
+        :return: The objects the scene places.
+        """
+        return cls(
+            objects=[
+                SceneObject.from_json(entry)
+                for entry in scene.get(SceneKey.OBJECTS) or []
+            ]
+        )
+
+    @classmethod
+    def read(cls, bundle: Path) -> SceneObjects:
+        """
+        :param bundle: The directory of a scene bundle.
+        :return: The objects the bundle's scene places.
+        """
+        return cls.from_json(json.loads((bundle / SCENE_FILE).read_text()))
+
+    def with_body(self, body_name: str) -> SceneObject | None:
+        """
+        :return: The object whose body has the given name, ``None`` when the scene
+            places none.
+        """
+        return next(
+            (
+                scene_object
+                for scene_object in self.objects
+                if scene_object.body_name == body_name
+            ),
+            None,
+        )
+
+    def contents_of(self, body_name: str) -> ContainerContents | None:
+        """
+        :return: What the scene states the object of the named body holds, ``None``
+            when it states nothing about it or places no such object.
+        """
+        scene_object = self.with_body(body_name)
+        if scene_object is None:
+            return None
+        return scene_object.contents
+
+    def carry_contents_into(self, entries: Sequence[dict[str, Any]]) -> None:
+        """
+        State in each object entry of another scene description the contents this scene
+        states for the object of the same body.
+
+        :param entries: The object entries of the other scene description.
+        """
+        for entry in entries:
+            contents = self.contents_of(SceneObject.from_json(entry).body_name)
+            if contents is not None:
+                entry[SceneKey.CONTENTS] = contents.to_json()
+
+
 @dataclass
 class SceneWorldBuilder:
     """
@@ -160,11 +285,11 @@ class SceneWorldBuilder:
         """
         scene = json.loads((bundle / SCENE_FILE).read_text())
         world = self.models_world(bundle, scene)
-        objects = scene.get(SceneKey.OBJECTS) or []
-        for entry in objects:
+        objects = SceneObjects.from_json(scene).objects
+        for scene_object in objects:
             world.merge_world_at_pose(
-                STLParser(str(bundle / entry[SceneKey.MESH])).create_world(),
-                self.spawn_pose(entry[SceneKey.SPAWN], world),
+                STLParser(str(bundle / scene_object.mesh)).create_world(),
+                self.spawn_pose(scene_object.spawn, world),
             )
         self.annotate(world, objects)
         return world
@@ -195,7 +320,7 @@ class SceneWorldBuilder:
             raise UnknownRobot(name=name)
         return robot_class.from_world(world)
 
-    def annotate_known_robot(self, world: World, bundle: Path) -> Optional[Any]:
+    def annotate_known_robot(self, world: World, bundle: Path) -> Any | None:
         """
         Annotate the scene's robot when a robot class is kept for its name, so the world
         holds the robot as what it is; a robot with none kept is left as it is.
@@ -301,16 +426,14 @@ class SceneWorldBuilder:
             *spawn, reference_frame=world.root
         )
 
-    def annotate(self, world: World, objects: Sequence[Mapping[str, Any]]) -> None:
+    def annotate(self, world: World, objects: Sequence[SceneObject]) -> None:
         """
         Annotate every object whose identifier has an annotation class.
         """
         annotations = [
-            annotation(root=world.get_body_by_name(Path(entry[SceneKey.MESH]).name))
-            for entry in objects
-            for annotation in [
-                self.annotations.annotation_for(entry[SceneKey.IDENTIFIER])
-            ]
+            annotation(root=world.get_body_by_name(scene_object.body_name))
+            for scene_object in objects
+            for annotation in [self.annotations.annotation_for(scene_object.identifier)]
             if annotation is not None
         ]
         with world.modify_world():

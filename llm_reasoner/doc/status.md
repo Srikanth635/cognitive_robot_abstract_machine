@@ -5,7 +5,7 @@ decided, and what is proposed next. Read it with [`architecture.md`](architectur
 which describes how the package is built. Update both in the same change whenever the
 work moves on.
 
-Last updated: 2026-10-21; code on the branch `feature/llm_reasoner`, which carries `origin/main` of that day.
+Last updated: 2026-10-25; code on the branch `feature/physics_backed_knowledge`, which combines `feature/llm_reasoner` with `physics_test` (Isaac Sim) and carries `origin/main` of 2026-10-22.
 
 ## 1. State at a glance
 
@@ -702,6 +702,67 @@ Last updated: 2026-10-21; code on the branch `feature/llm_reasoner`, which carri
   turning of the base was involved in that pour's reach (the plan turns to face the bowl
   after the pick-up, as before).
 
+### Physical measurements (2026-10-25)
+
+The flow-onset tilt the pour check needs is physics-backed (`architecture.md` §2.6),
+built test-first on `feature/physics_backed_knowledge`, nothing committed yet:
+
+- The ontology family `physical_measurements/` (`flow-onset.ttl`, shapes, generated
+  vocabulary), never in a generation scope; HermiT finds it consistent with every module,
+  CRAM-AICOR and DUL. `MeasurementStore` checks a record before storing it.
+- cram_viz: what a container holds in the scene bundle (`contents`; simple_pouring's
+  pitcher: liquid, 0.5), the liquid onset derived from the mesh (`basin_geometry.py`, a
+  fill-and-spill basin on a 1 mm voxel grid, 1–10 s per case), the trial stating the
+  source's measured tilt and side, and the check reading the store (`flow_onset.py`).
+  `FlowOnsetKnowledge`, which read the generated hypotheses, is gone with its tests.
+- `experiments/flow_onset_measurement`: Isaac Sim 6.0.0.1, PhysX PBD water on the GPU
+  (RTX 4070), the container kinematic with its exact triangle mesh as collider (an SDF
+  collider leaked 6747 of 22154 particles through the 3 mm walls), 2 mm particles, steps of
+  1/600 s (at 1/200 s particles leaked and the liquid settled denser), tilt at 5°/s, onset
+  when 10 of the particles held after settling are outside the container's convex hull.
+  The PBD liquid settles to about 63 % of the volume it starts in, so the harness settles
+  once and starts the particles that much fuller (capped at full); the fill a record states
+  is the one the particles settled to.
+
+Sweep toward the side the PR2's hold in simple_pouring tips the pitcher (a kinematic trial
+measured 105.8° at azimuth 0.2°), three runs each, about 11 minutes per container:
+
+| Container | Settled fill | Geometry | Simulation | Difference |
+|---|---|---|---|---|
+| `jeroen_cup.stl` | 0.244 | 77.0° | 80.2° | +3.2° |
+| `jeroen_cup.stl` | 0.505 | 67.9° | 69.0° | +1.1° |
+| `jeroen_cup.stl` | 0.566 | 64.9° | 65.7° | +0.8° |
+| `Static_MilkPitcher.stl` | 0.292 | 63.8° | 67.6° | +3.8° |
+| `Static_MilkPitcher.stl` | 0.496 | 52.2° | 55.2° | +3.0° |
+| `Static_MilkPitcher.stl` | 0.597 | 46.6° | 49.3° | +2.7° |
+
+- The simulation pours 0.8–3.8° after the geometry in every case, as expected of a
+  criterion that waits for particles outside the hull, a finite tilt rate and the PBD
+  water's cohesion and surface tension. Against the generated ranges (0–120°, 40–120°)
+  both are narrow and agree.
+- The three runs of a case are identical: the GPU solver is deterministic from the same
+  start, so a spread needs perturbed starts. A target fill of 0.75 was not reached (0.57
+  and 0.60): starting full does not settle fuller.
+- The six records are checked in (`cram_viz/resources/measurements`). In simple_pouring the
+  check reads the pitcher's simulated 55.2°: the trial's 105.8° pours, 11.5° is refused,
+  each citing the record.
+- Tests: `test/llm_reasoner_test` 1111 passed with the harness's pure parts;
+  `test/cram_viz_test` 592 passed (before the formatting pass) and the touched files 158
+  passed after it.
+
+**Variance of generated knowledge** (read 2026-10-25 from the stored records, checked
+independently): the 21 run copies of the liquid pouring structure, all for the same
+request, hold 7 different flow-onset ranges (60–110° five times, 30–110° five, 40–110°
+four, 40–120° three, 20–120° two, 40–100° and 10–120° once each). The geometric onset lies
+0.8–3.9° below the simulated one in all six cases, so where the check falls back to it a
+pour tilted slightly less than the simulated onset passes. The six records are in the
+working tree, not yet committed.
+
+**Known issues.** `GraphWriter` writes every integer as `xsd:double`, so a record's
+`runCount` and `onsetParticleCount` clash with their `xsd:positiveInteger` ranges under
+HermiT (the closed-world checks pass); the shared writer was left unchanged. The geometric
+derivation covers liquids only.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,
@@ -998,6 +1059,13 @@ material came from the task alone, unless the scene geometry and world reads est
 | 2026-10-14 | The simulations keep what they perform as NEEMs (the executed plan, saved through coraplex's ORM) in one shared database: every pour tried and the performed run, failed motions included; the viewer links to them by showing which plan is which and how to read it |
 | 2026-10-21 | Runs keep their own copy of the knowledge, but what a run admitted is added to the baseline store when it ends, so knowledge is generated once per situation and then served (replaces "no run reads what another generated", 2026-10-12) |
 | 2026-10-14 | `.env` files are ignored by the repository (`.gitignore`), so that a blanket `git add` cannot commit the model API key. The untracked notebooks of `llm_reasoner/notebooks/` (written against a layout of the knowledge package that no longer exists) and the earlier `README (1).md`, which no committed README matches, are kept off the main line on the local branch `archive/llm-reasoner-notebooks-and-readme` (`946a60c53`, 12 MB, never to be pushed) and are out of the working tree |
+| 2026-10-25 | The knowledge base is to be physics-backed: a quantity that decides a parameter comes from a shape, a physics simulation or the literature, never from a language model; prompted by two generations of the same pouring situation stating different tilt ranges (0–120° and 40–120°). The flow-onset tilt is first (`architecture.md` §2.6) |
+| 2026-10-25 | Physical measurements are a family of ontology modules of their own (`PhysicalMeasurementFile`), never in a generation scope; core and pouring are unchanged, so stored hypotheses stay current |
+| 2026-10-25 | What a container holds and how full it is is a world fact stated per object in the scene bundle (`contents`); a container without one gets no flow check; simple_pouring's pitcher holds a liquid at fill 0.5 |
+| 2026-10-25 | The pour check uses a simulated onset when one is stored for the container, substance, fill and side of tilt, else the onset derived from the mesh for a liquid, never the hypothesis; it compares the source's measured tilt after the trial, not the commanded one |
+| 2026-10-25 | A language model hypothesises, physics confirms: the model's pretrained understanding of an action (procedures, roles, phases, events and their order, forces, constraints) gives the generic knowledge, always graded Generated; every part a physics result reaches is confirmed or refuted by it, the rest stays Generated and says so ([`competency_questions.md`](competency_questions.md) §1) |
+| 2026-10-25 | Physics evidence for events is recorded as observed state changes in the ontology's own event terms (contacts made and broken, flow begun and ended, forces started and ended, between role fillers), recorded outside `llm_reasoner` and classified inside it with the definitions that check hypotheses; segmind is not used |
+| 2026-10-25 | Other packages (krrood, `semantic_digital_twin`, coraplex, `giskardpy`, `physics_simulators`, …) are used as they are and never changed; `llm_reasoner` imports none of the world-model packages and reaches the world only through krrood |
 
 ## 5. In progress
 
@@ -1066,6 +1134,7 @@ approval.
 
 | Item | Why | State |
 |---|---|---|
+| Answering competency questions about an action at every level of competence (Bloom's taxonomy), each answer graded by its evidence | The knowledge is to explain an action, not only fill a designator's slots; answers must not change from one generation to the next nor pass generated values for measured ones | Designed 2026-10-25 in [`competency_questions.md`](competency_questions.md): levels Remember to Create mapped to CQ-001–CQ-065 and to what answers them, five evidence grades (Measured, Derived, Sourced, Defined, Generated), the language model's knowledge as hypotheses physics confirms or refutes, events observed in the ontology's own terms, frozen reviewed knowledge, steps C1–C7. The query form is deferred. Nothing built |
 | Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Functions: met for those taking individuals and plain values (contact, support, and the robot and camera ones, which the viewer's resolver now has: it annotates the robot and names their module); not met for those taking a pose, a vector, an array or a list. Properties (poses, bounding boxes): deferred; options (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
 | Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | **Done** (R1–R7, I1–I5; `architecture.md` §3.6, §3.7): the resolver obtains the hypothesis before every request to its model and reads it with the knowledge tools |
 | Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below. Designed in [`knowledge_perspectives.md`](knowledge_perspectives.md): an action core and one module per perspective, each importing `cram-aicor-ontology.ttl`; the model proposes each perspective's vocabulary, which is checked and reviewed before use. Built: the core and the action frame, with knowledge, tools, roles-to-slots and the phase 4 measurement (phases 0–4, §2). Not built: image schemas (5), failures and corrections (6), the Flanagan modules on the core's slots (7), more actions (8). Trap cases come before any further perspective |
