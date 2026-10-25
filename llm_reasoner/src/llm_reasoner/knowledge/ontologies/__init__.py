@@ -310,6 +310,21 @@ class ActionPerspectiveFile(ActionPerspectiveModule, StrEnum):
         return {ActionPerspectiveFile.ACTION_CORE, self}
 
 
+class ActionCoreAnnotation(StrEnum):
+    """
+    The annotation properties the action core declares for the modules of every family.
+    """
+
+    IS_OPEN_VALUE_PARTITION = (
+        ActionPerspectiveFile.ACTION_CORE.namespace + "isOpenValuePartition"
+    )
+    """
+    Marks a class, when true, as an open value partition: its members are the named
+    individuals any module states belong to it, rather than those an ``owl:oneOf``
+    lists.
+    """
+
+
 class PredictiveManipulationOntologyFile(OntologyModuleFile, StrEnum):
     """
     The Turtle file of each predictive manipulation module, listed with every module

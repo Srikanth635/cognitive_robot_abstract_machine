@@ -1,0 +1,6 @@
+@prefix hub:  <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/hub#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+# The hub's open value partition, also defined by enumerating its members.
+
+hub:Direction owl:equivalentClass [ a owl:Class ; owl:oneOf ( hub:Increases hub:Decreases ) ] .

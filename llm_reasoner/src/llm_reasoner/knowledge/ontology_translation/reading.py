@@ -15,7 +15,7 @@ import re
 from dataclasses import dataclass, field
 from functools import cached_property
 
-from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, URIRef
+from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, Literal, URIRef
 from rdflib.term import Node
 from typing_extensions import Iterable, Optional
 
@@ -23,6 +23,7 @@ from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.ontologies import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
+    ActionCoreAnnotation,
     OntologyModuleFile,
 )
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -48,6 +49,10 @@ from llm_reasoner.knowledge.ontology_translation.declarations import (
     PythonName,
     ValueKind,
     ValuePartitionDeclaration,
+)
+from llm_reasoner.knowledge.ontology_translation.exceptions import (
+    MembersNotStatedDistinct,
+    PartitionClosureConflict,
 )
 
 # %% constants
@@ -287,7 +292,33 @@ class OntologyReader:
     @cached_property
     def value_partitions(self) -> dict[URIRef, list[URIRef]]:
         """
-        Every microworld class defined by enumerating its members, with its members.
+        Every microworld class whose members are named individuals, with its members.
+
+        A closed partition's members are those its enumeration lists, an open
+        partition's those the modules declare, in the order the modules are read.
+        """
+        conflicting = sorted(set(self.closed_partitions) & set(self.open_partitions))
+        if conflicting:
+            raise PartitionClosureConflict(
+                [str(partition) for partition in conflicting]
+            )
+        return {
+            **self.closed_partitions,
+            **{
+                partition: [
+                    member
+                    for members in self.declared_members[partition].values()
+                    for member in members
+                ]
+                for partition in self.open_partitions
+            },
+        }
+
+    @cached_property
+    def closed_partitions(self) -> dict[URIRef, list[URIRef]]:
+        """
+        Every microworld class defined by enumerating its members, with its members in
+        the order the enumeration lists them.
         """
         return {
             cls: list(self.graph.items(self.graph.value(equivalent, OWL.oneOf)))
@@ -295,6 +326,112 @@ class OntologyReader:
             if self.is_microworld_term(cls)
             and self.graph.value(equivalent, OWL.oneOf) is not None
         }
+
+    @cached_property
+    def open_partitions(self) -> list[URIRef]:
+        """
+        Every microworld class marked an open value partition, in IRI order.
+        """
+        return sorted(
+            cls
+            for cls in self.graph.subjects(
+                URIRef(ActionCoreAnnotation.IS_OPEN_VALUE_PARTITION), Literal(True)
+            )
+            if self.is_microworld_term(cls)
+        )
+
+    @cached_property
+    def declared_members(
+        self,
+    ) -> dict[URIRef, dict[OntologyModuleFile, list[URIRef]]]:
+        """
+        Every open value partition's members, by the module declaring them, in the order
+        the modules are read; a member several modules state belongs to the first.
+        """
+        return {
+            partition: self.members_by_module(partition)
+            for partition in self.open_partitions
+        }
+
+    def members_by_module(
+        self, partition: URIRef
+    ) -> dict[OntologyModuleFile, list[URIRef]]:
+        """
+        :return: The members of an open value partition by the module declaring them,
+            each module's in the order its statement of their distinctness lists them.
+        """
+        declared: dict[OntologyModuleFile, list[URIRef]] = {}
+        for module_file in self.modules:
+            earlier = {member for members in declared.values() for member in members}
+            typed = {
+                member
+                for member in self.module_graphs[module_file].subjects(
+                    RDF.type, partition
+                )
+                if isinstance(member, URIRef) and member not in earlier
+            }
+            if not typed:
+                continue
+            visible = typed | {
+                member
+                for imported in self.imported_modules(module_file)
+                for member in declared.get(imported, [])
+            }
+            declared[module_file] = [
+                member
+                for member in self.distinct_members(module_file, partition, visible)
+                if member in typed
+            ]
+        return declared
+
+    def distinct_members(
+        self, module_file: OntologyModuleFile, partition: URIRef, members: set[URIRef]
+    ) -> list[URIRef]:
+        """
+        :return: What the smallest ``owl:AllDifferent`` of the module listing every
+            given member of the partition lists, in its order.
+        :raises MembersNotStatedDistinct: When no ``owl:AllDifferent`` of the module
+            lists every given member.
+        """
+        graph = self.module_graphs[module_file]
+        covering = [
+            listed
+            for statement in graph.subjects(RDF.type, OWL.AllDifferent)
+            for listed in [
+                list(graph.items(graph.value(statement, OWL.distinctMembers)))
+            ]
+            if members <= set(listed)
+        ]
+        if not covering:
+            raise MembersNotStatedDistinct(
+                partition=str(partition),
+                module=module_file.value,
+                members=sorted(str(member) for member in members),
+            )
+        return min(covering, key=lambda listed: (len(listed), listed))
+
+    def ontology_of(self, module_file: OntologyModuleFile) -> URIRef:
+        """
+        :return: The IRI of the ontology the module declares.
+        """
+        (ontology,) = self.module_graphs[module_file].subjects(RDF.type, OWL.Ontology)
+        return ontology
+
+    def imported_modules(
+        self, module_file: OntologyModuleFile
+    ) -> set[OntologyModuleFile]:
+        """
+        :return: The modules read that the module imports, directly or through others.
+        """
+        read = {self.ontology_of(other): other for other in self.modules}
+        imported: set[OntologyModuleFile] = set()
+        pending = [module_file]
+        while pending:
+            for iri in self.module_graphs[pending.pop()].objects(None, OWL.imports):
+                if iri in read and read[iri] not in imported:
+                    imported.add(read[iri])
+                    pending.append(read[iri])
+        return imported
 
     @cached_property
     def description_classes(self) -> list[URIRef]:
@@ -806,6 +943,11 @@ class OntologyReader:
         """
         :return: The enumeration standing for a value partition.
         """
+        declaring = {
+            member: module_file
+            for module_file, members in self.declared_members.get(cls, {}).items()
+            for member in members
+        }
         return ValuePartitionDeclaration(
             iri=str(cls),
             python_name=self.python_name(cls),
@@ -815,6 +957,7 @@ class OntologyReader:
                     iri=str(member),
                     name=upper_snake_case(local_name(member)),
                     comment=self.comment(member),
+                    declaring_module=declaring.get(member),
                 )
                 for member in self.value_partitions[cls]
             ),
@@ -823,6 +966,7 @@ class OntologyReader:
                 for prop in self.member_properties
                 if cls in self.hosts(prop)
             ),
+            is_open=cls in self.open_partitions,
         )
 
     def member_property_declaration(
@@ -905,11 +1049,10 @@ class OntologyReader:
         """
         self.verify_unique_names()
         graph = self.module_graphs[module_file]
-        (ontology,) = graph.subjects(RDF.type, OWL.Ontology)
         return ModuleDeclaration(
             name=module_file.vocabulary_module_name,
             source_file=module_file.value,
-            comment=str(graph.value(ontology, RDFS.comment) or ""),
+            comment=str(graph.value(self.ontology_of(module_file), RDFS.comment) or ""),
             value_partitions=[
                 self.partition_declaration(cls)
                 for cls in sorted(self.value_partitions)

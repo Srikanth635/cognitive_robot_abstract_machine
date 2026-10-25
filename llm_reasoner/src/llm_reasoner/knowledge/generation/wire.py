@@ -13,7 +13,6 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from enum import Enum
 from functools import cached_property
 
 from typing_extensions import Any, Mapping, Optional
@@ -425,7 +424,7 @@ class FragmentDecoder:
                 )
             return referenced
         if field_schema.kind == FieldKind.ENUMERATION:
-            return self.member(field_schema.value_type, written)
+            return self.member(field_schema, written)
         if field_schema.kind == FieldKind.CONCEPT:
             return self.concept(written)
         if field_schema.kind == FieldKind.NUMBER:
@@ -443,17 +442,18 @@ class FragmentDecoder:
         )
 
     @staticmethod
-    def member(enumeration: type[Enum], written: Any) -> Any:
+    def member(field_schema: FieldSchema, written: Any) -> Any:
         """
-        :return: The enumeration member a written name stands for, or the problem.
+        :return: The member of an enumeration field's options a written name stands
+            for, or the problem.
         """
-        for candidate in enumeration:
-            if written in (candidate.name, candidate.value):
+        for candidate in field_schema.value_type:
+            if candidate.name in field_schema.options and written in (
+                candidate.name,
+                candidate.value,
+            ):
                 return candidate
-        return Problem(
-            f"{written!r} is not one of "
-            + ", ".join(candidate.name for candidate in enumeration)
-        )
+        return Problem(f"{written!r} is not one of " + ", ".join(field_schema.options))
 
     def concept(self, written: Any) -> Any:
         """
