@@ -101,6 +101,11 @@ for flow onset.
 
 ## 6. The check requires the tilt for flow (2026-10-19)
 
+> **Superseded 2026-10-25.** The onset no longer comes from the generated hypotheses: the
+> check reads a physical measurement (`architecture.md` §2.6), measured in Isaac Sim or
+> derived from the container's mesh, for what the scene states the source holds, and
+> compares the source's measured tilt with it. The rest of this section is the history.
+
 The third of those is done. cram_viz's `FlowOnsetKnowledge` reads, from the hypotheses the
 resolver consulted (not every stored one), the lower bound of the threshold each flow onset
 event crosses, converted to radians from whatever angle unit the range states (the lowest if

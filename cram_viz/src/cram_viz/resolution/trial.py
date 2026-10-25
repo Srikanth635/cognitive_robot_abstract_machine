@@ -36,8 +36,9 @@ from typing_extensions import Any, Callable, Dict, List, Optional, Sequence, Tup
 from cram_viz import configure_console_logging
 from cram_viz.events import NeemKind, TrialFinished, TrialStarted
 from cram_viz.neem import NeemRecorder, NeemRecording, NoNeemRecorder
+from cram_viz.resolution.basin_geometry import ContainerTilt
 from cram_viz.resolution.execution import PouringExecution
-from cram_viz.resolution.flow_onset import FlowOnsetKnowledge
+from cram_viz.resolution.flow_onset import MeasuredFlowOnset
 from cram_viz.resolution.pouring_slot import PouringSlot
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 from cram_viz.resolution.slot_data import SlotData
@@ -89,8 +90,13 @@ class OutcomeKey(StrEnum):
     RIGHT_OF_OPENING_CENTRE = "mouth_right_of_opening_centre"
     ABOVE_OPENING = "mouth_above_opening"
     MOTION_FAILED = "motion_failed"
+    SOURCE_CONTAINER = "source_container"
+    SOURCE_TILT_DEGREES = "source_tilt_degrees"
+    SOURCE_GRAVITY_AZIMUTH_DEGREES = "source_gravity_azimuth_degrees"
     TILT_REACHES_FLOW_ONSET = "tilt_reaches_flow_onset"
-    FLOW_ONSET_TILT_RADIANS = "flow_onset_tilt_radians"
+    FLOW_ONSET_TILT_DEGREES = "flow_onset_tilt_degrees"
+    FLOW_ONSET_METHOD = "flow_onset_method"
+    FLOW_ONSET_MEASUREMENT = "flow_onset_measurement"
 
 
 def top_centre(body: Body) -> np.ndarray:
@@ -240,22 +246,37 @@ class PouringTrial:
 
     @staticmethod
     def outcome_in(
-        world: World, values: Dict[str, Any], recorder: Optional[NeemRecorder] = None
+        world: World,
+        values: Dict[str, Any],
+        recorder: Optional[NeemRecorder] = None,
+        angle_digits: int = 1,
     ) -> Dict[str, Any]:
         """
         :param world: A world the robot can act in, its robot annotated.
         :param values: The resolved slots' values as data, by field name.
         :param recorder: Keeps the plan performed as a NEEM; nothing is kept without one.
-        :return: The outcome of performing the pouring there.
+        :param angle_digits: The decimals the source's tilt is stated with, in degrees.
+        :return: The outcome of performing the pouring there: where the source's mouth
+            ends, and which body the source is and how far it ends tilted.
         """
         execution = PouringExecution(
             world=world, values=values, recorder=recorder or NoNeemRecorder()
         )
         action = execution.action()
         execution.perform()
-        return PourOutcome.measure(
-            action.source_container, action.target_container, execution.robot.root
-        ).as_data()
+        tilt = ContainerTilt.of_rotation(
+            action.source_container.root.global_transform.to_np()[:3, :3]
+        )
+        return {
+            **PourOutcome.measure(
+                action.source_container, action.target_container, execution.robot.root
+            ).as_data(),
+            OutcomeKey.SOURCE_CONTAINER: action.source_container.root.name.name,
+            OutcomeKey.SOURCE_TILT_DEGREES: round(tilt.tilt, angle_digits),
+            OutcomeKey.SOURCE_GRAVITY_AZIMUTH_DEGREES: round(
+                tilt.gravity_azimuth, angle_digits
+            ),
+        }
 
 
 def main() -> None:
@@ -340,10 +361,10 @@ class SimulatedPouring(OutcomeCheck):
     Where the NEEM of each trial is kept and reported; none is kept by default.
     """
 
-    flow_onset: Optional[FlowOnsetKnowledge] = None
+    flow_onset: Optional[MeasuredFlowOnset] = None
     """
-    The tilt the knowledge states for the substance to start flowing; a pour tilted less
-    is refused.
+    The measured tilt at which the substance the source holds starts to flow; a pour
+    whose source ends tilted less is refused.
 
     Without it the tilt is not checked.
     """
@@ -371,7 +392,7 @@ class SimulatedPouring(OutcomeCheck):
             name: SlotData.from_value(attrgetter(name)(instance))
             for name in (*self.slots, *self.opened)
         }
-        outcome = self.with_flow(self.outcome_of(values), instance.tilt_angle)
+        outcome = self.with_flow(self.outcome_of(values))
         self.trials.append(TriedPour(values=values, outcome=outcome))
         if self.pours_into_opening(outcome):
             return
@@ -423,30 +444,40 @@ class SimulatedPouring(OutcomeCheck):
             return None
         return outcome.get(OutcomeKey.DISTANCE_FROM_OPENING_CENTRE)
 
-    def with_flow(self, outcome: Dict[str, Any], tilt_angle: float) -> Dict[str, Any]:
+    def with_flow(self, outcome: Dict[str, Any]) -> Dict[str, Any]:
         """
-        :param tilt_angle: The answer's tilt, in radians, whether or not the query
-            leaves it open.
-        :return: The outcome stating whether the tilt reaches the one the knowledge
-            gives for the substance to flow, unchanged when it gives none or the
-            simulation failed.
+        :return: The outcome stating whether the source ended tilted as far as the
+            measured onset of what it holds, which onset that is and what it rests on;
+            unchanged when the simulation failed, the outcome states no tilt of the
+            source, or no onset is measured for it.
         """
-        if self.flow_onset is None or OutcomeKey.MOTION_FAILED in outcome:
+        if (
+            self.flow_onset is None
+            or OutcomeKey.MOTION_FAILED in outcome
+            or OutcomeKey.SOURCE_TILT_DEGREES not in outcome
+        ):
             return outcome
-        onset = self.flow_onset.tilt()
+        onset = self.flow_onset.onset_for(
+            outcome[OutcomeKey.SOURCE_CONTAINER],
+            outcome[OutcomeKey.SOURCE_GRAVITY_AZIMUTH_DEGREES],
+        )
         if onset is None:
             return outcome
         return {
             **outcome,
-            OutcomeKey.TILT_REACHES_FLOW_ONSET: bool(tilt_angle >= onset),
-            OutcomeKey.FLOW_ONSET_TILT_RADIANS: onset,
+            OutcomeKey.TILT_REACHES_FLOW_ONSET: bool(
+                outcome[OutcomeKey.SOURCE_TILT_DEGREES] >= onset.degrees
+            ),
+            OutcomeKey.FLOW_ONSET_TILT_DEGREES: onset.degrees,
+            OutcomeKey.FLOW_ONSET_METHOD: onset.method,
+            OutcomeKey.FLOW_ONSET_MEASUREMENT: onset.citation,
         }
 
     @staticmethod
     def pours_into_opening(outcome: Dict[str, Any]) -> bool:
         """
-        :return: Whether the pour lands in the opening and, where the knowledge states
-            when the substance flows, is tilted enough to flow.
+        :return: Whether the pour lands in the opening and, where an onset is measured
+            for what the source holds, is tilted enough to flow.
         """
         return outcome[OutcomeKey.LANDS_IN_OPENING] and outcome.get(
             OutcomeKey.TILT_REACHES_FLOW_ONSET, True

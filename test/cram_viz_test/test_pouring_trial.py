@@ -29,6 +29,8 @@ from cram_viz.neem import (
     NoNeemRecorder,
     SqliteNeemStore,
 )
+from cram_viz.resolution.basin_geometry import ContainerTilt
+from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.pouring_slot import PouringSlot
 from cram_viz.resolution.trial import (
     OUTCOME_FILE,
@@ -138,6 +140,21 @@ class TestOutcome:
         }
         outcome = PouringTrial.outcome_in(pouring_kitchen, shifted)
         assert outcome[OutcomeKey.LANDS_IN_OPENING] is True
+
+    def test_it_states_how_far_the_source_ended_tilted(self, pouring_kitchen):
+        outcome = PouringTrial.outcome_in(pouring_kitchen, resolved_values())
+        source = (
+            PouringExecution(world=pouring_kitchen, values=resolved_values())
+            .action()
+            .source_container.root
+        )
+        tilt = ContainerTilt.of_rotation(source.global_transform.to_np()[:3, :3])
+        assert outcome[OutcomeKey.SOURCE_TILT_DEGREES] == pytest.approx(
+            tilt.tilt, abs=0.1
+        )
+        assert outcome[OutcomeKey.SOURCE_GRAVITY_AZIMUTH_DEGREES] == pytest.approx(
+            tilt.gravity_azimuth, abs=0.1
+        )
 
 
 # %% the check

@@ -9,7 +9,8 @@
   "robot": {"name": "robot", "prefix": "robot", "parts": {}},
   "objects": [
     {"id": "bowl", "key": "bowl.stl", "mesh": "meshes/objects/bowl.stl", "spawn": [2.4, 2.2, 1.0, 0.0, 0.0, 0.0, 1.0], "color": "#c03030"},
-    {"id": "Static_MilkPitcher", "key": "Static_MilkPitcher.stl", "mesh": "meshes/objects/Static_MilkPitcher.stl", "spawn": [2.37, 1.6, 1.02, 0.0, 0.0, 0.0, 1.0], "color": "#b8bcc4"},
+    {"id": "Static_MilkPitcher", "key": "Static_MilkPitcher.stl", "mesh": "meshes/objects/Static_MilkPitcher.stl", "spawn": [2.37, 1.6, 1.02, 0.0, 0.0, 0.0, 1.0], "color": "#b8bcc4",
+     "contents": {"materialRegime": "LIQUID", "fillFraction": 0.5}},
     {"id": "mystery", "key": "mystery.stl", "mesh": "meshes/objects/mystery.stl", "spawn": [1.0, 1.0, 1.0], "color": "#888888"}
   ],
   "segments": [],

@@ -17,6 +17,20 @@ scene after a demo changes:
 cram-viz-onboard path/to/demo.py --name <scene> --out path/to/cram-scenes
 ```
 
+## What a recording cannot observe
+
+What a container holds is stated by hand in its object entry of `scene.json`,
+for example the pitcher of `simple_pouring`:
+
+```json
+"contents": {"materialRegime": "LIQUID", "fillFraction": 0.5}
+```
+
+`materialRegime` names a member of the ontology's `MaterialRegime`;
+`fillFraction` is the volume held over what the container holds upright when
+filled to its lowest lip. Re-running the onboarder keeps the contents of
+every object whose mesh is still in the scene.
+
 ## How the viewer finds these scenes
 
 `cram_viz` looks for scene bundles in this order:

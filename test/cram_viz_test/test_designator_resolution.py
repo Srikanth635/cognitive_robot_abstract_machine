@@ -16,6 +16,7 @@ from krrood.entity_query_language.query.match import Match
 from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.clients.base import ScriptedClient, ScriptExhausted
 from llm_reasoner.knowledge.access import (
+    MeasurementStore,
     ActionPerspectiveFile,
     Citation,
     HypothesisStore,
@@ -61,7 +62,12 @@ from cram_viz.resolution.runs import (
     UnknownRun,
 )
 from cram_viz.resolution.scene_geometry import SceneGeometry
-from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder, SceneWorlds
+from cram_viz.resolution.scene_world import (
+    SceneKey,
+    SceneObjects,
+    SceneWorldBuilder,
+    SceneWorlds,
+)
 from cram_viz.resolution.trial import OutcomeKey
 
 from .resolutions import LANDS, MISSES, resolver_replaying
@@ -418,15 +424,30 @@ class TestTrials:
             slot.name: slot.serialized for slot in action.slots
         }
 
-    def test_a_pour_tilted_less_than_the_consulted_knowledge_says_it_needs_is_refused(
+    def test_a_pour_whose_source_ends_tilted_less_than_its_measured_onset_is_refused(
         self, pouring_bundle_with_arms, tmp_path
     ):
+        source = next(
+            scene_object.body_name
+            for scene_object in SceneObjects.read(pouring_bundle_with_arms).objects
+            if scene_object.contents is not None
+        )
+        tilted = [
+            {
+                **LANDS,
+                OutcomeKey.SOURCE_CONTAINER: source,
+                OutcomeKey.SOURCE_TILT_DEGREES: degrees,
+                OutcomeKey.SOURCE_GRAVITY_AZIMUTH_DEGREES: 0.0,
+            }
+            for degrees in (10.0, 170.0)
+        ]
         resolver = resolver_replaying(
             "objects_given_shallow",
             HypothesisStore(directory=tmp_path / "store"),
             tmp_path / "runs",
-            trial_outcomes=[LANDS, LANDS],
+            trial_outcomes=tilted,
         )
+        resolver.measurements = MeasurementStore(directory=tmp_path / "measurements")
         run = resolver.resolve(
             DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",

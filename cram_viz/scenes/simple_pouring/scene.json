@@ -222,7 +222,11 @@
     0.0,
     1.0
    ],
-   "color": "#b8bcc4"
+   "color": "#b8bcc4",
+   "contents": {
+    "materialRegime": "LIQUID",
+    "fillFraction": 0.5
+   }
   },
   {
    "id": "bowl",

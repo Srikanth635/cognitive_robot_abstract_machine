@@ -31,6 +31,9 @@ HYPOTHESIS_KNOWLEDGE_GRAPH_PATH = RESOURCES_ROOT / "hypothesis_knowledge_graph.j
 #: the store holding the checked-in sample hypothesis
 SAMPLE_HYPOTHESES_PATH = RESOURCES_ROOT / "sample_hypotheses"
 
+#: the store holding the checked-in physical measurements of the scenes' containers
+MEASUREMENTS_PATH = RESOURCES_ROOT / "measurements"
+
 
 def data_dir() -> Path:
     """

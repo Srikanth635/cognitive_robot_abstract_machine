@@ -1,12 +1,13 @@
 """
 Ontology files shipped with the package.
 
-The knowledge is described by two families of ontology modules, one Turtle file per
+The knowledge is described by three families of ontology modules, one Turtle file per
 module: the action perspectives, which describe an action from several points of view
-around an action core, and the predictive manipulation microworld, which describes it as
-phases of predictive control. Each file imports the modules it depends on, and the first
-module of each family imports the CRAM-AICOR and DOLCE+DnS Ultralite ontologies, whose
-terms the modules specialise.
+around an action core, the predictive manipulation microworld, which describes it as
+phases of predictive control, and the physical measurements, which give values of its
+quantities derived from shapes or measured in a physics simulation. Each file imports the
+modules it depends on, and the first module of each of the first two families imports
+the CRAM-AICOR and DOLCE+DnS Ultralite ontologies, whose terms the modules specialise.
 """
 
 from __future__ import annotations
@@ -163,6 +164,13 @@ class OntologyModuleFile:
         The modules whose classes a hypothesis rooted in a class of this module may use.
         """
         raise NotImplementedError
+
+    @property
+    def holds_generated_knowledge(self) -> bool:
+        """
+        Whether a language model may generate knowledge in the module's terms.
+        """
+        return True
 
     @property
     def path(self) -> Path:
@@ -373,9 +381,51 @@ class PredictiveManipulationOntologyFile(OntologyModuleFile, StrEnum):
         return set(PredictiveManipulationOntologyFile)
 
 
+class PhysicalMeasurementFile(OntologyModuleFile, StrEnum):
+    """
+    The Turtle file of each physical measurement module, listed with every module after
+    the modules it depends on.
+    """
+
+    FLOW_ONSET = "flow-onset.ttl"
+    """
+    The tilt at which a substance starts to leave a kind of container, derived from its
+    shape or measured in a physics simulation.
+    """
+
+    @property
+    def directory(self) -> Path:
+        """
+        The directory holding the physical measurement modules.
+        """
+        return ONTOLOGIES_DIRECTORY / "physical_measurements"
+
+    @property
+    def namespace_root(self) -> str:
+        """
+        The IRI prefix of the physical measurement modules.
+        """
+        return "http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/"
+
+    @property
+    def usable_modules(self) -> set[OntologyModuleFile]:
+        """
+        The physical measurement modules alone, which no generated knowledge reaches.
+        """
+        return set(PhysicalMeasurementFile)
+
+    @property
+    def holds_generated_knowledge(self) -> bool:
+        """
+        Never: a measurement's value comes from a shape or a physics simulation.
+        """
+        return False
+
+
 KNOWLEDGE_ONTOLOGY_MODULES: Tuple[OntologyModuleFile, ...] = (
     *ActionPerspectiveFile,
     *PredictiveManipulationOntologyFile,
+    *PhysicalMeasurementFile,
 )
 """
 The module of every family, each after the modules it depends on.
