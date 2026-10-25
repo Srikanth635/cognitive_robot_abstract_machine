@@ -8,18 +8,24 @@ from __future__ import annotations
 import inspect
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
+from functools import cache, cached_property
 
 from krrood.class_diagrams.class_diagram import WrappedClass
 from krrood.utils import recursive_subclasses
+from rdflib import SH, Graph
 from typing_extensions import Any, Optional
 
 from llm_reasoner.attribute_docstrings import attribute_docstrings
-from llm_reasoner.knowledge.ontologies import OntologyModuleFile
+from llm_reasoner.knowledge.ontologies import (
+    KNOWLEDGE_ONTOLOGY_MODULES,
+    OntologyModuleFile,
+)
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.terms import (
     is_inferred,
     ConceptReference,
     DescriptionEntity,
+    OpenValuePartition,
     PropertyTerm,
 )
 
@@ -292,6 +298,66 @@ class GenerationSchema:
 
 
 @dataclass(frozen=True)
+class ListedMembers:
+    """
+    The only members a SHACL shape lets one property of a class take, as its ``sh:in``
+    lists them.
+    """
+
+    target_class: str
+    """
+    The IRI of the class whose fragments the shape constrains.
+    """
+
+    property_iri: str
+    """
+    The IRI of the constrained property.
+    """
+
+    members: frozenset[str]
+    """
+    The IRIs of the members the property may take.
+    """
+
+    @classmethod
+    @cache
+    def stated_in(cls, module_file: OntologyModuleFile) -> tuple[ListedMembers, ...]:
+        """
+        :return: Every list of members the module's shapes state; none for a module
+            without shapes.
+        """
+        if not module_file.shapes_path.exists():
+            return ()
+        graph = Graph().parse(module_file.shapes_path, format="turtle")
+        return tuple(
+            cls(
+                target_class=str(target_class),
+                property_iri=str(graph.value(property_shape, SH.path)),
+                members=frozenset(str(member) for member in graph.items(listed)),
+            )
+            for shape, target_class in graph.subject_objects(SH.targetClass)
+            for property_shape in graph.objects(shape, SH.property)
+            for listed in graph.objects(property_shape, SH["in"])
+        )
+
+    def constrains(self, owner: type[DescriptionEntity], name: str) -> bool:
+        """
+        :return: Whether the list constrains the field of the given name of the class's
+            fragments: the field stands for the property, and the class is the target
+            class or specialises it.
+        """
+        term = PropertyTerm.of_field(owner, name)
+        return (
+            term is not None
+            and term.iri == self.property_iri
+            and any(
+                "term" in vars(ancestor) and ancestor.term.iri == self.target_class
+                for ancestor in owner.__mro__
+            )
+        )
+
+
+@dataclass(frozen=True)
 class TypeScope:
     """
     The generated classes a hypothesis may use: those of the modules its root's module
@@ -343,6 +409,55 @@ class TypeScope:
             candidate for candidate in generated_types(base) if self.admits(candidate)
         ]
 
+    @cached_property
+    def listed_members(self) -> tuple[ListedMembers, ...]:
+        """
+        The lists of members the shapes of the scope's modules state, or of every
+        registered module's shapes when the scope is unrestricted.
+        """
+        module_files = (
+            KNOWLEDGE_ONTOLOGY_MODULES
+            if self.usable_modules is None
+            else self.usable_modules
+        )
+        return tuple(
+            listed
+            for module_file in module_files
+            for listed in ListedMembers.stated_in(module_file)
+        )
+
+    def admits_member(self, member: Enum) -> bool:
+        """
+        :return: Whether a hypothesis in this scope may use the member: every member of
+            a partition its enumeration closes, and a member of an open value partition
+            when one of the scope's modules declares it.
+        """
+        return (
+            self.usable_modules is None
+            or not isinstance(member, OpenValuePartition)
+            or member.declaring_module in self.usable_modules
+        )
+
+    def offered_members(
+        self, owner: type[DescriptionEntity], name: str, enumeration: type[Enum]
+    ) -> list[Enum]:
+        """
+        :return: The members a field of a class may take in this scope, in their order:
+            those the scope admits that every list the scope's shapes state for the
+            field names.
+        """
+        listed = [
+            listing.members
+            for listing in self.listed_members
+            if listing.constrains(owner, name)
+        ]
+        return [
+            member
+            for member in enumeration
+            if self.admits_member(member)
+            and all(member.value in members for members in listed)
+        ]
+
 
 UNRESTRICTED = TypeScope()
 """
@@ -374,6 +489,7 @@ def type_schema_for(
         many = term is not None and not term.functional
         fields.append(
             field_schema_for(
+                python_type,
                 name,
                 docstrings.get(name, ""),
                 vocabulary.value_type_of(python_type, name, wrapped.type_endpoint),
@@ -401,6 +517,7 @@ def generated_types(base: type[DescriptionEntity]) -> list[type[DescriptionEntit
 
 
 def field_schema_for(
+    owner: type[DescriptionEntity],
     name: str,
     description: str,
     value_type: type,
@@ -408,6 +525,7 @@ def field_schema_for(
     scope: TypeScope = UNRESTRICTED,
 ) -> FieldSchema:
     """
+    :param owner: The generated class declaring or inheriting the field.
     :return: The schema of one field, from the value type krrood resolves for it.
     """
     if isinstance(value_type, type) and issubclass(value_type, DescriptionEntity):
@@ -428,7 +546,9 @@ def field_schema_for(
             kind=FieldKind.ENUMERATION,
             many=many,
             value_type=value_type,
-            options=tuple(member.name for member in value_type),
+            options=tuple(
+                member.name for member in scope.offered_members(owner, name, value_type)
+            ),
         )
     if value_type is ConceptReference:
         return FieldSchema(

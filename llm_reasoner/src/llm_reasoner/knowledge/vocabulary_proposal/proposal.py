@@ -36,6 +36,7 @@ class AnswerKey(StrEnum):
     RANGE = "range"
     FUNCTIONAL = "functional"
     MEMBERS = "members"
+    EXHAUSTIVE = "exhaustive"
 
 
 class RestrictionKind(StrEnum):
@@ -224,8 +225,8 @@ class ProposedMember:
 @dataclass(frozen=True)
 class ProposedValuePartition:
     """
-    A class whose individuals are exactly the members listed, such as the features a
-    filler can have.
+    A class whose individuals are the members listed, such as the features a filler
+    can have, and no others when it is exhaustive.
     """
 
     name: str
@@ -248,6 +249,12 @@ class ProposedValuePartition:
     Its members, in order.
     """
 
+    exhaustive: bool
+    """
+    Whether its definition allows no members besides those listed, so no other module
+    may add one.
+    """
+
     @classmethod
     def from_json(cls, data: Dict[str, Any]) -> ProposedValuePartition:
         """
@@ -258,6 +265,7 @@ class ProposedValuePartition:
             meaning=data[AnswerKey.MEANING],
             parents=tuple(data[AnswerKey.PARENTS]),
             members=tuple(map(ProposedMember.from_json, data[AnswerKey.MEMBERS])),
+            exhaustive=data[AnswerKey.EXHAUSTIVE],
         )
 
 

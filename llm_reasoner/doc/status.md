@@ -763,6 +763,26 @@ working tree, not yet committed.
 HermiT (the closed-world checks pass); the shared writer was left unchanged. The geometric
 derivation covers liquids only.
 
+### Open value partitions (2026-10-25)
+
+Step 4 of the ontology consolidation (code only; no list is opened yet, which is step 5):
+
+- A class marked `ac:isOpenValuePartition true` (declared in action-core 0.7.0) is an open
+  value partition: its members are the named individuals any registered module types with
+  it, ordered by module and then by the module's `owl:AllDifferent`. A closed partition
+  keeps `owl:oneOf`; a class marked both ways raises `PartitionClosureConflict`, and a
+  module whose one `owl:AllDifferent` does not cover its members and those of its imports
+  raises `MembersNotStatedDistinct` (`ontology_translation/exceptions.py`).
+- The enumeration is generated in the declaring module as an `OpenValuePartition`, whose
+  members name their `declaring_module`. `GenerationSchema` offers, and `FragmentDecoder`
+  accepts, only members declared in the root's usable modules, narrowed further by a
+  shape's `sh:in` on the field's property (`ListedMembers`).
+- A proposed value partition states `exhaustive`; only an exhaustive one is written with
+  `owl:oneOf`, any other with the open marker (rule `exhaustive`).
+- The regenerated vocabulary is unchanged. The cram_viz sample record moved to action-core
+  0.7.0 through the migration table `0004-open-value-partitions`, which moves the records
+  of a store made under 0.6.0 (`python -m llm_reasoner.knowledge.storage.migrate store`).
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

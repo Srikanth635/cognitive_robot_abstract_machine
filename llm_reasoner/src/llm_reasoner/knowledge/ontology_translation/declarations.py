@@ -10,6 +10,7 @@ from enum import StrEnum
 
 from typing_extensions import Optional
 
+from llm_reasoner.knowledge.ontologies import OntologyModuleFile
 from llm_reasoner.knowledge.ontologies.terms import ClassExpression
 
 # %% value kinds
@@ -94,6 +95,12 @@ class MemberDeclaration:
     The member's definition.
     """
 
+    declaring_module: Optional[OntologyModuleFile] = None
+    """
+    The module stating that the member belongs to an open value partition, or ``None``
+    for a member of a partition defined by enumerating its members.
+    """
+
 
 @dataclass(frozen=True)
 class MemberValue:
@@ -149,7 +156,7 @@ class MemberPropertyDeclaration:
 @dataclass(frozen=True)
 class ValuePartitionDeclaration:
     """
-    A class defined by enumerating its members, written as an enumeration.
+    A class whose members are named individuals, written as an enumeration.
     """
 
     iri: str
@@ -175,6 +182,11 @@ class ValuePartitionDeclaration:
     member_properties: tuple[MemberPropertyDeclaration, ...] = ()
     """
     The properties stated of every member.
+    """
+
+    is_open: bool = False
+    """
+    Whether any module may declare members, rather than an enumeration listing them.
     """
 
 
@@ -390,6 +402,21 @@ class ModuleDeclaration:
     The descriptors attached to fields, once the module sees both the field's class and
     the descriptor.
     """
+
+    @property
+    def declaring_modules(self) -> list[OntologyModuleFile]:
+        """
+        :return: The modules declaring members of the module's open value partitions,
+            each once, in the order the members name them.
+        """
+        return list(
+            dict.fromkeys(
+                member.declaring_module
+                for partition in self.value_partitions
+                if partition.is_open
+                for member in partition.members
+            )
+        )
 
     @property
     def referenced_modules(self) -> list[str]:

@@ -56,11 +56,12 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "meaning", "parents", "members"],
+        "required": ["name", "meaning", "parents", "exhaustive", "members"],
         "properties": {
           "name": {"type": "string", "description": "One word starting in capitals."},
           "meaning": {"type": "string"},
           "parents": {"type": "array", "items": {"type": "string"}},
+          "exhaustive": {"type": "boolean", "description": "Whether the definition allows no members besides those listed, such as whether a condition holds or does not; false when another action or perspective may add members."},
           "members": {
             "type": "array",
             "items": {

@@ -64,6 +64,7 @@
       "name": "FillerFeature",
       "meaning": "Something the filler of a slot can have or afford.",
       "parents": ["dul:Concept"],
+      "exhaustive": true,
       "members": [
         {"name": "HasOpening", "meaning": "It has an opening through which things enter or leave it."},
         {"name": "HoldsSubstance", "meaning": "It can hold a substance."},

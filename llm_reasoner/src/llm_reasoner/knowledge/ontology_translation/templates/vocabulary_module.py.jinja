@@ -7,12 +7,15 @@ Generated from ``{{ module.source_file }}`` by ``python -m llm_reasoner.knowledg
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-{% if module.value_partitions %}
+{% if module.value_partitions | rejectattr("is_open") | list %}
 from enum import StrEnum
 {% endif %}
 
 from typing_extensions import ClassVar, List, Optional
 
+{% for statement in module_file_imports() %}
+{{ statement }}
+{% endfor %}
 {% for referenced in module.referenced_modules %}
 from {{ packages[referenced] }} import {{ referenced }}
 {% endfor %}
@@ -27,6 +30,9 @@ from llm_reasoner.knowledge.ontologies.terms import (
     EnumeratedClass,
     IntersectionOf,
     NamedClass,
+{% if module.value_partitions | selectattr("is_open") | list %}
+    OpenValuePartition,
+{% endif %}
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -38,7 +44,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
 {% for partition in module.value_partitions %}
 
 
-class {{ partition.python_name.name }}(StrEnum):
+class {{ partition.python_name.name }}({{ "OpenValuePartition" if partition.is_open else "StrEnum" }}):
     """
     {{ partition.comment | docstring }}
     """
@@ -62,6 +68,16 @@ class {{ partition.python_name.name }}(StrEnum):
 {% endfor %}
         }[self]
 {% endfor %}
+{% if partition.is_open %}
+
+    @property
+    def declaring_module(self) -> {{ class_reference(module_file_class) }}:
+        return {
+{% for member in partition.members %}
+            {{ partition.python_name.name }}.{{ member.name }}: {{ module_file_reference(member.declaring_module) }},
+{% endfor %}
+        }[self]
+{% endif %}
 {% endfor %}
 {% endif %}
 {% if module.classes %}

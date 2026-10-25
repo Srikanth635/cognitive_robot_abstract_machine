@@ -78,6 +78,7 @@ class ProposalRuleName(StrEnum):
     TERMS = "terms"
     KINDS = "kinds"
     DEFINE = "define"
+    EXHAUSTIVE = "exhaustive"
     NAMES = "names"
     QUANTITIES = "quantities"
     CONCEPTS = "concepts"
@@ -150,6 +151,12 @@ RULES: List[PromptRule] = [
         ProposalRuleName.DEFINE,
         "Give every class, property, value partition and member a definition of one or "
         "two sentences saying what it is.",
+    ),
+    PromptRule(
+        ProposalRuleName.EXHAUSTIVE,
+        "Mark a value partition exhaustive only when its definition allows no members "
+        "besides those listed, such as whether a condition holds or does not; a "
+        "partition another action or perspective may add members to is not exhaustive.",
     ),
     PromptRule(
         ProposalRuleName.NAMES,
