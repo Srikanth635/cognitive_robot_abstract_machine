@@ -5,14 +5,16 @@ hypothesis must name.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
 
-from llm_reasoner.knowledge.ontologies import (
-    CRAM_AICOR_NAMESPACE,
-    DUL_NAMESPACE,
-    LinkedOntologyVariable,
+from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE, DUL_NAMESPACE
+from llm_reasoner.knowledge.ontologies.linked import (
+    LinkedOntologyFile,
+    LinkedOntologyTerms,
+    OntologyFiles,
 )
-from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms, OntologyFiles
 
 CASES = Path(__file__).parent / "linked_ontology_cases"
 """
@@ -47,12 +49,32 @@ class TestLinkedOntologyTerms:
             CRAM_AICOR_NAMESPACE + "Grasping"
         )
 
-    def test_files_are_named_by_the_environment(self, monkeypatch):
-        for variable, path in zip(LinkedOntologyVariable, EXCERPTS.paths):
-            monkeypatch.setenv(variable, str(path))
-        assert OntologyFiles.linked_from_environment() == EXCERPTS
 
-    def test_no_files_without_the_environment(self, monkeypatch):
-        for variable in LinkedOntologyVariable:
-            monkeypatch.delenv(variable, raising=False)
-        assert OntologyFiles.linked_from_environment() is None
+# %% the pinned linked ontologies
+
+
+class TestPinnedLinkedOntologies:
+    """
+    The linked ontologies are pinned copies shipped with the package, each recorded with
+    the digest of its bytes.
+    """
+
+    def test_each_pinned_file_has_the_digest_its_source_records(self):
+        sources = json.loads(
+            (LinkedOntologyFile.CRAM_AICOR.parent / "sources.json").read_text()
+        )
+        for linked_file in LinkedOntologyFile:
+            assert hashlib.sha256(linked_file.read_bytes()).hexdigest() == (
+                sources[linked_file.name]["sha256"]
+            )
+
+    def test_the_pinned_files_are_cram_aicor_and_dul(self):
+        assert OntologyFiles.pinned().paths == [
+            LinkedOntologyFile.CRAM_AICOR,
+            LinkedOntologyFile.DUL,
+        ]
+
+    def test_the_pinned_terms_hold_cram_aicors_and_duls(self):
+        terms = LinkedOntologyTerms.pinned()
+        assert terms.declares(CRAM_AICOR_NAMESPACE + "Pouring")
+        assert terms.declares(DUL_NAMESPACE + "Task")

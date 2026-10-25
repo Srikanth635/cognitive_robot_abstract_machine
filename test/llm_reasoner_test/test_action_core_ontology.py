@@ -4,9 +4,9 @@ its module file, what it says of an action's frame and of pouring in particular,
 links to CRAM-AICOR and DUL, the vocabulary generated from it, and what an OWL reasoner
 concludes from it.
 
-As for the predictive manipulation modules, tests that need CRAM-AICOR or DUL read them
-from the files named by :class:`LinkedOntologyVariable` and are skipped when those are
-unset, and the test that reasons needs ``owlready2`` and a Java runtime and is slow.
+As for the predictive manipulation modules, tests that need CRAM-AICOR or DUL read the
+pinned copies (:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`), and
+the test that reasons needs ``owlready2`` and a Java runtime and is slow.
 """
 
 from __future__ import annotations

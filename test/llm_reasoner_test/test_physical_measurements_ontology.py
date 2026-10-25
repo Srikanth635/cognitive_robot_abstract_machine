@@ -3,8 +3,8 @@ Tests of the physical measurement modules: the structure of the flow onset modul
 vocabulary generated from it, that no generated knowledge reaches it, the closed-world
 rules a measurement meets, and what an OWL reasoner concludes from it.
 
-Tests that need CRAM-AICOR or DUL read them from the files named by
-:class:`LinkedOntologyVariable` and are skipped when those are unset, and the test that
+Tests that need CRAM-AICOR or DUL read the pinned copies
+(:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`), and the test that
 reasons needs ``owlready2`` and a Java runtime and is slow.
 """
 

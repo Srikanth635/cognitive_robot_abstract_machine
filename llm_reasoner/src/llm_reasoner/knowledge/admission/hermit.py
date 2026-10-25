@@ -116,21 +116,17 @@ class HermitCheck(ConsistencyCheck):
     """
 
     @classmethod
-    def from_environment(cls) -> Optional[HermitCheck]:
+    def pinned(cls) -> HermitCheck:
         """
-        :return: A check against the microworld and the linked ontologies the
-            environment names, or ``None`` when it does not name all of them.
+        :return: A check against the microworld and the pinned linked ontologies.
         """
-        linked = OntologyFiles.linked_from_environment()
-        if linked is None:
-            return None
         return cls(
             background_files=[
                 *(
                     module_file.path
                     for module_file in PredictiveManipulationOntologyFile
                 ),
-                *linked.paths,
+                *OntologyFiles.pinned().paths,
             ]
         )
 

@@ -253,7 +253,7 @@ class OntologyText:
     def shipped(cls) -> OntologyText:
         """
         :return: The statements of the modules of the knowledge, of the kinds of object
-            and of the linked ontologies the environment names.
+            and of the pinned linked ontologies.
         """
         paths = [
             module.path
@@ -261,9 +261,7 @@ class OntologyText:
             for module in family
         ]
         paths.append(OBJECT_KINDS_FILE)
-        linked = OntologyFiles.linked_from_environment()
-        if linked is not None:
-            paths.extend(linked.paths)
+        paths.extend(OntologyFiles.pinned().paths)
         return cls(graph=OntologyFiles(paths=paths).graph())
 
     def description(self, iri: str) -> str:

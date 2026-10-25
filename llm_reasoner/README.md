@@ -103,5 +103,6 @@ python -m pytest test/llm_reasoner_test
 scripts/format_docstrings.py <modified Python files>
 ```
 
-Tests marked `slow` run HermiT; they need Java, owlready2, and the `CRAM_AICOR_ONTOLOGY`
-and `DUL_ONTOLOGY` environment variables pointing at those ontologies.
+Tests marked `slow` run HermiT; they need Java and owlready2. CRAM-AICOR and DUL are read
+from the pinned copies in `knowledge/ontologies/linked_ontologies/`, whose `sources.json`
+records where each comes from and its SHA-256.

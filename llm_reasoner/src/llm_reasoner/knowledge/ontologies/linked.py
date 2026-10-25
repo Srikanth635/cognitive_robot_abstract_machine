@@ -1,23 +1,20 @@
 """
-The ontologies the microworld links to, CRAM-AICOR and DOLCE+DnS Ultralite, which are
-not part of the package: reading their files, and the terms they declare.
+The ontologies the microworld links to, CRAM-AICOR and DOLCE+DnS Ultralite, as pinned
+copies shipped with the package: reading their files, and the terms they declare.
 """
 
 from __future__ import annotations
 
 import difflib
-import os
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 
+from krrood.patterns.path_enumeration import PathEnumeration
 from rdflib import RDF, Graph
-from typing_extensions import Optional, Sequence
+from typing_extensions import Sequence
 
-from llm_reasoner.knowledge.ontologies import (
-    CRAM_AICOR_NAMESPACE,
-    DUL_NAMESPACE,
-    LinkedOntologyVariable,
-)
+from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE, DUL_NAMESPACE
 
 LINKED_NAMESPACES = (CRAM_AICOR_NAMESPACE, DUL_NAMESPACE)
 """
@@ -28,6 +25,29 @@ RDF_XML_SUFFIXES = (".owl", ".rdf", ".xml")
 """
 The file suffixes of ontologies written in RDF/XML rather than Turtle.
 """
+
+
+# %% the pinned files
+
+
+class LinkedOntologyFile(PathEnumeration):
+    """
+    The pinned copy of each linked ontology; ``sources.json`` beside them records where
+    each comes from and the digest of its bytes.
+    """
+
+    CRAM_AICOR = Path(__file__).parent / "linked_ontologies" / "cram-aicor.ttl"
+    """
+    CRAM-AICOR, in Turtle.
+    """
+
+    DUL = Path(__file__).parent / "linked_ontologies" / "DUL.owl"
+    """
+    DOLCE+DnS Ultralite, in RDF/XML.
+    """
+
+
+# %% reading the files
 
 
 @dataclass(frozen=True)
@@ -42,15 +62,11 @@ class OntologyFiles:
     """
 
     @classmethod
-    def linked_from_environment(cls) -> Optional[OntologyFiles]:
+    def pinned(cls) -> OntologyFiles:
         """
-        :return: The files of the linked ontologies the environment names, or ``None``
-            when it does not name all of them.
+        :return: The pinned copies of the linked ontologies, CRAM-AICOR first.
         """
-        locations = [os.environ.get(variable) for variable in LinkedOntologyVariable]
-        if not all(locations):
-            return None
-        return cls(paths=[Path(location) for location in locations])
+        return cls(paths=list(LinkedOntologyFile))
 
     def graph(self) -> Graph:
         """
@@ -88,13 +104,12 @@ class LinkedOntologyTerms:
         )
 
     @classmethod
-    def from_environment(cls) -> Optional[LinkedOntologyTerms]:
+    @cache
+    def pinned(cls) -> LinkedOntologyTerms:
         """
-        :return: The terms of the linked ontologies the environment names, or ``None``
-            when it does not name all of them.
+        :return: The terms the pinned linked ontologies declare, read once.
         """
-        files = OntologyFiles.linked_from_environment()
-        return cls.from_files(files) if files is not None else None
+        return cls.from_files(OntologyFiles.pinned())
 
     @staticmethod
     def concerns(iri: str) -> bool:

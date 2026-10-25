@@ -451,7 +451,7 @@ concept, with no situation features, until phase 4 shows a need for them. (Super
 | Generation | The schema walks every type reachable from the root, with subclasses; decoding, patches and repair | The role and the content rule of the prompt describe predictive manipulation (phases, events, forces) |
 | Acceptance | `RestrictionsHold`, `RangesHold` | `ShapesHold` and `ComponentsDeclared` apply only to Flanagan structures, so they find nothing to check elsewhere (since 2026-10-21 the perspectives have shapes of their own, §9 phase 7) |
 | Vocabulary lookup | | `Vocabulary` (IRI → generated class) knows only the Flanagan modules |
-| Admission | HermiT, contradiction finding | `HermitCheck.from_environment` loads only the Flanagan modules |
+| Admission | HermiT, contradiction finding | `HermitCheck.pinned` (formerly `from_environment`) loads only the Flanagan modules |
 | Store | Key: root type and fixed values | The key's module versions are those of every Flanagan module |
 | Reading | `find_fragments`, `describe_fragment` | `HypothesisView.root` and `knowledge_overview` expect a phase structure |
 | Resolver | | A designator maps to one Flanagan structure; a consultation serves one record, and the tools read one record |

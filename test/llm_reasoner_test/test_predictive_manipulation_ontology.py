@@ -3,15 +3,14 @@ Tests of the predictive manipulation microworld ontology: the structure of its m
 files, its links to the CRAM-AICOR and DUL ontologies, and what an OWL reasoner
 concludes from it.
 
-Tests that need CRAM-AICOR or DUL read them from the files named by
-:class:`LinkedOntologyVariable` and are skipped when those are unset. Tests that reason
-additionally need ``owlready2`` and a Java runtime for HermiT; each run classifies both
+Tests that need CRAM-AICOR or DUL read the pinned copies
+(:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`). Tests that reason
+need ``owlready2`` and a Java runtime for HermiT; each run classifies both
 external ontologies with the microworld and takes minutes, so they are marked slow.
 """
 
 from __future__ import annotations
 
-import os
 import shutil
 from enum import StrEnum
 from pathlib import Path
@@ -21,6 +20,7 @@ import pytest
 from rdflib import OWL, RDF, RDFS, XSD, Graph, Namespace, URIRef
 from typing_extensions import Any, Callable
 
+from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyFile
 from llm_reasoner.knowledge.ontologies import (
     ActionPerspectiveFile,
     CRAM_AICOR_NAMESPACE,
@@ -28,7 +28,6 @@ from llm_reasoner.knowledge.ontologies import (
     DUL_NAMESPACE,
     DUL_ONTOLOGY_IRI,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
-    LinkedOntologyVariable,
     PredictiveManipulationOntologyFile,
 )
 
@@ -217,30 +216,20 @@ def module_graphs() -> dict[PredictiveManipulationOntologyFile, Graph]:
     }
 
 
-def configured_path(variable: LinkedOntologyVariable) -> Path:
-    """
-    Return the ontology file an environment variable names, or skip when it names none.
-    """
-    location = os.environ.get(variable)
-    if location is None or not Path(location).is_file():
-        pytest.skip(f"set {variable} to the ontology file")
-    return Path(location)
-
-
 @pytest.fixture(scope="module")
 def cram_aicor_path() -> Path:
     """
-    The CRAM-AICOR ontology file.
+    The pinned CRAM-AICOR ontology file.
     """
-    return configured_path(LinkedOntologyVariable.CRAM_AICOR_ONTOLOGY)
+    return LinkedOntologyFile.CRAM_AICOR
 
 
 @pytest.fixture(scope="module")
 def dul_path() -> Path:
     """
-    The DOLCE+DnS Ultralite ontology file.
+    The pinned DOLCE+DnS Ultralite ontology file.
     """
-    return configured_path(LinkedOntologyVariable.DUL_ONTOLOGY)
+    return LinkedOntologyFile.DUL
 
 
 @pytest.fixture(scope="module")

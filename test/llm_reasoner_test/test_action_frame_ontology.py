@@ -3,8 +3,8 @@ Tests of the action-frame perspective, the first module attached to the action c
 structure of its module file, the vocabulary generated from it, its links to the core,
 CRAM-AICOR and DUL, and what an OWL reasoner concludes from it.
 
-Tests that need CRAM-AICOR or DUL read them from the files named by
-:class:`LinkedOntologyVariable` and are skipped when those are unset, and the test that
+Tests that need CRAM-AICOR or DUL read the pinned copies
+(:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`), and the test that
 reasons needs ``owlready2`` and a Java runtime and is slow.
 """
 

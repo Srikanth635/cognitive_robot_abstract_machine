@@ -156,9 +156,9 @@ class TestReadingWithTheCore:
 @pytest.mark.slow
 class TestAdmission:
     def test_it_is_admitted_by_the_reasoner_with_the_core_it_builds_on(self, tmp_path):
-        check = HermitCheck.from_environment()
-        if check is None or HermitCheck.shipped_directory() is None:
-            pytest.skip("needs the linked ontologies and owlready2's HermiT")
+        if HermitCheck.shipped_directory() is None:
+            pytest.skip("needs owlready2's HermiT")
+        check = HermitCheck.pinned()
         service = service_answering(
             HypothesisStore(directory=tmp_path),
             answer_in_cases(AnswerCase.CORE),

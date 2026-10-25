@@ -104,8 +104,8 @@ class LiveCheck:
                     client=AnthropicClient(model=LIVE_MODEL),
                     suite=predictive_manipulation_suite(),
                     max_repairs=GENERATION_REPAIRS,
-                    consistency=HermitCheck.from_environment(),
-                    linked_terms=LinkedOntologyTerms.from_environment(),
+                    consistency=HermitCheck.pinned(),
+                    linked_terms=LinkedOntologyTerms.pinned(),
                     store=store,
                 )
             ),
