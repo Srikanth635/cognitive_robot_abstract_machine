@@ -28,7 +28,7 @@ from semantic_digital_twin.world_description.world_state_trajectory_plotter impo
 )
 
 if TYPE_CHECKING:
-    from semantic_digital_twin.adapters.multi_sim import MujocoSim
+    from semantic_digital_twin.adapters.multi_sim import SteppedSimulation
 
 
 logger = logging.getLogger(__name__)
@@ -146,11 +146,10 @@ class SteppedSimulationPacer(Pacer):
     world back.
     """
 
-    simulation: MujocoSim
+    simulation: SteppedSimulation
     """
-    The simulation to step; it has to be started with
-    :meth:`~semantic_digital_twin.adapters.multi_sim.MujocoSim.start_stepped_simulation`
-    already.
+    The simulation to step; it has to be started with :meth:`~semantic_digital_twin.adap
+    ters.multi_sim.SteppedSimulation.start_stepped_simulation` already.
     """
 
     standstill_velocity: float = 0.01
@@ -181,14 +180,13 @@ class SteppedSimulationPacer(Pacer):
         ]
         if not servo_names:
             return
-        simulator = self.simulation.simulator
         standstill_travel = self.standstill_velocity / self.target_frequency
-        previous = simulator.get_actuators_lengths(servo_names).result
+        previous = self.simulation.servo_positions(servo_names)
         for _ in range(
             int(self.standstill_time_limit.total_seconds() * self.target_frequency)
         ):
             self.sleep()
-            current = simulator.get_actuators_lengths(servo_names).result
+            current = self.simulation.servo_positions(servo_names)
             travelled = max(
                 abs(current[servo_name] - previous[servo_name])
                 for servo_name in servo_names

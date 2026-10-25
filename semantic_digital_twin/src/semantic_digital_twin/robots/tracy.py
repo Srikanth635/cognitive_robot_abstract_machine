@@ -385,8 +385,12 @@ class TracyRightArm(UR10eArm[TracyRightGripper]):
 
 @dataclass(eq=False)
 class TracyCamera(Camera):
+    """
+    The camera on the pole above Tracy's table, looking down along the x axis of its
+    ``camera_link``.
+    """
 
-    def setup_hardware_interfaces(self):
+    def setup_hardware_interfaces(self) -> None:
         pass
 
     def setup_joint_states(self) -> List[JointState]:
@@ -394,7 +398,7 @@ class TracyCamera(Camera):
 
     @property
     def forward_facing_axis(self) -> Vector3:
-        return Vector3.Z(reference_frame=self.root)
+        return Vector3.X(reference_frame=self.root)
 
     @classmethod
     def setup_default_configuration_in_world_below_robot_root(

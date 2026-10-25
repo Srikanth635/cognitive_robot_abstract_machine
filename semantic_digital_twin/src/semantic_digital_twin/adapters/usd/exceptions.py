@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from typing_extensions import List
+from krrood.exceptions import DataclassException
 
 from semantic_digital_twin.exceptions import ParsingError
+
+# %% parsing and writing USD stages
 
 
 @dataclass
@@ -27,7 +29,7 @@ class UnsupportedUsdPhysicsJointTypeError(ParsingError):
     The unsupported joint prim's USD type name.
     """
 
-    supported_types: List[str] = field(kw_only=True, default_factory=list)
+    supported_types: list[str] = field(kw_only=True, default_factory=list)
     """
     The joint types that can be mapped to connections.
     """
@@ -90,7 +92,7 @@ class UnsupportedUsdGeometryTypeError(ParsingError):
     The unsupported geometry prim's USD type name.
     """
 
-    supported_types: List[str] = field(kw_only=True, default_factory=list)
+    supported_types: list[str] = field(kw_only=True, default_factory=list)
     """
     The geometry types that can be mapped to shapes.
     """
@@ -105,3 +107,86 @@ class UnsupportedUsdGeometryTypeError(ParsingError):
         if not self.supported_types:
             return ""
         return f"Use one of the supported types: {', '.join(sorted(self.supported_types))}."
+
+
+@dataclass
+class UnsupportedUsdConnectionError(DataclassException):
+    """
+    Raised when a world holds a connection of a kind the USD builder does not write a
+    joint for.
+
+    Leaving it out would let the body it connects fall or float free under physics.
+    """
+
+    connection_name: str
+    """
+    The name of the unsupported connection.
+    """
+
+    connection_type: str
+    """
+    The name of the unsupported connection's class.
+    """
+
+    def error_message(self) -> str:
+        return (
+            f"The connection '{self.connection_name}' is a {self.connection_type}, "
+            f"which the USD builder does not write a joint for."
+        )
+
+    def suggest_correction(self) -> str:
+        return "Build the world for a simulator that supports this kind of connection."
+
+
+@dataclass
+class UnsupportedFollowingModeError(DataclassException):
+    """
+    Raised when a world holds a camera or light that follows its body in a way other
+    than fixed to it, which the USD builder does not write.
+    """
+
+    element_name: str
+    """
+    The name of the camera or light.
+    """
+
+    mode: str
+    """
+    How the camera or light follows its body, by MuJoCo's name for it.
+    """
+
+    def error_message(self) -> str:
+        return (
+            f"'{self.element_name}' follows its body as {self.mode}; the USD builder "
+            f"writes cameras and lights fixed to their body only."
+        )
+
+    def suggest_correction(self) -> str:
+        return "Fix the camera or light to its body, or build the world for MuJoCo."
+
+
+@dataclass
+class UnplacedSimulatorElementError(DataclassException):
+    """
+    Raised when a world holds a camera or light of a kind that does not say where it is
+    or how it looks, which the USD builder therefore cannot write.
+    """
+
+    element_name: str
+    """
+    The name of the camera or light.
+    """
+
+    element_type: str
+    """
+    The name of its class.
+    """
+
+    def error_message(self) -> str:
+        return (
+            f"'{self.element_name}' is a {self.element_type}, which says nothing of "
+            f"where it is or how it looks."
+        )
+
+    def suggest_correction(self) -> str:
+        return "Describe it as a MujocoCamera or a MujocoLight."

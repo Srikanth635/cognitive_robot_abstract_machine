@@ -46,7 +46,7 @@ from semantic_digital_twin.world_description.world_entity import Body
 
 if TYPE_CHECKING:
     from giskardpy.motion_statechart.motion_statechart import StateHistory
-    from semantic_digital_twin.adapters.multi_sim import MujocoSim
+    from semantic_digital_twin.adapters.multi_sim import SteppedSimulation
     from coraplex.robot_plans.actions.base import ActionDescription
 
     from coraplex.plans.condition_nodes import ConditionNode
@@ -242,7 +242,7 @@ class GiskardExecutable(Executable):
 
     collision_avoidance: ClassVar[bool] = False
 
-    simulation: ClassVar[Optional[MujocoSim]] = None
+    simulation: ClassVar[Optional[SteppedSimulation]] = None
     """
     The physically simulated world a plan is performed in, when the execution type is
     :attr:`~coraplex.datastructures.enums.ExecutionType.PHYSICALLY_SIMULATED`.

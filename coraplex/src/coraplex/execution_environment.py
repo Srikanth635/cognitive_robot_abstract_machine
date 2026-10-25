@@ -9,7 +9,7 @@ from coraplex.datastructures.enums import ExecutionType
 from coraplex.plans.executables import GiskardExecutable
 
 if TYPE_CHECKING:
-    from semantic_digital_twin.adapters.multi_sim import MujocoSim
+    from semantic_digital_twin.adapters.multi_sim import SteppedSimulation
 
 logger = logging.getLogger(__name__)
 
@@ -102,14 +102,13 @@ class PhysicallySimulatedRobot(ExecutionEnvironment):
     Always a physically simulated robot.
     """
 
-    simulation: MujocoSim = field(kw_only=True)
+    simulation: SteppedSimulation = field(kw_only=True)
     """
-    The world to perform in; it has to be started with
-    :meth:`~semantic_digital_twin.adapters.multi_sim.MujocoSim.start_stepped_simulation`
-    already.
+    The world to perform in; it has to be started with :meth:`~semantic_digital_twin.ada
+    pters.multi_sim.SteppedSimulation.start_stepped_simulation` already.
     """
 
-    previous_simulation: Optional[MujocoSim] = field(init=False, default=None)
+    previous_simulation: Optional[SteppedSimulation] = field(init=False, default=None)
     """
     The simulation that was being performed in before this environment was entered, used
     for nested environments.
