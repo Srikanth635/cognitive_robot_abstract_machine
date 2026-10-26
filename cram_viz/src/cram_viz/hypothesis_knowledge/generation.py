@@ -184,12 +184,12 @@ class ModelHypothesisSource(HypothesisSource):
     skips it.
     """
 
-    linked_terms: Optional[LinkedOntologyTerms] = field(
+    linked_terms: LinkedOntologyTerms = field(
         default_factory=LinkedOntologyTerms.pinned
     )
     """
-    The terms the pinned CRAM-AICOR and DUL declare, which the concepts of an answer
-    named in their namespaces must be among; none leaves them unchecked.
+    The classes the pinned CRAM-AICOR and DUL declare, which the concepts of an answer
+    named in their namespaces must be among.
     """
 
     _service: Optional[KnowledgeService] = field(default=None, init=False)

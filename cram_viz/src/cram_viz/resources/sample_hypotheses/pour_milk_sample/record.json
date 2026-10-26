@@ -13,7 +13,7 @@
   "consistency": "not_checked",
   "module_versions": {
     "action-core.ttl": "0.8.0",
-    "core.ttl": "0.7.0",
+    "core.ttl": "0.7.1",
     "object-dynamics.ttl": "0.4.0",
     "prehension.ttl": "0.6.0",
     "gaze.ttl": "0.3.0",

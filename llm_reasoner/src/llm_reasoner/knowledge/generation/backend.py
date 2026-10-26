@@ -105,10 +105,12 @@ class HypothesisBackend(GenerativeBackend):
     passes the acceptance rules; no open-world check when absent.
     """
 
-    linked_terms: Optional[LinkedOntologyTerms] = field(kw_only=True, default=None)
+    linked_terms: LinkedOntologyTerms = field(
+        kw_only=True, default_factory=LinkedOntologyTerms.pinned
+    )
     """
-    The terms CRAM-AICOR and DUL declare, which concepts named in their namespaces must
-    be among; without them such concepts are not checked.
+    The classes CRAM-AICOR and DUL declare, which concepts named in their namespaces
+    must be among.
     """
 
     store: Optional[HypothesisStore] = field(kw_only=True, default=None)

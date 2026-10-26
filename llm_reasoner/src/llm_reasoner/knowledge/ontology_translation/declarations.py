@@ -275,6 +275,17 @@ class FieldDeclaration:
     in a later module.
     """
 
+    linked_range_iri: str = ""
+    """
+    The IRI of the class of a linked ontology the values are instances of, when they
+    are concepts and the property states a range.
+    """
+
+    datatype_iri: str = ""
+    """
+    The IRI of the XML Schema datatype of the values, when they are literals.
+    """
+
 
 @dataclass(frozen=True)
 class AttachmentDeclaration:

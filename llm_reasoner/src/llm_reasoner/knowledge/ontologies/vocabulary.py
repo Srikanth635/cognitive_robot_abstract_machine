@@ -12,12 +12,16 @@ from operator import attrgetter
 from types import ModuleType
 
 from krrood.class_diagrams.class_diagram import WrappedClass
-from typing_extensions import Any, Optional
+from typing_extensions import Any, Optional, Sequence
 
 from llm_reasoner.attribute_docstrings import attribute_docstrings
 from llm_reasoner.knowledge.ontologies import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     OntologyModuleFile,
+)
+from llm_reasoner.knowledge.ontologies.linked import (
+    LinkedClassHierarchy,
+    LinkedOntologyTerms,
 )
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -25,6 +29,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
     IntersectionOf,
+    NamedClass,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -65,6 +70,11 @@ class Vocabulary:
     )
     """
     The generated module of every ontology module.
+    """
+
+    hierarchy: LinkedClassHierarchy = field(default_factory=LinkedClassHierarchy.pinned)
+    """
+    The told class hierarchy a concept's class is placed in.
     """
 
     def module_of(self, iri: str) -> Optional[ModuleType]:
@@ -156,10 +166,10 @@ class Vocabulary:
     def entailed_values(self, python_type: type[DescriptionEntity]) -> dict[str, Any]:
         """
         :return: The values every instance of a class has because its classes say so,
-            through value restrictions they state or are defined by, by field name.
-            A more specific class decides a field before a more general one.
+            through restrictions they state or are defined by, by field name. A more
+            specific class decides a field before a more general one.
         """
-        names = {declared.name for declared in fields(python_type)}
+        value_types = declared_value_types(python_type)
         entailed: dict[str, Any] = {}
         for owner in python_type.__mro__:
             if "term" not in vars(owner):
@@ -171,15 +181,35 @@ class Vocabulary:
             elif definition is not None:
                 expressions.append(definition)
             for expression in expressions:
-                if not (
-                    isinstance(expression, PropertyRestriction)
-                    and expression.quantifier == Quantifier.VALUE
-                ):
+                if not isinstance(expression, PropertyRestriction):
                     continue
                 name = python_attribute_name(expression.property_iri)
-                if name in names:
-                    entailed.setdefault(name, self.value_of(expression.value))
+                if name not in value_types:
+                    continue
+                value = self.restricted_value(expression, value_types[name])
+                if value is not None:
+                    entailed.setdefault(name, value)
         return entailed
+
+    def restricted_value(
+        self, restriction: PropertyRestriction, value_type: type
+    ) -> Any:
+        """
+        :param value_type: The type the restricted field is declared to hold.
+        :return: The value a restriction gives every instance: the value of a value
+            restriction, or a concept of the class of CRAM-AICOR or DUL an existential
+            restriction on a concept field requires; ``None`` for any other restriction.
+        """
+        if restriction.quantifier == Quantifier.VALUE:
+            return self.value_of(restriction.value)
+        if (
+            restriction.quantifier == Quantifier.SOME
+            and value_type is ConceptReference
+            and isinstance(restriction.filler, NamedClass)
+            and LinkedOntologyTerms.concerns(restriction.filler.iri)
+        ):
+            return ConceptReference(iri=restriction.filler.iri)
+        return None
 
     def fill_entailed_values(self, instance: DescriptionEntity) -> None:
         """
@@ -204,8 +234,21 @@ class Vocabulary:
             if PropertyTerm.of_field(type(instance), name).functional:
                 if stated is None:
                     setattr(instance, name, value)
-            elif value not in stated:
+            elif not self.holds(stated, value):
                 setattr(instance, name, [*stated, value])
+
+    def holds(self, stated: Sequence[Any], value: Any) -> bool:
+        """
+        :return: Whether the stated values hold an entailed value: a concept by one of
+            its class or of a subclass, any other value by itself.
+        """
+        if not isinstance(value, ConceptReference):
+            return value in stated
+        return any(
+            isinstance(held, ConceptReference)
+            and self.hierarchy.is_subclass(held.iri, value.iri)
+            for held in stated
+        )
 
     @cached_property
     def members(self) -> dict[str, StrEnum]:
@@ -280,21 +323,36 @@ class Vocabulary:
 
     # %% property values
 
-    def is_functional(self, entity: Any, property_iri: str) -> Optional[bool]:
+    @staticmethod
+    def property_term(
+        entities: Sequence[Any], property_iri: str
+    ) -> PropertyTerm | None:
+        """
+        :return: The term of the property a field of the given fragments' classes
+            stands for, or ``None`` when none of them has a field for it.
+        """
+        return next(
+            (
+                term
+                for entity_ in entities
+                if isinstance(entity_, DescriptionEntity)
+                for declared in fields(entity_)
+                for term in [PropertyTerm.of_field(type(entity_), declared.name)]
+                if term is not None and term.iri == property_iri
+            ),
+            None,
+        )
+
+    def is_functional(self, entity: Any, property_iri: str) -> bool | None:
         """
         :return: Whether the entity's attribute for the property holds one value, or
             ``None`` when the entity has no attribute for the property.
         """
-        name = python_attribute_name(property_iri)
         if isinstance(entity, StrEnum):
+            name = python_attribute_name(property_iri)
             return True if isinstance(vars(type(entity)).get(name), property) else None
-        if not isinstance(entity, DescriptionEntity):
-            return None
-        for declared in fields(entity):
-            term = PropertyTerm.of_field(type(entity), declared.name)
-            if term is not None and term.iri == property_iri:
-                return term.functional
-        return None
+        term = self.property_term([entity], property_iri)
+        return None if term is None else term.functional
 
     def values_of(self, entity: Any, property_iri: str) -> list[Any]:
         """

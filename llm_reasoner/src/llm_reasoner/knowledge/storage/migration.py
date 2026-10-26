@@ -15,13 +15,15 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
-from rdflib import Graph, URIRef
+from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, URIRef
+from rdflib.term import Node
 from typing_extensions import Any, Mapping, Sequence
 
 from llm_reasoner.knowledge.acceptance.derived import RangesHold, RestrictionsHold
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite, Severity
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold
 from llm_reasoner.knowledge.ontologies import (
+    HYPOTHESIS_CONCEPT_NAMESPACE,
     ONTOLOGIES_PACKAGE,
     ActionPerspectiveFile,
     PhysicalMeasurementFile,
@@ -65,6 +67,32 @@ class MigrationKey(StrEnum):
     MODULE = "module"
     """
     The file name of a module.
+    """
+
+    CONCEPT_VALUES = "concept_values"
+    """
+    The properties whose concepts become anonymous instances of their classes, each
+    with the class it ranges over, if any.
+    """
+
+    LITERAL_DATATYPES = "literal_datatypes"
+    """
+    The properties whose literals take a datatype, each with the datatype.
+    """
+
+    PROPERTY = "property"
+    """
+    The IRI of a property.
+    """
+
+    RANGE = "range"
+    """
+    The IRI of the class a property ranges over.
+    """
+
+    DATATYPE = "datatype"
+    """
+    The IRI of an XML Schema datatype.
     """
 
 
@@ -154,6 +182,134 @@ class ModuleVersionChange:
         )
 
 
+@dataclass(frozen=True)
+class ConceptValueAsInstance:
+    """
+    The concepts of a property written as anonymous instances of their classes, where
+    they are written as the IRI of the class; a concept of the hypothesis's own becomes
+    a class under the property's range.
+    """
+
+    property: str
+    """
+    The IRI of the property.
+    """
+
+    range: str = ""
+    """
+    The IRI of the class the property ranges over, if it states one.
+    """
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, str]) -> ConceptValueAsInstance:
+        """
+        :return: The rule a migration table states.
+        """
+        return cls(
+            property=data[MigrationKey.PROPERTY], range=data.get(MigrationKey.RANGE, "")
+        )
+
+    def touches(self, graph: Graph) -> bool:
+        """
+        :return: Whether the graph writes a concept of the property as an IRI, or lacks
+            the range of a concept of the hypothesis's own.
+        """
+        return any(
+            isinstance(value, URIRef)
+            for value in graph.objects(None, URIRef(self.property))
+        ) or any(
+            (concept, RDFS.subClassOf, URIRef(self.range)) not in graph
+            for concept in self.own_concepts(graph)
+            if self.range
+        )
+
+    def own_concepts(self, graph: Graph) -> set[Node]:
+        """
+        :return: The classes of the hypothesis's own the property's anonymous values are
+            instances of.
+        """
+        return {
+            concept
+            for value in graph.objects(None, URIRef(self.property))
+            if isinstance(value, BNode)
+            for concept in graph.objects(value, RDF.type)
+            if str(concept).startswith(HYPOTHESIS_CONCEPT_NAMESPACE)
+        }
+
+    def graph(self, graph: Graph) -> Graph:
+        """
+        :return: The graph with the property's concepts written as anonymous instances
+            of their classes.
+        """
+        migrated = Graph()
+        for prefix, namespace in graph.namespaces():
+            migrated.bind(prefix, namespace)
+        for subject, predicate, value in graph:
+            if predicate != URIRef(self.property) or not isinstance(value, URIRef):
+                migrated.add((subject, predicate, value))
+                continue
+            instance = BNode()
+            migrated.add((subject, predicate, instance))
+            migrated.add((instance, RDF.type, value))
+        for concept in self.own_concepts(migrated):
+            migrated.add((concept, RDF.type, OWL.Class))
+            if self.range:
+                migrated.add((concept, RDFS.subClassOf, URIRef(self.range)))
+        return migrated
+
+
+@dataclass(frozen=True)
+class LiteralDatatype:
+    """
+    The literals of a property given the datatype the property ranges over.
+    """
+
+    property: str
+    """
+    The IRI of the property.
+    """
+
+    datatype: str
+    """
+    The IRI of the datatype.
+    """
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, str]) -> LiteralDatatype:
+        """
+        :return: The rule a migration table states.
+        """
+        return cls(
+            property=data[MigrationKey.PROPERTY], datatype=data[MigrationKey.DATATYPE]
+        )
+
+    def touches(self, graph: Graph) -> bool:
+        """
+        :return: Whether a literal of the property has another datatype.
+        """
+        return any(
+            isinstance(value, Literal) and value.datatype != URIRef(self.datatype)
+            for value in graph.objects(None, URIRef(self.property))
+        )
+
+    def graph(self, graph: Graph) -> Graph:
+        """
+        :return: The graph with every literal of the property given the datatype, an
+            integral number written as an integer.
+        """
+        migrated = Graph()
+        for prefix, namespace in graph.namespaces():
+            migrated.bind(prefix, namespace)
+        for subject, predicate, value in graph:
+            if predicate == URIRef(self.property) and isinstance(value, Literal):
+                held = value.toPython()
+                if isinstance(held, float) and held.is_integer():
+                    held = int(held)
+                value = Literal(held, datatype=URIRef(self.datatype))
+            migrated.add((subject, predicate, value))
+        return migrated
+
+
 def python_path_of(iri: str) -> str:
     """
     :return: The module path and name of the Python class generated for a class IRI of
@@ -201,6 +357,16 @@ class Migration:
     The modules whose version moved.
     """
 
+    concept_values: tuple[ConceptValueAsInstance, ...] = ()
+    """
+    The properties whose concepts become anonymous instances of their classes.
+    """
+
+    literal_datatypes: tuple[LiteralDatatype, ...] = ()
+    """
+    The properties whose literals take a datatype.
+    """
+
     @classmethod
     def from_json(cls, name: str, data: Mapping[str, Any]) -> Migration:
         """
@@ -216,6 +382,14 @@ class Migration:
                 ModuleVersionChange.from_json(change)
                 for change in data.get(MigrationKey.MODULE_VERSIONS, [])
             ),
+            concept_values=tuple(
+                ConceptValueAsInstance.from_json(rule)
+                for rule in data.get(MigrationKey.CONCEPT_VALUES, [])
+            ),
+            literal_datatypes=tuple(
+                LiteralDatatype.from_json(rule)
+                for rule in data.get(MigrationKey.LITERAL_DATATYPES, [])
+            ),
         )
 
     @property
@@ -227,12 +401,17 @@ class Migration:
 
     def touches(self, graph: Graph) -> bool:
         """
-        :return: Whether the graph names a renamed IRI.
+        :return: Whether migrating changes the graph: it names a renamed IRI, or a rule
+            of its concepts or literals touches it.
         """
         renamed = self.renamed_nodes
-        return any(node in renamed for statement in graph for node in statement)
+        renamed_graph = self.renamed(graph)
+        return any(node in renamed for statement in graph for node in statement) or any(
+            rule.touches(renamed_graph)
+            for rule in (*self.concept_values, *self.literal_datatypes)
+        )
 
-    def graph(self, graph: Graph) -> Graph:
+    def renamed(self, graph: Graph) -> Graph:
         """
         :return: The graph with every renamed IRI renamed, in every position.
         """
@@ -242,6 +421,16 @@ class Migration:
             migrated.bind(prefix, namespace)
         for statement in graph:
             migrated.add(tuple(renamed.get(node, node) for node in statement))
+        return migrated
+
+    def graph(self, graph: Graph) -> Graph:
+        """
+        :return: The graph with every renamed IRI renamed, then its concepts and
+            literals rewritten by the migration's rules.
+        """
+        migrated = self.renamed(graph)
+        for rule in (*self.concept_values, *self.literal_datatypes):
+            migrated = rule.graph(migrated)
         return migrated
 
     def record(self, data: Mapping[str, Any]) -> dict[str, Any]:
@@ -368,37 +557,45 @@ class StoreMigration:
 
     def run(self) -> MigrationReport:
         """
-        Migrate every record through each migration not yet applied, in order.
+        Migrate every record through the migrations not yet applied, in order, and
+        check each record once all of them are applied.
 
         :return: Which records were migrated and which were left stale.
         """
         applied = self.applied
+        pending = [
+            migration for migration in self.migrations if migration.name not in applied
+        ]
         report = MigrationReport()
-        for migration in self.migrations:
-            if migration.name in applied:
-                continue
-            for location in sorted(self.directory.iterdir()):
-                if (location / StoredFile.RECORD).exists() and (
-                    location.name not in report.stale
-                ):
-                    self.migrate_record(migration, location, report)
-            applied.append(migration.name)
+        for location in sorted(self.directory.iterdir()):
+            if pending and (location / StoredFile.RECORD).exists():
+                self.migrate_record(pending, location, report)
+        applied.extend(migration.name for migration in pending)
         (self.directory / MigrationFile.APPLIED).write_text(
             json.dumps(applied, indent=2)
         )
         return report
 
     def migrate_record(
-        self, migration: Migration, location: Path, report: MigrationReport
+        self, migrations: Sequence[Migration], location: Path, report: MigrationReport
     ) -> None:
         """
-        Migrate one record, writing it only when the migrated hypothesis still meets its
-        ontology, and its Turtle only when a renamed term occurs in it.
+        Migrate one record through migrations, writing it only when the migrated
+        hypothesis still meets its ontology, and its Turtle only when a migration
+        changes it.
         """
         record_file = location / StoredFile.RECORD
         hypothesis_file = location / StoredFile.HYPOTHESIS
-        stored = Graph().parse(hypothesis_file, format="turtle")
-        graph = migration.graph(stored)
+        graph = Graph().parse(hypothesis_file, format="turtle")
+        record = json.loads(record_file.read_text())
+        changed = False
+        for migration in migrations:
+            changed = changed or migration.touches(graph)
+            graph = migration.graph(graph)
+            record = migration.record(record)
+            record[RecordField.MODULE_VERSIONS] = migration.versions_of(
+                record[RecordField.MODULE_VERSIONS]
+            )
         errors = [
             violation
             for violation in self.acceptance.violations(
@@ -409,15 +606,10 @@ class StoreMigration:
         if errors:
             report.stale.append(location.name)
             return
-        record = migration.record(json.loads(record_file.read_text()))
-        record[RecordField.MODULE_VERSIONS] = migration.versions_of(
-            record[RecordField.MODULE_VERSIONS]
-        )
-        if migration.touches(stored):
+        if changed:
             graph.serialize(hypothesis_file, format="turtle")
         record_file.write_text(json.dumps(record, indent=2))
-        if location.name not in report.migrated:
-            report.migrated.append(location.name)
+        report.migrated.append(location.name)
 
 
 # %% migrating recorded files

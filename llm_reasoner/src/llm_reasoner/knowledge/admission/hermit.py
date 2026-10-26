@@ -55,6 +55,12 @@ class HermitCommand(StrEnum):
     The option writing classes by their full IRIs rather than prefixed names.
     """
 
+    SUPERCLASSES = "-S"
+    """
+    The option listing the classes subsuming the class written right after it, in
+    angle brackets.
+    """
+
     LISTED_CLASS_INDENT = "\t"
     """
     What precedes each class HermiT lists.
@@ -206,8 +212,35 @@ class HermitCheck(ConsistencyCheck):
             and line.strip() != str(OWL.Nothing)
         ]
 
+    def superclasses(self, graph: Graph, classes: Sequence[str]) -> dict[str, set[str]]:
+        """
+        :return: The IRIs of the named classes the background and the graph together
+            make subsume each given class, its equivalent classes left out, by the
+            class's IRI.
+        :raises ReasonerFailed: When HermiT stops without listing them.
+        """
+        result = self.reason(
+            graph,
+            [
+                HermitCommand.FULL_IRIS,
+                *(f"{HermitCommand.SUPERCLASSES}<{iri}>" for iri in classes),
+            ],
+        )
+        if result.returncode != 0:
+            raise ReasonerFailed(result.stdout + result.stderr)
+        listed: dict[str, set[str]] = {}
+        listing: set[str] = set()
+        for line in result.stdout.splitlines():
+            if line.startswith(HermitCommand.LISTED_CLASS_INDENT):
+                listing.add(line.strip())
+            else:
+                listing = listed.setdefault(
+                    line[line.index("<") + 1 : line.rindex(">")], set()
+                )
+        return listed
+
     def reason(
-        self, graph: Graph, options: Sequence[HermitCommand]
+        self, graph: Graph, options: Sequence[str]
     ) -> subprocess.CompletedProcess:
         """
         :param graph: The statements reasoned over beside the background.

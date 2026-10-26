@@ -13,7 +13,7 @@
 # is description-level: a phase concept, a controller, an event type, a role slot.
 
 case:pouring_structure a pour:PouringPhaseStructure , aicor:FoundationModelOutput ;
-    core:decomposesTask aicor:Pouring ;
+    core:decomposesTask [ a aicor:Pouring ] ;
     ac:hasMaterialRegime ac:Liquid ;
     ac:hasTerminationReason ac:TargetQuantityAttained ;
     core:definesRole case:actor , case:effector , case:source , case:lip , case:target , case:substance ;
@@ -62,7 +62,7 @@ case:tilt a pour:TiltToFlowPhase ;
     core:terminatedBy case:flow_onset ;
     core:involvesRole case:effector , case:source , case:lip ;
     core:hasActiveParameter case:tilt_angle , case:onset_angle ;
-    core:realizesActionCategory aicor:Tilting ;
+    core:realizesActionCategory [ a aicor:Tilting ] ;
     core:controlledBy case:tilt_controller .
 
 case:tilt_controller a core:ActionPhaseController ;

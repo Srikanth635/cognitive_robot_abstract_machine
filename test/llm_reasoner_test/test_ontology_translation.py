@@ -79,6 +79,11 @@ class TranslationCase(StrEnum):
     A property without a range whose restriction names a microworld class as filler.
     """
 
+    CONCEPT_PROPERTY_WITH_LINKED_RANGE = "concept_property_with_linked_range.ttl"
+    """
+    A property whose values are concepts, ranging over a class of CRAM-AICOR.
+    """
+
     @property
     def path(self) -> Path:
         """
@@ -365,6 +370,21 @@ class TestProperties:
         reader = reader_with(TranslationCase.ENUMERATION_FROM_A_LATER_MODULE)
         with pytest.raises(FieldTypeOutOfReach):
             reader.module_declaration(PredictiveManipulationOntologyFile.CORE)
+
+    def test_a_concept_field_records_the_linked_class_its_property_ranges_over(self):
+        case = TranslationCase.CONCEPT_PROPERTY_WITH_LINKED_RANGE
+        prop, linked_range = next(
+            iter(Graph().parse(case.path, format="turtle").subject_objects(RDFS.range))
+        )
+        declaration = reader_with(case).module_declaration(
+            PredictiveManipulationOntologyFile.CORE
+        )
+        assert {
+            declared.linked_range_iri
+            for cls in declaration.classes
+            for declared in cls.fields
+            if declared.property_iri == str(prop)
+        } == {str(linked_range)}
 
 
 # %% krrood descriptors

@@ -197,6 +197,11 @@ class GenerationCase(StrEnum):
     hypothesis itself, and a misspelt CRAM-AICOR term.
     """
 
+    LINKED_PROPERTY_AS_CONCEPT = "linked_property_as_concept.json"
+    """
+    A structure decomposing a property of CRAM-AICOR rather than a class.
+    """
+
     LIFT_AND_POUR = "lift_and_pour.json"
     """
     A pouring structure that loads, lifts and tilts a carton, with the forces at lift-
@@ -520,12 +525,6 @@ class TestFragmentDecoder:
         assert side.has_category == ConceptReference(
             iri=HYPOTHESIS_CONCEPT_NAMESPACE + "SideGraspAtMidHeight"
         )
-
-    def test_linked_concepts_are_not_checked_without_the_ontologies(self):
-        decoded = structure_decoder().decode(
-            GenerationCase.CONCEPTS_LINKED_AND_LOCAL.text
-        )
-        assert decoded.problems == []
 
     def test_reference_of_wrong_type_names_the_accepted_types(self):
         decoder = structure_decoder()

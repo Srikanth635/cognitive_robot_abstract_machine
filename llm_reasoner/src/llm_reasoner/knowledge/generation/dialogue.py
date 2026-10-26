@@ -127,10 +127,12 @@ class GenerationDialogue:
     How many times a rejected answer is returned to the model for correction.
     """
 
-    linked_terms: Optional[LinkedOntologyTerms] = None
+    linked_terms: LinkedOntologyTerms = field(
+        default_factory=LinkedOntologyTerms.pinned
+    )
     """
-    The terms CRAM-AICOR and DUL declare, which concepts named in their namespaces must
-    be among; without them such concepts are not checked.
+    The classes CRAM-AICOR and DUL declare, which concepts named in their namespaces
+    must be among.
     """
 
     observer: EventSink = field(default_factory=NullSink)

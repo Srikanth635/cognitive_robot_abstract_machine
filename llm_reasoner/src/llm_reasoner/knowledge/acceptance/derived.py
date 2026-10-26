@@ -14,6 +14,7 @@ from enum import StrEnum
 from operator import attrgetter
 
 from krrood.class_diagrams.class_diagram import WrappedClass
+from krrood.class_diagrams.wrapped_field import WrappedField
 from typing_extensions import Any, Sequence
 
 from llm_reasoner.knowledge.acceptance.restrictions import ClosedWorldMembership
@@ -22,6 +23,7 @@ from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
     ComplementOf,
+    ConceptReference,
     DescriptionEntity,
     EnumeratedClass,
     IntersectionOf,
@@ -234,26 +236,66 @@ class RangesHold(AcceptanceRule):
         return isinstance(value, allowed)
 
     def violations(self, fragments: Sequence[DescriptionEntity]) -> list[Violation]:
-        vocabulary = Vocabulary()
-        violations: list[Violation] = []
-        for fragment in fragments:
-            for wrapped in WrappedClass(type(fragment)).fields:
-                if PropertyTerm.of_field(type(fragment), wrapped.field.name) is None:
-                    continue
-                value = attrgetter(wrapped.field.name)(fragment)
-                values = value if isinstance(value, list) else [value]
-                allowed = vocabulary.value_type_of(
-                    type(fragment), wrapped.field.name, wrapped.type_endpoint
-                )
-                violations.extend(
-                    RangeViolation(
-                        rule=self.name,
-                        fragment=fragment,
-                        reason=f"{wrapped.field.name} holds a {type(held).__name__}, "
-                        f"not a {allowed.__name__}",
-                        field_name=wrapped.field.name,
-                    )
-                    for held in values
-                    if held is not None and not self.allows(allowed, held)
-                )
-        return violations
+        membership = ClosedWorldMembership()
+        return [
+            violation
+            for fragment in fragments
+            for wrapped in WrappedClass(type(fragment)).fields
+            for violation in self.field_violations(fragment, wrapped, membership)
+        ]
+
+    def field_violations(
+        self,
+        fragment: DescriptionEntity,
+        wrapped: WrappedField,
+        membership: ClosedWorldMembership,
+    ) -> list[RangeViolation]:
+        """
+        :return: The values of one field of a fragment that are not of the type its
+            field allows, or are concepts outside the class its property ranges over.
+        """
+        name = wrapped.field.name
+        term = PropertyTerm.of_field(type(fragment), name)
+        if term is None:
+            return []
+        value = attrgetter(name)(fragment)
+        allowed = membership.vocabulary.value_type_of(
+            type(fragment), name, wrapped.type_endpoint
+        )
+        return [
+            RangeViolation(
+                rule=self.name, fragment=fragment, reason=reason, field_name=name
+            )
+            for held in (value if isinstance(value, list) else [value])
+            if held is not None
+            for reason in [self.out_of_range(name, held, allowed, term, membership)]
+            if reason is not None
+        ]
+
+    def out_of_range(
+        self,
+        name: str,
+        held: Any,
+        allowed: type,
+        term: PropertyTerm,
+        membership: ClosedWorldMembership,
+    ) -> str | None:
+        """
+        :param name: The name of the field holding the value.
+        :param allowed: The type the field allows.
+        :return: Why a value lies outside its field's range: it is not of the type the
+            field allows, or is a concept outside the class its property ranges over;
+            ``None`` when it lies within.
+        """
+        if not self.allows(allowed, held):
+            return f"{name} holds a {type(held).__name__}, not a {allowed.__name__}"
+        if (
+            isinstance(held, ConceptReference)
+            and term.linked_range
+            and not membership.is_subsumed(held, term.linked_range, term)
+        ):
+            return (
+                f"{name} holds an instance of {local_name(held.iri)}, not of "
+                f"{local_name(term.linked_range)}"
+            )
+        return None

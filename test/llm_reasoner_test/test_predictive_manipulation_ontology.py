@@ -17,7 +17,7 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
-from rdflib import OWL, RDF, RDFS, XSD, Graph, Namespace, URIRef
+from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, Namespace, URIRef
 from typing_extensions import Any, Callable
 
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyFile
@@ -328,23 +328,11 @@ def referenced_terms(graph: Graph) -> set[URIRef]:
     }
 
 
-def reason(
-    owlready2: ModuleType,
-    cram_aicor_path: Path,
-    dul_path: Path,
-    scratch: Path,
-    *cases: ReasoningCase,
-) -> Any:
+def merged_with(cram_aicor_path: Path, dul_path: Path, *cases: ReasoningCase) -> Graph:
     """
-    Run HermiT over CRAM-AICOR, DUL, the action core, every predictive manipulation
-    module and the given cases.
-
-    The files are merged into one graph without their import statements, so the reasoner
-    never fetches an ontology from the web.
-
-    :return: The reasoned ``owlready2`` world.
-    :raises owlready2.OwlReadyInconsistentOntologyError: when the merged ontology is
-        inconsistent.
+    Merge CRAM-AICOR, DUL, the action core, every predictive manipulation module and the
+    given cases into one graph without their import statements, so the reasoner never
+    fetches an ontology from the web.
     """
     merged = Graph().parse(cram_aicor_path, format="turtle")
     merged.parse(dul_path, format="xml")
@@ -354,8 +342,27 @@ def reason(
     ]:
         merged.parse(path, format="turtle")
     merged.remove((None, OWL.imports, None))
+    return merged
+
+
+def reason(
+    owlready2: ModuleType,
+    cram_aicor_path: Path,
+    dul_path: Path,
+    scratch: Path,
+    *cases: ReasoningCase,
+) -> Any:
+    """
+    Run HermiT over the merge of the linked ontologies, the modules and the given cases.
+
+    :return: The reasoned ``owlready2`` world.
+    :raises owlready2.OwlReadyInconsistentOntologyError: when the merged ontology is
+        inconsistent.
+    """
     merged_path = scratch / "merged.nt"
-    merged.serialize(merged_path, format="nt", encoding="utf-8")
+    merged_with(cram_aicor_path, dul_path, *cases).serialize(
+        merged_path, format="nt", encoding="utf-8"
+    )
     world = owlready2.World()
     world.get_ontology(merged_path.as_uri()).load()
     owlready2.sync_reasoner_hermit(world, infer_property_values=False, debug=0)
@@ -552,12 +559,15 @@ class TestReasoning:
         "linked_class", [CRAM_AICOR.ForceDynamicSchema, DUL.Workflow]
     )
     def test_pouring_prototype_is_inferred_to_be(
-        self, reasoner, owlready2, linked_class
+        self, hermit, cram_aicor_path, dul_path, linked_class
     ):
-        world = reasoner(ReasoningCase.POURING_PROTOTYPE)
-        assert str(linked_class) in inferred_types(
-            owlready2, world, CASE.pouring_structure
-        )
+        merged = merged_with(cram_aicor_path, dul_path, ReasoningCase.POURING_PROTOTYPE)
+        assert hermit.is_consistent(merged)
+        outside = BNode()
+        merged.add((outside, RDF.type, OWL.Class))
+        merged.add((outside, OWL.complementOf, linked_class))
+        merged.add((CASE.pouring_structure, RDF.type, outside))
+        assert not hermit.is_consistent(merged)
 
     def test_event_classified_by_flow_onset_is_an_efflux_onset_event(
         self, reasoner, owlready2

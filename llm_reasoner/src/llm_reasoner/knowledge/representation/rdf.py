@@ -13,19 +13,27 @@ from dataclasses import dataclass, field, fields
 from enum import StrEnum
 from operator import attrgetter
 
-from rdflib import OWL, RDF, RDFS, XSD, Graph, Literal, URIRef
+from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, Literal, URIRef
 from rdflib.term import Node
 from typing_extensions import Any, Mapping, Optional, Sequence
 
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.knowledge.ontologies.terms import is_inferred
-from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
+from llm_reasoner.knowledge.ontologies import HYPOTHESIS_CONCEPT_NAMESPACE
 from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,
+    is_inferred,
 )
+from llm_reasoner.knowledge.ontologies.vocabulary import (
+    Vocabulary,
+    declared_value_types,
+)
+from llm_reasoner.knowledge.representation.exceptions import (
+    AmbiguousConceptType,
+    ConceptWrittenAsIndividual,
+)
+from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 
 HYPOTHESIS_NAMESPACE_ROOT = "http://www.ease-crc.org/ont/llm_reasoner/hypothesis/"
 """
@@ -165,16 +173,42 @@ class GraphWriter:
                     continue
                 value = attrgetter(declared.name)(fragment)
                 for held in value if isinstance(value, list) else [value]:
-                    node = self.node(held, names)
-                    if node is not None:
-                        graph.add((subject, URIRef(term.iri), node))
+                    for statement in self.statements(subject, term, held, names):
+                        graph.add(statement)
         return graph
 
     @staticmethod
-    def node(value: Any, names: dict[int, URIRef]) -> Optional[Node]:
+    def statements(
+        subject: URIRef, term: PropertyTerm, value: Any, names: dict[int, URIRef]
+    ) -> list[tuple[Node, Node, Node]]:
         """
-        :return: The RDF node standing for a value, or ``None`` for an absent value or a
+        :return: The statements giving the subject a value of the property: a concept
+            as an anonymous instance of its class, with a class of the hypothesis's own
+            declared a subclass of the property's range; none for an absent value or a
             fragment outside the hypothesis.
+        """
+        if isinstance(value, ConceptReference):
+            instance, concept = BNode(), URIRef(value.iri)
+            written = [
+                (subject, URIRef(term.iri), instance),
+                (instance, RDF.type, concept),
+            ]
+            if value.iri.startswith(HYPOTHESIS_CONCEPT_NAMESPACE):
+                written.append((concept, RDF.type, OWL.Class))
+                if term.linked_range:
+                    written.append(
+                        (concept, RDFS.subClassOf, URIRef(term.linked_range))
+                    )
+            return written
+        node = GraphWriter.node(value, names, term.datatype)
+        return [] if node is None else [(subject, URIRef(term.iri), node)]
+
+    @staticmethod
+    def node(value: Any, names: dict[int, URIRef], datatype: str) -> Node | None:
+        """
+        :param datatype: The IRI of the datatype the property ranges over, if any.
+        :return: The RDF node standing for a value other than a concept, or ``None`` for
+            an absent value or a fragment outside the hypothesis.
         """
         if value is None:
             return None
@@ -182,8 +216,8 @@ class GraphWriter:
             return names.get(id(value))
         if isinstance(value, StrEnum):
             return URIRef(value.value)
-        if isinstance(value, ConceptReference):
-            return URIRef(value.iri)
+        if datatype and datatype != str(XSD.string):
+            return Literal(value, datatype=URIRef(datatype))
         if isinstance(value, bool):
             return Literal(value)
         if isinstance(value, (int, float)):
@@ -349,6 +383,7 @@ class GraphReader:
             for term in [PropertyTerm.of_field(type(instance), declared.name)]
             if term is not None
         }
+        value_types = declared_value_types(type(instance))
         values: dict[str, list[Any]] = {}
         unread = []
         for predicate, value in graph.predicate_objects(subject):
@@ -362,7 +397,12 @@ class GraphReader:
                     Statement(subject=subject, predicate=predicate, object=value)
                 )
                 continue
-            values.setdefault(str(predicate), []).append(self.value(value, instances))
+            name, _ = fields_by_property[str(predicate)]
+            values.setdefault(str(predicate), []).append(
+                self.concept(graph, subject, predicate, value)
+                if value_types[name] is ConceptReference
+                else self.value(value, instances)
+            )
         for property_iri, read_values in values.items():
             name, functional = fields_by_property[property_iri]
             read_values = [
@@ -376,10 +416,31 @@ class GraphReader:
             setattr(instance, name, read_values[0] if functional else read_values)
         return unread
 
+    @staticmethod
+    def concept(
+        graph: Graph, subject: Node, predicate: Node, node: Node
+    ) -> ConceptReference:
+        """
+        :return: The concept an anonymous instance of a class stands for.
+        :raises ConceptWrittenAsIndividual: When the value is the IRI of a term.
+        :raises AmbiguousConceptType: When the instance is of several classes or of
+            none.
+        """
+        if not isinstance(node, BNode):
+            raise ConceptWrittenAsIndividual(
+                individual=str(subject), property_iri=str(predicate), term=str(node)
+            )
+        classes = sorted(str(named) for named in graph.objects(node, RDF.type))
+        if len(classes) != 1:
+            raise AmbiguousConceptType(
+                individual=str(subject), property_iri=str(predicate), classes=classes
+            )
+        return ConceptReference(iri=classes[0])
+
     def value(self, node: Node, instances: dict[Node, DescriptionEntity]) -> Any:
         """
         :return: The Python value an RDF node stands for: a fragment, an enumeration
-            member, a concept reference or a literal.
+            member or a literal, and a concept reference for any other IRI.
         """
         if node in instances:
             return instances[node]

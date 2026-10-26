@@ -108,10 +108,12 @@ class FragmentDecoder:
     values classes entail.
     """
 
-    linked_terms: Optional[LinkedOntologyTerms] = None
+    linked_terms: LinkedOntologyTerms = field(
+        default_factory=LinkedOntologyTerms.pinned
+    )
     """
-    The terms CRAM-AICOR and DUL declare, which a concept named in their namespaces
-    must be among; without them such concepts are not checked.
+    The classes CRAM-AICOR and DUL declare, which a concept named in their namespaces
+    must be among.
     """
 
     given: GivenFragments = field(default_factory=GivenFragments)
@@ -458,8 +460,8 @@ class FragmentDecoder:
     def concept(self, written: Any) -> Any:
         """
         :return: The concept reference a prefixed name or IRI stands for, or the
-            problem; a concept in the namespace of CRAM-AICOR or DUL must be one they
-            declare.
+            problem; a concept in the namespace of CRAM-AICOR or DUL must be a class
+            they declare.
         """
         if isinstance(written, str) and written.startswith(("http://", "https://")):
             iri = written
@@ -473,16 +475,12 @@ class FragmentDecoder:
                     "IRI"
                 )
             iri = CONCEPT_PREFIXES[prefix] + local
-        if (
-            self.linked_terms is not None
-            and self.linked_terms.concerns(iri)
-            and not self.linked_terms.declares(iri)
-        ):
+        if self.linked_terms.concerns(iri) and not self.linked_terms.declares(iri):
             closest = ", ".join(
                 prefixed_name(term) for term in self.linked_terms.closest(iri)
             )
             return Problem(
-                f"{written!r} is not a term CRAM-AICOR or DUL declares"
+                f"{written!r} is not a class CRAM-AICOR or DUL declares"
                 + (f"; the closest they declare: {closest}" if closest else "")
                 + "; write hypothesis:<Name> for a concept they lack"
             )

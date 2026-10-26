@@ -19,9 +19,9 @@
     ns1:fluidSurfaceTension 7.4e-03 ;
     ns1:fluidViscosity 1.7e-06 ;
     ns1:hasSettledFillRange <http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_57596763e889e56bf0be5567e36a54344e6de05bf69190cd71264e519da5144c_liquid_fill-0.496_azimuth-0.0_PhysicsSimulationSetup/fragment_4> ;
-    ns1:onsetParticleCount 1e+01 ;
+    ns1:onsetParticleCount "10"^^xsd:positiveInteger ;
     ns1:particleSpacing 2e-03 ;
-    ns1:runCount 3e+00 ;
+    ns1:runCount "3"^^xsd:positiveInteger ;
     ns1:simulationEngine "Isaac Sim" ;
     ns1:simulationEngineVersion "6.0.0.1" ;
     ns1:tiltRate 5e+00 ;
