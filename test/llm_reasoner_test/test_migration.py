@@ -30,6 +30,7 @@ from llm_reasoner.knowledge.storage.migration import (
     IriRename,
     LiteralDatatype,
     Migration,
+    MigrationFile,
     ModuleVersionChange,
     PartOfFill,
     RoleListSplit,
@@ -442,6 +443,64 @@ class TestStoreMigration:
             ],
         ).run()
         assert report.migrated == [SAMPLE_RECORD]
+
+    def test_a_record_left_stale_takes_the_migrations_it_missed(self, store):
+        hypothesis_file = store / SAMPLE_RECORD / StoredFile.HYPOTHESIS
+        concepts_as_individuals(
+            Graph().parse(hypothesis_file, format="turtle")
+        ).serialize(hypothesis_file, format="turtle")
+        old = sample_record(store).module_versions["pouring.ttl"]
+        missed = Migration(
+            name="concepts",
+            concept_values=tuple(
+                rule
+                for migration in shipped_migrations()
+                for rule in migration.concept_values
+            ),
+            module_versions=(pouring_version_moved(old),),
+        )
+        later = Migration(
+            name="later", module_versions=(pouring_version_moved(old + ".1"),)
+        )
+        (store / MigrationFile.APPLIED).write_text(json.dumps([missed.name]))
+        report = StoreMigration(directory=store, migrations=[missed, later]).run()
+        assert report.migrated == [SAMPLE_RECORD]
+        assert (
+            sample_record(store).module_versions["pouring.ttl"]
+            == later.module_versions[0].new
+        )
+
+    def test_a_migrated_record_takes_no_migration_it_was_migrated_through(self, store):
+        old = sample_record(store).module_versions["pouring.ttl"]
+        through = Migration(
+            name="through",
+            renames=(RENAMED_PROPERTY,),
+            module_versions=(
+                ModuleVersionChange(
+                    module=PredictiveManipulationOntologyFile.POURING.value,
+                    old=old + ".0",
+                    new=old,
+                ),
+            ),
+        )
+        (store / MigrationFile.APPLIED).write_text(json.dumps([through.name]))
+        later = Migration(name="later", module_versions=(pouring_version_moved(old),))
+        report = StoreMigration(directory=store, migrations=[through, later]).run()
+        assert report.migrated == [SAMPLE_RECORD]
+
+    def test_a_record_its_missed_migrations_leave_behind_is_stale_unread(self, store):
+        hypothesis_file = store / SAMPLE_RECORD / StoredFile.HYPOTHESIS
+        concepts_as_individuals(
+            Graph().parse(hypothesis_file, format="turtle")
+        ).serialize(hypothesis_file, format="turtle")
+        old = sample_record(store).module_versions["pouring.ttl"]
+        through = Migration(
+            name="through", module_versions=(pouring_version_moved(old + ".0"),)
+        )
+        (store / MigrationFile.APPLIED).write_text(json.dumps([through.name]))
+        later = Migration(name="later", module_versions=(pouring_version_moved(old),))
+        report = StoreMigration(directory=store, migrations=[through, later]).run()
+        assert report.stale == [SAMPLE_RECORD]
 
     def test_a_backup_holds_the_store_as_it_was(self, store):
         old = sample_record(store).module_versions["pouring.ttl"]
