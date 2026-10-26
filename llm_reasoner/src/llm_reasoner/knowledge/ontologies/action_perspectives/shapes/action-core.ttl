@@ -33,7 +33,7 @@
 # %% conditions
 
 :ConditionNotInvolvingItsOwnSlot a sh:NodeShape ;
-    sh:targetClass ac:SlotCondition ;
+    sh:targetClass ac:SlotConditionType ;
     rdfs:comment "A condition never involves the slot it is on: condition_involves_slot names the other slots whose fillers the condition relates the first one to."@en ;
     sh:sparql [
         sh:message "condition_involves_slot names the slot the condition is on" ;

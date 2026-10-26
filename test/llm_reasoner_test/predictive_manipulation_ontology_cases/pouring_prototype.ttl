@@ -1,3 +1,4 @@
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix pf:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#> .
 @prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
 @prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
@@ -45,9 +46,9 @@ case:substance a pour:PouredSubstance .
 
 # %% conditions and subgoals
 
-case:flowing a pour:SubstanceFlowing ; core:conditionOnRole case:substance , case:lip .
-case:accumulated a pour:SubstanceAccumulatedInTarget ; core:conditionOnRole case:substance , case:target .
-case:upright_state a pour:SourceUpright ; core:conditionOnRole case:source .
+case:flowing a pour:SubstanceFlowing ; ac:conditionOnSlot case:substance ; ac:conditionInvolvesSlot case:lip .
+case:accumulated a pour:SubstanceAccumulatedInTarget ; ac:conditionOnSlot case:substance ; ac:conditionInvolvesSlot case:target .
+case:upright_state a pour:SourceUpright ; ac:conditionOnSlot case:source .
 
 case:reach_flow a core:Subgoal ; core:targetsCondition case:flowing ; core:attainmentSignalledBy case:flow_onset .
 case:reach_volume a core:Subgoal ; core:targetsCondition case:accumulated ; core:attainmentSignalledBy case:volume_reached .

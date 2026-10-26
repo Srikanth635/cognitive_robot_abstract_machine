@@ -9,5 +9,6 @@
   "0010-condition-timing",
   "0011-polarity",
   "0012-slot-roles",
-  "0013-action-failure"
+  "0013-action-failure",
+  "0014-slot-conditions"
 ]

@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.14.0> ;
-    owl:versionInfo "0.14.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.15.0> ;
+    owl:versionInfo "0.15.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -196,12 +196,17 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 
 # %% conditions on slots
 
-:SlotCondition a owl:Class ;
+:SlotConditionType a owl:Class ;
     rdfs:subClassOf aicor:dul_Description , dul:Description ,
-        [ a owl:Restriction ; owl:onProperty :conditionOnSlot ; owl:someValuesFrom :FrameSlot ] ,
+        [ a owl:Restriction ; owl:onProperty :conditionOnSlot ; owl:someValuesFrom :FrameSlot ] ;
+    rdfs:label "slot condition type"@en ;
+    rdfs:comment "A kind of condition a world can check about the filler of a slot, possibly in relation to the fillers of other slots, such as having a part, affording something or being in a state, rather than membership of a class. Whether it holds, or must hold, is said by what states or uses it."@en .
+
+:SlotCondition a owl:Class ;
+    rdfs:subClassOf :SlotConditionType ,
         [ a owl:Restriction ; owl:onProperty :hasPolarity ; owl:someValuesFrom :ConditionPolarity ] ;
     rdfs:label "slot condition"@en ;
-    rdfs:comment "A condition a world can check about the filler of a slot, possibly in relation to the filler of another slot, such as having a part, affording something or being in a state, rather than membership of a class. Whether it is required or observed is said by the property relating it to what uses it."@en .
+    rdfs:comment "A slot condition type stated as holding or not holding, such as the source not being empty. Whether it is required or observed is said by the property relating it to what uses it."@en .
 
 :StateCondition a owl:Class ;
     rdfs:subClassOf :SlotCondition ,
@@ -211,14 +216,14 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 
 :conditionOnSlot a owl:ObjectProperty , owl:FunctionalProperty ;
     rdfs:subPropertyOf dul:usesConcept ;
-    rdfs:domain :SlotCondition ;
+    rdfs:domain :SlotConditionType ;
     rdfs:range :FrameSlot ;
     rdfs:label "condition on slot"@en ;
     rdfs:comment "The slot whose filler the condition is about."@en .
 
 :conditionInvolvesSlot a owl:ObjectProperty ;
     rdfs:subPropertyOf dul:usesConcept ;
-    rdfs:domain :SlotCondition ;
+    rdfs:domain :SlotConditionType ;
     rdfs:range :FrameSlot ;
     rdfs:label "condition involves slot"@en ;
     rdfs:comment "Another slot whose filler the condition relates the first filler to, such as the agent in the condition that the source is held, or the opening in the condition that the lip is over it."@en .

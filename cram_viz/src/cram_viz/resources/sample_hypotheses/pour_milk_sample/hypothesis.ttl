@@ -860,8 +860,8 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter> a ns3:ObjectSupportContact,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#cessation_window> a ns1:TemporalWindow,
         owl:NamedIndividual ;
@@ -1523,27 +1523,27 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_above_counter> a ns1:PhaseConditionType,
         owl:NamedIndividual ;
     rdfs:label "carton held above its put-down spot" ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_at_clearance> a ns1:PhaseConditionType,
         owl:NamedIndividual ;
     rdfs:label "carton raised to a safe height" ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_intact> a ns3:ObjectIntact,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_near_bowl> a ns1:PhaseConditionType,
         owl:NamedIndividual ;
     rdfs:label "carton held just above the bowl" ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_upright> a ns6:SourceUpright,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_goal> a ns1:Subgoal,
         owl:NamedIndividual ;
@@ -1631,13 +1631,13 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_clear> a ns1:PhaseConditionType,
         owl:NamedIndividual ;
     rdfs:label "hand withdrawn clear of the carton" ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_positioned> a ns3:EffectorPositioned,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_clearance> a ns3:LiftClearanceSetpoint,
         owl:NamedIndividual ;
@@ -1918,7 +1918,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_open> a ns1:PhaseConditionType,
         owl:NamedIndividual ;
     rdfs:label "hand open, no longer touching the carton" ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#inverse_model> a ns1:InverseModel,
         owl:NamedIndividual .
@@ -1932,18 +1932,18 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_flowing> a ns6:SubstanceFlowing,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_bowl> a ns6:SubstanceAccumulatedInTarget,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_carton> a ns6:SubstanceContainedInSource,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#on_counter_goal> a ns1:Subgoal,
         owl:NamedIndividual ;
@@ -1972,8 +1972,8 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl> a ns6:LipOverReceptacle,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#stop_goal> a ns1:Subgoal,
         owl:NamedIndividual ;
@@ -2247,8 +2247,8 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_on_counter_again> a ns3:ObjectSupportContact,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> a ns3:InitialSupport,
         owl:NamedIndividual ;
@@ -2261,8 +2261,8 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_on_carton> a ns3:EffectorObjectContact,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force> a ns3:LoadForceSetpoint,
         owl:NamedIndividual ;
@@ -2288,8 +2288,8 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_clear_of_counter> a ns3:ObjectClearOfSupport,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_start> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached> a ns3:LiftClearanceReached,
         owl:NamedIndividual ;
@@ -2299,8 +2299,8 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> a ns3:GraspStability,
         owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+    ac:conditionInvolvesSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ac:conditionOnSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction> a ns1:SensoryEventPrediction,
         owl:NamedIndividual ;

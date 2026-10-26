@@ -693,13 +693,13 @@ class PatientSlot(ParticipantSlot):
 
 
 @dataclass(eq=False)
-class SlotCondition(DescriptionEntity):
+class SlotConditionType(DescriptionEntity):
     """
-    A condition a world can check about the filler of a slot, possibly in relation to the filler of another slot, such as having a part, affording something or being in a state, rather than membership of a class. Whether it is required or observed is said by the property relating it to what uses it.
+    A kind of condition a world can check about the filler of a slot, possibly in relation to the fillers of other slots, such as having a part, affording something or being in a state, rather than membership of a class. Whether it holds, or must hold, is said by what states or uses it.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
-        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotConditionType",
         linked_terms=(
             "http://aicor.knowledge/l2-ontology.owl#dul_Description",
             "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
@@ -712,13 +712,6 @@ class SlotCondition(DescriptionEntity):
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
                     iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPolarity",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ConditionPolarity"
                 ),
             ),
         ),
@@ -750,6 +743,33 @@ class SlotCondition(DescriptionEntity):
     )
     """
     The slot whose filler the condition is about.
+    """
+
+
+@dataclass(eq=False)
+class SlotCondition(SlotConditionType):
+    """
+    A slot condition type stated as holding or not holding, such as the source not being empty. Whether it is required or observed is said by the property relating it to what uses it.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SlotCondition",
+        linked_terms=(),
+        evidence_status="",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPolarity",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ConditionPolarity"
+                ),
+            ),
+        ),
+        definition=None,
+    )
+    """
+    The ontology class this class stands for.
     """
 
     has_polarity: Optional[ConditionPolarity] = field(
@@ -932,10 +952,12 @@ SlotQuantity.about_slot = AboutSlot(SlotQuantity, "about_slot")
 Consequence.affects_slot = AffectsSlot(Consequence, "affects_slot")
 ActionFrame.brings_about = BringsAbout(ActionFrame, "brings_about")
 Objective.concerns_slot = ConcernsSlot(Objective, "concerns_slot")
-SlotCondition.condition_involves_slot = ConditionInvolvesSlot(
-    SlotCondition, "condition_involves_slot"
+SlotConditionType.condition_involves_slot = ConditionInvolvesSlot(
+    SlotConditionType, "condition_involves_slot"
 )
-SlotCondition.condition_on_slot = ConditionOnSlot(SlotCondition, "condition_on_slot")
+SlotConditionType.condition_on_slot = ConditionOnSlot(
+    SlotConditionType, "condition_on_slot"
+)
 ActionFrame.defines_slot = DefinesSlot(ActionFrame, "defines_slot")
 PartSlot.is_part_of_slot = IsPartOfSlot(PartSlot, "is_part_of_slot")
 ActionFrame.leaves_open = LeavesOpen(ActionFrame, "leaves_open")

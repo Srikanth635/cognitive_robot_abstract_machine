@@ -21,6 +21,7 @@ from rdflib.term import Node
 from typing_extensions import Any, Mapping, Sequence
 
 from llm_reasoner.knowledge.acceptance.derived import RangesHold, RestrictionsHold
+from llm_reasoner.knowledge.acceptance.restrictions import ClosedWorldMembership
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite, Severity
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold
 from llm_reasoner.knowledge.ontologies import (
@@ -33,6 +34,8 @@ from llm_reasoner.knowledge.ontologies import (
 from llm_reasoner.knowledge.ontologies.linked import LinkedClassHierarchy
 from llm_reasoner.knowledge.ontologies.terms import (
     DescriptionEntity,
+    IntersectionOf,
+    PropertyRestriction,
     local_name,
     python_attribute_name,
 )
@@ -114,6 +117,18 @@ class MigrationKey(StrEnum):
     WHOLE = "whole"
     """
     The IRI of the class of the participant a part is part of.
+    """
+
+    ROLE_LIST_SPLITS = "role_list_splits"
+    """
+    The properties listing roles in no order, each with the properties the roles are
+    split into.
+    """
+
+    TARGETS = "targets"
+    """
+    The IRIs of the properties a list of roles is split into, the first naming the slot
+    an individual is on or about.
     """
 
 
@@ -417,6 +432,125 @@ class PartOfFill:
         return migrated
 
 
+@dataclass(frozen=True)
+class RoleListSplit:
+    """
+    The roles an individual lists through one property in no order, split into the
+    properties its class restricts to slots of given classes. The first target takes
+    exactly one role; a later functional target takes one where one fits; any other
+    takes every fitting role left. An individual whose roles cannot all be placed, or
+    fit a functional target several times, keeps its list.
+    """
+
+    property: str
+    """
+    The IRI of the property listing the roles.
+    """
+
+    targets: tuple[str, ...]
+    """
+    The IRIs of the properties the roles are split into, the first naming the slot the
+    individual is on or about.
+    """
+
+    membership: ClosedWorldMembership = field(
+        default_factory=ClosedWorldMembership, compare=False
+    )
+    """
+    Decides which roles a target's restrictions accept.
+    """
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoleListSplit:
+        """
+        :return: The rule a migration table states.
+        """
+        return cls(
+            property=data[MigrationKey.PROPERTY],
+            targets=tuple(data[MigrationKey.TARGETS]),
+        )
+
+    def placements(self, graph: Graph) -> dict[Node, dict[str, list[Node]]]:
+        """
+        :return: Each individual listing roles whose roles can be split, with the roles
+            each target takes.
+        """
+        read = GraphReader(vocabulary=self.membership.vocabulary).read(graph)
+        by_iri = read.by_iri()
+        placements: dict[Node, dict[str, list[Node]]] = {}
+        for subject in sorted(
+            set(graph.subjects(URIRef(self.property), None)), key=str
+        ):
+            listed = [
+                str(role) for role in graph.objects(subject, URIRef(self.property))
+            ]
+            if str(subject) not in by_iri or not all(role in by_iri for role in listed):
+                continue
+            placed = self.placement(
+                by_iri[str(subject)], [by_iri[role] for role in listed]
+            )
+            if placed is not None:
+                placements[subject] = {
+                    target: [URIRef(read.identifiers[id(role)]) for role in roles]
+                    for target, roles in placed.items()
+                }
+        return placements
+
+    def placement(
+        self, individual: DescriptionEntity, roles: list[DescriptionEntity]
+    ) -> dict[str, list[DescriptionEntity]] | None:
+        """
+        :return: The roles each target takes, or ``None`` when the roles cannot all be
+            placed or a functional target fits several.
+        """
+        remaining = list(roles)
+        placed: dict[str, list[DescriptionEntity]] = {}
+        for position, target in enumerate(self.targets):
+            fillers = [
+                restriction.filler
+                for owner in type(individual).__mro__
+                if "term" in vars(owner)
+                for restriction in owner.term.restrictions
+                if isinstance(restriction, PropertyRestriction)
+                and restriction.property_iri == target
+                and restriction.filler is not None
+            ]
+            if not fillers:
+                continue
+            fitting = self.membership.members(IntersectionOf(tuple(fillers)), remaining)
+            if self.membership.vocabulary.is_functional(individual, target):
+                if len(fitting) > 1 or (position == 0 and not fitting):
+                    return None
+            placed[target] = fitting
+            fitting_ids = {id(role) for role in fitting}
+            remaining = [role for role in remaining if id(role) not in fitting_ids]
+        return None if remaining else placed
+
+    def touches(self, graph: Graph) -> bool:
+        """
+        :return: Whether an individual's list of roles can be split.
+        """
+        return bool(self.placements(graph))
+
+    def graph(self, graph: Graph) -> Graph:
+        """
+        :return: The graph with every list of roles that can be split replaced by the
+            targets that take them.
+        """
+        placements = self.placements(graph)
+        migrated = Graph()
+        for prefix, namespace in graph.namespaces():
+            migrated.bind(prefix, namespace)
+        for subject, predicate, value in graph:
+            if subject not in placements or predicate != URIRef(self.property):
+                migrated.add((subject, predicate, value))
+        for subject, placed in placements.items():
+            for target, roles in placed.items():
+                for role in roles:
+                    migrated.add((subject, URIRef(target), role))
+        return migrated
+
+
 def python_path_of(iri: str) -> str:
     """
     :return: The module path and name of the Python class generated for a class IRI of
@@ -479,6 +613,11 @@ class Migration:
     The parts of participants linked to the participants they are part of.
     """
 
+    role_list_splits: tuple[RoleListSplit, ...] = ()
+    """
+    The lists of roles split into the slots they name.
+    """
+
     @classmethod
     def from_json(cls, name: str, data: Mapping[str, Any]) -> Migration:
         """
@@ -506,6 +645,10 @@ class Migration:
                 PartOfFill.from_json(rule)
                 for rule in data.get(MigrationKey.PART_OF_FILLS, [])
             ),
+            role_list_splits=tuple(
+                RoleListSplit.from_json(rule)
+                for rule in data.get(MigrationKey.ROLE_LIST_SPLITS, [])
+            ),
         )
 
     @property
@@ -517,8 +660,8 @@ class Migration:
 
     def touches(self, graph: Graph) -> bool:
         """
-        :return: Whether migrating changes the graph: it names a renamed IRI, or a rule
-            of its concepts or literals touches it.
+        :return: Whether migrating changes the graph: it names a renamed IRI, or one
+            of the migration's rules touches it.
         """
         renamed = self.renamed_nodes
         renamed_graph = self.renamed(graph)
@@ -528,6 +671,7 @@ class Migration:
                 *self.concept_values,
                 *self.literal_datatypes,
                 *self.part_of_fills,
+                *self.role_list_splits,
             )
         )
 
@@ -545,14 +689,15 @@ class Migration:
 
     def graph(self, graph: Graph) -> Graph:
         """
-        :return: The graph with every renamed IRI renamed, then its concepts and
-            literals rewritten by the migration's rules.
+        :return: The graph with every renamed IRI renamed, then rewritten by each of
+            the migration's rules.
         """
         migrated = self.renamed(graph)
         for rule in (
             *self.concept_values,
             *self.literal_datatypes,
             *self.part_of_fills,
+            *self.role_list_splits,
         ):
             migrated = rule.graph(migrated)
         return migrated

@@ -380,7 +380,10 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    no core hypothesis states them: the decoder now refuses only a type another module's given
    hypothesis states, such as a slot (`FragmentDecoder.given_types`). The Flanagan
    `ConditionRequirement` names a phase condition type rather than a slot and stays as it is.
-   Versions: action core 0.4.0, action frame 0.5.0, failures 0.4.0.
+   Versions: action core 0.4.0, action frame 0.5.0, failures 0.4.0. Since 2026-10-26 a phase
+   condition type is a kind of the core's `SlotConditionType`, on one slot and involving others,
+   which `SlotCondition` states with a polarity; the requirement on a phase condition keeps its
+   polarity.
 5. *One quantity about a slot, 2026-10-21.* The action core's `SlotQuantity` is a kind of
    quantity about a slot's filler, possibly measured from another slot's (`hasQuantityKind`,
    `aboutSlot`, `relativeToSlot`), carrying no value. `ParameterDimension` is the kind the

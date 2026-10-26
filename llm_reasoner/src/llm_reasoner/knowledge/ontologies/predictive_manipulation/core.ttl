@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.13.0> ;
-    owl:versionInfo "0.13.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.14.0> ;
+    owl:versionInfo "0.14.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -417,10 +417,9 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "attainment signalled by"@en ; rdfs:comment "The event whose registration is evidence that the subgoal is reached."@en .
 
 :PhaseConditionType a owl:Class ;
-    rdfs:subClassOf aicor:FluentType ,
-        [ a owl:Restriction ; owl:onProperty :conditionOnRole ; owl:someValuesFrom :ManipulationRole ] ;
+    rdfs:subClassOf aicor:FluentType , ac:SlotConditionType ;
     rdfs:label "phase condition type"@en ;
-    rdfs:comment "A type of world state relevant to a phase, about one or more participant roles."@en ;
+    rdfs:comment "A type of world state relevant to a phase, on the filler of one role and possibly involving the fillers of others. Whether it must hold is said by the requirement on it."@en ;
     :evidenceStatus :EngineeringExtension .
 
 :ContactCondition a owl:Class ;
@@ -430,8 +429,6 @@ Classes classify description-level individuals, the knowledge a language model g
     :evidenceStatus :EmpiricalFinding ;
     :representsClaim :FJ-003 .
 
-:conditionOnRole a owl:ObjectProperty ; rdfs:range :ManipulationRole ;
-    rdfs:label "condition on role"@en ; rdfs:comment "A role the condition is about. Without it the condition cannot be bound to the world."@en .
 :violationSignalledBy a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :ConditionRequirement ; rdfs:range :FailureEventType ;
     rdfs:label "violation signalled by"@en ; rdfs:comment "The failure event that registers the condition ceasing to hold."@en .
 
