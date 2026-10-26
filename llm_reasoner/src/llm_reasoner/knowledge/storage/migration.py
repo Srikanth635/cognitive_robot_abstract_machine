@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import shutil
+from graphlib import TopologicalSorter
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -30,7 +31,11 @@ from llm_reasoner.knowledge.ontologies import (
     PredictiveManipulationOntologyFile,
 )
 from llm_reasoner.knowledge.ontologies.linked import LinkedClassHierarchy
-from llm_reasoner.knowledge.ontologies.terms import local_name, python_attribute_name
+from llm_reasoner.knowledge.ontologies.terms import (
+    DescriptionEntity,
+    local_name,
+    python_attribute_name,
+)
 from llm_reasoner.knowledge.ontology_translation.reading import upper_snake_case
 from llm_reasoner.knowledge.representation.rdf import GraphReader
 from llm_reasoner.knowledge.storage.exceptions import UnknownTermFamily
@@ -678,7 +683,9 @@ class StoreMigration:
     def run(self) -> MigrationReport:
         """
         Migrate every record through the migrations not yet applied, in order, and
-        check each record once all of them are applied.
+        check each record once all of them are applied, together with the migrated
+        fragments of the records it builds on; a record building on a stale record is
+        stale too.
 
         :return: Which records were migrated and which were left stale.
         """
@@ -687,27 +694,60 @@ class StoreMigration:
             migration for migration in self.migrations if migration.name not in applied
         ]
         report = MigrationReport()
-        for location in sorted(self.directory.iterdir()):
-            if pending and (location / StoredFile.RECORD).exists():
-                self.migrate_record(pending, location, report)
+        read: dict[str, dict[str, DescriptionEntity]] = {}
+        for location in self.records_after_their_bases() if pending else []:
+            self.migrate_record(pending, location, report, read)
         applied.extend(migration.name for migration in pending)
         (self.directory / MigrationFile.APPLIED).write_text(
             json.dumps(applied, indent=2)
         )
         return report
 
+    def records_after_their_bases(self) -> list[Path]:
+        """
+        :return: The directory of every record of the store, each after the records it
+            builds on.
+        """
+        locations = {
+            location.name: location
+            for location in sorted(self.directory.iterdir())
+            if (location / StoredFile.RECORD).exists()
+        }
+        bases = {
+            name: [
+                base
+                for base in json.loads((location / StoredFile.RECORD).read_text()).get(
+                    RecordField.BUILDS_ON, []
+                )
+                if base in locations
+            ]
+            for name, location in locations.items()
+        }
+        return [locations[name] for name in TopologicalSorter(bases).static_order()]
+
     def migrate_record(
-        self, migrations: Sequence[Migration], location: Path, report: MigrationReport
+        self,
+        migrations: Sequence[Migration],
+        location: Path,
+        report: MigrationReport,
+        read: dict[str, dict[str, DescriptionEntity]],
     ) -> None:
         """
         Migrate one record through migrations, writing it only when the migrated
         hypothesis still meets its ontology, and its Turtle only when a migration
         changes it.
+
+        :param read: The migrated fragments of every record migrated so far, by the IRI
+            they are stored under, by record; the record's own are added.
         """
         record_file = location / StoredFile.RECORD
         hypothesis_file = location / StoredFile.HYPOTHESIS
         graph = Graph().parse(hypothesis_file, format="turtle")
         record = json.loads(record_file.read_text())
+        bases = record.get(RecordField.BUILDS_ON, [])
+        if any(base in report.stale for base in bases):
+            report.stale.append(location.name)
+            return
         changed = False
         for migration in migrations:
             changed = changed or migration.touches(graph)
@@ -716,11 +756,18 @@ class StoreMigration:
             record[RecordField.MODULE_VERSIONS] = migration.versions_of(
                 record[RecordField.MODULE_VERSIONS]
             )
+        hypothesis = GraphReader().read(
+            graph,
+            known={
+                iri: fragment
+                for base in bases
+                for iri, fragment in read.get(base, {}).items()
+            },
+        )
+        read[location.name] = hypothesis.by_iri()
         errors = [
             violation
-            for violation in self.acceptance.violations(
-                GraphReader().read(graph).fragments
-            )
+            for violation in self.acceptance.violations(hypothesis.fragments)
             if violation.severity is Severity.ERROR
         ]
         if errors:
