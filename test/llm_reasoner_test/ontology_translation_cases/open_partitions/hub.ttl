@@ -1,0 +1,54 @@
+@prefix :     <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/hub#> .
+@prefix ac:   <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# A hub declaring an open value partition, the direction of a correction, whose members the
+# modules importing it add to.
+
+<http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/hub> a owl:Ontology ;
+    rdfs:comment "Corrections and the directions they move a choice in."@en .
+
+# %% classes
+
+:Correction a owl:Class ;
+    rdfs:label "correction"@en ;
+    rdfs:comment "A change made to put an action right."@en .
+
+:hasDirection a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :Correction ;
+    rdfs:range :Direction ;
+    rdfs:label "has direction"@en ;
+    rdfs:comment "The direction the correction moves a choice in."@en .
+
+# %% value partitions
+
+:Direction a owl:Class ;
+    ac:isOpenValuePartition true ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :changesAlong ; owl:allValuesFrom :Axis ] ;
+    rdfs:label "direction"@en ;
+    rdfs:comment "The direction a correction moves a choice in."@en .
+:Increases a owl:NamedIndividual , :Direction ; :changesAlong :Magnitude ;
+    rdfs:label "increases"@en ;
+    rdfs:comment "The choice becomes larger."@en .
+:Decreases a owl:NamedIndividual , :Direction ; :changesAlong :Magnitude ;
+    rdfs:label "decreases"@en ;
+    rdfs:comment "The choice becomes smaller."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Increases :Decreases ) ] .
+
+:Axis a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Magnitude :Place ) ] ;
+    rdfs:label "axis"@en ;
+    rdfs:comment "What a direction changes."@en .
+:Magnitude a owl:NamedIndividual , :Axis ;
+    rdfs:label "magnitude"@en ;
+    rdfs:comment "How large the choice is."@en .
+:Place a owl:NamedIndividual , :Axis ;
+    rdfs:label "place"@en ;
+    rdfs:comment "Where the choice is."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Magnitude :Place ) ] .
+
+:changesAlong a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:range :Axis ;
+    rdfs:label "changes along"@en ;
+    rdfs:comment "What the direction changes."@en .

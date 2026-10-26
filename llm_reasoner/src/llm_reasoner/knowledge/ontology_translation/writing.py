@@ -235,6 +235,42 @@ class ModuleRendering:
             return "default=None"
         return "default_factory=list"
 
+    @staticmethod
+    def class_reference(cls: type) -> str:
+        """
+        :return: How the module refers to a class it imports through the Python module
+            defining it.
+        """
+        return f"{cls.__module__.rpartition('.')[2]}.{cls.__name__}"
+
+    def module_file_reference(self, module_file: OntologyModuleFile) -> str:
+        """
+        :return: How the module refers to an ontology module file.
+        """
+        return f"{self.class_reference(type(module_file))}.{module_file.name}"
+
+    def module_file_imports(self) -> list[str]:
+        """
+        :return: The statements importing the Python modules that define the module
+            files the module's open value partitions refer to, in name order; none for
+            a module without open value partitions.
+        """
+        if not any(partition.is_open for partition in self.module.value_partitions):
+            return []
+        defining = {
+            OntologyModuleFile.__module__,
+            *(
+                type(module_file).__module__
+                for module_file in self.module.declaring_modules
+            ),
+        }
+        return [
+            f"from {package} import {name}"
+            for package, _, name in sorted(
+                python_module.rpartition(".") for python_module in defining
+            )
+        ]
+
 
 # %% writer
 
@@ -292,6 +328,10 @@ class VocabularyWriter:
             super_descriptors=rendering.super_descriptors,
             annotation=rendering.annotation,
             default=rendering.default,
+            class_reference=rendering.class_reference,
+            module_file_reference=rendering.module_file_reference,
+            module_file_imports=rendering.module_file_imports,
+            module_file_class=OntologyModuleFile,
         )
 
     def source(self, module_file: OntologyModuleFile) -> str:

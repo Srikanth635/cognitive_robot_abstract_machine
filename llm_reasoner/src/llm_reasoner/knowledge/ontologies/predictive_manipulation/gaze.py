@@ -7,10 +7,10 @@ Generated from ``gaze.ttl`` by ``python -m llm_reasoner.knowledge.ontology_trans
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge import ontologies
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -21,6 +21,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     EnumeratedClass,
     IntersectionOf,
     NamedClass,
+    OpenValuePartition,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -30,7 +31,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
-class GazeMode(StrEnum):
+class GazeMode(OpenValuePartition):
     """
     Whether gaze predicts or follows the manipulation.
     """
@@ -47,8 +48,15 @@ class GazeMode(StrEnum):
     Gaze follows the hand or the moving object, as while a novel task is still being learned.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            GazeMode.PROACTIVE: ontologies.PredictiveManipulationOntologyFile.GAZE,
+            GazeMode.REACTIVE: ontologies.PredictiveManipulationOntologyFile.GAZE,
+        }[self]
 
-class LandmarkPurpose(StrEnum):
+
+class LandmarkPurpose(OpenValuePartition):
     """
     Why a location is fixated during manipulation.
     """
@@ -62,6 +70,13 @@ class LandmarkPurpose(StrEnum):
     """
     A location where contact must be avoided, such as an obstacle to circumnavigate.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            LandmarkPurpose.CONTACT_LANDMARK: ontologies.PredictiveManipulationOntologyFile.GAZE,
+            LandmarkPurpose.AVOIDANCE_LANDMARK: ontologies.PredictiveManipulationOntologyFile.GAZE,
+        }[self]
 
 
 # %% classes

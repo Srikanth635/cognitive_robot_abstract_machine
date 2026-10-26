@@ -7,10 +7,10 @@ Generated from ``image-schemas.ttl`` by ``python -m llm_reasoner.knowledge.ontol
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge import ontologies
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -21,6 +21,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     EnumeratedClass,
     IntersectionOf,
     NamedClass,
+    OpenValuePartition,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -30,7 +31,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
-class QuantityAspect(StrEnum):
+class QuantityAspect(OpenValuePartition):
     """
     The aspects of a slot's filler that a deciding quantity can measure.
     """
@@ -50,8 +51,16 @@ class QuantityAspect(StrEnum):
     Where the filler or a part of it is.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            QuantityAspect.CENTRE: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            QuantityAspect.EXTENT: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            QuantityAspect.LOCATION: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+        }[self]
 
-class RelationKind(StrEnum):
+
+class RelationKind(OpenValuePartition):
     """
     The kinds of relation a schema can require between two slots.
     """
@@ -91,8 +100,20 @@ class RelationKind(StrEnum):
     The subject holds up the reference.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            RelationKind.ABOVE: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            RelationKind.BELOW: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            RelationKind.VERTICALLY_OVER: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            RelationKind.WITHIN_INTERIOR: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            RelationKind.OUTSIDE_INTERIOR: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            RelationKind.IN_CONTACT_WITH: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            RelationKind.HOLDS_UP: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+        }[self]
 
-class RequirementPhase(StrEnum):
+
+class RequirementPhase(OpenValuePartition):
     """
     The phases of an action in which a requirement holds.
     """
@@ -112,8 +133,16 @@ class RequirementPhase(StrEnum):
     Holds during the whole action.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            RequirementPhase.BEFORE_ACTION: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            RequirementPhase.AFTER_ACTION: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            RequirementPhase.THROUGHOUT_ACTION: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+        }[self]
 
-class SchemaKind(StrEnum):
+
+class SchemaKind(OpenValuePartition):
     """
     The kinds of image schema an action's frame can instantiate.
     """
@@ -143,8 +172,18 @@ class SchemaKind(StrEnum):
     Touching without a gap.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            SchemaKind.SOURCE_PATH_GOAL: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaKind.CONTAINMENT: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaKind.VERTICALITY: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaKind.SUPPORT_PATTERN: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaKind.CONTACT_PATTERN: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+        }[self]
 
-class SchemaRoleKind(StrEnum):
+
+class SchemaRoleKind(OpenValuePartition):
     """
     The roles a slot can take within an image schema.
     """
@@ -208,6 +247,23 @@ class SchemaRoleKind(StrEnum):
     """
     A thing in contact with another.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            SchemaRoleKind.TRAJECTOR: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.LANDMARK: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.PATH_START: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.PATH_END: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.ENTRANCE: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.CONTAINING: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.CONTENT: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.HIGHER: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.LOWER: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.SUPPORTER: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.SUPPORTED: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+            SchemaRoleKind.TOUCHER: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
+        }[self]
 
 
 # %% classes

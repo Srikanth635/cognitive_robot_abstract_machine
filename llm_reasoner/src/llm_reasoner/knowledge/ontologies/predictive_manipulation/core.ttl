@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.6.1> ;
-    owl:versionInfo "0.6.1" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.7.0> ;
+    owl:versionInfo "0.7.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -608,7 +608,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :CouplingRegime a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Uncoupled :Transitional :Coupled ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "coupling regime"@en ;
     rdfs:comment "Whether the effector and the manipulandum form a single kinematic unit."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -622,7 +622,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :RegulationMode a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Feedforward :ContinuousFeedback :Hybrid ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "regulation mode"@en ;
     rdfs:comment "How a controller regulates its commands within a phase."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -636,7 +636,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :ConditionMode a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :AtEntry :Throughout :AtExit ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "condition mode"@en ;
     rdfs:comment "When, relative to a phase, a condition is demanded."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -651,7 +651,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :SensoryModality a owl:Class ;
     rdfs:subClassOf aicor:Modality , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Tactile :Proprioceptive :Visual :Auditory ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "sensory modality"@en ;
     rdfs:comment "The sensory channel carrying evidence of an event."@en ;
     :evidenceStatus :EmpiricalFinding ;
@@ -668,7 +668,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :TrajectoryTrend a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Increasing :Decreasing :Stable ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "trajectory trend"@en ;
     rdfs:comment "The direction of change expected across a signal trajectory."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -695,7 +695,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :PredictionErrorKind a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :AbsentEvent :UnexpectedEvent :EarlyEvent :LateEvent :MagnitudeMismatch :DirectionMismatch :SpatialMismatch ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "prediction error kind"@en ;
     rdfs:comment "The dimension along which an observation violates a prediction."@en ;
     :evidenceStatus :EmpiricalFinding ;
@@ -732,7 +732,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :RecoveryMode a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :ContinuePhase :AbortAndCorrect :RepeatPhase :Replan :Abort ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "recovery mode"@en ;
     rdfs:comment "How execution proceeds when a corrective response is released."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -761,7 +761,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :UpdateTimescale a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :SingleTrial :RepeatedTrials ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "update timescale"@en ;
     rdfs:comment "How many interactions an update of represented object properties needs."@en ;
     :evidenceStatus :EmpiricalFinding ;
@@ -786,7 +786,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :ForceKind a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Weight :Inertia :LoadForce :GripForce :Friction :SupportReaction :Containment :MaterialStrength ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "force kind"@en ;
     rdfs:comment "The physical kind of a force acting in a manipulation."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -812,7 +812,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :PredictionSource a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :ObjectSpecificMemory :CategorySizeWeightAssociation :VisualIdentityCue :VisualGeometricCue :LearnedArbitraryCue :RecentHapticExperience :TactileContactResponse ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "prediction source"@en ;
     rdfs:comment "Where an estimate used to parameterise a controller in advance comes from."@en ;
     :evidenceStatus :EmpiricalFinding ;
@@ -840,7 +840,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :PhysicalDimension a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Mass :MassFlowRate :Force :ForceRate :Torque :Length :Angle :AngularRate :Volume :VolumetricFlowRate :DynamicViscosity :Frequency :Time :Dimensionless ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "physical dimension"@en ;
     rdfs:comment "A dimensional space of physical quantities, which in DUL is a maximal region."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -862,7 +862,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :MeasurementUnit a owl:Class ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:someValuesFrom :PhysicalDimension ] ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Kilogram :Gram :KilogramPerSecond :Newton :NewtonPerSecond :NewtonMetre :Metre :Centimetre :Millimetre :Degree :DegreePerSecond :Litre :Millilitre :MillilitrePerSecond :Centipoise :Hertz :Second :Millisecond :Ratio ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "measurement unit"@en ;
     rdfs:comment "A unit measuring exactly one physical dimension. Neither CRAM-AICOR nor DUL defines units."@en ;
     :evidenceStatus :EngineeringExtension .

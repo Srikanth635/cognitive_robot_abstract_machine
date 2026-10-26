@@ -1,0 +1,12 @@
+@prefix hub:  <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/hub#> .
+@prefix side: <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/sideways-corrections#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# A direction the sideways module adds to the hub's open value partition, stated distinct
+# from the module's other direction but not from the hub's own.
+
+side:Upwards a owl:NamedIndividual , hub:Direction ; hub:changesAlong hub:Place ;
+    rdfs:label "upwards"@en ;
+    rdfs:comment "The choice moves up."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( side:Sideways side:Upwards ) ] .

@@ -19,6 +19,7 @@ from typing_extensions import Callable, List
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_ONTOLOGY_IRI,
     DUL_ONTOLOGY_IRI,
+    ActionCoreAnnotation,
     ActionPerspectiveFile,
 )
 from llm_reasoner.knowledge.vocabulary_proposal.catalogue import Prefix, is_prefixed
@@ -293,8 +294,10 @@ class ProposalWriter:
         self, graph: Graph, partition: ProposedValuePartition
     ) -> None:
         """
-        Write a value partition as the class of exactly its members, each an individual
-        of it and distinct from the others.
+        Write a value partition and its members, each an individual of it and distinct
+        from the others: an exhaustive partition as the class of exactly its members,
+        any other marked an open value partition, which other modules may add members
+        to.
         """
         term = self.iri(partition.name)
         members = [self.iri(member.name) for member in partition.members]
@@ -302,10 +305,19 @@ class ProposalWriter:
         self.write_named(graph, term, partition.name, partition.meaning)
         for parent in partition.parents:
             graph.add((term, RDFS.subClassOf, self.iri(parent)))
-        enumeration = BNode()
-        graph.add((enumeration, RDF.type, OWL.Class))
-        graph.add((enumeration, OWL.oneOf, Collection(graph, BNode(), members).uri))
-        graph.add((term, OWL.equivalentClass, enumeration))
+        if partition.exhaustive:
+            enumeration = BNode()
+            graph.add((enumeration, RDF.type, OWL.Class))
+            graph.add((enumeration, OWL.oneOf, Collection(graph, BNode(), members).uri))
+            graph.add((term, OWL.equivalentClass, enumeration))
+        else:
+            graph.add(
+                (
+                    term,
+                    URIRef(ActionCoreAnnotation.IS_OPEN_VALUE_PARTITION),
+                    Literal(True),
+                )
+            )
         for member, individual in zip(partition.members, members):
             graph.add((individual, RDF.type, OWL.NamedIndividual))
             graph.add((individual, RDF.type, term))

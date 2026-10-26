@@ -16,9 +16,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from krrood.patterns.field_metadata import FieldMetadata
-from typing_extensions import ClassVar, Optional, Union
+from typing_extensions import TYPE_CHECKING, ClassVar, Optional, Union
 
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
+
+if TYPE_CHECKING:
+    from llm_reasoner.knowledge.ontologies import OntologyModuleFile
 
 # %% naming
 
@@ -245,6 +248,20 @@ class PropertyTerm(FieldMetadata):
     fragments. The field's annotation names a superclass of it when the class is
     generated in a later module than the field.
     """
+
+
+class OpenValuePartition(StrEnum):
+    """
+    Base of every enumeration standing for an open value partition, a class whose
+    members any module may declare.
+    """
+
+    @property
+    def declaring_module(self) -> OntologyModuleFile:
+        """
+        The module stating that the member belongs to the partition.
+        """
+        raise NotImplementedError
 
 
 @dataclass(frozen=True)

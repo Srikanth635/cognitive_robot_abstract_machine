@@ -1,0 +1,16 @@
+@prefix :     <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/shapes/sideways-corrections#> .
+@prefix hub:  <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/hub#> .
+@prefix side: <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/sideways-corrections#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+# Closes the direction of a sideways correction to two of the members its module may use.
+
+<http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/shapes/sideways-corrections> a owl:Ontology ;
+    rdfs:comment "Closed-world rules of the sideways corrections."@en .
+
+:SidewaysCorrectionDirection a sh:NodeShape ;
+    sh:targetClass side:SidewaysCorrection ;
+    rdfs:comment "A sideways correction moves a choice sideways or makes it smaller."@en ;
+    sh:property [ sh:path hub:hasDirection ; sh:in ( hub:Decreases side:Sideways ) ] .

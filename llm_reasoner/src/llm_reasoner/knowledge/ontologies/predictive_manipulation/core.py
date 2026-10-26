@@ -15,6 +15,7 @@ from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge import ontologies
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -25,6 +26,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     EnumeratedClass,
     IntersectionOf,
     NamedClass,
+    OpenValuePartition,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -54,7 +56,7 @@ class ComparisonOutcome(StrEnum):
     """
 
 
-class ConditionMode(StrEnum):
+class ConditionMode(OpenValuePartition):
     """
     When, relative to a phase, a condition is demanded.
     """
@@ -77,6 +79,14 @@ class ConditionMode(StrEnum):
     """
     Is brought about by completing the phase.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            ConditionMode.AT_ENTRY: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ConditionMode.THROUGHOUT: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ConditionMode.AT_EXIT: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
 
 class CorrectionDirection(StrEnum):
@@ -110,7 +120,7 @@ class CorrectionDirection(StrEnum):
     """
 
 
-class CouplingRegime(StrEnum):
+class CouplingRegime(OpenValuePartition):
     """
     Whether the effector and the manipulandum form a single kinematic unit.
     """
@@ -131,6 +141,14 @@ class CouplingRegime(StrEnum):
     """
     The effector and the object move together as one kinematic unit.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            CouplingRegime.UNCOUPLED: ontologies.PredictiveManipulationOntologyFile.CORE,
+            CouplingRegime.TRANSITIONAL: ontologies.PredictiveManipulationOntologyFile.CORE,
+            CouplingRegime.COUPLED: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
 
 class EstimateUpdateDirection(StrEnum):
@@ -185,7 +203,7 @@ class EvidenceStatus(StrEnum):
     """
 
 
-class ForceKind(StrEnum):
+class ForceKind(OpenValuePartition):
     """
     The physical kind of a force acting in a manipulation.
     """
@@ -236,8 +254,21 @@ class ForceKind(StrEnum):
     The internal resistance of an object to deformation or rupture.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            ForceKind.WEIGHT: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ForceKind.INERTIA: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ForceKind.LOAD_FORCE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ForceKind.GRIP_FORCE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ForceKind.FRICTION: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ForceKind.SUPPORT_REACTION: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ForceKind.CONTAINMENT: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ForceKind.MATERIAL_STRENGTH: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
-class MeasurementUnit(StrEnum):
+
+class MeasurementUnit(OpenValuePartition):
     """
     A unit measuring exactly one physical dimension. Neither CRAM-AICOR nor DUL defines units.
     """
@@ -380,6 +411,30 @@ class MeasurementUnit(StrEnum):
             MeasurementUnit.RATIO: PhysicalDimension.DIMENSIONLESS,
         }[self]
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            MeasurementUnit.KILOGRAM: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.GRAM: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.KILOGRAM_PER_SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.NEWTON: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.NEWTON_PER_SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.NEWTON_METRE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.METRE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.CENTIMETRE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.MILLIMETRE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.DEGREE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.DEGREE_PER_SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.LITRE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.MILLILITRE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.MILLILITRE_PER_SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.CENTIPOISE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.HERTZ: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.MILLISECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
+            MeasurementUnit.RATIO: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
+
 
 class ParameterValueForm(StrEnum):
     """
@@ -397,7 +452,7 @@ class ParameterValueForm(StrEnum):
     """
 
 
-class PhysicalDimension(StrEnum):
+class PhysicalDimension(OpenValuePartition):
     """
     A dimensional space of physical quantities, which in DUL is a maximal region.
     """
@@ -482,8 +537,27 @@ class PhysicalDimension(StrEnum):
     A ratio or fraction without a physical unit.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            PhysicalDimension.MASS: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.MASS_FLOW_RATE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.FORCE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.FORCE_RATE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.TORQUE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.LENGTH: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.ANGLE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.ANGULAR_RATE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.VOLUME: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.VOLUMETRIC_FLOW_RATE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.DYNAMIC_VISCOSITY: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.FREQUENCY: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.TIME: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PhysicalDimension.DIMENSIONLESS: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
-class PredictionErrorKind(StrEnum):
+
+class PredictionErrorKind(OpenValuePartition):
     """
     The dimension along which an observation violates a prediction.
     """
@@ -523,8 +597,20 @@ class PredictionErrorKind(StrEnum):
     The observation involved a different location or participant.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            PredictionErrorKind.ABSENT_EVENT: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionErrorKind.UNEXPECTED_EVENT: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionErrorKind.EARLY_EVENT: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionErrorKind.LATE_EVENT: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionErrorKind.MAGNITUDE_MISMATCH: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionErrorKind.DIRECTION_MISMATCH: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionErrorKind.SPATIAL_MISMATCH: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
-class PredictionSource(StrEnum):
+
+class PredictionSource(OpenValuePartition):
     """
     Where an estimate used to parameterise a controller in advance comes from.
     """
@@ -564,8 +650,20 @@ class PredictionSource(StrEnum):
     Tactile signals at initial contact, which reveal friction and override visual shape predictions.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            PredictionSource.OBJECT_SPECIFIC_MEMORY: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionSource.CATEGORY_SIZE_WEIGHT_ASSOCIATION: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionSource.VISUAL_IDENTITY_CUE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionSource.VISUAL_GEOMETRIC_CUE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionSource.LEARNED_ARBITRARY_CUE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionSource.RECENT_HAPTIC_EXPERIENCE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            PredictionSource.TACTILE_CONTACT_RESPONSE: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
-class RecoveryMode(StrEnum):
+
+class RecoveryMode(OpenValuePartition):
     """
     How execution proceeds when a corrective response is released.
     """
@@ -599,8 +697,18 @@ class RecoveryMode(StrEnum):
     Terminate the manipulation safely.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            RecoveryMode.CONTINUE_PHASE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            RecoveryMode.ABORT_AND_CORRECT: ontologies.PredictiveManipulationOntologyFile.CORE,
+            RecoveryMode.REPEAT_PHASE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            RecoveryMode.REPLAN: ontologies.PredictiveManipulationOntologyFile.CORE,
+            RecoveryMode.ABORT: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
-class RegulationMode(StrEnum):
+
+class RegulationMode(OpenValuePartition):
     """
     How a controller regulates its commands within a phase.
     """
@@ -622,8 +730,16 @@ class RegulationMode(StrEnum):
     Feedforward predictions and continuous sensory correction cooperate.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            RegulationMode.FEEDFORWARD: ontologies.PredictiveManipulationOntologyFile.CORE,
+            RegulationMode.CONTINUOUS_FEEDBACK: ontologies.PredictiveManipulationOntologyFile.CORE,
+            RegulationMode.HYBRID: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
-class SensoryModality(StrEnum):
+
+class SensoryModality(OpenValuePartition):
     """
     The sensory channel carrying evidence of an event.
     """
@@ -654,8 +770,17 @@ class SensoryModality(StrEnum):
     Acoustic evidence of an event or of a continuously changing state.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            SensoryModality.TACTILE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            SensoryModality.PROPRIOCEPTIVE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            SensoryModality.VISUAL: ontologies.PredictiveManipulationOntologyFile.CORE,
+            SensoryModality.AUDITORY: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
-class TrajectoryTrend(StrEnum):
+
+class TrajectoryTrend(OpenValuePartition):
     """
     The direction of change expected across a signal trajectory.
     """
@@ -677,8 +802,16 @@ class TrajectoryTrend(StrEnum):
     The signal remains within a bounded steady range.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            TrajectoryTrend.INCREASING: ontologies.PredictiveManipulationOntologyFile.CORE,
+            TrajectoryTrend.DECREASING: ontologies.PredictiveManipulationOntologyFile.CORE,
+            TrajectoryTrend.STABLE: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
-class UpdateTimescale(StrEnum):
+
+class UpdateTimescale(OpenValuePartition):
     """
     How many interactions an update of represented object properties needs.
     """
@@ -692,6 +825,13 @@ class UpdateTimescale(StrEnum):
     """
     Several interactions are needed, as with misleading cues, unfamiliar objects or unusual dynamics.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            UpdateTimescale.SINGLE_TRIAL: ontologies.PredictiveManipulationOntologyFile.CORE,
+            UpdateTimescale.REPEATED_TRIALS: ontologies.PredictiveManipulationOntologyFile.CORE,
+        }[self]
 
 
 # %% classes

@@ -18,6 +18,10 @@ from typing_extensions import Any, Dict, Iterator, List, Optional, Tuple
 
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
 from llm_reasoner.knowledge.ontologies import ActionPerspectiveFile
+from llm_reasoner.knowledge.ontology_translation.exceptions import (
+    MembersNotStatedDistinct,
+    PartitionClosureConflict,
+)
 from llm_reasoner.knowledge.ontology_translation.reading import (
     ConflictingPythonNames,
     FieldTypeOutOfReach,
@@ -52,7 +56,9 @@ How a property is named: one word starting in lower case.
 GENERATOR_REFUSALS = (
     ConflictingPythonNames,
     FieldTypeOutOfReach,
+    MembersNotStatedDistinct,
     MissingPropertyRange,
+    PartitionClosureConflict,
     UnsupportedRestriction,
 )
 """

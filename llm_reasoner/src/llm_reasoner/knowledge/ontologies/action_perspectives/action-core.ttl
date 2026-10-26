@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.6.0> ;
-    owl:versionInfo "0.6.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.8.0> ;
+    owl:versionInfo "0.8.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -16,6 +16,12 @@
 A perspective, such as the action frame, the image schemas or predictive control, describes the action in terms of the core's slots and parameter dimensions and never in terms of another perspective. The resolver grounds a slot in an individual of the world through a CRAM-AICOR role binding, and maps the slots and parameter dimensions to the fields of an action designator.
 
 Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots are CRAM-AICOR role slots specialising its participant roles, an objective is a CRAM-AICOR telos, a consequence a CRAM-AICOR effect, and a parameter dimension a DUL parameter in CRAM-AICOR's action parameter space. Axioms are read under the open-world assumption."""@en .
+
+# %% annotations
+
+:isOpenValuePartition a owl:AnnotationProperty ;
+    rdfs:label "is open value partition"@en ;
+    rdfs:comment "States, when true, that a class is an open value partition: its members are the named individuals any module states belong to it, and a module adding members states them distinct from the members of the modules it imports. A class whose members are fixed by its definition lists them with owl:oneOf instead."@en .
 
 # %% frames
 
@@ -293,7 +299,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 
 :QuantityKind a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Amount :Rate :Position :Orientation :Distance :Duration :Selection ) ] ;
+    :isOpenValuePartition true ;
     rdfs:label "quantity kind"@en ;
     rdfs:comment "The kind of quantity a choice an action leaves open sets."@en .
 :Amount a owl:NamedIndividual , :QuantityKind ; rdfs:label "amount"@en ;
@@ -325,7 +331,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 
 :ChangeDirection a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Increases :Decreases ) ] ;
+    :isOpenValuePartition true ;
     rdfs:label "change direction"@en ;
     rdfs:comment "Whether something becomes larger or smaller, such as a quantity an action changes, a choice a correction moves or an estimate evidence revises. A direction that can also take values of its own lists these two among its members."@en .
 :Increases a owl:NamedIndividual , :ChangeDirection ; rdfs:label "increases"@en ;
@@ -336,7 +342,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 
 :MaterialRegime a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Liquid :Granular :Cohesive ) ] ;
+    :isOpenValuePartition true ;
     rdfs:label "material regime"@en ;
     rdfs:comment "The physical flow behaviour of a transferred substance."@en .
 :Liquid a owl:NamedIndividual , :MaterialRegime ; rdfs:label "liquid"@en ;
@@ -349,7 +355,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 
 :TransferTerminationReason a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :TargetQuantityAttained :SourceExhausted :InstructedStop :TransferFailure ) ] ;
+    :isOpenValuePartition true ;
     rdfs:label "transfer termination reason"@en ;
     rdfs:comment "The condition that intentionally or exceptionally ends a transfer."@en .
 :TargetQuantityAttained a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "target quantity attained"@en ;

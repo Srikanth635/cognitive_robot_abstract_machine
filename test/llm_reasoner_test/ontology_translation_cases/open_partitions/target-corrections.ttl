@@ -1,0 +1,24 @@
+@prefix :     <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/target-corrections#> .
+@prefix hub:  <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/hub#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# A module adding two directions to the hub's open value partition, stated distinct from each
+# other and from the hub's own in an order other than that of their names.
+
+<http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/target-corrections> a owl:Ontology ;
+    owl:imports <http://www.ease-crc.org/ont/llm_reasoner/test/open-partitions/hub> ;
+    rdfs:comment "Corrections that move a choice relative to a target."@en .
+
+:TargetCorrection a owl:Class ;
+    rdfs:subClassOf hub:Correction ;
+    rdfs:label "target correction"@en ;
+    rdfs:comment "A correction that moves a choice relative to a target."@en .
+
+:TowardsTarget a owl:NamedIndividual , hub:Direction ; hub:changesAlong hub:Place ;
+    rdfs:label "towards target"@en ;
+    rdfs:comment "The choice moves towards the target."@en .
+:AwayFromTarget a owl:NamedIndividual , hub:Direction ; hub:changesAlong hub:Place ;
+    rdfs:label "away from target"@en ;
+    rdfs:comment "The choice moves away from the target."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( hub:Increases hub:Decreases :TowardsTarget :AwayFromTarget ) ] .

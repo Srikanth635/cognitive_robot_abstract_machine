@@ -25,6 +25,7 @@ from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_ONTOLOGY_IRI,
     DUL_NAMESPACE,
     DUL_ONTOLOGY_IRI,
+    ActionCoreAnnotation,
     ActionPerspectiveFile,
 )
 from llm_reasoner.knowledge.vocabulary_proposal.catalogue import TermCatalogue, TermKind
@@ -469,6 +470,42 @@ class TestWriting:
         ]
         assert (FRAME_PERSPECTIVE.HasOpening, RDF.type, feature) in graph
         assert (FRAME_PERSPECTIVE.HasOpening, RDF.type, OWL.NamedIndividual) in graph
+
+    def test_an_exhaustive_value_partition_is_not_marked_open(self, answer):
+        answer["value_partitions"][0]["exhaustive"] = True
+        graph = written(answer)
+        marker = URIRef(ActionCoreAnnotation.IS_OPEN_VALUE_PARTITION)
+        assert graph.value(FRAME_PERSPECTIVE.FillerFeature, marker) is None
+
+    def test_a_value_partition_that_is_not_exhaustive_is_marked_open_without_one_of(
+        self, answer
+    ):
+        answer["value_partitions"][0]["exhaustive"] = False
+        graph = written(answer)
+        feature = FRAME_PERSPECTIVE.FillerFeature
+        marker = URIRef(ActionCoreAnnotation.IS_OPEN_VALUE_PARTITION)
+        assert list(graph.objects(feature, OWL.equivalentClass)) == []
+        assert graph.value(feature, marker) == Literal(True)
+
+    def test_the_members_of_an_open_value_partition_are_stated_distinct(self, answer):
+        answer["value_partitions"][0]["exhaustive"] = False
+        graph = written(answer)
+        members = [
+            FRAME_PERSPECTIVE[member["name"]]
+            for member in answer["value_partitions"][0]["members"]
+        ]
+        (distinct,) = graph.subjects(RDF.type, OWL.AllDifferent)
+        assert list(Collection(graph, graph.value(distinct, OWL.distinctMembers))) == (
+            members
+        )
+        assert [
+            (member, RDF.type, FRAME_PERSPECTIVE.FillerFeature) in graph
+            for member in members
+        ] == [True] * len(members)
+
+    def test_an_open_value_partition_can_be_written_as_python(self, catalogue, answer):
+        answer["value_partitions"][0]["exhaustive"] = False
+        assert problem_kinds(catalogue, answer) == []
 
     def test_a_cited_source_is_written_as_see_also(self, answer):
         graph = written(answer)

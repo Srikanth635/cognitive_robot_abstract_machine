@@ -7,10 +7,10 @@ Generated from ``prehension.ttl`` by ``python -m llm_reasoner.knowledge.ontology
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge import ontologies
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import object_dynamics
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
@@ -22,6 +22,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     EnumeratedClass,
     IntersectionOf,
     NamedClass,
+    OpenValuePartition,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -31,7 +32,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
-class LoadOrigin(StrEnum):
+class LoadOrigin(OpenValuePartition):
     """
     Whether a load on the grasp can be predicted from the actor's own motor commands.
     """
@@ -45,6 +46,13 @@ class LoadOrigin(StrEnum):
     """
     A load imposed from outside: grip follows it with a delay and a raised baseline.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            LoadOrigin.SELF_GENERATED_LOAD: ontologies.PredictiveManipulationOntologyFile.PREHENSION,
+            LoadOrigin.EXTERNALLY_GENERATED_LOAD: ontologies.PredictiveManipulationOntologyFile.PREHENSION,
+        }[self]
 
 
 # %% classes

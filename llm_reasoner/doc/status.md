@@ -788,6 +788,50 @@ commit on `feature/physics_backed_knowledge`:
   the shipped hypotheses is consistent and satisfiable, and that with CRAM-AICOR as it is
   every unsatisfiable class of ours follows from those axioms.
 
+### Open value partitions (2026-10-25)
+
+Step 4 of the ontology consolidation (code only; no list is opened yet, which is step 5):
+
+- A class marked `ac:isOpenValuePartition true` (declared in action-core 0.7.0) is an open
+  value partition: its members are the named individuals any registered module types with
+  it, ordered by module and then by the module's `owl:AllDifferent`. A closed partition
+  keeps `owl:oneOf`; a class marked both ways raises `PartitionClosureConflict`, and a
+  module whose one `owl:AllDifferent` does not cover its members and those of its imports
+  raises `MembersNotStatedDistinct` (`ontology_translation/exceptions.py`).
+- The enumeration is generated in the declaring module as an `OpenValuePartition`, whose
+  members name their `declaring_module`. `GenerationSchema` offers, and `FragmentDecoder`
+  accepts, only members declared in the root's usable modules, narrowed further by a
+  shape's `sh:in` on the field's property (`ListedMembers`).
+- A proposed value partition states `exhaustive`; only an exhaustive one is written with
+  `owl:oneOf`, any other with the open marker (rule `exhaustive`).
+- The regenerated vocabulary is unchanged. The cram_viz sample record moved to action-core
+  0.7.0 through the migration table `0004-open-value-partitions`, which moves the records
+  of a store made under 0.6.0 (`python -m llm_reasoner.knowledge.storage.migrate store`).
+
+### Open lists (2026-10-26)
+
+Step 5 of the ontology consolidation: 33 of the 40 value partitions are open value
+partitions now; their `owl:oneOf` is replaced by `ac:isOpenValuePartition true`.
+
+- Closed are the four exhaustive by definition (`ConditionPolarity`, `ParameterValueForm`,
+  `EvidenceStatus`, `ComparisonOutcome`) and, until step 9 merges them into the open
+  `ac:ChangeDirection`, the three directions listing the action core's `Increases` and
+  `Decreases` (`CorrectionDirection`, `EstimateUpdateDirection`,
+  `ParameterChangeDirection`): opening them would have the predictive manipulation core
+  describe action-core terms. `CouplingRegime` and `UpdateTimescale`, whose
+  exhaustiveness is unclear, are open.
+- A generation scope also admits a member that the module declaring its partition
+  declares: the predictive manipulation roots use the action core's `MaterialRegime` and
+  `TransferTerminationReason` without the action core being among their usable modules.
+- Every generation root (`PouringPhaseStructure`, `ActionPhaseStructure`, `PouringFrame`,
+  `FrameStereotype`, `SchemaStereotype`, `FailureStereotype`) is offered exactly the
+  members it was offered before. The generated enumerations keep their members; they
+  derive from `OpenValuePartition` and name each member's declaring module.
+- Closing a property per action with `sh:in` is left to step 9, where another module first
+  adds members.
+- The eight changed modules moved a minor version (`0005-open-lists`); the cram_viz sample
+  record was migrated through it.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

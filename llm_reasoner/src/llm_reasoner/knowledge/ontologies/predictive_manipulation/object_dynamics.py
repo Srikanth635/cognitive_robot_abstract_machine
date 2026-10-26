@@ -7,10 +7,10 @@ Generated from ``object-dynamics.ttl`` by ``python -m llm_reasoner.knowledge.ont
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge import ontologies
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -21,6 +21,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     EnumeratedClass,
     IntersectionOf,
     NamedClass,
+    OpenValuePartition,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -30,7 +31,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
-class CoordinateFrame(StrEnum):
+class CoordinateFrame(OpenValuePartition):
     """
     The reference frame in which represented dynamics are encoded.
     """
@@ -55,8 +56,17 @@ class CoordinateFrame(StrEnum):
     Coordinates organised relative to the current gaze.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            CoordinateFrame.OBJECT_CENTERED: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+            CoordinateFrame.ARM_CENTERED: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+            CoordinateFrame.HAND_CENTERED: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+            CoordinateFrame.GAZE_CENTERED: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+        }[self]
 
-class MemoryPersistence(StrEnum):
+
+class MemoryPersistence(OpenValuePartition):
     """
     How long a sensorimotor memory remains recruited.
     """
@@ -71,8 +81,15 @@ class MemoryPersistence(StrEnum):
     The memory remains available after the object is released.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            MemoryPersistence.WHILE_OBJECT_COUPLED: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+            MemoryPersistence.AFTER_RELEASE: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+        }[self]
 
-class PerturbationKind(StrEnum):
+
+class PerturbationKind(OpenValuePartition):
     """
     The manipulation applied when dynamics transfer is assessed.
     """
@@ -87,8 +104,15 @@ class PerturbationKind(StrEnum):
     The object, hand or arm orientation is changed.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            PerturbationKind.LOAD_PERTURBATION: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+            PerturbationKind.ROTATION_PERTURBATION: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+        }[self]
 
-class RepresentationPurpose(StrEnum):
+
+class RepresentationPurpose(OpenValuePartition):
     """
     The function for which represented content is recruited.
     """
@@ -103,8 +127,15 @@ class RepresentationPurpose(StrEnum):
     Content used for conscious property judgments.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            RepresentationPurpose.SENSORIMOTOR_CONTROL: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+            RepresentationPurpose.PERCEPTUAL_JUDGMENT: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+        }[self]
 
-class TransferOutcome(StrEnum):
+
+class TransferOutcome(OpenValuePartition):
     """
     Whether adaptation acquired in one context carries over to another.
     """
@@ -118,6 +149,13 @@ class TransferOutcome(StrEnum):
     """
     Adaptation acquired in the first context does not hold in the second.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            TransferOutcome.GENERALIZES: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+            TransferOutcome.DOES_NOT_GENERALIZE: ontologies.PredictiveManipulationOntologyFile.OBJECT_DYNAMICS,
+        }[self]
 
 
 # %% classes
