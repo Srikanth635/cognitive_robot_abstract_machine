@@ -10,8 +10,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.10.0> ;
-    owl:versionInfo "0.10.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.11.0> ;
+    owl:versionInfo "0.11.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> ;
     rdfs:label "Predictive manipulation: prehension"@en ;
     rdfs:comment """Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes."""@en .
@@ -242,20 +242,29 @@
 # %% parameters
 
 :ReachPoseSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:CategoricalParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:CategoricalParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Selection ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :GraspingEffector ] ,
+        [ a owl:Restriction ; owl:onProperty ac:relativeToSlot ; owl:allValuesFrom :GraspSite ] ;
     rdfs:label "reach pose setpoint"@en ;
     rdfs:comment "A categorical target for the pre-contact effector pose."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :GripForceSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:ForceParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:ForceParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Magnitude ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :GraspingEffector ] ;
     rdfs:label "grip force setpoint"@en ;
     rdfs:comment "The target of the force applied normal to the grasp surfaces, which creates the friction that holds the load."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
     core:representsClaim core:FJ-025 .
 
 :LoadForceSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:ForceParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:ForceParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Magnitude ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :GraspingEffector ] ;
     rdfs:label "load force setpoint"@en ;
     rdfs:comment "The target of the force applied tangentially to the grasp surfaces to move the manipulandum."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
@@ -263,6 +272,8 @@
 
 :LoadForceRateSetpoint a owl:Class ;
     rdfs:subClassOf core:ForceRateSetpoint ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :GraspingEffector ] ,
         [ a owl:Restriction ; owl:onProperty core:rateOf ; owl:someValuesFrom :LoadForceSetpoint ] ;
     rdfs:label "load force rate setpoint"@en ;
     rdfs:comment "The commanded rate of load-force increase during loading, scaled in advance to the predicted weight."@en ;
@@ -270,59 +281,85 @@
     core:representsClaim core:FJ-009 .
 
 :GripToLoadRatioSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:DimensionlessParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:DimensionlessParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Ratio ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :GraspingEffector ] ;
     rdfs:label "grip-to-load ratio setpoint"@en ;
     rdfs:comment "The commanded ratio of grip to load force, adapted to friction and surface shape."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
     core:representsClaim core:JF09-06 .
 
 :LiftClearanceSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:LengthParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:LengthParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Distance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:relativeToSlot ; owl:allValuesFrom :InitialSupport ] ;
     rdfs:label "lift clearance setpoint"@en ;
     rdfs:comment "The commanded clearance above the initial support."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :TransportPoseSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:CategoricalParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:CategoricalParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Selection ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:relativeToSlot ; owl:allValuesFrom ac:ParticipantSlot ] ;
     rdfs:label "transport pose setpoint"@en ;
     rdfs:comment "A categorical target for the transported manipulandum's pose."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :WithdrawalDistanceSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:LengthParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:LengthParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Distance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :GraspingEffector ] ,
+        [ a owl:Restriction ; owl:onProperty ac:relativeToSlot ; owl:allValuesFrom core:Manipulandum ] ;
     rdfs:label "withdrawal distance setpoint"@en ;
     rdfs:comment "The commanded effector withdrawal distance after release."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :SlipThreshold a owl:Class ;
-    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ;
+    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Magnitude ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :GraspingEffector ] ;
     rdfs:label "slip threshold"@en ;
     rdfs:comment "The minimum grip force that holds the predicted tangential load, given the friction of the grasp interface."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
     core:representsClaim core:FJ-025 .
 
 :CrushThreshold a owl:Class ;
-    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ;
+    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Magnitude ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :GraspingEffector ] ;
     rdfs:label "crush threshold"@en ;
     rdfs:comment "The grip force beyond which the manipulandum is damaged, relevant for fragile objects."@en ;
     core:evidenceStatus core:SupportedInterpretation ;
     core:representsClaim core:JF09-07 .
 
 :LiftoffThreshold a owl:Class ;
-    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ;
+    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Magnitude ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :GraspingEffector ] ;
     rdfs:label "lift-off threshold"@en ;
     rdfs:comment "The load force corresponding to the manipulandum's weight, a force and not a mass."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
     core:representsClaim core:FJ-010 .
 
 :TouchdownThreshold a owl:Class ;
-    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ;
+    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Magnitude ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :FinalSupport ] ;
     rdfs:label "touchdown threshold"@en ;
     rdfs:comment "The support-reaction force that registers touchdown."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :ExpectedMass a owl:Class ;
-    rdfs:subClassOf core:ObjectPropertyEstimate , core:MassParameter ;
+    rdfs:subClassOf core:ObjectPropertyEstimate , core:MassParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Amount ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ;
     rdfs:label "expected mass"@en ;
     rdfs:comment "The anticipated mass of the manipulandum, from which its weight force is predicted."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
@@ -330,6 +367,9 @@
 
 :ExpectedFrictionCoefficient a owl:Class ;
     rdfs:subClassOf core:ContactPropertyEstimate , core:DimensionlessParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:MaterialProperty ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom [ a owl:Class ; owl:unionOf ( core:Manipulandum :GraspSite ) ] ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :GraspingEffector ] ,
         [ a owl:Restriction ; owl:onProperty core:predictedFrom ; owl:allValuesFrom [ a owl:Class ; owl:oneOf ( core:RecentHapticExperience core:TactileContactResponse ) ] ] ;
     rdfs:label "expected friction coefficient"@en ;
     rdfs:comment "The anticipated friction of the grasp interface, predicted from haptic experience, not from vision."@en ;
@@ -337,14 +377,18 @@
     core:representsClaim core:FJ-012 , core:JF09-08 .
 
 :ExpectedCenterOfMassPosition a owl:Class ;
-    rdfs:subClassOf core:ObjectStateEstimate , core:LengthParameter ;
+    rdfs:subClassOf core:ObjectStateEstimate , core:LengthParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Position ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ;
     rdfs:label "expected centre of mass position"@en ;
     rdfs:comment "The anticipated centre of mass position in the object frame."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
     core:representsClaim core:FJ-009 .
 
 :ExpectedShape a owl:Class ;
-    rdfs:subClassOf core:ObjectPropertyEstimate , core:CategoricalParameter ;
+    rdfs:subClassOf core:ObjectPropertyEstimate , core:CategoricalParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Shape ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom core:Manipulandum ] ;
     rdfs:label "expected shape"@en ;
     rdfs:comment "The anticipated geometry of the grasp surfaces."@en ;
     core:evidenceStatus core:EmpiricalFinding ;

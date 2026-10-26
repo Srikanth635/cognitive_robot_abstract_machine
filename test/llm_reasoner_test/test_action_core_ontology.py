@@ -29,6 +29,8 @@ from llm_reasoner.knowledge.ontologies import (
     ActionPerspectiveFile,
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.terms import local_name
+from llm_reasoner.knowledge.ontology_translation.reading import upper_snake_case
 from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
 
 from .test_predictive_manipulation_ontology import (
@@ -274,7 +276,7 @@ class TestVocabulary:
     ):
         members = set(graph.subjects(RDF.type, CORE.QuantityKind))
         assert {member.name for member in action_core.QuantityKind} == {
-            str(member).split("#")[-1].upper() for member in members
+            upper_snake_case(local_name(member)) for member in members
         }
 
 

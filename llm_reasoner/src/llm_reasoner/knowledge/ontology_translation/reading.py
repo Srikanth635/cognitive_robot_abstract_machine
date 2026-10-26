@@ -993,13 +993,18 @@ class OntologyReader:
             values=tuple(
                 MemberValue(
                     member=upper_snake_case(local_name(member)),
-                    value=PythonName(
-                        module=enumeration.module,
-                        name=f"{enumeration.name}.{upper_snake_case(local_name(self.graph.value(member, prop)))}",
+                    values=tuple(
+                        PythonName(
+                            module=enumeration.module,
+                            name=f"{enumeration.name}.{upper_snake_case(local_name(value))}",
+                        )
+                        for value in self.value_partitions[value_partition]
+                        if (member, prop, value) in self.graph
                     ),
                 )
                 for member in self.value_partitions[partition]
             ),
+            functional=(prop, RDF.type, OWL.FunctionalProperty) in self.graph,
         )
 
     def ordered_classes(self, module_file: OntologyModuleFile) -> list[URIRef]:

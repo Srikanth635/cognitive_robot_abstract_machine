@@ -278,8 +278,8 @@
                 $this core:marginOn ?setpoint ;
                     core:marginOver ?threshold .
                 FILTER NOT EXISTS {
-                    ?setpoint core:parameterOnRole ?role .
-                    ?threshold core:parameterOnRole ?role .
+                    ?setpoint ac:aboutSlot|ac:relativeToSlot|ac:quantityInvolvesSlot ?role .
+                    ?threshold ac:aboutSlot|ac:relativeToSlot|ac:quantityInvolvesSlot ?role .
                 }
             }
         """ ;
@@ -529,8 +529,8 @@
             SELECT $this WHERE {
                 $this core:predictsTrajectory/core:hasExpectedRange/core:hasUnit ?rangeUnit ;
                     core:hasTolerance/core:hasUnit ?toleranceUnit .
-                ?rangeUnit core:measuresDimension ?rangeDimension .
-                ?toleranceUnit core:measuresDimension ?toleranceDimension .
+                ?rangeUnit ac:measuresDimension ?rangeDimension .
+                ?toleranceUnit ac:measuresDimension ?toleranceDimension .
                 FILTER (?rangeDimension != ?toleranceDimension)
             }
         """ ;

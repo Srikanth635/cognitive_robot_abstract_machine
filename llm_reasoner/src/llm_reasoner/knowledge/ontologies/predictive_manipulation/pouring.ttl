@@ -13,8 +13,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.11.0> ;
-    owl:versionInfo "0.11.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.12.0> ;
+    owl:versionInfo "0.12.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ,
         <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame> ;
@@ -172,92 +172,130 @@
 # %% parameters
 
 :DynamicViscosityEstimate a owl:Class ;
-    rdfs:subClassOf core:ObjectPropertyEstimate , core:DynamicViscosityParameter ;
+    rdfs:subClassOf core:ObjectPropertyEstimate , core:DynamicViscosityParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:MaterialProperty ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouredSubstance ] ;
     rdfs:label "dynamic viscosity estimate"@en ;
     rdfs:comment "The anticipated dynamic viscosity of a liquid or cohesive substance. Not applicable to granular material."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :RemainingSourceQuantityEstimate a owl:Class ;
     rdfs:subClassOf core:ObjectStateEstimate ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Amount ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouredSubstance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :SourceContainer ] ,
         [ a owl:Class ; owl:unionOf ( core:MassParameter core:VolumeParameter ) ] ;
     rdfs:label "remaining source quantity estimate"@en ;
     rdfs:comment "The anticipated mass or volume remaining in the source."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :TargetFillStateEstimate a owl:Class ;
-    rdfs:subClassOf core:ObjectStateEstimate , core:DimensionlessParameter ;
+    rdfs:subClassOf core:ObjectStateEstimate , core:DimensionlessParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Ratio ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :TargetReceptacle ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :PouredSubstance ] ;
     rdfs:label "target fill state estimate"@en ;
     rdfs:comment "The anticipated filled fraction of the target receptacle."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :AlignmentErrorEstimate a owl:Class ;
-    rdfs:subClassOf core:ObjectStateEstimate , core:AngleParameter ;
+    rdfs:subClassOf core:ObjectStateEstimate , core:AngleParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Orientation ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouringLip ] ,
+        [ a owl:Restriction ; owl:onProperty ac:relativeToSlot ; owl:allValuesFrom :TargetReceptacle ] ;
     rdfs:label "alignment error estimate"@en ;
     rdfs:comment "The angular deviation between the pouring lip and the receptacle opening."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :SloshDynamicsEstimate a owl:Class ;
-    rdfs:subClassOf core:DynamicsEstimate , core:CategoricalParameter ;
+    rdfs:subClassOf core:DynamicsEstimate , core:CategoricalParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:MaterialProperty ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouredSubstance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :SourceContainer ] ;
     rdfs:label "slosh dynamics estimate"@en ;
     rdfs:comment "A categorical model of internal liquid motion under acceleration."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :GranularFlowDynamicsEstimate a owl:Class ;
-    rdfs:subClassOf core:DynamicsEstimate , core:CategoricalParameter ;
+    rdfs:subClassOf core:DynamicsEstimate , core:CategoricalParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:MaterialProperty ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouredSubstance ] ;
     rdfs:label "granular flow dynamics estimate"@en ;
     rdfs:comment "A categorical model of particle flow, jamming and avalanching."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :CohesiveFlowDynamicsEstimate a owl:Class ;
-    rdfs:subClassOf core:DynamicsEstimate , core:CategoricalParameter ;
+    rdfs:subClassOf core:DynamicsEstimate , core:CategoricalParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:MaterialProperty ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouredSubstance ] ;
     rdfs:label "cohesive flow dynamics estimate"@en ;
     rdfs:comment "A categorical model of delayed or intermittent cohesive flow."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :CenterOfMassShiftEstimate a owl:Class ;
-    rdfs:subClassOf core:DynamicsEstimate , core:LengthParameter ;
+    rdfs:subClassOf core:DynamicsEstimate , core:LengthParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Distance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :SourceContainer ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :PouredSubstance ] ;
     rdfs:label "centre of mass shift estimate"@en ;
     rdfs:comment "The predicted displacement of the centre of mass as substance leaves the source."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :TiltAngleSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:AngleParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:AngleParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Orientation ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :SourceContainer ] ;
     rdfs:label "tilt angle setpoint"@en ;
     rdfs:comment "The commanded orientation of the source container about its pouring axis."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :TiltRateSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:AngularRateParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:AngularRateParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Rate ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :SourceContainer ] ;
     rdfs:label "tilt rate setpoint"@en ;
     rdfs:comment "The commanded angular velocity of tilting the source container."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :TorqueSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:TorqueParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:TorqueParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Magnitude ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :SourceContainer ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom pre:GraspingEffector ] ;
     rdfs:label "torque setpoint"@en ;
     rdfs:comment "The commanded moment about the grasp."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :PourPoseSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:CategoricalParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:CategoricalParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Selection ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :SourceContainer ] ,
+        [ a owl:Restriction ; owl:onProperty ac:relativeToSlot ; owl:allValuesFrom :TargetReceptacle ] ;
     rdfs:label "pour pose setpoint"@en ;
     rdfs:comment "A categorical reference to the desired pouring pose."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :LipAlignmentSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:AngleParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:AngleParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Orientation ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouringLip ] ,
+        [ a owl:Restriction ; owl:onProperty ac:relativeToSlot ; owl:allValuesFrom :TargetReceptacle ] ;
     rdfs:label "lip alignment setpoint"@en ;
     rdfs:comment "The commanded angular alignment of the pouring lip with the receptacle."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :UprightAngleSetpoint a owl:Class ;
-    rdfs:subClassOf core:MotorSetpoint , core:AngleParameter ;
+    rdfs:subClassOf core:MotorSetpoint , core:AngleParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Orientation ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :SourceContainer ] ;
     rdfs:label "upright angle setpoint"@en ;
     rdfs:comment "The commanded upright orientation of the source container."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :FlowRateSetpoint a owl:Class ;
     rdfs:subClassOf core:TaskSetpoint ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Rate ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouredSubstance ] ,
         [ a owl:Class ; owl:unionOf ( core:MassFlowRateParameter core:VolumetricFlowRateParameter ) ] ;
     rdfs:label "flow rate setpoint"@en ;
     rdfs:comment "The desired mass or volume transferred per unit time, a task target and not a motor command."@en ;
@@ -265,19 +303,28 @@
 
 :TransferredQuantitySetpoint a owl:Class ;
     rdfs:subClassOf core:TaskSetpoint ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Amount ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouredSubstance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :TargetReceptacle ] ,
         [ a owl:Class ; owl:unionOf ( core:MassParameter core:VolumeParameter ) ] ;
     rdfs:label "transferred quantity setpoint"@en ;
     rdfs:comment "The desired mass or volume of substance to transfer, a task target and not a motor command."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :FlowOnsetThreshold a owl:Class ;
-    rdfs:subClassOf core:MechanicalThreshold , core:AngleParameter ;
+    rdfs:subClassOf core:MechanicalThreshold , core:AngleParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Orientation ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :SourceContainer ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :PouredSubstance ] ;
     rdfs:label "flow onset threshold"@en ;
     rdfs:comment "The tilt angle at which the substance begins crossing the lip."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :SpillThreshold a owl:Class ;
     rdfs:subClassOf core:MechanicalThreshold ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Rate ] ,
+        [ a owl:Restriction ; owl:onProperty ac:aboutSlot ; owl:someValuesFrom :PouredSubstance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:quantityInvolvesSlot ; owl:allValuesFrom :TargetReceptacle ] ,
         [ a owl:Class ; owl:unionOf ( core:MassFlowRateParameter core:VolumetricFlowRateParameter ) ] ;
     rdfs:label "spill threshold"@en ;
     rdfs:comment "The flow rate beyond which the substance is no longer contained by the target."@en ;

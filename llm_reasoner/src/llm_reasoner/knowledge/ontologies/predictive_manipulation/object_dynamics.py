@@ -716,7 +716,13 @@ class LoadForceEstimate(core.DynamicsEstimate, core.ForceParameter):
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-008",
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-025",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Magnitude",
+            ),
+        ),
         definition=None,
     )
     """

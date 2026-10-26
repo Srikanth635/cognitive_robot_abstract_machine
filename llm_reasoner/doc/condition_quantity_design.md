@@ -9,9 +9,10 @@ options, a recommendation and what it costs.
 
 **Decided (user, 2026-10-26):** P1, R1 with the condition table and
 `ac:quantityInvolvesSlot`, D1 with `Magnitude`, `MaterialProperty` and `Ratio` as new
-kinds, and S1. Step 13 is built: P1 is met by a `SlotConditionType` above an unchanged
-`SlotCondition`, and an effector-object contact may also involve the grasp site; see
-[`status.md`](status.md).
+kinds, and S1. Both steps are built: P1 is met by a `SlotConditionType` above an
+unchanged `SlotCondition`, an effector-object contact may also involve the grasp site, a
+fourth new kind `Shape` covers `ExpectedShape`, and the unit `Ratio` became `Unitless`;
+see [`status.md`](status.md).
 
 ## Why it matters
 

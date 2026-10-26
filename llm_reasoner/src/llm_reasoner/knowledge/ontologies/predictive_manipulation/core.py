@@ -183,174 +183,6 @@ class ForceKind(OpenValuePartition):
         }[self]
 
 
-class MeasurementUnit(OpenValuePartition):
-    """
-    A unit measuring exactly one physical dimension. Neither CRAM-AICOR nor DUL defines units.
-    """
-
-    KILOGRAM = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Kilogram"
-    )
-    """
-    Kilogram, a unit of mass.
-    """
-
-    GRAM = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Gram"
-    """
-    Gram, a unit of mass.
-    """
-
-    KILOGRAM_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#KilogramPerSecond"
-    """
-    Kilogram per second, a unit of mass flow rate.
-    """
-
-    NEWTON = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Newton"
-    )
-    """
-    Newton, a unit of force.
-    """
-
-    NEWTON_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#NewtonPerSecond"
-    """
-    Newton per second, a unit of force rate.
-    """
-
-    NEWTON_METRE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#NewtonMetre"
-    """
-    Newton metre, a unit of torque.
-    """
-
-    METRE = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Metre"
-    )
-    """
-    Metre, a unit of length.
-    """
-
-    CENTIMETRE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Centimetre"
-    """
-    Centimetre, a unit of length.
-    """
-
-    MILLIMETRE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Millimetre"
-    """
-    Millimetre, a unit of length.
-    """
-
-    DEGREE = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Degree"
-    )
-    """
-    Degree, a unit of angle.
-    """
-
-    DEGREE_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#DegreePerSecond"
-    """
-    Degree per second, a unit of angular rate.
-    """
-
-    LITRE = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Litre"
-    )
-    """
-    Litre, a unit of volume.
-    """
-
-    MILLILITRE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Millilitre"
-    """
-    Millilitre, a unit of volume.
-    """
-
-    MILLILITRE_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MillilitrePerSecond"
-    """
-    Millilitre per second, a unit of volumetric flow rate.
-    """
-
-    CENTIPOISE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Centipoise"
-    """
-    Centipoise, a unit of dynamic viscosity.
-    """
-
-    HERTZ = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Hertz"
-    )
-    """
-    Hertz, a unit of frequency.
-    """
-
-    SECOND = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Second"
-    )
-    """
-    Second, a unit of time.
-    """
-
-    MILLISECOND = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Millisecond"
-    """
-    Millisecond, a unit of time.
-    """
-
-    RATIO = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Ratio"
-    )
-    """
-    Unit marker for dimensionless ratios and bounded fractions.
-    """
-
-    @property
-    def measures_dimension(self) -> PhysicalDimension:
-        """
-        The single physical dimension a unit measures.
-        """
-        return {
-            MeasurementUnit.KILOGRAM: PhysicalDimension.MASS,
-            MeasurementUnit.GRAM: PhysicalDimension.MASS,
-            MeasurementUnit.KILOGRAM_PER_SECOND: PhysicalDimension.MASS_FLOW_RATE,
-            MeasurementUnit.NEWTON: PhysicalDimension.FORCE,
-            MeasurementUnit.NEWTON_PER_SECOND: PhysicalDimension.FORCE_RATE,
-            MeasurementUnit.NEWTON_METRE: PhysicalDimension.TORQUE,
-            MeasurementUnit.METRE: PhysicalDimension.LENGTH,
-            MeasurementUnit.CENTIMETRE: PhysicalDimension.LENGTH,
-            MeasurementUnit.MILLIMETRE: PhysicalDimension.LENGTH,
-            MeasurementUnit.DEGREE: PhysicalDimension.ANGLE,
-            MeasurementUnit.DEGREE_PER_SECOND: PhysicalDimension.ANGULAR_RATE,
-            MeasurementUnit.LITRE: PhysicalDimension.VOLUME,
-            MeasurementUnit.MILLILITRE: PhysicalDimension.VOLUME,
-            MeasurementUnit.MILLILITRE_PER_SECOND: PhysicalDimension.VOLUMETRIC_FLOW_RATE,
-            MeasurementUnit.CENTIPOISE: PhysicalDimension.DYNAMIC_VISCOSITY,
-            MeasurementUnit.HERTZ: PhysicalDimension.FREQUENCY,
-            MeasurementUnit.SECOND: PhysicalDimension.TIME,
-            MeasurementUnit.MILLISECOND: PhysicalDimension.TIME,
-            MeasurementUnit.RATIO: PhysicalDimension.DIMENSIONLESS,
-        }[self]
-
-    @property
-    def declaring_module(self) -> ontologies.OntologyModuleFile:
-        return {
-            MeasurementUnit.KILOGRAM: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.GRAM: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.KILOGRAM_PER_SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.NEWTON: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.NEWTON_PER_SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.NEWTON_METRE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.METRE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.CENTIMETRE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.MILLIMETRE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.DEGREE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.DEGREE_PER_SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.LITRE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.MILLILITRE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.MILLILITRE_PER_SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.CENTIPOISE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.HERTZ: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.SECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.MILLISECOND: ontologies.PredictiveManipulationOntologyFile.CORE,
-            MeasurementUnit.RATIO: ontologies.PredictiveManipulationOntologyFile.CORE,
-        }[self]
-
-
 class ParameterValueForm(StrEnum):
     """
     Whether a parameter holds a magnitude or a named category.
@@ -365,111 +197,6 @@ class ParameterValueForm(StrEnum):
     """
     The parameter holds a categorical value.
     """
-
-
-class PhysicalDimension(OpenValuePartition):
-    """
-    A dimensional space of physical quantities, which in DUL is a maximal region.
-    """
-
-    MASS = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Mass"
-    """
-    Quantity of matter. Distinct from weight, which is a force.
-    """
-
-    MASS_FLOW_RATE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MassFlowRate"
-    """
-    Mass transferred per unit time.
-    """
-
-    FORCE = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Force"
-    )
-    """
-    Mechanical force, including weight force.
-    """
-
-    FORCE_RATE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceRate"
-    """
-    Rate of force change.
-    """
-
-    TORQUE = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Torque"
-    )
-    """
-    Moment of force.
-    """
-
-    LENGTH = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Length"
-    )
-    """
-    Spatial distance or position component.
-    """
-
-    ANGLE = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Angle"
-    )
-    """
-    Planar or rotational angle.
-    """
-
-    ANGULAR_RATE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AngularRate"
-    """
-    Rate of angular change.
-    """
-
-    VOLUME = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Volume"
-    )
-    """
-    Three-dimensional capacity.
-    """
-
-    VOLUMETRIC_FLOW_RATE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#VolumetricFlowRate"
-    """
-    Volume transferred per unit time.
-    """
-
-    DYNAMIC_VISCOSITY = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#DynamicViscosity"
-    """
-    Resistance of a fluid to shear flow.
-    """
-
-    FREQUENCY = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Frequency"
-    """
-    Repetitions of a periodic signal per unit time.
-    """
-
-    TIME = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Time"
-    """
-    Temporal duration or offset.
-    """
-
-    DIMENSIONLESS = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Dimensionless"
-    """
-    A ratio or fraction without a physical unit.
-    """
-
-    @property
-    def declaring_module(self) -> ontologies.OntologyModuleFile:
-        return {
-            PhysicalDimension.MASS: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.MASS_FLOW_RATE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.FORCE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.FORCE_RATE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.TORQUE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.LENGTH: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.ANGLE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.ANGULAR_RATE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.VOLUME: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.VOLUMETRIC_FLOW_RATE: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.DYNAMIC_VISCOSITY: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.FREQUENCY: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.TIME: ontologies.PredictiveManipulationOntologyFile.CORE,
-            PhysicalDimension.DIMENSIONLESS: ontologies.PredictiveManipulationOntologyFile.CORE,
-        }[self]
 
 
 class PredictionErrorKind(OpenValuePartition):
@@ -1620,9 +1347,9 @@ class Actor(action_core.AgentSlot, ManipulationRole):
 
 
 @dataclass(eq=False)
-class Parameter(DescriptionEntity):
+class Parameter(action_core.SlotQuantity):
     """
-    A quantitative or categorical slot in a phase structure, applying to participant roles.
+    A quantity of a phase structure about the filler of a role, holding a range of magnitudes or a categorical value.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -1639,13 +1366,6 @@ class Parameter(DescriptionEntity):
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ParameterValueForm"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#parameterOnRole",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole"
                 ),
             ),
         ),
@@ -1679,17 +1399,6 @@ class Parameter(DescriptionEntity):
     The value of a quantitative parameter.
     """
 
-    has_physical_dimension: Optional[PhysicalDimension] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
-            functional=True,
-        ).as_dict(),
-    )
-    """
-    The physical dimension of a quantitative parameter, which the unit of its range must measure.
-    """
-
     has_value_form: Optional[ParameterValueForm] = field(
         default=None,
         metadata=PropertyTerm(
@@ -1699,18 +1408,6 @@ class Parameter(DescriptionEntity):
     )
     """
     Whether the parameter holds a magnitude range or a categorical value.
-    """
-
-    parameter_on_role: List[ManipulationRole] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#parameterOnRole",
-            functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
-        ).as_dict(),
-    )
-    """
-    A participant role to which the parameter applies.
     """
 
 
@@ -1734,17 +1431,17 @@ class QuantitativeParameter(Parameter):
                 )
             ),
             PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PhysicalDimension"
+                ),
+            ),
+            PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasParameterRange",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MagnitudeRange"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhysicalDimension"
                 ),
             ),
         ),
@@ -1785,9 +1482,9 @@ class AngleParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Angle",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Angle",
                     ),
                 ),
             ),
@@ -1798,9 +1495,9 @@ class AngleParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Angle",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Angle",
                 ),
             )
         ),
@@ -1829,9 +1526,9 @@ class AngularRateParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AngularRate",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AngularRate",
                     ),
                 ),
             ),
@@ -1842,9 +1539,9 @@ class AngularRateParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AngularRate",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AngularRate",
                 ),
             )
         ),
@@ -2721,9 +2418,9 @@ class DimensionlessParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Dimensionless",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Dimensionless",
                     ),
                 ),
             ),
@@ -2734,9 +2431,9 @@ class DimensionlessParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Dimensionless",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Dimensionless",
                 ),
             )
         ),
@@ -2765,9 +2462,9 @@ class DynamicViscosityParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#DynamicViscosity",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#DynamicViscosity",
                     ),
                 ),
             ),
@@ -2778,9 +2475,9 @@ class DynamicViscosityParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#DynamicViscosity",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#DynamicViscosity",
                 ),
             )
         ),
@@ -3211,9 +2908,9 @@ class ForceParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Force",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Force",
                     ),
                 ),
             ),
@@ -3224,9 +2921,9 @@ class ForceParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Force",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Force",
                 ),
             )
         ),
@@ -3255,9 +2952,9 @@ class ForceRateParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceRate",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ForceRate",
                     ),
                 ),
             ),
@@ -3268,9 +2965,9 @@ class ForceRateParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceRate",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ForceRate",
                 ),
             )
         ),
@@ -3332,6 +3029,11 @@ class ForceRateSetpoint(ForceRateParameter, MotorSetpoint):
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-025",
         ),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Rate",
+            ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#rateOf",
                 quantifier=Quantifier.SOME,
@@ -3548,9 +3250,9 @@ class LengthParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Length",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Length",
                     ),
                 ),
             ),
@@ -3561,9 +3263,9 @@ class LengthParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Length",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Length",
                 ),
             )
         ),
@@ -3592,7 +3294,7 @@ class MagnitudeRange(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MeasurementUnit"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MeasurementUnit"
                 ),
             ),
             PropertyRestriction(
@@ -3612,7 +3314,7 @@ class MagnitudeRange(DescriptionEntity):
     The ontology class this class stands for.
     """
 
-    has_unit: Optional[MeasurementUnit] = field(
+    has_unit: Optional[action_core.MeasurementUnit] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
@@ -3686,9 +3388,9 @@ class MassFlowRateParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MassFlowRate",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MassFlowRate",
                     ),
                 ),
             ),
@@ -3699,9 +3401,9 @@ class MassFlowRateParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MassFlowRate",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MassFlowRate",
                 ),
             )
         ),
@@ -3730,9 +3432,9 @@ class MassParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Mass",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Mass",
                     ),
                 ),
             ),
@@ -3743,9 +3445,9 @@ class MassParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Mass",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Mass",
                 ),
             )
         ),
@@ -4445,6 +4147,11 @@ class SafetyMargin(QuantitativeParameter):
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-06",
         ),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Ratio",
+            ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#marginOn",
                 quantifier=Quantifier.SOME,
@@ -5321,16 +5028,16 @@ class TemporalWindow(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                 quantifier=Quantifier.ONLY,
                 filler=PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Time",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Time",
                 ),
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MeasurementUnit"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MeasurementUnit"
                 ),
             ),
             PropertyRestriction(
@@ -5357,7 +5064,7 @@ class TemporalWindow(DescriptionEntity):
     The inclusive beginning of the window, relative to its reference event.
     """
 
-    has_unit: Optional[MeasurementUnit] = field(
+    has_unit: Optional[action_core.MeasurementUnit] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
@@ -5439,9 +5146,9 @@ class TorqueParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Torque",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Torque",
                     ),
                 ),
             ),
@@ -5452,9 +5159,9 @@ class TorqueParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Torque",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Torque",
                 ),
             )
         ),
@@ -5483,9 +5190,9 @@ class VolumeParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Volume",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Volume",
                     ),
                 ),
             ),
@@ -5496,9 +5203,9 @@ class VolumeParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Volume",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Volume",
                 ),
             )
         ),
@@ -5527,9 +5234,9 @@ class VolumetricFlowRateParameter(QuantitativeParameter):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#VolumetricFlowRate",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#VolumetricFlowRate",
                     ),
                 ),
             ),
@@ -5540,9 +5247,9 @@ class VolumetricFlowRateParameter(QuantitativeParameter):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#QuantitativeParameter"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#VolumetricFlowRate",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#VolumetricFlowRate",
                 ),
             )
         ),
@@ -6118,13 +5825,6 @@ class ObservesFeature(ObjectPropertyDescriptor):
 
 
 @dataclass
-class ParameterOnRole(ObjectPropertyDescriptor):
-    """
-    A participant role to which the parameter applies.
-    """
-
-
-@dataclass
 class PermittedBy(ObjectPropertyDescriptor):
     """
     A successful comparison required in addition to the event gates.
@@ -6491,7 +6191,6 @@ SensoryObservationType.observes_event = ObservesEvent(
 SensoryObservationType.observes_feature = ObservesFeature(
     SensoryObservationType, "observes_feature"
 )
-Parameter.parameter_on_role = ParameterOnRole(Parameter, "parameter_on_role")
 PhaseTransition.permitted_by = PermittedBy(PhaseTransition, "permitted_by")
 SensoryEventPrediction.predicts_event = PredictsEvent(
     SensoryEventPrediction, "predicts_event"

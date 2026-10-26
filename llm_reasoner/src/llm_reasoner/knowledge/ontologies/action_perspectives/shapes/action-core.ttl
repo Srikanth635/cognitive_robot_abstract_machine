@@ -30,6 +30,22 @@
         """ ;
     ] .
 
+:QuantityMeasuredInItsKind a sh:NodeShape ;
+    sh:targetClass ac:SlotQuantity ;
+    rdfs:comment "A quantity is measured in a physical dimension its kind is measured in, such as an orientation in an angle: has_physical_dimension is one of the dimensions measured_in names for has_quantity_kind."@en ;
+    sh:sparql [
+        sh:message "has_physical_dimension is no dimension the quantity's kind is measured in" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/action-core> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                $this ac:hasQuantityKind ?kind ;
+                    ac:hasPhysicalDimension ?value .
+                ?kind ac:measuredIn ?dimension .
+                FILTER NOT EXISTS { ?kind ac:measuredIn ?value }
+            }
+        """ ;
+    ] .
+
 # %% conditions
 
 :ConditionNotInvolvingItsOwnSlot a sh:NodeShape ;

@@ -133,9 +133,9 @@ class FlowOnsetTiltMeasurement(DescriptionEntity):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Angle",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Angle",
                     ),
                 ),
             ),
@@ -325,9 +325,9 @@ class PhysicsSimulationSetup(MeasurementSetup):
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUnit",
                     quantifier=Quantifier.ONLY,
                     filler=PropertyRestriction(
-                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension",
                         quantifier=Quantifier.VALUE,
-                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Dimensionless",
+                        value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Dimensionless",
                     ),
                 ),
             ),

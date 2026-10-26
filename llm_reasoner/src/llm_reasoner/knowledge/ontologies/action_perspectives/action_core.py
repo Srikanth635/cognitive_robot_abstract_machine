@@ -147,9 +147,272 @@ class ConditionTiming(OpenValuePartition):
         }[self]
 
 
+class MeasurementUnit(OpenValuePartition):
+    """
+    A unit measuring exactly one physical dimension. Neither CRAM-AICOR nor DUL defines units.
+    """
+
+    KILOGRAM = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Kilogram"
+    """
+    Kilogram, a unit of mass.
+    """
+
+    GRAM = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Gram"
+    )
+    """
+    Gram, a unit of mass.
+    """
+
+    KILOGRAM_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#KilogramPerSecond"
+    """
+    Kilogram per second, a unit of mass flow rate.
+    """
+
+    NEWTON = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Newton"
+    """
+    Newton, a unit of force.
+    """
+
+    NEWTON_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#NewtonPerSecond"
+    """
+    Newton per second, a unit of force rate.
+    """
+
+    NEWTON_METRE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#NewtonMetre"
+    """
+    Newton metre, a unit of torque.
+    """
+
+    METRE = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Metre"
+    )
+    """
+    Metre, a unit of length.
+    """
+
+    CENTIMETRE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Centimetre"
+    """
+    Centimetre, a unit of length.
+    """
+
+    MILLIMETRE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Millimetre"
+    """
+    Millimetre, a unit of length.
+    """
+
+    DEGREE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Degree"
+    """
+    Degree, a unit of angle.
+    """
+
+    DEGREE_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#DegreePerSecond"
+    """
+    Degree per second, a unit of angular rate.
+    """
+
+    LITRE = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Litre"
+    )
+    """
+    Litre, a unit of volume.
+    """
+
+    MILLILITRE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Millilitre"
+    """
+    Millilitre, a unit of volume.
+    """
+
+    MILLILITRE_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MillilitrePerSecond"
+    """
+    Millilitre per second, a unit of volumetric flow rate.
+    """
+
+    CENTIPOISE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Centipoise"
+    """
+    Centipoise, a unit of dynamic viscosity.
+    """
+
+    HERTZ = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Hertz"
+    )
+    """
+    Hertz, a unit of frequency.
+    """
+
+    SECOND = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Second"
+    """
+    Second, a unit of time.
+    """
+
+    MILLISECOND = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Millisecond"
+    """
+    Millisecond, a unit of time.
+    """
+
+    UNITLESS = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Unitless"
+    """
+    The unit of a dimensionless ratio or bounded fraction.
+    """
+
+    @property
+    def measures_dimension(self) -> PhysicalDimension:
+        """
+        The single physical dimension a unit measures.
+        """
+        return {
+            MeasurementUnit.KILOGRAM: PhysicalDimension.MASS,
+            MeasurementUnit.GRAM: PhysicalDimension.MASS,
+            MeasurementUnit.KILOGRAM_PER_SECOND: PhysicalDimension.MASS_FLOW_RATE,
+            MeasurementUnit.NEWTON: PhysicalDimension.FORCE,
+            MeasurementUnit.NEWTON_PER_SECOND: PhysicalDimension.FORCE_RATE,
+            MeasurementUnit.NEWTON_METRE: PhysicalDimension.TORQUE,
+            MeasurementUnit.METRE: PhysicalDimension.LENGTH,
+            MeasurementUnit.CENTIMETRE: PhysicalDimension.LENGTH,
+            MeasurementUnit.MILLIMETRE: PhysicalDimension.LENGTH,
+            MeasurementUnit.DEGREE: PhysicalDimension.ANGLE,
+            MeasurementUnit.DEGREE_PER_SECOND: PhysicalDimension.ANGULAR_RATE,
+            MeasurementUnit.LITRE: PhysicalDimension.VOLUME,
+            MeasurementUnit.MILLILITRE: PhysicalDimension.VOLUME,
+            MeasurementUnit.MILLILITRE_PER_SECOND: PhysicalDimension.VOLUMETRIC_FLOW_RATE,
+            MeasurementUnit.CENTIPOISE: PhysicalDimension.DYNAMIC_VISCOSITY,
+            MeasurementUnit.HERTZ: PhysicalDimension.FREQUENCY,
+            MeasurementUnit.SECOND: PhysicalDimension.TIME,
+            MeasurementUnit.MILLISECOND: PhysicalDimension.TIME,
+            MeasurementUnit.UNITLESS: PhysicalDimension.DIMENSIONLESS,
+        }[self]
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            MeasurementUnit.KILOGRAM: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.GRAM: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.KILOGRAM_PER_SECOND: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.NEWTON: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.NEWTON_PER_SECOND: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.NEWTON_METRE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.METRE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.CENTIMETRE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.MILLIMETRE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.DEGREE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.DEGREE_PER_SECOND: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.LITRE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.MILLILITRE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.MILLILITRE_PER_SECOND: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.CENTIPOISE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.HERTZ: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.SECOND: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.MILLISECOND: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MeasurementUnit.UNITLESS: ontologies.ActionPerspectiveFile.ACTION_CORE,
+        }[self]
+
+
+class PhysicalDimension(OpenValuePartition):
+    """
+    A dimensional space of physical quantities, which in DUL is a maximal region.
+    """
+
+    MASS = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Mass"
+    )
+    """
+    Quantity of matter. Distinct from weight, which is a force.
+    """
+
+    MASS_FLOW_RATE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MassFlowRate"
+    """
+    Mass transferred per unit time.
+    """
+
+    FORCE = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Force"
+    )
+    """
+    Mechanical force, including weight force.
+    """
+
+    FORCE_RATE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ForceRate"
+    """
+    Rate of force change.
+    """
+
+    TORQUE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Torque"
+    """
+    Moment of force.
+    """
+
+    LENGTH = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Length"
+    """
+    Spatial distance or position component.
+    """
+
+    ANGLE = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Angle"
+    )
+    """
+    Planar or rotational angle.
+    """
+
+    ANGULAR_RATE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AngularRate"
+    """
+    Rate of angular change.
+    """
+
+    VOLUME = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Volume"
+    """
+    Three-dimensional capacity.
+    """
+
+    VOLUMETRIC_FLOW_RATE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#VolumetricFlowRate"
+    """
+    Volume transferred per unit time.
+    """
+
+    DYNAMIC_VISCOSITY = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#DynamicViscosity"
+    """
+    Resistance of a fluid to shear flow.
+    """
+
+    FREQUENCY = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Frequency"
+    """
+    Repetitions of a periodic signal per unit time.
+    """
+
+    TIME = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Time"
+    )
+    """
+    Temporal duration or offset.
+    """
+
+    DIMENSIONLESS = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Dimensionless"
+    """
+    A ratio or fraction without a physical unit.
+    """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            PhysicalDimension.MASS: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.MASS_FLOW_RATE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.FORCE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.FORCE_RATE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.TORQUE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.LENGTH: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.ANGLE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.ANGULAR_RATE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.VOLUME: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.VOLUMETRIC_FLOW_RATE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.DYNAMIC_VISCOSITY: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.FREQUENCY: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.TIME: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            PhysicalDimension.DIMENSIONLESS: ontologies.ActionPerspectiveFile.ACTION_CORE,
+        }[self]
+
+
 class QuantityKind(OpenValuePartition):
     """
-    The kind of quantity a choice an action leaves open sets.
+    What a quantity about the filler of a slot is: how much, how fast, where, which way it faces, how far, how long, how strongly it acts, a property of its material, a ratio, its shape, or which of several.
     """
 
     AMOUNT = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Amount"
@@ -189,6 +452,64 @@ class QuantityKind(OpenValuePartition):
     Which of several alternatives is taken, such as the hand that holds the source.
     """
 
+    MAGNITUDE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Magnitude"
+    """
+    How strongly one filler acts on another, such as the grip force on the source or the torque about the grasp.
+    """
+
+    MATERIAL_PROPERTY = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialProperty"
+    """
+    A property of the material of a filler or of its surface, such as the viscosity of the substance, the friction of the grasp or how the substance flows.
+    """
+
+    RATIO = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Ratio"
+    )
+    """
+    How large one quantity is against another, such as the grip force against the load force or the filled fraction of the goal.
+    """
+
+    SHAPE = (
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Shape"
+    )
+    """
+    What form a filler or its surface has, such as the geometry of the grasp surfaces.
+    """
+
+    @property
+    def measured_in(self) -> tuple[PhysicalDimension, ...]:
+        """
+        A physical dimension a kind of quantity may be measured in, such as an angle for an orientation; a kind measured in none, such as a selection or a shape, constrains none.
+        """
+        return {
+            QuantityKind.AMOUNT: (
+                PhysicalDimension.MASS,
+                PhysicalDimension.VOLUME,
+            ),
+            QuantityKind.RATE: (
+                PhysicalDimension.MASS_FLOW_RATE,
+                PhysicalDimension.FORCE_RATE,
+                PhysicalDimension.ANGULAR_RATE,
+                PhysicalDimension.VOLUMETRIC_FLOW_RATE,
+                PhysicalDimension.FREQUENCY,
+            ),
+            QuantityKind.POSITION: (PhysicalDimension.LENGTH,),
+            QuantityKind.ORIENTATION: (PhysicalDimension.ANGLE,),
+            QuantityKind.DISTANCE: (PhysicalDimension.LENGTH,),
+            QuantityKind.DURATION: (PhysicalDimension.TIME,),
+            QuantityKind.SELECTION: (),
+            QuantityKind.MAGNITUDE: (
+                PhysicalDimension.FORCE,
+                PhysicalDimension.TORQUE,
+            ),
+            QuantityKind.MATERIAL_PROPERTY: (
+                PhysicalDimension.DYNAMIC_VISCOSITY,
+                PhysicalDimension.DIMENSIONLESS,
+            ),
+            QuantityKind.RATIO: (PhysicalDimension.DIMENSIONLESS,),
+            QuantityKind.SHAPE: (),
+        }[self]
+
     @property
     def declaring_module(self) -> ontologies.OntologyModuleFile:
         return {
@@ -199,6 +520,10 @@ class QuantityKind(OpenValuePartition):
             QuantityKind.DISTANCE: ontologies.ActionPerspectiveFile.ACTION_CORE,
             QuantityKind.DURATION: ontologies.ActionPerspectiveFile.ACTION_CORE,
             QuantityKind.SELECTION: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.MAGNITUDE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.MATERIAL_PROPERTY: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.RATIO: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.SHAPE: ontologies.ActionPerspectiveFile.ACTION_CORE,
         }[self]
 
 
@@ -543,7 +868,7 @@ class Objective(DescriptionEntity):
 @dataclass(eq=False)
 class SlotQuantity(DescriptionEntity):
     """
-    A kind of quantity about the filler of a slot, possibly measured from the filler of another slot, such as the tilt of the source or the height of the lip above the goal; it carries no value. What it is for is said by its kind: a choice the action leaves open, a quantity deciding whether a relation holds, or one a failure is noticed by.
+    A kind of quantity about the filler of a slot, possibly measured from the filler of another slot or acting between it and the fillers of others, such as the tilt of the source, the height of the lip above the goal or the grip force on the source; it carries no value of its own. What it is for is said by its class: a choice the action leaves open, a quantity deciding whether a relation holds, one a failure is noticed by, or a parameter of a phase, which holds a value.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -588,6 +913,17 @@ class SlotQuantity(DescriptionEntity):
     The slot whose filler the quantity is about, such as the source whose orientation is chosen.
     """
 
+    has_physical_dimension: Optional[PhysicalDimension] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension",
+            functional=True,
+        ).as_dict(),
+    )
+    """
+    The physical dimension a quantity is measured in, which one of its kind's dimensions is and the unit of its value measures.
+    """
+
     has_quantity_kind: Optional[QuantityKind] = field(
         default=None,
         metadata=PropertyTerm(
@@ -597,6 +933,18 @@ class SlotQuantity(DescriptionEntity):
     )
     """
     What kind of quantity something about an action is about, such as the quantity a choice sets, a condition constrains or a change changes.
+    """
+
+    quantity_involves_slot: List[FrameSlot] = field(
+        default_factory=list,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+            functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#FrameSlot",
+        ).as_dict(),
+    )
+    """
+    Another slot whose filler the quantity acts between the first filler and, such as the effector a grip force on the source is exerted by, or the goal a transferred amount ends up in; unlike relative_to_slot, it is no reference the quantity is measured from.
     """
 
     relative_to_slot: Optional[FrameSlot] = field(
@@ -926,6 +1274,13 @@ class LeavesOpen(ObjectPropertyDescriptor):
 
 
 @dataclass
+class QuantityInvolvesSlot(ObjectPropertyDescriptor):
+    """
+    Another slot whose filler the quantity acts between the first filler and, such as the effector a grip force on the source is exerted by, or the goal a transferred amount ends up in; unlike relative_to_slot, it is no reference the quantity is measured from.
+    """
+
+
+@dataclass
 class RelativeToSlot(ObjectPropertyDescriptor):
     """
     The slot whose filler the quantity is measured from, such as the goal a position above which is chosen, or the opening the lip ends beside; absent for a quantity measured from nothing in particular.
@@ -961,5 +1316,8 @@ SlotConditionType.condition_on_slot = ConditionOnSlot(
 ActionFrame.defines_slot = DefinesSlot(ActionFrame, "defines_slot")
 PartSlot.is_part_of_slot = IsPartOfSlot(PartSlot, "is_part_of_slot")
 ActionFrame.leaves_open = LeavesOpen(ActionFrame, "leaves_open")
+SlotQuantity.quantity_involves_slot = QuantityInvolvesSlot(
+    SlotQuantity, "quantity_involves_slot"
+)
 SlotQuantity.relative_to_slot = RelativeToSlot(SlotQuantity, "relative_to_slot")
 ActionFrame.states_objective = StatesObjective(ActionFrame, "states_objective")

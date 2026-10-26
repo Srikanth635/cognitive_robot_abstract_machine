@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from llm_reasoner.knowledge.access import (
     MeasurementStore,
+    action_core,
     core,
     flow_onset,
     pouring_frame,
@@ -66,7 +67,7 @@ def simulated_record(
         has_measured_range=core.MagnitudeRange(
             lower_bound=onset[0],
             upper_bound=onset[1],
-            has_unit=core.MeasurementUnit.DEGREE,
+            has_unit=action_core.MeasurementUnit.DEGREE,
         ),
         follows_setup=flow_onset.PhysicsSimulationSetup(
             simulation_engine="Isaac Sim",
@@ -80,7 +81,9 @@ def simulated_record(
             fluid_cohesion=0.01,
             fluid_surface_tension=0.0074,
             has_settled_fill_range=core.MagnitudeRange(
-                lower_bound=0.5, upper_bound=0.5, has_unit=core.MeasurementUnit.RATIO
+                lower_bound=0.5,
+                upper_bound=0.5,
+                has_unit=action_core.MeasurementUnit.UNITLESS,
             ),
         ),
     )

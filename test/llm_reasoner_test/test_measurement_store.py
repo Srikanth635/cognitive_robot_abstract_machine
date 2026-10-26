@@ -11,7 +11,10 @@ from pathlib import Path
 
 import pytest
 
-from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
+from llm_reasoner.knowledge.ontologies.action_perspectives import (
+    action_core,
+    pouring_frame,
+)
 from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.storage.exceptions import InvalidMeasurement
@@ -48,7 +51,7 @@ def measurement(
         has_measured_range=core.MagnitudeRange(
             lower_bound=onset[0],
             upper_bound=onset[1],
-            has_unit=core.MeasurementUnit.DEGREE,
+            has_unit=action_core.MeasurementUnit.DEGREE,
         ),
         follows_setup=setup or flow_onset.GeometricDerivationSetup(voxel_pitch=0.001),
     )
@@ -70,7 +73,9 @@ def simulation_setup() -> flow_onset.PhysicsSimulationSetup:
         fluid_cohesion=0.01,
         fluid_surface_tension=0.0,
         has_settled_fill_range=core.MagnitudeRange(
-            lower_bound=0.49, upper_bound=0.51, has_unit=core.MeasurementUnit.RATIO
+            lower_bound=0.49,
+            upper_bound=0.51,
+            has_unit=action_core.MeasurementUnit.UNITLESS,
         ),
     )
 
@@ -109,7 +114,7 @@ class TestStoring:
         assert read.measurement.has_measured_range.lower_bound == 46.0
         assert read.measurement.has_measured_range.upper_bound == 49.5
         assert read.measurement.has_measured_range.has_unit is (
-            core.MeasurementUnit.DEGREE
+            action_core.MeasurementUnit.DEGREE
         )
         assert read.measurement.measured_for_container.mesh_digest == CUP_DIGEST
         assert isinstance(

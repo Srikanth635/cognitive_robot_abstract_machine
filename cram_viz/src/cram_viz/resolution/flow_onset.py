@@ -16,6 +16,7 @@ from llm_reasoner.knowledge.access import (
     FlowOnsetQuery,
     MeasurementStore,
     StoredFlowOnset,
+    action_core,
     core,
     flow_onset,
     pouring_frame,
@@ -212,7 +213,7 @@ class MeasuredFlowOnset:
             has_measured_range=core.MagnitudeRange(
                 lower_bound=onset.degrees,
                 upper_bound=onset.degrees,
-                has_unit=core.MeasurementUnit.DEGREE,
+                has_unit=action_core.MeasurementUnit.DEGREE,
             ),
             follows_setup=flow_onset.GeometricDerivationSetup(voxel_pitch=onset.pitch),
         )

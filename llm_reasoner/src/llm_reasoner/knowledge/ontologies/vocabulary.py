@@ -350,7 +350,9 @@ class Vocabulary:
         """
         if isinstance(entity, StrEnum):
             name = python_attribute_name(property_iri)
-            return True if isinstance(vars(type(entity)).get(name), property) else None
+            if not isinstance(vars(type(entity)).get(name), property):
+                return None
+            return not isinstance(attrgetter(name)(entity), tuple)
         term = self.property_term([entity], property_iri)
         return None if term is None else term.functional
 

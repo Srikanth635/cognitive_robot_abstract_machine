@@ -58,13 +58,21 @@ class {{ partition.python_name.name }}({{ "OpenValuePartition" if partition.is_o
 {% for member_property in partition.member_properties %}
 
     @property
+{% if member_property.functional %}
     def {{ member_property.name }}(self) -> {{ reference(member_property.value_type) }}:
+{% else %}
+    def {{ member_property.name }}(self) -> tuple[{{ reference(member_property.value_type) }}, ...]:
+{% endif %}
         """
         {{ member_property.comment | docstring }}
         """
         return {
 {% for value in member_property.values %}
-            {{ partition.python_name.name }}.{{ value.member }}: {{ reference(value.value) }},
+{% if member_property.functional %}
+            {{ partition.python_name.name }}.{{ value.member }}: {{ reference(value.values[0]) }},
+{% else %}
+            {{ partition.python_name.name }}.{{ value.member }}: ({% for held in value.values %}{{ reference(held) }}, {% endfor %}),
+{% endif %}
 {% endfor %}
         }[self]
 {% endfor %}

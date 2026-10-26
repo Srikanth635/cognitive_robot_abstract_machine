@@ -21,9 +21,11 @@ from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     ActionCoreAnnotation,
+    ActionPerspectiveFile,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
 )
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
@@ -32,6 +34,7 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     prehension,
 )
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontology_translation.reading import (
     ConflictingPythonNames,
     FieldTypeOutOfReach,
@@ -319,9 +322,24 @@ class TestProperties:
 
     def test_property_of_partition_members_is_an_enumeration_property(self):
         assert (
-            core.MeasurementUnit.KILOGRAM.measures_dimension
-            == core.PhysicalDimension.MASS
+            action_core.MeasurementUnit.KILOGRAM.measures_dimension
+            == action_core.PhysicalDimension.MASS
         )
+
+    def test_property_with_several_values_of_partition_members_holds_them_all(self):
+        assert action_core.QuantityKind.AMOUNT.measured_in == (
+            action_core.PhysicalDimension.MASS,
+            action_core.PhysicalDimension.VOLUME,
+        )
+
+    def test_property_of_partition_members_may_hold_no_value(self):
+        assert action_core.QuantityKind.SELECTION.measured_in == ()
+
+    def test_the_values_of_a_property_of_partition_members_are_read_as_stated(self):
+        measured_in = ActionPerspectiveFile.ACTION_CORE.namespace + "measuredIn"
+        assert Vocabulary().values_of(
+            action_core.QuantityKind.ORIENTATION, measured_in
+        ) == [action_core.PhysicalDimension.ANGLE]
 
     @pytest.mark.parametrize(
         "unit, dimension",
@@ -336,8 +354,8 @@ class TestProperties:
         self, unit, dimension
     ):
         assert (
-            core.MeasurementUnit[unit].measures_dimension
-            == core.PhysicalDimension[dimension]
+            action_core.MeasurementUnit[unit].measures_dimension
+            == action_core.PhysicalDimension[dimension]
         )
 
     def test_no_field_is_declared_only_on_a_defined_class(self):

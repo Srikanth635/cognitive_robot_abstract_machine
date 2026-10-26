@@ -391,7 +391,9 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    location) and the failures' `Indicator` only its form and who notices it. Their own slot
    properties (`quantityOfSlot`, `measuredOnSlot`) are gone, a list of two slots becoming the
    slot and the slot it is measured from. All are DUL concepts, as a parameter is. Versions:
-   action core 0.5.0, image schemas 0.2.0, failures 0.5.0.
+   action core 0.5.0, image schemas 0.2.0, failures 0.5.0. Since 2026-10-26 the Flanagan parameters are slot
+   quantities too, each class fixing its kind; the core also owns the physical dimensions and
+   units, and names the dimensions each kind is measured in.
 6. *Shapes for the perspectives, 2026-10-21.* `StructureShapes` loads the shapes of every
    module of either family, and the action perspectives keep theirs under
    `action_perspectives/shapes/`, so perspective answers are checked across fragments as the

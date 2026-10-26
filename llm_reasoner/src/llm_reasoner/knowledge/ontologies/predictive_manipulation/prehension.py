@@ -258,7 +258,27 @@ class CrushThreshold(core.ForceParameter, core.MechanicalThreshold):
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-07",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Magnitude",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -391,7 +411,20 @@ class ExpectedCenterOfMassPosition(core.LengthParameter, core.ObjectStateEstimat
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-009",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Position",
+            ),
+        ),
         definition=None,
     )
     """
@@ -416,6 +449,32 @@ class ExpectedFrictionCoefficient(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-08",
         ),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=UnionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                        ),
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspSite"
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialProperty",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#predictedFrom",
                 quantifier=Quantifier.ONLY,
@@ -449,7 +508,20 @@ class ExpectedMass(core.MassParameter, core.ObjectPropertyEstimate):
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-010",
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-08",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Amount",
+            ),
+        ),
         definition=None,
     )
     """
@@ -471,7 +543,20 @@ class ExpectedShape(core.CategoricalParameter, core.ObjectPropertyEstimate):
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-009",
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-08",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Shape",
+            ),
+        ),
         definition=None,
     )
     """
@@ -898,7 +983,27 @@ class GripForceSetpoint(core.ForceParameter, core.MotorSetpoint):
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-025",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Magnitude",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1084,7 +1189,27 @@ class GripToLoadRatioSetpoint(core.DimensionlessParameter, core.MotorSetpoint):
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-06",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Ratio",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1174,7 +1299,27 @@ class LiftClearanceSetpoint(core.LengthParameter, core.MotorSetpoint):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Distance",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#relativeToSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#InitialSupport"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1307,7 +1452,27 @@ class LiftoffThreshold(core.ForceParameter, core.MechanicalThreshold):
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-010",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Magnitude",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1329,6 +1494,20 @@ class LoadForceRateSetpoint(core.ForceRateSetpoint):
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-009",
         ),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#rateOf",
                 quantifier=Quantifier.SOME,
@@ -1357,7 +1536,27 @@ class LoadForceSetpoint(core.ForceParameter, core.MotorSetpoint):
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-025",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Magnitude",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1750,7 +1949,27 @@ class ReachPoseSetpoint(core.CategoricalParameter, core.MotorSetpoint):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Selection",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#relativeToSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspSite"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1938,7 +2157,27 @@ class SlipThreshold(core.ForceParameter, core.MechanicalThreshold):
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-025",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Magnitude",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -2036,7 +2275,27 @@ class TouchdownThreshold(core.ForceParameter, core.MechanicalThreshold):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Magnitude",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#FinalSupport"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -2089,7 +2348,27 @@ class TransportPoseSetpoint(core.CategoricalParameter, core.MotorSetpoint):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Selection",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#relativeToSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ParticipantSlot"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -2228,7 +2507,27 @@ class WithdrawalDistanceSetpoint(core.LengthParameter, core.MotorSetpoint):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Distance",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#relativeToSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
