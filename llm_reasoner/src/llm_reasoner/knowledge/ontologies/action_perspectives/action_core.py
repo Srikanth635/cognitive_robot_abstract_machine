@@ -15,6 +15,7 @@ from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge import ontologies
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
@@ -24,6 +25,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     EnumeratedClass,
     IntersectionOf,
     NamedClass,
+    OpenValuePartition,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -33,7 +35,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
-class ChangeDirection(StrEnum):
+class ChangeDirection(OpenValuePartition):
     """
     Whether something becomes larger or smaller, such as a quantity an action changes, a choice a correction moves or an estimate evidence revises. A direction that can also take values of its own lists these two among its members.
     """
@@ -47,6 +49,13 @@ class ChangeDirection(StrEnum):
     """
     Becomes smaller, or grows more slowly.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            ChangeDirection.INCREASES: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            ChangeDirection.DECREASES: ontologies.ActionPerspectiveFile.ACTION_CORE,
+        }[self]
 
 
 class ConditionPolarity(StrEnum):
@@ -67,7 +76,7 @@ class ConditionPolarity(StrEnum):
     """
 
 
-class MaterialRegime(StrEnum):
+class MaterialRegime(OpenValuePartition):
     """
     The physical flow behaviour of a transferred substance.
     """
@@ -87,8 +96,16 @@ class MaterialRegime(StrEnum):
     A highly viscous or cohesive material with delayed flow.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            MaterialRegime.LIQUID: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MaterialRegime.GRANULAR: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            MaterialRegime.COHESIVE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+        }[self]
 
-class QuantityKind(StrEnum):
+
+class QuantityKind(OpenValuePartition):
     """
     The kind of quantity a choice an action leaves open sets.
     """
@@ -130,8 +147,20 @@ class QuantityKind(StrEnum):
     Which of several alternatives is taken, such as the hand that holds the source.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            QuantityKind.AMOUNT: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.RATE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.POSITION: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.ORIENTATION: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.DISTANCE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.DURATION: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            QuantityKind.SELECTION: ontologies.ActionPerspectiveFile.ACTION_CORE,
+        }[self]
 
-class TransferTerminationReason(StrEnum):
+
+class TransferTerminationReason(OpenValuePartition):
     """
     The condition that intentionally or exceptionally ends a transfer.
     """
@@ -155,6 +184,15 @@ class TransferTerminationReason(StrEnum):
     """
     A spill or another failure forces the transfer to stop.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            TransferTerminationReason.TARGET_QUANTITY_ATTAINED: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            TransferTerminationReason.SOURCE_EXHAUSTED: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            TransferTerminationReason.INSTRUCTED_STOP: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            TransferTerminationReason.TRANSFER_FAILURE: ontologies.ActionPerspectiveFile.ACTION_CORE,
+        }[self]
 
 
 # %% classes

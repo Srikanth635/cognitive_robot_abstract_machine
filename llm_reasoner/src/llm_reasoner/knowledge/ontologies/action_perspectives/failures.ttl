@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.5.0> ;
-    owl:versionInfo "0.5.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.6.0> ;
+    owl:versionInfo "0.6.0" .
 
 # %% classes
 
@@ -95,8 +95,7 @@ failures:IndicatorForm a owl:Class ;
     rdfs:label "indicator form"@en ;
     rdfs:comment "The form of the quantity by which a failure is noticed."@en ;
     rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( failures:MeasuredValue failures:OnsetValue failures:Happening ) ] .
+    core:isOpenValuePartition true .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( failures:MeasuredValue failures:OnsetValue failures:Happening ) .
@@ -110,8 +109,7 @@ failures:Noticer a owl:Class ;
     rdfs:label "noticer"@en ;
     rdfs:comment "Who notices a failure."@en ;
     rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( failures:PersonObserver failures:AgentSensing ) ] .
+    core:isOpenValuePartition true .
 
 failures:PersonObserver a failures:Noticer,
         owl:NamedIndividual ;
@@ -150,8 +148,7 @@ failures:CorrectionTiming a owl:Class ;
     rdfs:label "correction timing"@en ;
     rdfs:comment "When a correction can be applied."@en ;
     rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( failures:DuringAction failures:RetryOnly ) ] .
+    core:isOpenValuePartition true .
 
 failures:DuringAction a failures:CorrectionTiming,
         owl:NamedIndividual ;

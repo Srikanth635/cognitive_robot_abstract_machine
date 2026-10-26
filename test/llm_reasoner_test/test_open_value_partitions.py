@@ -28,6 +28,11 @@ from llm_reasoner.knowledge.ontologies import (
     ActionCoreAnnotation,
     ActionPerspectiveFile,
 )
+from llm_reasoner.knowledge.ontologies.action_perspectives import (
+    action_core,
+    failures,
+)
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
 from llm_reasoner.knowledge.ontologies.terms import (
     DescriptionEntity,
     OpenValuePartition,
@@ -336,6 +341,32 @@ class TestScope:
         )
         assert field_schema.options == tuple(member.name for member in direction)
 
+    def test_the_members_of_the_declaring_module_are_offered_beyond_its_scope(
+        self, generated, direction
+    ):
+        module_file = OpenPartitionModuleFile.TARGET_CORRECTIONS
+        correction = generated[module_file].TargetCorrection
+        scope = TypeScope(
+            usable_modules=frozenset({module_file}),
+            vocabulary=Vocabulary(modules=generated),
+        )
+        field_schema = type_schema_for(correction, scope).field_named("has_direction")
+        assert field_schema.options == (
+            direction.INCREASES.name,
+            direction.DECREASES.name,
+            direction.TOWARDS_TARGET.name,
+            direction.AWAY_FROM_TARGET.name,
+        )
+
+    def test_a_pouring_structure_is_offered_every_material_regime_of_the_core(self):
+        schema = GenerationSchema.for_root(pouring.PouringPhaseStructure)
+        regime = schema.get(pouring.PouringPhaseStructure.__name__).field_named(
+            "has_material_regime"
+        )
+        assert regime.options == tuple(
+            member.name for member in action_core.MaterialRegime
+        )
+
 
 # %% decoding
 
@@ -370,3 +401,28 @@ class TestDecoding:
             generated,
         )
         assert (result.hypothesis, result.partial.root.has_direction) == (None, None)
+
+
+# %% the shipped lists
+
+
+class TestShippedLists:
+    def test_only_complete_lists_and_lists_sharing_core_members_stay_closed(self):
+        closed = {
+            definition
+            for module in Vocabulary().modules.values()
+            for definition in vars(module).values()
+            if isinstance(definition, type)
+            and issubclass(definition, StrEnum)
+            and definition.__module__ == module.__name__
+            and not issubclass(definition, OpenValuePartition)
+        }
+        assert closed == {
+            action_core.ConditionPolarity,
+            core.ComparisonOutcome,
+            core.EvidenceStatus,
+            core.ParameterValueForm,
+            core.CorrectionDirection,
+            core.EstimateUpdateDirection,
+            failures.ParameterChangeDirection,
+        }

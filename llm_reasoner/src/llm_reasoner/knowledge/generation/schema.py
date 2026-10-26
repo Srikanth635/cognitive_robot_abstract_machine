@@ -430,12 +430,14 @@ class TypeScope:
         """
         :return: Whether a hypothesis in this scope may use the member: every member of
             a partition its enumeration closes, and a member of an open value partition
-            when one of the scope's modules declares it.
+            when the module declaring the partition or one of the scope's modules
+            declares it.
         """
         return (
             self.usable_modules is None
             or not isinstance(member, OpenValuePartition)
-            or member.declaring_module in self.usable_modules
+            or member.declaring_module
+            in {*self.usable_modules, self.vocabulary.module_file_of(type(member))}
         )
 
     def offered_members(

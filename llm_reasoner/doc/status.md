@@ -808,6 +808,30 @@ Step 4 of the ontology consolidation (code only; no list is opened yet, which is
   0.7.0 through the migration table `0004-open-value-partitions`, which moves the records
   of a store made under 0.6.0 (`python -m llm_reasoner.knowledge.storage.migrate store`).
 
+### Open lists (2026-10-26)
+
+Step 5 of the ontology consolidation: 33 of the 40 value partitions are open value
+partitions now; their `owl:oneOf` is replaced by `ac:isOpenValuePartition true`.
+
+- Closed are the four exhaustive by definition (`ConditionPolarity`, `ParameterValueForm`,
+  `EvidenceStatus`, `ComparisonOutcome`) and, until step 9 merges them into the open
+  `ac:ChangeDirection`, the three directions listing the action core's `Increases` and
+  `Decreases` (`CorrectionDirection`, `EstimateUpdateDirection`,
+  `ParameterChangeDirection`): opening them would have the predictive manipulation core
+  describe action-core terms. `CouplingRegime` and `UpdateTimescale`, whose
+  exhaustiveness is unclear, are open.
+- A generation scope also admits a member that the module declaring its partition
+  declares: the predictive manipulation roots use the action core's `MaterialRegime` and
+  `TransferTerminationReason` without the action core being among their usable modules.
+- Every generation root (`PouringPhaseStructure`, `ActionPhaseStructure`, `PouringFrame`,
+  `FrameStereotype`, `SchemaStereotype`, `FailureStereotype`) is offered exactly the
+  members it was offered before. The generated enumerations keep their members; they
+  derive from `OpenValuePartition` and name each member's declaring module.
+- Closing a property per action with `sh:in` is left to step 9, where another module first
+  adds members.
+- The eight changed modules moved a minor version (`0005-open-lists`); the cram_viz sample
+  record was migrated through it.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

@@ -10,8 +10,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.5.0> ;
-    owl:versionInfo "0.5.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.6.0> ;
+    owl:versionInfo "0.6.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> ;
     rdfs:label "Predictive manipulation: prehension"@en ;
     rdfs:comment """Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes."""@en .
@@ -521,7 +521,7 @@
 
 :LoadOrigin a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :SelfGeneratedLoad :ExternallyGeneratedLoad ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "load origin"@en ;
     rdfs:comment "Whether a load on the grasp can be predicted from the actor's own motor commands."@en ;
     core:evidenceStatus core:EmpiricalFinding ;

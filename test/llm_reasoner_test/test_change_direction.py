@@ -7,13 +7,14 @@ directions share beside the values only they have.
 from __future__ import annotations
 
 import pytest
-from rdflib import OWL, RDF, RDFS, Graph, Namespace, URIRef
+from rdflib import OWL, RDF, RDFS, Graph, Literal, Namespace, URIRef
 from rdflib.collection import Collection
 from typing_extensions import Optional, get_type_hints
 
 from llm_reasoner.knowledge.ontologies import (
     DUL_NAMESPACE,
     KNOWLEDGE_ONTOLOGY_MODULES,
+    ActionCoreAnnotation,
     ActionPerspectiveFile,
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
@@ -66,10 +67,17 @@ def class_iri(enumeration: type) -> URIRef:
     return URIRef(module_file.namespace + enumeration.__name__)
 
 
-def enumerated(graph: Graph, cls: URIRef) -> set[URIRef]:
+def members_of(graph: Graph, cls: URIRef) -> set[URIRef]:
     """
-    :return: The individuals the graph enumerates as the class's members.
+    :return: The individuals the graph states are the class's members: those its
+        enumeration lists, or for an open value partition those typed with it.
     """
+    if (
+        cls,
+        URIRef(ActionCoreAnnotation.IS_OPEN_VALUE_PARTITION),
+        Literal(True),
+    ) in graph:
+        return set(graph.subjects(RDF.type, cls))
     (enumeration,) = graph.objects(cls, OWL.equivalentClass)
     return set(Collection(graph, graph.value(enumeration, OWL.oneOf)))
 
@@ -85,7 +93,7 @@ The action core's members, larger and smaller.
 
 class TestTheTerm:
     def test_the_action_core_declares_it_with_two_members(self, graph):
-        assert enumerated(graph, class_iri(action_core.ChangeDirection)) == (
+        assert members_of(graph, class_iri(action_core.ChangeDirection)) == (
             CORE_MEMBERS
         )
         assert [member.name for member in action_core.ChangeDirection] == [
@@ -108,7 +116,7 @@ class TestTheTerm:
             *(member.name for member in action_core.ChangeDirection),
             *own_members,
         }
-        assert CORE_MEMBERS <= enumerated(graph, class_iri(direction))
+        assert CORE_MEMBERS <= members_of(graph, class_iri(direction))
 
     @pytest.mark.parametrize("direction, own_members", SHARING_DIRECTIONS)
     def test_a_shared_member_is_the_core_member(self, direction, own_members):

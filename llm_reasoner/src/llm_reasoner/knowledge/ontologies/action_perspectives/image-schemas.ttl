@@ -13,8 +13,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas/0.2.0> ;
-    owl:versionInfo "0.2.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas/0.3.0> ;
+    owl:versionInfo "0.3.0" .
 
 # %% classes
 
@@ -136,8 +136,7 @@ schemas:SchemaKind a owl:Class ;
     rdfs:label "schema kind"@en ;
     rdfs:comment "The kinds of image schema an action's frame can instantiate."@en ;
     rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( schemas:SourcePathGoal schemas:Containment schemas:Verticality schemas:SupportPattern schemas:ContactPattern ) ] .
+    core:isOpenValuePartition true .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( schemas:SourcePathGoal schemas:Containment schemas:Verticality schemas:SupportPattern schemas:ContactPattern ) .
@@ -206,8 +205,7 @@ schemas:SchemaRoleKind a owl:Class ;
     rdfs:label "schema role kind"@en ;
     rdfs:comment "The roles a slot can take within an image schema."@en ;
     rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( schemas:Trajector schemas:Landmark schemas:PathStart schemas:PathEnd schemas:Entrance schemas:Containing schemas:Content schemas:Higher schemas:Lower schemas:Supporter schemas:Supported schemas:Toucher ) ] .
+    core:isOpenValuePartition true .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( schemas:Trajector schemas:Landmark schemas:PathStart schemas:PathEnd schemas:Entrance schemas:Containing schemas:Content schemas:Higher schemas:Lower schemas:Supporter schemas:Supported schemas:Toucher ) .
@@ -251,8 +249,7 @@ schemas:RelationKind a owl:Class ;
     rdfs:label "relation kind"@en ;
     rdfs:comment "The kinds of relation a schema can require between two slots."@en ;
     rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( schemas:Above schemas:Below schemas:VerticallyOver schemas:WithinInterior schemas:OutsideInterior schemas:InContactWith schemas:HoldsUp ) ] .
+    core:isOpenValuePartition true .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( schemas:Above schemas:Below schemas:VerticallyOver schemas:WithinInterior schemas:OutsideInterior schemas:InContactWith schemas:HoldsUp ) .
@@ -276,8 +273,7 @@ schemas:RequirementPhase a owl:Class ;
     rdfs:label "requirement phase"@en ;
     rdfs:comment "The phases of an action in which a requirement holds."@en ;
     rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( schemas:BeforeAction schemas:AfterAction schemas:ThroughoutAction ) ] .
+    core:isOpenValuePartition true .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( schemas:BeforeAction schemas:AfterAction schemas:ThroughoutAction ) .
@@ -301,8 +297,7 @@ schemas:QuantityAspect a owl:Class ;
     rdfs:label "quantity aspect"@en ;
     rdfs:comment "The aspects of a slot's filler that a deciding quantity can measure."@en ;
     rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( schemas:Centre schemas:Extent schemas:Location ) ] .
+    core:isOpenValuePartition true .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( schemas:Centre schemas:Extent schemas:Location ) .

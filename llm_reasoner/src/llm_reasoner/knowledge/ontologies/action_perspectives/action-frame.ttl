@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.5.0> ;
-    owl:versionInfo "0.5.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.6.0> ;
+    owl:versionInfo "0.6.0" .
 
 # %% classes
 
@@ -114,8 +114,7 @@ frame:Posture a owl:Class ;
     rdfs:label "posture"@en ;
     rdfs:comment "How a thing stands relative to the vertical, as a qualitative value of its orientation."@en ;
     rdfs:subClassOf dul:Region ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( frame:Upright frame:Tilted frame:Inverted ) ] .
+    core:isOpenValuePartition true .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( frame:Upright frame:Tilted frame:Inverted ) .
