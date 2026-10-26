@@ -189,7 +189,13 @@ class TestModuleFile:
             assert graph.value(term, RDFS.comment) is not None, term
 
     def test_every_property_is_attached_to_a_class(self, graph):
-        restricted = set(graph.objects(None, OWL.onProperty))
+        restricted = {
+            prop
+            for module in KNOWLEDGE_ONTOLOGY_MODULES
+            for prop in Graph()
+            .parse(module.path, format="turtle")
+            .objects(None, OWL.onProperty)
+        }
         for property_type in (OWL.ObjectProperty, OWL.DatatypeProperty):
             for prop in graph.subjects(RDF.type, property_type):
                 assert (

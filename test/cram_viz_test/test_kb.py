@@ -13,6 +13,7 @@ krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
 from llm_reasoner.knowledge.access import (  # noqa: E402
     ConceptReference,
+    action_core,
     core,
     CRAM_AICOR_NAMESPACE,
     prehension,
@@ -445,12 +446,13 @@ class TestHypothesisKnowledgeQueries:
             id(requirement): requirement
             for phase in structure().defines_phase
             for requirement in phase.has_condition_requirement
-            if requirement.has_condition_mode is core.ConditionMode.THROUGHOUT
+            if requirement.has_condition_timing
+            is action_core.ConditionTiming.THROUGHOUT
         }
         result = kb.run_query(
             "an(entity(pouring_condition_requirement)"
-            ".where(pouring_condition_requirement.has_condition_mode"
-            " == ConditionMode.THROUGHOUT))"
+            ".where(pouring_condition_requirement.has_condition_timing"
+            " == ConditionTiming.THROUGHOUT))"
         )
         assert result["ok"] and expected
         assert row_names(result) == entity_names(expected.values())

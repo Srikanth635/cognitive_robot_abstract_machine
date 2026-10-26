@@ -301,7 +301,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_holds_milk> a ns1:ConditionRequirement,
         owl:NamedIndividual ;
     ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk_in_carton> ;
-    ns1:hasConditionMode ns1:AtEntry ;
+    ac:hasConditionTiming ac:AtEntry ;
     ns1:hasConditionPolarity ac:Holds ;
     ns1:isWorldAssumption true .
 
@@ -330,7 +330,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_before_loading> a ns1:ConditionRequirement,
         owl:NamedIndividual ;
     ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper_on_carton> ;
-    ns1:hasConditionMode ns1:AtEntry ;
+    ac:hasConditionTiming ac:AtEntry ;
     ns1:hasConditionPolarity ac:Holds .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_point> a ns1:SensorimotorControlPoint,
@@ -426,7 +426,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable_after_loading> a ns1:ConditionRequirement,
         owl:NamedIndividual ;
     ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
-    ns1:hasConditionMode ns1:AtExit ;
+    ac:hasConditionTiming ac:AtExit ;
     ns1:hasConditionPolarity ac:Holds .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_corridor> a ns3:GripForceCorridor,
@@ -684,7 +684,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl_before_tilting> a ns1:ConditionRequirement,
         owl:NamedIndividual ;
     ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl> ;
-    ns1:hasConditionMode ns1:AtEntry ;
+    ac:hasConditionTiming ac:AtEntry ;
     ns1:hasConditionPolarity ac:Holds .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#start_support> a ns1:ForceComponent,
@@ -2240,7 +2240,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact> a ns1:ConditionRequirement,
         owl:NamedIndividual ;
     ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_intact> ;
-    ns1:hasConditionMode ns1:Throughout ;
+    ac:hasConditionTiming ac:Throughout ;
     ns1:hasConditionPolarity ac:Holds ;
     ns1:isWorldAssumption true ;
     ns1:violationSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#crush> .
@@ -2347,7 +2347,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> a ns1:ConditionRequirement,
         owl:NamedIndividual ;
     ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
-    ns1:hasConditionMode ns1:Throughout ;
+    ac:hasConditionTiming ac:Throughout ;
     ns1:hasConditionPolarity ac:Holds ;
     ns1:violationSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip> .
 

@@ -113,35 +113,6 @@ class RelationKind(OpenValuePartition):
         }[self]
 
 
-class RequirementPhase(OpenValuePartition):
-    """
-    The phases of an action in which a requirement holds.
-    """
-
-    BEFORE_ACTION = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#BeforeAction"
-    """
-    Holds before the action starts.
-    """
-
-    AFTER_ACTION = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#AfterAction"
-    """
-    Holds once the action has ended.
-    """
-
-    THROUGHOUT_ACTION = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#ThroughoutAction"
-    """
-    Holds during the whole action.
-    """
-
-    @property
-    def declaring_module(self) -> ontologies.OntologyModuleFile:
-        return {
-            RequirementPhase.BEFORE_ACTION: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
-            RequirementPhase.AFTER_ACTION: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
-            RequirementPhase.THROUGHOUT_ACTION: ontologies.ActionPerspectiveFile.IMAGE_SCHEMAS,
-        }[self]
-
-
 class SchemaKind(OpenValuePartition):
     """
     The kinds of image schema an action's frame can instantiate.
@@ -480,6 +451,13 @@ class SchemaRequirement(DescriptionEntity):
         claims=(),
         restrictions=(
             PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasConditionTiming",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ConditionTiming"
+                ),
+            ),
+            PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#referenceSlot",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
@@ -498,6 +476,17 @@ class SchemaRequirement(DescriptionEntity):
     )
     """
     The ontology class this class stands for.
+    """
+
+    has_condition_timing: Optional[action_core.ConditionTiming] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasConditionTiming",
+            functional=True,
+        ).as_dict(),
+    )
+    """
+    When, relative to the phase or the action, the condition or the relation is demanded.
     """
 
     constrains_dimension: List[action_core.ParameterDimension] = field(
@@ -522,17 +511,6 @@ class SchemaRequirement(DescriptionEntity):
     )
     """
     A kind of quantity that decides whether the required relation holds.
-    """
-
-    holds_in_phase: Optional[RequirementPhase] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#holdsInPhase",
-            functional=True,
-        ).as_dict(),
-    )
-    """
-    The phase of the action in which the requirement holds.
     """
 
     names_spatial_relation: List[ConceptReference] = field(

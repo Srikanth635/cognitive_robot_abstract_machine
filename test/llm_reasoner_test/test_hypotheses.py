@@ -32,6 +32,7 @@ from llm_reasoner.knowledge.hypotheses.service import KnowledgeService, StoreReq
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView, UnknownCitation
 from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
 from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     pouring,
@@ -144,9 +145,9 @@ class TestHypothesisView:
     def test_requirements_are_selected_by_their_mode(self, view):
         lift = fragment_named(view, "lift")
         assert names(
-            view, view.requirements_of(lift, core.ConditionMode.THROUGHOUT)
+            view, view.requirements_of(lift, action_core.ConditionTiming.THROUGHOUT)
         ) == ["carton_upright_throughout"]
-        assert view.requirements_of(lift, core.ConditionMode.AT_ENTRY) == []
+        assert view.requirements_of(lift, action_core.ConditionTiming.AT_ENTRY) == []
 
     def test_world_assumptions_are_the_requirements_assumed_of_the_world(self, view):
         assert names(view, view.world_assumptions()) == ["carton_upright_throughout"]

@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas/0.4.0> ;
-    owl:versionInfo "0.4.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas/0.5.0> ;
+    owl:versionInfo "0.5.0" .
 
 # %% classes
 
@@ -99,6 +99,9 @@ schemas:SchemaRequirement a owl:Class ;
         [ a owl:Restriction ;
             owl:onProperty schemas:subjectSlot ;
             owl:someValuesFrom core:FrameSlot ],
+        [ a owl:Restriction ;
+            owl:onProperty core:hasConditionTiming ;
+            owl:allValuesFrom core:ConditionTiming ],
         dul:Description .
 
 schemas:DecidingQuantity a owl:Class ;
@@ -255,30 +258,6 @@ schemas:RelationKind a owl:Class ;
 [] a owl:AllDifferent ;
     owl:distinctMembers ( schemas:Above schemas:Below schemas:VerticallyOver schemas:WithinInterior schemas:OutsideInterior schemas:InContactWith schemas:HoldsUp ) .
 
-schemas:AfterAction a schemas:RequirementPhase,
-        owl:NamedIndividual ;
-    rdfs:label "after action"@en ;
-    rdfs:comment "Holds once the action has ended."@en .
-
-schemas:BeforeAction a schemas:RequirementPhase,
-        owl:NamedIndividual ;
-    rdfs:label "before action"@en ;
-    rdfs:comment "Holds before the action starts."@en .
-
-schemas:ThroughoutAction a schemas:RequirementPhase,
-        owl:NamedIndividual ;
-    rdfs:label "throughout action"@en ;
-    rdfs:comment "Holds during the whole action."@en .
-
-schemas:RequirementPhase a owl:Class ;
-    rdfs:label "requirement phase"@en ;
-    rdfs:comment "The phases of an action in which a requirement holds."@en ;
-    rdfs:subClassOf dul:Concept ;
-    core:isOpenValuePartition true .
-
-[] a owl:AllDifferent ;
-    owl:distinctMembers ( schemas:BeforeAction schemas:AfterAction schemas:ThroughoutAction ) .
-
 schemas:Centre a schemas:QuantityAspect,
         owl:NamedIndividual ;
     rdfs:label "centre"@en ;
@@ -384,13 +363,6 @@ schemas:namesState a owl:ObjectProperty ;
     rdfs:label "names state"@en ;
     rdfs:comment "The CRAM-AICOR state type, such as aicor:ContainedState, that the requirement amounts to, named by its IRI."@en ;
     rdfs:domain schemas:SchemaRequirement .
-
-schemas:holdsInPhase a owl:FunctionalProperty,
-        owl:ObjectProperty ;
-    rdfs:label "holds in phase"@en ;
-    rdfs:comment "The phase of the action in which the requirement holds."@en ;
-    rdfs:domain schemas:SchemaRequirement ;
-    rdfs:range schemas:RequirementPhase .
 
 schemas:constrainsDimension a owl:ObjectProperty ;
     rdfs:label "constrains dimension"@en ;

@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.9.0> ;
-    owl:versionInfo "0.9.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.10.0> ;
+    owl:versionInfo "0.10.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -438,27 +438,27 @@ Classes classify description-level individuals, the knowledge a language model g
 :ConditionRequirement a owl:Class ;
     rdfs:subClassOf aicor:dul_Relation , dul:Relation ,
         [ a owl:Restriction ; owl:onProperty aicor:hasConditionType ; owl:someValuesFrom :PhaseConditionType ] ,
-        [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:someValuesFrom :ConditionMode ] ,
+        [ a owl:Restriction ; owl:onProperty ac:hasConditionTiming ; owl:someValuesFrom ac:ConditionTiming ] ,
         [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:someValuesFrom ac:ConditionPolarity ] ;
     rdfs:label "condition requirement"@en ;
     rdfs:comment "A phase's demand on a condition: when it applies, whether it must hold or be absent, and whether it is presupposed."@en ;
     :evidenceStatus :EngineeringExtension .
 
 :EntryRequirement a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :AtEntry ] ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement [ a owl:Restriction ; owl:onProperty ac:hasConditionTiming ; owl:hasValue ac:AtEntry ] ) ] ;
     rdfs:label "entry requirement"@en ;
     rdfs:comment "A condition demanded for the phase to begin: the classical precondition."@en ;
     :evidenceStatus :EngineeringExtension .
 
 :ExitRequirement a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :AtExit ] ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement [ a owl:Restriction ; owl:onProperty ac:hasConditionTiming ; owl:hasValue ac:AtExit ] ) ] ;
     rdfs:label "exit requirement"@en ;
     rdfs:comment "A condition brought about by completing the phase: the classical postcondition."@en ;
     :evidenceStatus :EngineeringExtension .
 
 :InvariantRequirement a owl:Class ;
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement
-        [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :Throughout ]
+        [ a owl:Restriction ; owl:onProperty ac:hasConditionTiming ; owl:hasValue ac:Throughout ]
         [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:hasValue ac:Holds ] ) ] ;
     rdfs:subClassOf aicor:MaintenanceGoal , dul:Goal ,
         [ a owl:Restriction ; owl:onProperty :violationSignalledBy ; owl:someValuesFrom :FailureEventType ] ;
@@ -468,7 +468,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :ProhibitionRequirement a owl:Class ;
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement
-        [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :Throughout ]
+        [ a owl:Restriction ; owl:onProperty ac:hasConditionTiming ; owl:hasValue ac:Throughout ]
         [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:hasValue ac:DoesNotHold ] ) ] ;
     rdfs:subClassOf aicor:PreventionGoal , dul:Goal ;
     rdfs:label "prohibition requirement"@en ;
@@ -489,8 +489,6 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:comment "A demanded condition that no phase establishes, so it is presupposed of the world."@en ;
     :evidenceStatus :EngineeringExtension .
 
-:hasConditionMode a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ConditionMode ;
-    rdfs:label "has condition mode"@en ; rdfs:comment "When, relative to the phase, the condition is demanded."@en .
 :hasConditionPolarity a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range ac:ConditionPolarity ;
     rdfs:label "has condition polarity"@en ; rdfs:comment "Whether the condition is demanded to hold or to be absent."@en .
 :isWorldAssumption a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:domain :ConditionRequirement ; rdfs:range xsd:boolean ;
@@ -636,21 +634,6 @@ Classes classify description-level individuals, the knowledge a language model g
 :Hybrid a owl:NamedIndividual , :RegulationMode ; rdfs:label "hybrid"@en ;
     rdfs:comment "Feedforward predictions and continuous sensory correction cooperate."@en .
 [ a owl:AllDifferent ; owl:distinctMembers ( :Feedforward :ContinuousFeedback :Hybrid ) ] .
-
-:ConditionMode a owl:Class ;
-    rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    ac:isOpenValuePartition true ;
-    rdfs:label "condition mode"@en ;
-    rdfs:comment "When, relative to a phase, a condition is demanded."@en ;
-    :evidenceStatus :EngineeringExtension .
-:AtEntry a owl:NamedIndividual , :ConditionMode ; rdfs:label "at entry"@en ;
-    rdfs:comment "Must hold for the phase to begin."@en .
-:Throughout a owl:NamedIndividual , :ConditionMode ; rdfs:label "throughout"@en ;
-    rdfs:comment "Must hold at every instant of the phase."@en .
-:AtExit a owl:NamedIndividual , :ConditionMode ; rdfs:label "at exit"@en ;
-    rdfs:comment "Is brought about by completing the phase."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :AtEntry :Throughout :AtExit ) ] .
-
 
 :SensoryModality a owl:Class ;
     rdfs:subClassOf aicor:Modality , dul:Concept ;

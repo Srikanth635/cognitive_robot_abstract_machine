@@ -56,39 +56,6 @@ class ComparisonOutcome(StrEnum):
     """
 
 
-class ConditionMode(OpenValuePartition):
-    """
-    When, relative to a phase, a condition is demanded.
-    """
-
-    AT_ENTRY = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AtEntry"
-    )
-    """
-    Must hold for the phase to begin.
-    """
-
-    THROUGHOUT = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Throughout"
-    """
-    Must hold at every instant of the phase.
-    """
-
-    AT_EXIT = (
-        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AtExit"
-    )
-    """
-    Is brought about by completing the phase.
-    """
-
-    @property
-    def declaring_module(self) -> ontologies.OntologyModuleFile:
-        return {
-            ConditionMode.AT_ENTRY: ontologies.PredictiveManipulationOntologyFile.CORE,
-            ConditionMode.THROUGHOUT: ontologies.PredictiveManipulationOntologyFile.CORE,
-            ConditionMode.AT_EXIT: ontologies.PredictiveManipulationOntologyFile.CORE,
-        }[self]
-
-
 class CouplingRegime(OpenValuePartition):
     """
     Whether the effector and the manipulandum form a single kinematic unit.
@@ -2052,10 +2019,10 @@ class ConditionRequirement(DescriptionEntity):
                 ),
             ),
             PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionMode",
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasConditionTiming",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ConditionMode"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ConditionTiming"
                 ),
             ),
             PropertyRestriction(
@@ -2072,15 +2039,15 @@ class ConditionRequirement(DescriptionEntity):
     The ontology class this class stands for.
     """
 
-    has_condition_mode: Optional[ConditionMode] = field(
+    has_condition_timing: Optional[action_core.ConditionTiming] = field(
         default=None,
         metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionMode",
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasConditionTiming",
             functional=True,
         ).as_dict(),
     )
     """
-    When, relative to the phase, the condition is demanded.
+    When, relative to the phase or the action, the condition or the relation is demanded.
     """
 
     has_condition_polarity: Optional[action_core.ConditionPolarity] = field(
@@ -2882,9 +2849,9 @@ class EntryRequirement(ConditionRequirement):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ConditionRequirement"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionMode",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasConditionTiming",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AtEntry",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AtEntry",
                 ),
             )
         ),
@@ -2967,9 +2934,9 @@ class ExitRequirement(ConditionRequirement):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ConditionRequirement"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionMode",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasConditionTiming",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AtExit",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AtExit",
                 ),
             )
         ),
@@ -3524,9 +3491,9 @@ class InvariantRequirement(ConditionRequirement):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ConditionRequirement"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionMode",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasConditionTiming",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Throughout",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Throughout",
                 ),
                 PropertyRestriction(
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
@@ -4446,9 +4413,9 @@ class ProhibitionRequirement(ConditionRequirement):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ConditionRequirement"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionMode",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasConditionTiming",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Throughout",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Throughout",
                 ),
                 PropertyRestriction(
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
