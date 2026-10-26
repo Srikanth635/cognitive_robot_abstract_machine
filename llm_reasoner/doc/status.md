@@ -16,7 +16,7 @@ Last updated: 2026-10-26; code on the branch `feature/physics_backed_knowledge`,
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
 | Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model, which reads the hypothesis through three knowledge tools and cites its fragments as grounds (R1–R7 and I1–I5, verified live). Two vocabulary families: the Flanagan predictive-control modules and the action perspectives (action core and action frame, phases 0–4 of `knowledge_perspectives.md`, offered opt-in). A pour's predicted end and the flow-onset tilt are checked on the resolver side (`pour_prediction.md`) |
-| Offline tests | `python -m pytest test/llm_reasoner_test -m "not slow"`: 1229 passed, 41 deselected as slow (2026-10-26) |
+| Offline tests | `python -m pytest test/llm_reasoner_test -m "not slow"`: 1350 passed, 41 deselected as slow, which pass on their own (2026-10-26) |
 
 ## 2. Completed
 
@@ -788,6 +788,10 @@ commit on `feature/physics_backed_knowledge`:
   the shipped hypotheses is consistent and satisfiable, and that with CRAM-AICOR as it is
   every unsatisfiable class of ours follows from those axioms.
 
+Steps 4 to 16 follow, one subsection each; step 15 (the action failure) was built before
+steps 13 and 14, which waited for the design note
+[`condition_quantity_design.md`](condition_quantity_design.md).
+
 ### Open value partitions (2026-10-25)
 
 Step 4 of the ontology consolidation (code only; no list is opened yet, which is step 5):
@@ -1074,6 +1078,28 @@ Step 14 of the ontology consolidation, with the decisions D1, R1 and S1 of
   0.3.0, and splits each parameter's roles by the slots its class names. The cram_viz
   sample's safety margin, which no class tells apart, was split by hand; the shipped
   measurement records use the moved units.
+
+### Close-out of the consolidation (2026-10-26)
+
+Step 16 of the ontology consolidation, without its live check:
+
+- `architecture.md` §2.3 and §2.6 and `knowledge_perspectives.md` (phases 5 to 7) describe
+  the consolidated modules: 32 of the 36 value partitions are open, the four closed ones
+  exhaustive by definition; the material regime is the pouring frame's; the requirements of
+  both families state their timing with `ConditionTiming`; a failure is a kind of
+  `ac:ActionFailure`.
+- `~/.cram_viz/hypotheses` is migrated through every table, 0001 to 0015, with a dated
+  backup before each run (the last `hypotheses.backup-2026-10-26-before-0015`). The five
+  records of 2026-10-21 are current; the four phase structures of 2026-10-07/08 stay stale.
+- Served from the migrated store through a client that fails when called, the pouring
+  designator's knowledge for a liquid needed no model call: the phase structure
+  (`533b7c95`), the pouring frame (`13cc4df0`) and its frame, schema and failure
+  stereotypes. Each record is read as a view with its three knowledge tools, and the frame
+  fills the designator's six frame parts.
+- `cram_classes/cram-classes.ttl` is written again from the code: the physics_test merge
+  changed the docstring of semantic_digital_twin's `TracyCamera`, which `test_cram_classes`
+  reported.
+- Deferred (user, 2026-10-26): the live check, which waits for API credit (§6).
 
 ## 2a. Moved onto the upstream main (2026-10-21)
 
@@ -1451,6 +1477,7 @@ approval.
 | Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | **Done** (R1–R7, I1–I5; `architecture.md` §3.6, §3.7): the resolver obtains the hypothesis before every request to its model and reads it with the knowledge tools |
 | Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below. Designed in [`knowledge_perspectives.md`](knowledge_perspectives.md): an action core and one module per perspective, each importing `cram-aicor-ontology.ttl`; the model proposes each perspective's vocabulary, which is checked and reviewed before use. Built: the core and the action frame, with knowledge, tools, roles-to-slots and the phase 4 measurement (phases 0–4, §2). Not built: image schemas (5), failures and corrections (6), the Flanagan modules on the core's slots (7), more actions (8). Trap cases come before any further perspective |
 | Structured prompts for the knowledge component | Its system, initial and repair prompts were prose built in Python, unlike the resolver's tagged sections | **Done** 2026-10-12 (`architecture.md` §3.2): tagged sections, JSON data and named rules; the system prompt grew from about 80k to 130k characters (the types as indented JSON) |
+| Live check of the consolidated modules (step 16 of the ontology consolidation) | Shows whether generation is still admitted, and at what cost, once each shared notion has one owner | Deferred by the user on 2026-10-26 until there is API credit: one hypothesis per root (liquid `PouringPhaseStructure`, liquid `pf:PouringFrame`, `FrameStereotype`, `SchemaStereotype`, `FailureStereotype`) with Sonnet 5.5, recording admission, repairs, warnings, HermiT's verdict, tokens, cost and time against the store's records of 2026-10-21; then one cram_viz `simple_pouring` resolution by the resolver's model |
 | Designator slots supplied from the SDT world (containers, arms) | Replaces hand-written bindings | Deferred |
 | Choosing smaller pouring structures from the world state | The full 12-phase pouring structure is always required | Deferred |
 | An MCP server over the world-access contract | For consumers outside the resolver's process | When a second consumer needs it |
