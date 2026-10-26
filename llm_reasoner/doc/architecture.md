@@ -6,7 +6,9 @@ state of the work — what is done, in progress and proposed — is kept separat
 [`status.md`](status.md). The scientific contract of the predictive-manipulation
 ontology is [`flanagan_scientific_contract.md`](flanagan_scientific_contract.md). How the
 knowledge is to answer competency questions about an action, level by level and graded by
-its evidence, is designed in [`competency_questions.md`](competency_questions.md).
+its evidence, is designed in [`competency_questions.md`](competency_questions.md). How conditions and
+quantities are to get one owner across the two families is open for decision in
+[`condition_quantity_design.md`](condition_quantity_design.md).
 
 ## 1. Principles
 
