@@ -176,13 +176,22 @@ ACTION_CORE_ONTOLOGY_IRI = ActionPerspectiveFile.ACTION_CORE.namespace.rstrip("#
 The action core, whose condition polarity the core module uses.
 """
 
-EXTERNAL_ONTOLOGIES = (
+CORE_IMPORTS = (
     CRAM_AICOR_ONTOLOGY_IRI,
     DUL_ONTOLOGY_IRI,
     ACTION_CORE_ONTOLOGY_IRI,
 )
 """
 The ontologies the core module imports, whose terms the microworld links to or uses.
+"""
+
+EXTERNAL_ONTOLOGIES = (
+    *CORE_IMPORTS,
+    ActionPerspectiveFile.POURING_FRAME.namespace.rstrip("#"),
+)
+"""
+The ontologies outside the microworld whose terms it uses: those the core imports, and
+the pouring frame the pouring module imports.
 """
 
 STANDARD_NAMESPACES = (str(RDF), str(RDFS), str(OWL), str(XSD))
@@ -337,6 +346,7 @@ def merged_with(cram_aicor_path: Path, dul_path: Path, *cases: ReasoningCase) ->
     merged = Graph().parse(cram_aicor_path, format="turtle")
     merged.parse(dul_path, format="xml")
     merged.parse(ActionPerspectiveFile.ACTION_CORE.path, format="turtle")
+    merged.parse(ActionPerspectiveFile.POURING_FRAME.path, format="turtle")
     for path in [module.path for module in PredictiveManipulationOntologyFile] + [
         case.path for case in cases
     ]:
@@ -430,7 +440,7 @@ class TestModuleFiles:
                 None, OWL.imports
             )
         )
-        assert imported == {URIRef(iri) for iri in EXTERNAL_ONTOLOGIES}
+        assert imported == {URIRef(iri) for iri in CORE_IMPORTS}
 
     def test_modules_import_only_modules_listed_before_them(self, module_graphs):
         modules = list(PredictiveManipulationOntologyFile)

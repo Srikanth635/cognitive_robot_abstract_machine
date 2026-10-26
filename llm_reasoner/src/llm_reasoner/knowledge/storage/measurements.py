@@ -14,7 +14,7 @@ from typing_extensions import Optional
 from llm_reasoner.knowledge.acceptance.derived import RangesHold, RestrictionsHold
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite, Severity
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.representation.rdf import GraphReader, GraphWriter
 from llm_reasoner.knowledge.storage.exceptions import InvalidMeasurement
@@ -50,7 +50,7 @@ class FlowOnsetQuery:
     The SHA-256 digest of the container's mesh file, in hexadecimal.
     """
 
-    material_regime: action_core.MaterialRegime
+    material_regime: pouring_frame.MaterialRegime
     """
     How the substance flows.
     """

@@ -36,6 +36,11 @@ class Prefix(StrEnum):
     The action core.
     """
 
+    POURING_FRAME = "pf"
+    """
+    The action core's frame of pouring.
+    """
+
     AICOR = "aicor"
     """
     CRAM-AICOR.
@@ -53,6 +58,7 @@ class Prefix(StrEnum):
         """
         return {
             Prefix.CORE: ActionPerspectiveFile.ACTION_CORE.namespace,
+            Prefix.POURING_FRAME: ActionPerspectiveFile.POURING_FRAME.namespace,
             Prefix.AICOR: CRAM_AICOR_NAMESPACE,
             Prefix.DUL: DUL_NAMESPACE,
         }[self]
@@ -220,7 +226,7 @@ class TermCatalogue:
 
     core: Tuple[CatalogueEntry, ...]
     """
-    The action core's terms.
+    The action core's terms, and those of its frames of particular actions.
     """
 
     linked: Tuple[CatalogueEntry, ...]
@@ -229,16 +235,25 @@ class TermCatalogue:
     """
 
     @classmethod
-    def from_files(cls, core: Path, linked: Sequence[Path]) -> TermCatalogue:
+    def from_files(
+        cls, core: Path, linked: Sequence[Path], frames: Sequence[Path] = ()
+    ) -> TermCatalogue:
         """
         :param core: The action core module file.
         :param linked: The files of CRAM-AICOR and DUL, in Turtle or RDF/XML.
+        :param frames: The module files of the core's frames of particular actions,
+            such as the pouring frame.
         :return: The catalogue of their terms.
         """
         core_graph = Graph().parse(core, format="turtle")
         return cls(
             core_graph=core_graph,
-            core=tuple(entries_of(core_graph, [Prefix.CORE])),
+            core=(
+                *entries_of(core_graph, [Prefix.CORE]),
+                *entries_of(
+                    OntologyFiles(paths=frames).graph(), [Prefix.POURING_FRAME]
+                ),
+            ),
             linked=tuple(
                 entries_of(
                     OntologyFiles(paths=linked).graph(), [Prefix.AICOR, Prefix.DUL]

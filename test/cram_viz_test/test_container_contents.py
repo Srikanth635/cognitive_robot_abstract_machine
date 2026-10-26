@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
-from llm_reasoner.knowledge.access import action_core
+from llm_reasoner.knowledge.access import pouring_frame
 
 from cram_viz import paths
 from cram_viz.onboard.demo import Recorder, build_scene
@@ -107,21 +107,21 @@ def recording_of_still_pitcher(mesh_source: Path) -> Recorder:
 class TestStatedContents:
     def test_contents_read_back_as_written(self):
         contents = ContainerContents(
-            material_regime=action_core.MaterialRegime.GRANULAR, fill_fraction=0.25
+            material_regime=pouring_frame.MaterialRegime.GRANULAR, fill_fraction=0.25
         )
         assert ContainerContents.from_json(contents.to_json()) == contents
 
     def test_a_fill_fraction_above_full_is_refused(self):
         with pytest.raises(FillFractionOutOfRange):
             ContainerContents(
-                material_regime=action_core.MaterialRegime.LIQUID, fill_fraction=1.5
+                material_regime=pouring_frame.MaterialRegime.LIQUID, fill_fraction=1.5
             )
 
     def test_a_negative_fill_fraction_is_refused(self):
         with pytest.raises(FillFractionOutOfRange):
             ContainerContents.from_json(
                 {
-                    ContentsKey.MATERIAL_REGIME: action_core.MaterialRegime.LIQUID.name,
+                    ContentsKey.MATERIAL_REGIME: pouring_frame.MaterialRegime.LIQUID.name,
                     ContentsKey.FILL_FRACTION: -0.1,
                 }
             )
@@ -143,7 +143,7 @@ class TestContentsOfBody:
     def test_the_simple_pouring_pitcher_is_half_full_of_liquid(self):
         objects = SceneObjects.read(paths.BUNDLED_SCENES / "simple_pouring")
         assert objects.contents_of(PITCHER_BODY) == ContainerContents(
-            material_regime=action_core.MaterialRegime.LIQUID, fill_fraction=0.5
+            material_regime=pouring_frame.MaterialRegime.LIQUID, fill_fraction=0.5
         )
 
     def test_a_body_whose_entry_states_no_contents_has_none(self, pouring_bundle):

@@ -1,0 +1,102 @@
+{
+  "renames": [
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PouringFrame",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#PouringFrame"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#LiquidPouringFrame",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#LiquidPouringFrame"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#GranularPouringFrame",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#GranularPouringFrame"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#CohesivePouringFrame",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#CohesivePouringFrame"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TargetQuantityAttainedPouringFrame",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#TargetQuantityAttainedPouringFrame"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceExhaustedPouringFrame",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#SourceExhaustedPouringFrame"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#InstructedStopPouringFrame",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#InstructedStopPouringFrame"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TransferFailurePouringFrame",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#TransferFailurePouringFrame"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasMaterialRegime"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasTerminationReason"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialRegime",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#MaterialRegime"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Liquid",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#Liquid"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Granular",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#Granular"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Cohesive",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#Cohesive"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TransferTerminationReason",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#TransferTerminationReason"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TargetQuantityAttained",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#TargetQuantityAttained"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceExhausted",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#SourceExhausted"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#InstructedStop",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#InstructedStop"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TransferFailure",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#TransferFailure"
+    }
+  ],
+  "module_versions": [
+    {
+      "module": "action-core.ttl",
+      "old": "0.9.0",
+      "new": "0.10.0"
+    },
+    {
+      "module": "pouring-frame.ttl",
+      "old": "",
+      "new": "0.1.0"
+    },
+    {
+      "module": "pouring.ttl",
+      "old": "0.8.0",
+      "new": "0.9.0"
+    },
+    {
+      "module": "flow-onset.ttl",
+      "old": "0.1.0",
+      "new": "0.2.0"
+    }
+  ]
+}

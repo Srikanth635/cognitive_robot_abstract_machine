@@ -137,8 +137,9 @@ RULES: List[PromptRule] = [
     ),
     PromptRule(
         ProposalRuleName.TERMS,
-        "Name a term of the core, CRAM-AICOR or DUL with its prefix (core:, aicor:, "
-        "dul:) exactly as listed; name a term of the proposal by its name alone.",
+        "Name a term of the core, its frames, CRAM-AICOR or DUL with its prefix (core:, "
+        "pf:, aicor:, dul:) exactly as listed; name a term of the proposal by its name "
+        "alone.",
     ),
     PromptRule(
         ProposalRuleName.KINDS,
@@ -238,7 +239,7 @@ class ProposalPrompt:
         """
         :param perspective: The perspective whose vocabulary is asked for.
         :param action: The CRAM-AICOR concept of the action, such as ``aicor:Pouring``.
-        :param frame: The core's frame of the action, such as ``core:PouringFrame``.
+        :param frame: The core's frame of the action, such as ``pf:PouringFrame``.
         :return: The request.
         """
         return render_blocks(

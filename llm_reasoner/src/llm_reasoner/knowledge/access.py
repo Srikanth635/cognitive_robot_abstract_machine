@@ -47,6 +47,7 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_frame,
     failures,
     image_schemas,
+    pouring_frame,
 )
 from llm_reasoner.knowledge.ontologies.described_actions import (
     DescribedAction,
@@ -147,6 +148,7 @@ __all__ = [
     "PhysicalMeasurementFile",
     "PerspectiveRoot",
     "pouring",
+    "pouring_frame",
     "PredictiveManipulationOntologyFile",
     "PREDICTIVE_MANIPULATION_NAMESPACE_ROOT",
     "predictive_manipulation_suite",

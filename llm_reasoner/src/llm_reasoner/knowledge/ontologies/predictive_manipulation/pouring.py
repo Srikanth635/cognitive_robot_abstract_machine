@@ -10,8 +10,8 @@ from dataclasses import dataclass, field
 
 from typing_extensions import ClassVar, List, Optional
 
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import prehension
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
@@ -125,17 +125,17 @@ class PouringPhaseStructure(prehension.PrehensionPhaseStructure):
         claims=(),
         restrictions=(
             PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasMaterialRegime",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialRegime"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#MaterialRegime"
                 ),
             ),
             PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasTerminationReason",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TransferTerminationReason"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#TransferTerminationReason"
                 ),
             ),
             PropertyRestriction(
@@ -298,10 +298,10 @@ class PouringPhaseStructure(prehension.PrehensionPhaseStructure):
     The ontology class this class stands for.
     """
 
-    has_material_regime: Optional[action_core.MaterialRegime] = field(
+    has_material_regime: Optional[pouring_frame.MaterialRegime] = field(
         default=None,
         metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasMaterialRegime",
             functional=True,
         ).as_dict(),
     )
@@ -309,10 +309,10 @@ class PouringPhaseStructure(prehension.PrehensionPhaseStructure):
     The flow behaviour of the transferred substance.
     """
 
-    has_termination_reason: Optional[action_core.TransferTerminationReason] = field(
+    has_termination_reason: Optional[pouring_frame.TransferTerminationReason] = field(
         default=None,
         metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasTerminationReason",
             functional=True,
         ).as_dict(),
     )
@@ -356,9 +356,9 @@ class CohesivePouringStructure(PouringPhaseStructure):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasMaterialRegime",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Cohesive",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#Cohesive",
                 ),
             )
         ),
@@ -679,9 +679,9 @@ class GranularPouringStructure(PouringPhaseStructure):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasMaterialRegime",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Granular",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#Granular",
                 ),
             )
         ),
@@ -717,9 +717,9 @@ class InstructedStopPouringStructure(PouringPhaseStructure):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasTerminationReason",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#InstructedStop",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#InstructedStop",
                 ),
             )
         ),
@@ -836,9 +836,9 @@ class LiquidPouringStructure(PouringPhaseStructure):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasMaterialRegime",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Liquid",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#Liquid",
                 ),
             )
         ),
@@ -1127,9 +1127,9 @@ class SourceExhaustedPouringStructure(PouringPhaseStructure):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasTerminationReason",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceExhausted",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#SourceExhausted",
                 ),
             )
         ),
@@ -1356,9 +1356,9 @@ class TargetQuantityAttainedPouringStructure(PouringPhaseStructure):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasTerminationReason",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TargetQuantityAttained",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#TargetQuantityAttained",
                 ),
             )
         ),
@@ -1527,9 +1527,9 @@ class TransferFailurePouringStructure(PouringPhaseStructure):
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasTerminationReason",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasTerminationReason",
                     quantifier=Quantifier.VALUE,
-                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#TransferFailure",
+                    value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#TransferFailure",
                 ),
             )
         ),

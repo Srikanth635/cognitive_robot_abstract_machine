@@ -1,8 +1,7 @@
 """
 Tests of the action core, the hub every action perspective attaches to: the structure of
-its module file, what it says of an action's frame and of pouring in particular, its
-links to CRAM-AICOR and DUL, the vocabulary generated from it, and what an OWL reasoner
-concludes from it.
+its module file, what it says of an action's frame, its links to CRAM-AICOR and DUL, the
+vocabulary generated from it, and what an OWL reasoner concludes from it.
 
 As for the predictive manipulation modules, tests that need CRAM-AICOR or DUL read the
 pinned copies (:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`), and
@@ -68,16 +67,6 @@ PARTICIPANT_SLOTS = {
 }
 """
 Each kind of participant slot, with the CRAM-AICOR participant role it specialises.
-"""
-
-POURING_PARTICIPANTS = (
-    CORE.AgentSlot,
-    CORE.SourceSlot,
-    CORE.SubstanceSlot,
-    CORE.GoalSlot,
-)
-"""
-The participants of a pour, as CRAM-AICOR's pouring intention names them.
 """
 
 # %% fixtures
@@ -257,54 +246,11 @@ class TestFrames:
             graph, CORE.ParameterDimension
         )
 
+    def test_the_core_frames_no_particular_action(self, graph):
+        assert list(graph.subjects(OWL.onProperty, CORE.framesAction)) == []
+
     def test_the_kind_of_quantity_is_not_reserved_for_parameter_dimensions(self, graph):
         assert graph.value(CORE.hasQuantityKind, RDFS.domain) is None
-
-
-# %% pouring
-
-
-class TestPouringFrame:
-    def test_it_is_a_frame_of_a_manipulation(self, graph):
-        assert CORE.ManipulationActionFrame in superclasses(graph, CORE.PouringFrame)
-
-    def test_it_frames_cram_aicors_pouring(self, graph):
-        assert AICOR.Pouring in restriction_fillers(
-            graph, CORE.PouringFrame, CORE.framesAction
-        )
-
-    @pytest.mark.parametrize("participant", POURING_PARTICIPANTS)
-    def test_it_defines_a_slot_for_each_participant_of_a_pour(self, graph, participant):
-        assert participant in restriction_fillers(
-            graph, CORE.PouringFrame, CORE.definesSlot
-        )
-
-    @pytest.mark.parametrize("whole", (CORE.SourceSlot, CORE.GoalSlot))
-    def test_it_defines_a_part_of_the_source_and_of_the_goal(self, graph, whole):
-        assert requires_value_of_kind(
-            graph,
-            CORE.PouringFrame,
-            CORE.definesSlot,
-            CORE.PartSlot,
-            (CORE.isPartOfSlot, whole),
-        )
-
-    def test_it_is_for_the_substance_having_accumulated_in_the_goal(self, graph):
-        assert requires_value_of_kind(
-            graph,
-            CORE.PouringFrame,
-            CORE.statesObjective,
-            CORE.Objective,
-            (CORE.aimsAtState, AICOR.AccumulatedState),
-        )
-
-    def test_it_brings_about_a_consequence_and_leaves_choices_open(self, graph):
-        assert CORE.Consequence in restriction_fillers(
-            graph, CORE.PouringFrame, CORE.bringsAbout
-        )
-        assert CORE.ParameterDimension in restriction_fillers(
-            graph, CORE.PouringFrame, CORE.leavesOpen
-        )
 
 
 # %% the generated vocabulary
@@ -316,10 +262,6 @@ class TestVocabulary:
         assert module_file.vocabulary_path.read_text() == (
             VocabularyWriter.for_knowledge_modules().source(module_file)
         )
-
-    def test_a_pouring_frame_is_a_frame_of_a_manipulation_in_python_too(self):
-        assert issubclass(action_core.PouringFrame, action_core.ManipulationActionFrame)
-        assert issubclass(action_core.ManipulationActionFrame, action_core.ActionFrame)
 
     def test_the_kinds_of_quantity_are_an_enumeration_of_the_ontologys_members(
         self, graph

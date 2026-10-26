@@ -13,15 +13,15 @@ from jsonschema import Draft202012Validator
 
 from llm_reasoner.clients.tools import ToolBox, ToolErrorKey, tool_error_schema
 from llm_reasoner.knowledge.access import (
-    KNOWLEDGE_ACCESS_VERSION,
-    action_core,
     HypothesisStore,
+    KNOWLEDGE_ACCESS_VERSION,
     KnowledgeAccess,
     KnowledgeService,
     KnowledgeToolName,
     SituationFeatures,
     core,
     pouring,
+    pouring_frame,
 )
 from llm_reasoner.knowledge.hypotheses.questions import (
     UnknownFragment,
@@ -182,10 +182,10 @@ class TestOverview:
         (material,) = [
             feature
             for feature in SituationFeatures().of(pouring.PouringPhaseStructure)
-            if action_core.MaterialRegime.GRANULAR in feature.values
+            if pouring_frame.MaterialRegime.GRANULAR in feature.values
         ]
         assert overview["situation"] == {
-            material.field_name: action_core.MaterialRegime.GRANULAR.name
+            material.field_name: pouring_frame.MaterialRegime.GRANULAR.name
         }
 
     def test_a_phase_names_the_subgoal_it_aims_for(self, service):

@@ -10,7 +10,7 @@ from llm_reasoner.knowledge.ontologies.described_actions import (
     DescribedAction,
     DescribedActions,
 )
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity
 
@@ -61,15 +61,15 @@ class TestStructureQuery:
     def test_the_query_fixes_the_values_given(self):
         described = DescribedActions().describing(POURING_DESIGNATOR)
         structure = described.query(
-            {"has_material_regime": action_core.MaterialRegime.GRANULAR}
+            {"has_material_regime": pouring_frame.MaterialRegime.GRANULAR}
         ).construct_instance()
-        assert structure.has_material_regime is action_core.MaterialRegime.GRANULAR
+        assert structure.has_material_regime is pouring_frame.MaterialRegime.GRANULAR
 
 
 class TestFrameQuery:
     def test_the_pouring_designator_is_framed_by_the_cores_pouring_frame(self):
         described = DescribedActions().describing(POURING_DESIGNATOR)
-        assert described.frame is action_core.PouringFrame
+        assert described.frame is pouring_frame.PouringFrame
 
     def test_the_frame_query_is_for_the_frame_framing_the_described_concept(self):
         described = DescribedActions().describing(POURING_DESIGNATOR)

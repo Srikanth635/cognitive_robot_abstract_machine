@@ -36,7 +36,7 @@ from llm_reasoner.knowledge.ontologies import (
     PhysicalMeasurementFile,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
@@ -74,7 +74,7 @@ def measurement() -> flow_onset.FlowOnsetTiltMeasurement:
             mesh_digest="0" * 64, mesh_file_name="cup.stl"
         ),
         at_fill_fraction=0.5,
-        has_material_regime=action_core.MaterialRegime.LIQUID,
+        has_material_regime=pouring_frame.MaterialRegime.LIQUID,
         gravity_azimuth=90.0,
         has_measured_range=core.MagnitudeRange(
             lower_bound=48.0, upper_bound=48.0, has_unit=core.MeasurementUnit.DEGREE
@@ -110,12 +110,12 @@ class TestModuleFile:
             position(ActionPerspectiveFile.ACTION_CORE),
         )
 
-    def test_it_declares_one_ontology_importing_the_cores_it_uses(self, graph):
+    def test_it_declares_one_ontology_importing_the_modules_it_uses(self, graph):
         iri = ontology_iri(graph)
         assert str(iri) == PhysicalMeasurementFile.FLOW_ONSET.namespace.rstrip("#")
         assert set(graph.objects(iri, OWL.imports)) == {
             URIRef(PredictiveManipulationOntologyFile.CORE.namespace.rstrip("#")),
-            URIRef(ActionPerspectiveFile.ACTION_CORE.namespace.rstrip("#")),
+            URIRef(ActionPerspectiveFile.POURING_FRAME.namespace.rstrip("#")),
         }
 
     def test_every_term_is_declared_in_its_namespace(self, graph):
@@ -175,7 +175,7 @@ class TestNeverGenerated:
                 assert not set(PhysicalMeasurementFile) & module_file.usable_modules
 
     @pytest.mark.parametrize(
-        "root", [pouring.PouringPhaseStructure, action_core.PouringFrame]
+        "root", [pouring.PouringPhaseStructure, pouring_frame.PouringFrame]
     )
     def test_a_hypothesis_is_never_offered_a_measurement_class(self, root):
         offered = TypeScope.of_root(root).generated_types(DescriptionEntity)

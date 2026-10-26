@@ -1,4 +1,4 @@
-@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix pf:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#> .
 @prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
 @prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
 @prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
@@ -14,8 +14,8 @@
 
 case:pouring_structure a pour:PouringPhaseStructure , aicor:FoundationModelOutput ;
     core:decomposesTask [ a aicor:Pouring ] ;
-    ac:hasMaterialRegime ac:Liquid ;
-    ac:hasTerminationReason ac:TargetQuantityAttained ;
+    pf:hasMaterialRegime pf:Liquid ;
+    pf:hasTerminationReason pf:TargetQuantityAttained ;
     core:definesRole case:actor , case:effector , case:source , case:lip , case:target , case:substance ;
     core:definesPhase case:tilt , case:regulate , case:terminate , case:upright ;
     core:definesController case:tilt_controller , case:regulate_controller , case:terminate_controller , case:upright_controller ;

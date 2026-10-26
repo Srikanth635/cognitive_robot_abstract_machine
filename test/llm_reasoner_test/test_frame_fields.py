@@ -17,7 +17,10 @@ from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
 from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.action_perspectives import (
+    action_core,
+    pouring_frame,
+)
 from llm_reasoner.knowledge.ontologies.described_actions import DescribedActions
 from llm_reasoner.knowledge.ontologies.frame_fields import (
     CodeFieldKind,
@@ -56,7 +59,7 @@ def code_ontology() -> CodeOntology:
 
 
 @pytest.fixture
-def core_frame(tmp_path) -> action_core.PouringFrame:
+def core_frame(tmp_path) -> pouring_frame.PouringFrame:
     """
     The frame of the scripted core hypothesis about pouring, read back from the store.
     """
@@ -69,7 +72,7 @@ def core_frame(tmp_path) -> action_core.PouringFrame:
         )
     )
     return service.view_for(
-        the(action_core.PouringFrame)(
+        the(pouring_frame.PouringFrame)(
             frames_action=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring")
         )
     ).root
@@ -274,7 +277,7 @@ def stored_core(tmp_path) -> tuple[KnowledgeService, str]:
         )
     )
     return service, service.serve(
-        the(action_core.PouringFrame)(
+        the(pouring_frame.PouringFrame)(
             frames_action=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring")
         )
     )

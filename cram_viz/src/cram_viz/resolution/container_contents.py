@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from llm_reasoner.knowledge.access import action_core
+from llm_reasoner.knowledge.access import pouring_frame
 from typing_extensions import Any, Mapping
 
 from cram_viz.resolution.exceptions import (
@@ -27,7 +27,7 @@ class ContentsKey(StrEnum):
     MATERIAL_REGIME = "materialRegime"
     """
     How the substance held flows, by the name of its member of
-    :class:`~llm_reasoner.knowledge.ontologies.action_perspectives.action_core.MaterialRegime`.
+    :class:`~llm_reasoner.knowledge.ontologies.action_perspectives.pouring_frame.MaterialRegime`.
     """
 
     FILL_FRACTION = "fillFraction"
@@ -44,7 +44,7 @@ class ContainerContents:
     :raises FillFractionOutOfRange: When the fill fraction is not between 0 and 1.
     """
 
-    material_regime: action_core.MaterialRegime
+    material_regime: pouring_frame.MaterialRegime
     """
     How the substance held flows.
     """
@@ -68,10 +68,10 @@ class ContainerContents:
         :raises UnknownMaterialRegime: When the ontology names no such material regime.
         """
         regime = data[ContentsKey.MATERIAL_REGIME]
-        if regime not in action_core.MaterialRegime.__members__:
+        if regime not in pouring_frame.MaterialRegime.__members__:
             raise UnknownMaterialRegime(stated_regime=regime)
         return cls(
-            material_regime=action_core.MaterialRegime[regime],
+            material_regime=pouring_frame.MaterialRegime[regime],
             fill_fraction=data[ContentsKey.FILL_FRACTION],
         )
 

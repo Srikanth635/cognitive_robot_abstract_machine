@@ -40,7 +40,7 @@ from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     pouring,
@@ -419,7 +419,7 @@ class TestHypothesisStore:
         store.put(record, written(chained_structure()))
         granular = {
             **record.fixed_values,
-            "has_material_regime": written_value(action_core.MaterialRegime.GRANULAR),
+            "has_material_regime": written_value(pouring_frame.MaterialRegime.GRANULAR),
         }
         assert store.find(root_type=record.root_type, fixed_values=granular) is None
 

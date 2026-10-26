@@ -403,7 +403,8 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
 7. *Perspectives keyed by situation, 2026-10-21.* The material regime (liquid, granular,
    cohesive) and the transfer's termination reason are the action core's
    (`MaterialRegime`, `TransferTerminationReason`, `hasMaterialRegime`,
-   `hasTerminationReason`); the Flanagan pouring module uses them. `PouringFrame` takes
+   `hasTerminationReason`; since 2026-10-26 the pouring frame's, `pf:`, together with
+   `PouringFrame` and its variants); the Flanagan pouring module uses them. `PouringFrame` takes
    both, with a defined variant per value (`GranularPouringFrame`,
    `SourceExhaustedPouringFrame`, …), so `SituationFeatures` finds the same features on it
    as on the phase structure. The situation is chosen once: the values chosen for the phase
@@ -524,7 +525,7 @@ vocabulary is proposed from too.
 
 ### 11.6 Resolver
 
-- A described action gains its core frame class (`core:PouringFrame`) beside its
+- A described action gains its core frame class (`pf:PouringFrame`) beside its
   Flanagan structure (`described_actions.json`, `"frame"`).
 - `consult` serves the Flanagan hypothesis as today, and, when the requester's
   `perspectives` name any (none by default, so runs are unchanged; phase 4 compares none

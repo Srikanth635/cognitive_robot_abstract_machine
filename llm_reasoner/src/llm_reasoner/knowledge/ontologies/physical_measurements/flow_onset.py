@@ -10,8 +10,8 @@ from dataclasses import dataclass, field
 
 from typing_extensions import ClassVar, List, Optional
 
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
@@ -103,10 +103,10 @@ class FlowOnsetTiltMeasurement(DescriptionEntity):
         claims=(),
         restrictions=(
             PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasMaterialRegime",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialRegime"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#MaterialRegime"
                 ),
             ),
             PropertyRestriction(
@@ -160,10 +160,10 @@ class FlowOnsetTiltMeasurement(DescriptionEntity):
     The ontology class this class stands for.
     """
 
-    has_material_regime: Optional[action_core.MaterialRegime] = field(
+    has_material_regime: Optional[pouring_frame.MaterialRegime] = field(
         default=None,
         metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#hasMaterialRegime",
             functional=True,
         ).as_dict(),
     )

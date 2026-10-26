@@ -22,6 +22,7 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_frame,
     failures,
     image_schemas,
+    pouring_frame,
 )
 
 from .test_generation import bodies
@@ -46,7 +47,7 @@ def field_names(entry: dict) -> set[str]:
 
 
 QUANTITIES = [
-    (action_core.PouringFrame, action_core.ParameterDimension),
+    (pouring_frame.PouringFrame, action_core.ParameterDimension),
     (image_schemas.SchemaStereotype, image_schemas.DecidingQuantity),
     (failures.FailureStereotype, failures.Indicator),
 ]

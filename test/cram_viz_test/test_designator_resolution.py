@@ -16,13 +16,13 @@ from krrood.entity_query_language.query.match import Match
 from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.clients.base import ScriptedClient, ScriptExhausted
 from llm_reasoner.knowledge.access import (
-    MeasurementStore,
     ActionPerspectiveFile,
     Citation,
     HypothesisStore,
     KnowledgeService,
-    action_core,
+    MeasurementStore,
     action_frame,
+    pouring_frame,
 )
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
 from llm_reasoner.resolver.grounds import GroundKey
@@ -797,7 +797,7 @@ class TestOfferingTheFrame:
         )
         core_record, frame_record = run.resolution.perspective_record_ids
         assert isinstance(
-            run.knowledge.view(core_record).root, action_core.PouringFrame
+            run.knowledge.view(core_record).root, pouring_frame.PouringFrame
         )
         assert isinstance(
             run.knowledge.view(frame_record).root, action_frame.FrameStereotype

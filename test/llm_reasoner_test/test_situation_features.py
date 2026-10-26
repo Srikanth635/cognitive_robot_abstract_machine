@@ -9,7 +9,7 @@ from krrood.entity_query_language.verbalization.rendering.source_documentation i
     _attribute_docstrings,
 )
 
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
 from llm_reasoner.knowledge.ontologies.situation import SituationFeatures
 from llm_reasoner.knowledge.ontologies.terms import PropertyRestriction, Quantifier
@@ -29,9 +29,9 @@ class TestSituationFeatures:
         material = features_by_field(pouring.PouringPhaseStructure)[
             "has_material_regime"
         ]
-        assert material.values == tuple(action_core.MaterialRegime)
+        assert material.values == tuple(pouring_frame.MaterialRegime)
         assert (
-            material.variants[action_core.MaterialRegime.GRANULAR]
+            material.variants[pouring_frame.MaterialRegime.GRANULAR]
             is pouring.GranularPouringStructure
         )
 
@@ -72,9 +72,9 @@ class TestSituationFeatures:
             "has_material_regime"
         ]
         structure = pouring.PouringPhaseStructure(
-            has_material_regime=action_core.MaterialRegime.COHESIVE
+            has_material_regime=pouring_frame.MaterialRegime.COHESIVE
         )
-        assert material.value_in(structure) is action_core.MaterialRegime.COHESIVE
+        assert material.value_in(structure) is pouring_frame.MaterialRegime.COHESIVE
 
     def test_a_feature_left_unset_reads_as_nothing(self):
         material = features_by_field(pouring.PouringPhaseStructure)[
