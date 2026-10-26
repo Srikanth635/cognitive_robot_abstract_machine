@@ -45,6 +45,21 @@ class HermitCommand(StrEnum):
     The option checking that the ontology is consistent.
     """
 
+    LIST_UNSATISFIABLE = "-U"
+    """
+    The option listing the classes equivalent to ``owl:Nothing``.
+    """
+
+    FULL_IRIS = "-N"
+    """
+    The option writing classes by their full IRIs rather than prefixed names.
+    """
+
+    LISTED_CLASS_INDENT = "\t"
+    """
+    What precedes each class HermiT lists.
+    """
+
     JAR = "HermiT.jar"
     """
     The file name of the HermiT archive.
@@ -165,28 +180,57 @@ class HermitCheck(ConsistencyCheck):
         return graph
 
     def is_consistent(self, graph: Graph) -> bool:
-        directory = self.shipped_directory()
-        if directory is None:
-            raise HermitNotInstalled()
-        with tempfile.TemporaryDirectory() as scratch_directory:
-            ontology = Path(scratch_directory) / "checked.nt"
-            (self.background + graph).serialize(ontology, format="nt", encoding="utf-8")
-            result = subprocess.run(
-                [
-                    "java",
-                    f"-Xmx{self.java_memory_megabytes}M",
-                    "-cp",
-                    f"{directory}:{directory / HermitCommand.JAR}",
-                    HermitCommand.MAIN_CLASS,
-                    HermitCommand.CHECK_CONSISTENCY,
-                    ontology.as_uri(),
-                ],
-                capture_output=True,
-                text=True,
-            )
+        result = self.reason(graph, [HermitCommand.CHECK_CONSISTENCY])
         if result.returncode == 0:
             return True
         output = result.stdout + result.stderr
         if HermitCommand.INCONSISTENCY_REPORT in output:
             return False
         raise ReasonerFailed(output)
+
+    def unsatisfiable_classes(self, graph: Graph) -> list[str]:
+        """
+        :return: The IRIs of the named classes the background and the graph together
+            make equivalent to ``owl:Nothing``, in the order HermiT lists them.
+        :raises ReasonerFailed: When HermiT stops without listing them.
+        """
+        result = self.reason(
+            graph, [HermitCommand.FULL_IRIS, HermitCommand.LIST_UNSATISFIABLE]
+        )
+        if result.returncode != 0:
+            raise ReasonerFailed(result.stdout + result.stderr)
+        return [
+            line.strip()
+            for line in result.stdout.splitlines()
+            if line.startswith(HermitCommand.LISTED_CLASS_INDENT)
+            and line.strip() != str(OWL.Nothing)
+        ]
+
+    def reason(
+        self, graph: Graph, options: Sequence[HermitCommand]
+    ) -> subprocess.CompletedProcess:
+        """
+        :param graph: The statements reasoned over beside the background.
+        :param options: The HermiT options saying what to reason about.
+        :return: What HermiT's command line printed and returned.
+        :raises HermitNotInstalled: When owlready2's HermiT is not installed.
+        """
+        directory = self.shipped_directory()
+        if directory is None:
+            raise HermitNotInstalled()
+        with tempfile.TemporaryDirectory() as scratch_directory:
+            ontology = Path(scratch_directory) / "checked.nt"
+            (self.background + graph).serialize(ontology, format="nt", encoding="utf-8")
+            return subprocess.run(
+                [
+                    "java",
+                    f"-Xmx{self.java_memory_megabytes}M",
+                    "-cp",
+                    f"{directory}:{directory / HermitCommand.JAR}",
+                    HermitCommand.MAIN_CLASS,
+                    *options,
+                    ontology.as_uri(),
+                ],
+                capture_output=True,
+                text=True,
+            )

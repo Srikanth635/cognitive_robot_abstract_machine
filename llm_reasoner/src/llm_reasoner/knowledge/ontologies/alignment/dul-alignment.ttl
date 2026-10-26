@@ -1,0 +1,26 @@
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/alignment/dul-alignment> a owl:Ontology ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/alignment/dul-alignment/0.1.0> ;
+    owl:versionInfo "0.1.0" ;
+    owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
+    rdfs:label "Alignment of CRAM-AICOR with DUL"@en ;
+    rdfs:comment """CRAM-AICOR declares its own copies of DUL's classes (aicor:dul_*) without relating them to DUL; this module equates each copy with the DUL class of the same name, so a reasoner sees the categories both ontologies place a class in. Neither ontology is changed. Until CRAM-AICOR repairs five of its own axioms, equating the copies makes some of its classes unsatisfiable, so the open-world check of a hypothesis leaves this module out and the alignment is checked by the tests."""@en .
+
+aicor:dul_Action owl:equivalentClass dul:Action .
+aicor:dul_Agent owl:equivalentClass dul:Agent .
+aicor:dul_Concept owl:equivalentClass dul:Concept .
+aicor:dul_Description owl:equivalentClass dul:Description .
+aicor:dul_Entity owl:equivalentClass dul:Entity .
+aicor:dul_Event owl:equivalentClass dul:Event .
+aicor:dul_InformationObject owl:equivalentClass dul:InformationObject .
+aicor:dul_PhysicalAgent owl:equivalentClass dul:PhysicalAgent .
+aicor:dul_PhysicalObject owl:equivalentClass dul:PhysicalObject .
+aicor:dul_Process owl:equivalentClass dul:Process .
+aicor:dul_Quality owl:equivalentClass dul:Quality .
+aicor:dul_Region owl:equivalentClass dul:Region .
+aicor:dul_Relation owl:equivalentClass dul:Relation .
+aicor:dul_Situation owl:equivalentClass dul:Situation .

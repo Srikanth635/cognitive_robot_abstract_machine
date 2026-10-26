@@ -1,0 +1,19 @@
+@prefix core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix gaze: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
+@prefix dul:  <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# The DUL links our modules dropped because they put a class into a DUL category disjoint
+# with the one its CRAM-AICOR parent gives it; re-added to check that the alignment test
+# notices them.
+
+core:ActionPhase rdfs:subClassOf dul:Task .
+core:PhaseBoundaryEventType rdfs:subClassOf dul:EventType .
+core:PhaseConditionType rdfs:subClassOf dul:EventType .
+core:SensoryObservationType rdfs:subClassOf dul:EventType .
+gaze:ClosestApproach rdfs:subClassOf dul:EventType .
+core:involvesRole rdfs:subPropertyOf dul:isTaskOf .
+core:definesPhase rdfs:subPropertyOf dul:definesTask .
+core:definesEventType rdfs:subPropertyOf dul:defines .
+core:definesConditionType rdfs:subPropertyOf dul:defines .
+core:hasActiveParameter rdfs:subPropertyOf dul:hasParameter .

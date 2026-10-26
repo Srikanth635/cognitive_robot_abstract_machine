@@ -47,6 +47,17 @@ class LinkedOntologyFile(PathEnumeration):
     """
 
 
+class AlignmentFile(PathEnumeration):
+    """
+    The modules of ours that align the linked ontologies with each other.
+    """
+
+    DUL_ALIGNMENT = Path(__file__).parent / "alignment" / "dul-alignment.ttl"
+    """
+    CRAM-AICOR's copies of DUL's classes equated with DUL.
+    """
+
+
 # %% reading the files
 
 
