@@ -1,29 +1,34 @@
 """
-Tests that a change becoming larger or smaller is one term of the action core, which the
-action frame uses as it is and the failures' and the predictive manipulation core's
-directions share beside the values only they have.
+Tests that the direction in which something changes is one term of the action core: an
+open value partition whose larger and smaller the core declares, which the failures and
+the predictive manipulation core add their own directions to, and which a shape closes,
+for each property taking a direction, to the members that property takes.
 """
 
 from __future__ import annotations
 
 import pytest
-from rdflib import OWL, RDF, RDFS, Graph, Literal, Namespace, URIRef
-from rdflib.collection import Collection
+from rdflib import OWL, RDF, RDFS, Graph, Namespace, URIRef
 from typing_extensions import Optional, get_type_hints
 
+from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.ontologies import (
     DUL_NAMESPACE,
     KNOWLEDGE_ONTOLOGY_MODULES,
-    ActionCoreAnnotation,
     ActionPerspectiveFile,
+    PredictiveManipulationOntologyFile,
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     action_frame,
     failures,
 )
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, prehension
-from llm_reasoner.knowledge.ontologies.terms import PropertyTerm
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
+    core,
+    pouring,
+    prehension,
+)
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.representation.rdf import GraphReader
 
@@ -32,16 +37,58 @@ DUL = Namespace(DUL_NAMESPACE)
 The terms of DOLCE+DnS Ultralite.
 """
 
-SHARING_DIRECTIONS = [
+CHANGE = action_core.ChangeDirection
+"""
+The direction in which something changes.
+"""
+
+DIRECTED_FIELDS = [
     (
-        failures.ParameterChangeDirection,
-        {"TOWARDS_TARGET", "AWAY_FROM_TARGET", "TO_ALTERNATIVE"},
+        failures.FailureStereotype,
+        failures.ParameterChange,
+        "has_direction",
+        {
+            CHANGE.INCREASES,
+            CHANGE.DECREASES,
+            CHANGE.TOWARDS_TARGET,
+            CHANGE.AWAY_FROM_TARGET,
+            CHANGE.TO_ALTERNATIVE,
+        },
     ),
-    (core.CorrectionDirection, {"HOLD_SETPOINT", "REVERSE_CHANGE", "STOP_CHANGE"}),
-    (core.EstimateUpdateDirection, {"REPLACE_ESTIMATE"}),
+    (
+        pouring.PouringPhaseStructure,
+        core.CorrectiveAction,
+        "has_correction_direction",
+        {
+            CHANGE.INCREASES,
+            CHANGE.DECREASES,
+            CHANGE.HOLD_SETPOINT,
+            CHANGE.REVERSE_CHANGE,
+            CHANGE.STOP_CHANGE,
+        },
+    ),
+    (
+        pouring.PouringPhaseStructure,
+        core.ModelUpdate,
+        "has_update_direction",
+        {CHANGE.INCREASES, CHANGE.DECREASES, CHANGE.REPLACE_ESTIMATE},
+    ),
+    (
+        pouring.PouringPhaseStructure,
+        prehension.AnticipatoryGripAdjustment,
+        "has_adjustment_direction",
+        {
+            CHANGE.INCREASES,
+            CHANGE.DECREASES,
+            CHANGE.HOLD_SETPOINT,
+            CHANGE.REVERSE_CHANGE,
+            CHANGE.STOP_CHANGE,
+        },
+    ),
 ]
 """
-Each direction that shares the core's members, with the members only it has.
+Each field taking a direction, with a root whose answers state it, its class, its name
+and the members it may take.
 """
 
 # %% fixtures
@@ -58,104 +105,109 @@ def graph() -> Graph:
     return union
 
 
-def class_iri(enumeration: type) -> URIRef:
-    """
-    :return: The IRI of the class an enumeration stands for: the namespace of its
-        members' module with the enumeration's name.
-    """
-    module_file = Vocabulary().module_file_of(enumeration)
-    return URIRef(module_file.namespace + enumeration.__name__)
-
-
-def members_of(graph: Graph, cls: URIRef) -> set[URIRef]:
-    """
-    :return: The individuals the graph states are the class's members: those its
-        enumeration lists, or for an open value partition those typed with it.
-    """
-    if (
-        cls,
-        URIRef(ActionCoreAnnotation.IS_OPEN_VALUE_PARTITION),
-        Literal(True),
-    ) in graph:
-        return set(graph.subjects(RDF.type, cls))
-    (enumeration,) = graph.objects(cls, OWL.equivalentClass)
-    return set(Collection(graph, graph.value(enumeration, OWL.oneOf)))
-
-
-CORE_MEMBERS = {URIRef(member.value) for member in action_core.ChangeDirection}
-"""
-The action core's members, larger and smaller.
-"""
-
-
 # %% the term
 
 
 class TestTheTerm:
-    def test_the_action_core_declares_it_with_two_members(self, graph):
-        assert members_of(graph, class_iri(action_core.ChangeDirection)) == (
-            CORE_MEMBERS
-        )
-        assert [member.name for member in action_core.ChangeDirection] == [
-            "INCREASES",
-            "DECREASES",
-        ]
+    def test_the_action_core_declares_it_as_a_dul_concept(self, graph):
+        assert (URIRef(CHANGE.INCREASES.value), RDF.type, OWL.NamedIndividual) in graph
+        assert (
+            URIRef(ActionPerspectiveFile.ACTION_CORE.namespace + "ChangeDirection"),
+            RDFS.subClassOf,
+            DUL.Concept,
+        ) in graph
 
     def test_the_action_frame_uses_it_as_it_is(self):
         assert "ChangeDirection" not in vars(action_frame)
         assert (
             get_type_hints(action_frame.AdditionalConsequence)["changes_in_direction"]
-            == Optional[action_core.ChangeDirection]
+            == Optional[CHANGE]
         )
-
-    @pytest.mark.parametrize("direction, own_members", SHARING_DIRECTIONS)
-    def test_a_direction_has_the_core_members_and_only_its_own_others(
-        self, graph, direction, own_members
-    ):
-        assert {member.name for member in direction} == {
-            *(member.name for member in action_core.ChangeDirection),
-            *own_members,
-        }
-        assert CORE_MEMBERS <= members_of(graph, class_iri(direction))
-
-    @pytest.mark.parametrize("direction, own_members", SHARING_DIRECTIONS)
-    def test_a_shared_member_is_the_core_member(self, direction, own_members):
-        for member in action_core.ChangeDirection:
-            assert direction[member.name].value == member.value
 
     @pytest.mark.parametrize(
-        "direction",
-        [action_core.ChangeDirection, *(shared for shared, _ in SHARING_DIRECTIONS)],
-    )
-    def test_every_direction_is_a_dul_concept(self, graph, direction):
-        assert (class_iri(direction), RDFS.subClassOf, DUL.Concept) in graph
-
-
-# %% reading a shared member
-
-
-class TestReadingASharedMember:
-    def test_a_stated_member_is_read_as_the_fields_own(self):
-        graph = Graph()
-        individual = URIRef("http://example.org/hypothesis#correction")
-        graph.add((individual, RDF.type, URIRef(core.CorrectiveAction.term.iri)))
-        graph.add(
+        "module, directions",
+        [
+            (ActionPerspectiveFile.ACTION_CORE, {"INCREASES", "DECREASES"}),
             (
-                individual,
-                URIRef(
-                    PropertyTerm.of_field(
-                        clazz=core.CorrectiveAction, field_name="has_correction_direction"
-                    ).iri
-                ),
-                URIRef(action_core.ChangeDirection.INCREASES.value),
-            )
-        )
-        (correction,) = GraphReader().read(graph).fragments
-        assert correction.has_correction_direction is (
-            core.CorrectionDirection.INCREASES
-        )
+                ActionPerspectiveFile.FAILURES,
+                {"TOWARDS_TARGET", "AWAY_FROM_TARGET", "TO_ALTERNATIVE"},
+            ),
+            (
+                PredictiveManipulationOntologyFile.CORE,
+                {"HOLD_SETPOINT", "REVERSE_CHANGE", "STOP_CHANGE", "REPLACE_ESTIMATE"},
+            ),
+        ],
+    )
+    def test_each_module_declares_its_own_directions(self, module, directions):
+        assert {
+            member.name for member in CHANGE if member.declaring_module is module
+        } == directions
 
-    def test_an_entailed_member_is_the_fields_own(self):
+    @pytest.mark.parametrize("module", [failures, core])
+    def test_no_module_keeps_a_direction_class_of_its_own(self, module):
+        assert {
+            name
+            for name in vars(module)
+            if name.endswith("Direction") and isinstance(vars(module)[name], type)
+        } == set()
+
+
+# %% the properties taking a direction
+
+
+class TestClosedProperties:
+    @pytest.mark.parametrize("root, owner, name, members", DIRECTED_FIELDS)
+    def test_every_property_taking_a_direction_ranges_over_it(
+        self, graph, root, owner, name, members
+    ):
+        assert graph.value(
+            URIRef(PropertyTerm.of_field(owner, name).iri), RDFS.range
+        ) == URIRef(ActionPerspectiveFile.ACTION_CORE.namespace + "ChangeDirection")
+
+    @pytest.mark.parametrize("root, owner, name, members", DIRECTED_FIELDS)
+    def test_a_model_is_offered_only_the_members_the_property_takes(
+        self, root, owner, name, members
+    ):
+        field_schema = (
+            GenerationSchema.for_root(root).get(owner.__name__).field_named(name)
+        )
+        assert set(field_schema.options) == {member.name for member in members}
+
+
+# %% reading a direction
+
+
+def stated(owner: type[DescriptionEntity], name: str, member: CHANGE) -> Graph:
+    """
+    :return: A fragment of a class stating a direction for one of its fields.
+    """
+    graph = Graph()
+    individual = URIRef("http://example.org/hypothesis#directed")
+    graph.add((individual, RDF.type, URIRef(owner.term.iri)))
+    graph.add(
+        (
+            individual,
+            URIRef(PropertyTerm.of_field(owner, name).iri),
+            URIRef(member.value),
+        )
+    )
+    return graph
+
+
+class TestReadingADirection:
+    def test_a_stated_direction_is_the_cores_member(self):
+        (correction,) = (
+            GraphReader()
+            .read(
+                stated(
+                    core.CorrectiveAction, "has_correction_direction", CHANGE.INCREASES
+                )
+            )
+            .fragments
+        )
+        assert correction.has_correction_direction is CHANGE.INCREASES
+
+    def test_an_entailed_direction_is_the_cores_member(self):
         reduction = prehension.LoadRateReduction()
         Vocabulary().fill_entailed_values(reduction)
-        assert reduction.has_correction_direction is core.CorrectionDirection.DECREASES
+        assert reduction.has_correction_direction is CHANGE.DECREASES

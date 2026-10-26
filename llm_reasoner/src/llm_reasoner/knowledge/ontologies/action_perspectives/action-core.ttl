@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.10.0> ;
-    owl:versionInfo "0.10.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.11.0> ;
+    owl:versionInfo "0.11.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -273,7 +273,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
     :isOpenValuePartition true ;
     rdfs:label "change direction"@en ;
-    rdfs:comment "Whether something becomes larger or smaller, such as a quantity an action changes, a choice a correction moves or an estimate evidence revises. A direction that can also take values of its own lists these two among its members."@en .
+    rdfs:comment "The direction in which something changes: larger or smaller, such as a quantity an action changes, a choice a correction moves or an estimate evidence revises, or a direction of its own a module adds, such as moving a choice towards a target. A property taking a direction may be closed to the members it takes."@en .
 :Increases a owl:NamedIndividual , :ChangeDirection ; rdfs:label "increases"@en ;
     rdfs:comment "Becomes larger."@en .
 :Decreases a owl:NamedIndividual , :ChangeDirection ; rdfs:label "decreases"@en ;

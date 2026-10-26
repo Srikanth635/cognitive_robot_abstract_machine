@@ -363,7 +363,8 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    `ParameterChangeDirection` and the Flanagan core's `CorrectionDirection` and
    `EstimateUpdateDirection` list those two among their members in place of their own
    increase/raise and decrease/lower, and keep the values only they have (towards, away from or
-   to another alternative; hold, reverse or stop a setpoint; replace an estimate). All four are
+   to another alternative; hold, reverse or stop a setpoint; replace an estimate). Since 2026-10-26 the three are gone: their own values are directions of the open
+   `ChangeDirection`, and a shape closes each property to the directions it takes. All four are
    DUL concepts now, since DUL keeps regions and concepts apart. Several enumerations thus list
    one individual, so a value read from a stored hypothesis or entailed by a class becomes the
    member of its field's own enumeration (`Vocabulary.held_by_field`). Versions: action core

@@ -89,37 +89,6 @@ class ConditionMode(OpenValuePartition):
         }[self]
 
 
-class CorrectionDirection(StrEnum):
-    """
-    How a corrective response changes its target setpoint.
-    """
-
-    INCREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Increases"
-    """
-    Becomes larger.
-    """
-
-    DECREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Decreases"
-    """
-    Becomes smaller, or grows more slowly.
-    """
-
-    HOLD_SETPOINT = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#HoldSetpoint"
-    """
-    Keep the target at its present value.
-    """
-
-    REVERSE_CHANGE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ReverseChange"
-    """
-    Command a change opposite to the current direction.
-    """
-
-    STOP_CHANGE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#StopChange"
-    """
-    Bring the commanded change to rest.
-    """
-
-
 class CouplingRegime(OpenValuePartition):
     """
     Whether the effector and the manipulandum form a single kinematic unit.
@@ -149,27 +118,6 @@ class CouplingRegime(OpenValuePartition):
             CouplingRegime.TRANSITIONAL: ontologies.PredictiveManipulationOntologyFile.CORE,
             CouplingRegime.COUPLED: ontologies.PredictiveManipulationOntologyFile.CORE,
         }[self]
-
-
-class EstimateUpdateDirection(StrEnum):
-    """
-    How evidence changes a represented estimate.
-    """
-
-    INCREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Increases"
-    """
-    Becomes larger.
-    """
-
-    DECREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Decreases"
-    """
-    Becomes smaller, or grows more slowly.
-    """
-
-    REPLACE_ESTIMATE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ReplaceEstimate"
-    """
-    Change an unordered estimate or replace its current value.
-    """
 
 
 class EvidenceStatus(StrEnum):
@@ -2645,7 +2593,7 @@ class CorrectiveAction(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCorrectionDirection",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#CorrectionDirection"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ChangeDirection"
                 ),
             ),
             PropertyRestriction(
@@ -2695,7 +2643,7 @@ class CorrectiveAction(DescriptionEntity):
     An event that ends a corrective programme, such as lift-off ending probing force increases.
     """
 
-    has_correction_direction: Optional[CorrectionDirection] = field(
+    has_correction_direction: Optional[action_core.ChangeDirection] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCorrectionDirection",
@@ -4034,7 +3982,7 @@ class ModelUpdate(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUpdateDirection",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EstimateUpdateDirection"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ChangeDirection"
                 ),
             ),
             PropertyRestriction(
@@ -4065,7 +4013,7 @@ class ModelUpdate(DescriptionEntity):
     The ontology class this class stands for.
     """
 
-    has_update_direction: Optional[EstimateUpdateDirection] = field(
+    has_update_direction: Optional[action_core.ChangeDirection] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasUpdateDirection",

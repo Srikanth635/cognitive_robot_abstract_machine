@@ -16,7 +16,6 @@ from types import ModuleType
 
 import pytest
 from rdflib import OWL, RDF, RDFS, Graph, Namespace, URIRef
-from rdflib.collection import Collection
 
 from llm_reasoner.knowledge.ontologies import (
     ACTION_PERSPECTIVES_NAMESPACE_ROOT,
@@ -143,29 +142,22 @@ class TestVocabulary:
             VocabularyWriter.for_knowledge_modules().source(module_file)
         )
 
-    def test_the_cores_vocabulary_holds_nothing_of_the_failures(self):
-        assert ActionPerspectiveFile.FAILURES.namespace not in (
-            VocabularyWriter.for_knowledge_modules().source(
-                ActionPerspectiveFile.ACTION_CORE
-            )
+    def test_the_cores_vocabulary_holds_nothing_of_the_failures_but_their_directions(
+        self,
+    ):
+        source = VocabularyWriter.for_knowledge_modules().source(
+            ActionPerspectiveFile.ACTION_CORE
         )
+        for member in action_core.ChangeDirection:
+            if member.declaring_module is ActionPerspectiveFile.FAILURES:
+                source = source.replace(member.value, "")
+        assert ActionPerspectiveFile.FAILURES.namespace not in source
 
     def test_the_core_s_frame_gains_no_field_for_a_failure(self):
         assert not hasattr(action_core.ActionFrame, "has_failure")
 
     def test_a_failure_names_no_frame_of_its_own(self):
         assert not hasattr(failures.Failure, "failure_of_frame")
-
-    def test_the_parameter_change_directions_are_an_enumeration_of_the_ontologys_members(
-        self, graph
-    ):
-        (enumeration,) = graph.objects(
-            FAILURES.ParameterChangeDirection, OWL.equivalentClass
-        )
-        members = Collection(graph, graph.value(enumeration, OWL.oneOf))
-        assert {member.value for member in failures.ParameterChangeDirection} == {
-            str(member) for member in members
-        }
 
 
 # %% where the knowledge is rooted

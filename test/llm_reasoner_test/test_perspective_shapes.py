@@ -271,20 +271,20 @@ class TestFailureShapes:
 
     def test_a_change_towards_a_target_names_the_target(self):
         change = failures.ParameterChange(
-            has_direction=failures.ParameterChangeDirection.TOWARDS_TARGET
+            has_direction=action_core.ChangeDirection.TOWARDS_TARGET
         )
         assert broken(change, FAILURE_SHAPES.TargetNamedOnlyForTargetDirections)
 
     def test_only_a_change_towards_or_away_names_a_target(self, slots):
         change = failures.ParameterChange(
-            has_direction=failures.ParameterChangeDirection.INCREASES,
+            has_direction=action_core.ChangeDirection.INCREASES,
             change_towards_slot=[slots.goal],
         )
         assert broken(change, FAILURE_SHAPES.TargetNamedOnlyForTargetDirections)
 
     def test_a_change_away_from_a_named_target_passes(self, slots):
         change = failures.ParameterChange(
-            has_direction=failures.ParameterChangeDirection.AWAY_FROM_TARGET,
+            has_direction=action_core.ChangeDirection.AWAY_FROM_TARGET,
             change_towards_slot=[slots.goal],
         )
         assert not broken(change, FAILURE_SHAPES.TargetNamedOnlyForTargetDirections)

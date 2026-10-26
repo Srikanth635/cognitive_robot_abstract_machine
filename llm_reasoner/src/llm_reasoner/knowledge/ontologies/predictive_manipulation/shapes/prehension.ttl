@@ -1,5 +1,7 @@
 @prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/prehension#> .
 @prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh:    <http://www.w3.org/ns/shacl#> .
@@ -9,7 +11,7 @@
 # another, which OWL restrictions cannot state.
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/prehension> a owl:Ontology ;
-    owl:versionInfo "0.1.0" ;
+    owl:versionInfo "0.2.0" ;
     rdfs:comment "Closed-world structural rules of the prehension module."@en ;
     sh:declare
         [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
@@ -65,3 +67,10 @@
             }
         """ ;
     ] .
+
+# %% directions
+
+:AdjustmentDirections a sh:NodeShape ;
+    sh:targetClass pre:AnticipatoryGripAdjustment ;
+    rdfs:comment "An anticipatory grip adjustment changes grip force larger or smaller, holds it, reverses or stops its change."@en ;
+    sh:property [ sh:path pre:hasAdjustmentDirection ; sh:in ( ac:Increases ac:Decreases core:HoldSetpoint core:ReverseChange core:StopChange ) ] .

@@ -30,7 +30,6 @@ from llm_reasoner.knowledge.ontologies import (
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
-    failures,
     pouring_frame,
 )
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
@@ -408,7 +407,7 @@ class TestDecoding:
 
 
 class TestShippedLists:
-    def test_only_complete_lists_and_lists_sharing_core_members_stay_closed(self):
+    def test_only_complete_lists_stay_closed(self):
         closed = {
             definition
             for module in Vocabulary().modules.values()
@@ -423,7 +422,4 @@ class TestShippedLists:
             core.ComparisonOutcome,
             core.EvidenceStatus,
             core.ParameterValueForm,
-            core.CorrectionDirection,
-            core.EstimateUpdateDirection,
-            failures.ParameterChangeDirection,
         }
