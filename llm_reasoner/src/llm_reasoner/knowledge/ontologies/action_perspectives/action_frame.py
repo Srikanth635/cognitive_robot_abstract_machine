@@ -219,6 +219,7 @@ class AffordanceCondition(action_core.SlotCondition):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionAffordsAction",
             functional=False,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#ManipulationActionCategory",
         ).as_dict(),
     )
     """
@@ -230,6 +231,7 @@ class AffordanceCondition(action_core.SlotCondition):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionAffordsState",
             functional=False,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#DiscreteMode",
         ).as_dict(),
     )
     """
@@ -548,6 +550,7 @@ class SlotExpectation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#normallyFilledBy",
             functional=False,
+            linked_range="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#PhysicalObject",
         ).as_dict(),
     )
     """

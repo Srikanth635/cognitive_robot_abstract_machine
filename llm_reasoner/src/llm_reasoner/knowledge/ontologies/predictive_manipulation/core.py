@@ -1172,6 +1172,7 @@ class ActionPhase(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#realizesActionCategory",
             functional=False,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#ManipulationActionCategory",
         ).as_dict(),
     )
     """
@@ -1372,6 +1373,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#decomposesTask",
             functional=True,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#ManipulationActionCategory",
         ).as_dict(),
     )
     """

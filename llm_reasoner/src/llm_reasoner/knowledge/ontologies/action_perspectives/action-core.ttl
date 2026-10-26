@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.8.0> ;
-    owl:versionInfo "0.8.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.9.0> ;
+    owl:versionInfo "0.9.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -39,14 +39,14 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 
 :PouringFrame a owl:Class ;
     rdfs:subClassOf :ManipulationActionFrame ,
-        [ a owl:Restriction ; owl:onProperty :framesAction ; owl:hasValue aicor:Pouring ] ,
+        [ a owl:Restriction ; owl:onProperty :framesAction ; owl:someValuesFrom aicor:Pouring ] ,
         [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom :AgentSlot ] ,
         [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom :SourceSlot ] ,
         [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom :SubstanceSlot ] ,
         [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom :GoalSlot ] ,
         [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :PartSlot [ a owl:Restriction ; owl:onProperty :isPartOfSlot ; owl:someValuesFrom :SourceSlot ] ) ] ] ,
         [ a owl:Restriction ; owl:onProperty :definesSlot ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :PartSlot [ a owl:Restriction ; owl:onProperty :isPartOfSlot ; owl:someValuesFrom :GoalSlot ] ) ] ] ,
-        [ a owl:Restriction ; owl:onProperty :statesObjective ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :Objective [ a owl:Restriction ; owl:onProperty :aimsAtState ; owl:hasValue aicor:AccumulatedState ] ) ] ] ,
+        [ a owl:Restriction ; owl:onProperty :statesObjective ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :Objective [ a owl:Restriction ; owl:onProperty :aimsAtState ; owl:someValuesFrom aicor:AccumulatedState ] ) ] ] ,
         [ a owl:Restriction ; owl:onProperty :bringsAbout ; owl:someValuesFrom :Consequence ] ,
         [ a owl:Restriction ; owl:onProperty :leavesOpen ; owl:someValuesFrom :ParameterDimension ] ,
         [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:allValuesFrom :MaterialRegime ] ,
@@ -102,6 +102,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:comment "The condition that ends the transfer."@en .
 
 :framesAction a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:range aicor:ManipulationActionCategory ;
     rdfs:domain :ActionFrame ;
     rdfs:label "frames action"@en ;
     rdfs:comment "The kind of action the frame describes, as the IRI of a CRAM-AICOR action category, such as aicor:Pouring."@en .
@@ -203,6 +204,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:comment "A slot whose filler the objective is about."@en .
 
 :aimsAtState a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:range aicor:DiscreteMode ;
     rdfs:domain :Objective ;
     rdfs:label "aims at state"@en ;
     rdfs:comment "The state the objective aims at, as the IRI of a CRAM-AICOR state type, such as aicor:AccumulatedState."@en .
@@ -220,6 +222,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:comment "A slot whose filler the consequence changes."@en .
 
 :resultsInState a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:range aicor:DiscreteMode ;
     rdfs:domain :Consequence ;
     rdfs:label "results in state"@en ;
     rdfs:comment "The state the filler is in afterwards, as the IRI of a CRAM-AICOR state type, such as aicor:ContainedState."@en .
@@ -285,6 +288,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:comment "Another slot whose filler the condition relates the first filler to, such as the agent in the condition that the source is held, or the opening in the condition that the lip is over it."@en .
 
 :conditionHasState a owl:ObjectProperty ;
+    rdfs:range aicor:DiscreteMode ;
     rdfs:domain :StateCondition ;
     rdfs:label "condition has state"@en ;
     rdfs:comment "The state the filler is in when the condition holds, as the IRI of a CRAM-AICOR state type, such as aicor:GraspedState or aicor:FlowingState."@en .

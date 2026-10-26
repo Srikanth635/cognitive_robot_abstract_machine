@@ -12,8 +12,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.7.0> ;
-    owl:versionInfo "0.7.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.8.0> ;
+    owl:versionInfo "0.8.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ,
         <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> ;
     rdfs:label "Predictive manipulation: pouring"@en ;
@@ -283,7 +283,7 @@
 :TiltToFlowPhase a owl:Class ;
     rdfs:subClassOf core:ActionPhase , aicor:PouringPhase ,
         [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ,
-        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Tilting ] ;
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:someValuesFrom aicor:Tilting ] ;
     rdfs:label "tilt-to-flow phase"@en ;
     rdfs:comment "Rotation of the source container until flow begins."@en ;
     core:evidenceStatus core:EngineeringExtension .
@@ -328,7 +328,7 @@
 
 :PouringPhaseStructure a owl:Class ;
     rdfs:subClassOf pre:PrehensionPhaseStructure ,
-        [ a owl:Restriction ; owl:onProperty core:decomposesTask ; owl:hasValue aicor:Pouring ] ,
+        [ a owl:Restriction ; owl:onProperty core:decomposesTask ; owl:someValuesFrom aicor:Pouring ] ,
         [ a owl:Restriction ; owl:onProperty core:definesRole ; owl:someValuesFrom :SourceContainer ] ,
         [ a owl:Restriction ; owl:onProperty core:definesRole ; owl:someValuesFrom :TargetReceptacle ] ,
         [ a owl:Restriction ; owl:onProperty core:definesRole ; owl:someValuesFrom :PouredSubstance ] ,

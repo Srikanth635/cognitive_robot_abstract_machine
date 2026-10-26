@@ -173,8 +173,10 @@ class ContactEstablishmentPhase(core.ActionPhase):
         restrictions=(
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#realizesActionCategory",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Grasping",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://aicor.knowledge/l2-ontology.owl#Grasping"
+                ),
             ),
         ),
         definition=None,
@@ -480,8 +482,10 @@ class ForceLoadingPhase(core.ActionPhase):
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#realizesActionCategory",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Grasping",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://aicor.knowledge/l2-ontology.owl#Grasping"
+                ),
             ),
         ),
         definition=None,
@@ -649,6 +653,7 @@ class GraspSite(core.ManipulationRole):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#graspSiteSuitedFor",
             functional=False,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#ManipulationActionCategory",
         ).as_dict(),
     )
     """
@@ -1135,8 +1140,8 @@ class LiftPhase(core.ActionPhase):
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#realizesActionCategory",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Lifting",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(iri="http://aicor.knowledge/l2-ontology.owl#Lifting"),
             ),
         ),
         definition=None,
@@ -1608,8 +1613,10 @@ class ReachPhase(core.ActionPhase):
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#realizesActionCategory",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Reaching",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://aicor.knowledge/l2-ontology.owl#Reaching"
+                ),
             ),
         ),
         definition=None,
@@ -1930,8 +1937,10 @@ class TransportPhase(core.ActionPhase):
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#realizesActionCategory",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Transporting",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://aicor.knowledge/l2-ontology.owl#Transporting"
+                ),
             ),
         ),
         definition=None,

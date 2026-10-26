@@ -867,6 +867,31 @@ step 7):
   2026-10-26). The told hierarchy holds every superclass HermiT infers for the concepts
   in use (`TestHierarchyAgainstReasoner`).
 
+### Concept ranges (2026-10-26)
+
+Step 7 of the ontology consolidation: the concept properties range over CRAM-AICOR and DUL
+classes, and no class requires a concept as an individual.
+
+- Ranges (user, 2026-10-26): action categories (`framesAction`, `decomposesTask`,
+  `realizesActionCategory`, `graspSiteSuitedFor`, `conditionAffordsAction`) over
+  `aicor:ManipulationActionCategory`; states (`aimsAtState`, `resultsInState`,
+  `conditionHasState`, `conditionAffordsState`, `namesState`) over `aicor:DiscreteMode`;
+  `normallyFilledBy` over `dul:PhysicalObject`; `namesSpatialRelation` over
+  `aicor:SpatialRelation`. `hasCategory`, `hasJustification` and `triggeredBy` take any
+  class and state no range.
+- The nine `owl:hasValue` restrictions on concept properties (`framesAction` Pouring,
+  `aimsAtState` AccumulatedState, `decomposesTask` Pouring, six `realizesActionCategory`)
+  are `owl:someValuesFrom`; the closed-world checks accept a subclass, and the concept is
+  still entailed where none is stated.
+- A proposed concept property gives its CRAM-AICOR class as its range (rule `concepts`).
+- action-core 0.9.0, action-frame 0.7.0, image-schemas 0.4.0, core 0.8.0, pouring 0.8.0
+  and prehension 0.7.0 (`0007-concept-ranges`, which also places a concept the
+  hypothesis coins under its property's range); the cram_viz sample is migrated.
+- With CRAM-AICOR as it is, `ac:StateCondition` becomes unsatisfiable too, through
+  `conditionHasState`'s range `aicor:DiscreteMode`, which one of CRAM-AICOR's five root
+  causes makes unsatisfiable; the slow alignment test follows the ranges of restricted
+  properties to explain it (user, 2026-10-26).
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

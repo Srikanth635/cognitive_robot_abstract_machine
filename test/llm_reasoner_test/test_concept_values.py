@@ -45,9 +45,13 @@ from llm_reasoner.knowledge.ontologies.terms import (
     NamedClass,
     PropertyRestriction,
     PropertyTerm,
+    Quantifier,
     UnionOf,
 )
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.ontologies.vocabulary import (
+    Vocabulary,
+    declared_value_types,
+)
 from llm_reasoner.knowledge.representation.exceptions import (
     AmbiguousConceptType,
     ConceptWrittenAsIndividual,
@@ -335,6 +339,80 @@ class TestLocalisingConcepts:
             ContradictedByOneClass(contradicting_class=CategoryClass.POURING)
         ).conflict(graph)
         assert conflict == [URIRef(FragmentName.ACTION)]
+
+
+# %% the concept properties of the modules
+
+
+def concept_fields() -> dict[str, PropertyTerm]:
+    """
+    :return: The term of every concept field of the generated vocabulary, by the IRI
+        of its property.
+    """
+    return {
+        term.iri: term
+        for generated in Vocabulary().classes
+        for declared in fields(generated)
+        if declared_value_types(generated)[declared.name] is ConceptReference
+        for term in [PropertyTerm.of_field(generated, declared.name)]
+    }
+
+
+class OpenConceptProperty(StrEnum):
+    """
+    The concept properties whose values may be of any class, so they state no range.
+    """
+
+    CATEGORY = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCategory"
+    """
+    The category a categorical value names.
+    """
+
+    JUSTIFICATION = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasJustification"
+    """
+    What justifies an exemption.
+    """
+
+    TRIGGER = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#triggeredBy"
+    """
+    What ends a phase from outside.
+    """
+
+
+class TestConceptPropertiesOfTheModules:
+    def test_every_concept_property_but_the_open_ones_ranges_over_a_linked_class(self):
+        assert {
+            iri
+            for iri, term in concept_fields().items()
+            if not LinkedOntologyTerms.pinned().declares(term.linked_range)
+        } == set(OpenConceptProperty)
+
+    def test_no_class_requires_a_concept_as_an_individual(self):
+        concept_properties = set(concept_fields())
+        assert [
+            (generated.__name__, restriction.property_iri)
+            for generated in Vocabulary().classes
+            for restriction in generated.term.restrictions
+            if isinstance(restriction, PropertyRestriction)
+            and restriction.quantifier == Quantifier.VALUE
+            and restriction.property_iri in concept_properties
+        ] == []
+
+    def test_a_structure_decomposing_a_state_is_out_of_range(self):
+        structure = decomposing(CategoryClass.ACCUMULATED_STATE)
+        assert [
+            violation.field_name for violation in RangesHold().violations([structure])
+        ] == ["decomposes_task"]
+
+    def test_a_task_the_hypothesis_coins_is_a_kind_of_its_propertys_range(self):
+        graph = written(decomposing(CategoryClass.DECANTING))
+        term = PropertyTerm.of_field(core.ActionPhaseStructure, "decomposes_task")
+        assert term.linked_range
+        assert (
+            URIRef(CategoryClass.DECANTING),
+            RDFS.subClassOf,
+            URIRef(term.linked_range),
+        ) in graph
 
 
 # %% reasoning

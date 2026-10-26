@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.7.1> ;
-    owl:versionInfo "0.7.1" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.8.0> ;
+    owl:versionInfo "0.8.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -251,6 +251,7 @@ Classes classify description-level individuals, the knowledge a language model g
     :representsClaim :FJ-001 , :FJ-003 , :JF09-02 .
 
 :decomposesTask a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:range aicor:ManipulationActionCategory ;
     rdfs:label "decomposes task"@en ;
     rdfs:comment "The task divided into phases, as the IRI of a CRAM-AICOR action category, such as aicor:Pouring."@en .
 
@@ -359,6 +360,7 @@ Classes classify description-level individuals, the knowledge a language model g
 :hasActiveParameter a owl:ObjectProperty ; rdfs:domain :ActionPhase ; rdfs:subPropertyOf dul:hasParameter ; rdfs:range :Parameter ;
     rdfs:label "has active parameter"@en ; rdfs:comment "A parameter in force during the phase, which its controller is parameterised by in advance."@en .
 :realizesActionCategory a owl:ObjectProperty ;
+    rdfs:range aicor:ManipulationActionCategory ;
     rdfs:label "realizes action category"@en ;
     rdfs:comment "A CRAM-AICOR action category the phase carries out, as its IRI, such as aicor:Tilting."@en .
 :isOptional a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:domain :ActionPhase ; rdfs:range xsd:boolean ;

@@ -241,7 +241,8 @@ def reaches_any(
 ) -> bool:
     """
     :return: Whether the class specialises one of the targets, or requires a value of a
-        class that does, through told superclasses and the fillers of their restrictions.
+        class that does, through told superclasses, the fillers of their restrictions and
+        the ranges of the properties they restrict.
     """
     seen = set()
     pending = deque([cls])
@@ -260,4 +261,10 @@ def reaches_any(
                         filler = graph.value(parent, quantifier)
                         if filler is not None:
                             pending.extend(LinkedClassHierarchy.named_in(graph, filler))
+                    restricted = graph.value(parent, OWL.onProperty)
+                    if restricted is not None:
+                        for value_range in graph.objects(restricted, RDFS.range):
+                            pending.extend(
+                                LinkedClassHierarchy.named_in(graph, value_range)
+                            )
     return False

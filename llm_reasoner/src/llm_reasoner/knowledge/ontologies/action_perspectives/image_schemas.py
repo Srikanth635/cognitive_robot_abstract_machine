@@ -540,6 +540,7 @@ class SchemaRequirement(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#namesSpatialRelation",
             functional=False,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#SpatialRelation",
         ).as_dict(),
     )
     """
@@ -551,6 +552,7 @@ class SchemaRequirement(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#namesState",
             functional=False,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#DiscreteMode",
         ).as_dict(),
     )
     """

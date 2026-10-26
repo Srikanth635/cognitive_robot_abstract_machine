@@ -480,7 +480,7 @@ class TestModuleFiles:
         }
         assert unattached == set()
 
-    def test_every_property_range_is_a_microworld_or_action_core_class_or_a_datatype(
+    def test_every_property_range_is_a_class_of_ours_cram_aicor_or_dul_or_a_datatype(
         self, module_graphs
     ):
         microworld = merged(module_graphs)
@@ -492,6 +492,8 @@ class TestModuleFiles:
                 (
                     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
                     ACTION_CORE_ONTOLOGY_IRI,
+                    CRAM_AICOR_NAMESPACE,
+                    DUL_NAMESPACE,
                     str(XSD),
                 )
             )
