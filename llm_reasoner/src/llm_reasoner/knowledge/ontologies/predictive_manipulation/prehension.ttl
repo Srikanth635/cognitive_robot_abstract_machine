@@ -10,8 +10,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.7.0> ;
-    owl:versionInfo "0.7.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.8.0> ;
+    owl:versionInfo "0.8.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> ;
     rdfs:label "Predictive manipulation: prehension"@en ;
     rdfs:comment """Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes."""@en .
@@ -476,7 +476,7 @@
     rdfs:subClassOf aicor:dul_Concept , dul:Task ,
         [ a owl:Restriction ; owl:onProperty :triggeredByPrediction ; owl:someValuesFrom core:SensoryEventPrediction ] ,
         [ a owl:Restriction ; owl:onProperty :adjustsGripForce ; owl:someValuesFrom :GripForceSetpoint ] ,
-        [ a owl:Restriction ; owl:onProperty :hasAdjustmentDirection ; owl:someValuesFrom core:CorrectionDirection ] ,
+        [ a owl:Restriction ; owl:onProperty :hasAdjustmentDirection ; owl:someValuesFrom ac:ChangeDirection ] ,
         [ a owl:Restriction ; owl:onProperty :adjustmentActiveIn ; owl:someValuesFrom core:ActionPhase ] ;
     rdfs:label "anticipatory grip adjustment"@en ;
     rdfs:comment "A feedforward grip change scheduled from a predicted event."@en ;
@@ -486,7 +486,7 @@
     rdfs:label "triggered by prediction"@en ; rdfs:comment "The predicted event consequence that schedules the adjustment."@en .
 :adjustsGripForce a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :GripForceSetpoint ;
     rdfs:label "adjusts grip force"@en ; rdfs:comment "The grip-force target changed before the predicted event."@en .
-:hasAdjustmentDirection a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:CorrectionDirection ;
+:hasAdjustmentDirection a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range ac:ChangeDirection ;
     rdfs:label "has adjustment direction"@en ; rdfs:comment "The direction in which grip force changes."@en .
 :adjustmentActiveIn a owl:ObjectProperty ; rdfs:range core:ActionPhase ;
     rdfs:label "adjustment active in"@en ; rdfs:comment "A phase during which the anticipatory change is active."@en .

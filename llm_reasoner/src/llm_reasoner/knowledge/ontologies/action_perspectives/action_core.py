@@ -37,7 +37,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
 
 class ChangeDirection(OpenValuePartition):
     """
-    Whether something becomes larger or smaller, such as a quantity an action changes, a choice a correction moves or an estimate evidence revises. A direction that can also take values of its own lists these two among its members.
+    The direction in which something changes: larger or smaller, such as a quantity an action changes, a choice a correction moves or an estimate evidence revises, or a direction of its own a module adds, such as moving a choice towards a target. A property taking a direction may be closed to the members it takes.
     """
 
     INCREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Increases"
@@ -50,11 +50,53 @@ class ChangeDirection(OpenValuePartition):
     Becomes smaller, or grows more slowly.
     """
 
+    TOWARDS_TARGET = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#TowardsTarget"
+    """
+    The chosen position or orientation is moved towards a slot or part of one.
+    """
+
+    AWAY_FROM_TARGET = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#AwayFromTarget"
+    """
+    The chosen position or orientation is moved away from a slot or part of one.
+    """
+
+    TO_ALTERNATIVE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#ToAlternative"
+    """
+    Another of the available alternatives is chosen.
+    """
+
+    HOLD_SETPOINT = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#HoldSetpoint"
+    """
+    Keep the target at its present value.
+    """
+
+    REVERSE_CHANGE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ReverseChange"
+    """
+    Command a change opposite to the current direction.
+    """
+
+    STOP_CHANGE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#StopChange"
+    """
+    Bring the commanded change to rest.
+    """
+
+    REPLACE_ESTIMATE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ReplaceEstimate"
+    """
+    Change an unordered estimate or replace its current value.
+    """
+
     @property
     def declaring_module(self) -> ontologies.OntologyModuleFile:
         return {
             ChangeDirection.INCREASES: ontologies.ActionPerspectiveFile.ACTION_CORE,
             ChangeDirection.DECREASES: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            ChangeDirection.TOWARDS_TARGET: ontologies.ActionPerspectiveFile.FAILURES,
+            ChangeDirection.AWAY_FROM_TARGET: ontologies.ActionPerspectiveFile.FAILURES,
+            ChangeDirection.TO_ALTERNATIVE: ontologies.ActionPerspectiveFile.FAILURES,
+            ChangeDirection.HOLD_SETPOINT: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ChangeDirection.REVERSE_CHANGE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ChangeDirection.STOP_CHANGE: ontologies.PredictiveManipulationOntologyFile.CORE,
+            ChangeDirection.REPLACE_ESTIMATE: ontologies.PredictiveManipulationOntologyFile.CORE,
         }[self]
 
 

@@ -7,7 +7,6 @@ Generated from ``failures.ttl`` by ``python -m llm_reasoner.knowledge.ontology_t
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
@@ -105,37 +104,6 @@ class Noticer(OpenValuePartition):
             Noticer.PERSON_OBSERVER: ontologies.ActionPerspectiveFile.FAILURES,
             Noticer.AGENT_SENSING: ontologies.ActionPerspectiveFile.FAILURES,
         }[self]
-
-
-class ParameterChangeDirection(StrEnum):
-    """
-    The direction in which a correction moves a parameter choice: larger or smaller, as the action core's change direction says, or towards, away from or to another alternative.
-    """
-
-    INCREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Increases"
-    """
-    Becomes larger.
-    """
-
-    DECREASES = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Decreases"
-    """
-    Becomes smaller, or grows more slowly.
-    """
-
-    TOWARDS_TARGET = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#TowardsTarget"
-    """
-    The chosen position or orientation is moved towards a slot or part of one.
-    """
-
-    AWAY_FROM_TARGET = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#AwayFromTarget"
-    """
-    The chosen position or orientation is moved away from a slot or part of one.
-    """
-
-    TO_ALTERNATIVE = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#ToAlternative"
-    """
-    Another of the available alternatives is chosen.
-    """
 
 
 # %% classes
@@ -432,7 +400,7 @@ class ParameterChange(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#hasDirection",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#ParameterChangeDirection"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ChangeDirection"
                 ),
             ),
         ),
@@ -478,7 +446,7 @@ class ParameterChange(DescriptionEntity):
     The failed condition whose holding is the reason for the change.
     """
 
-    has_direction: Optional[ParameterChangeDirection] = field(
+    has_direction: Optional[action_core.ChangeDirection] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#hasDirection",

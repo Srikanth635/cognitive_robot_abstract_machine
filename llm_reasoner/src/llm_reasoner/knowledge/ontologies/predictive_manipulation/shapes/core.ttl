@@ -1,5 +1,6 @@
 @prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core#> .
 @prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh:    <http://www.w3.org/ns/shacl#> .
@@ -11,7 +12,7 @@
 # reported beside it.
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> a owl:Ontology ;
-    owl:versionInfo "0.3.1" ;
+    owl:versionInfo "0.4.0" ;
     rdfs:comment "Closed-world structural rules of the core predictive manipulation module."@en ;
     sh:declare
         [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
@@ -568,3 +569,15 @@
             }
         """ ;
     ] .
+
+# %% directions
+
+:CorrectionDirections a sh:NodeShape ;
+    sh:targetClass core:CorrectiveAction ;
+    rdfs:comment "A corrective action changes its setpoints larger or smaller, holds them, reverses or stops their change."@en ;
+    sh:property [ sh:path core:hasCorrectionDirection ; sh:in ( ac:Increases ac:Decreases core:HoldSetpoint core:ReverseChange core:StopChange ) ] .
+
+:UpdateDirections a sh:NodeShape ;
+    sh:targetClass core:ModelUpdate ;
+    rdfs:comment "A model update makes its estimates larger or smaller, or replaces them."@en ;
+    sh:property [ sh:path core:hasUpdateDirection ; sh:in ( ac:Increases ac:Decreases core:ReplaceEstimate ) ] .

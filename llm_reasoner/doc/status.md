@@ -916,6 +916,24 @@ Step 8 of the ontology consolidation: the action core names no action of its own
   measurements, `described_actions.json` and `pouring_prototype.ttl` (by hand) are
   migrated; recorded answers name classes and members by name and are unchanged.
 
+### One change direction (2026-10-26)
+
+Step 9 of the ontology consolidation: the direction in which something changes is the
+action core's open `ac:ChangeDirection` alone.
+
+- The failures' `ParameterChangeDirection` and the predictive manipulation core's
+  `CorrectionDirection` and `EstimateUpdateDirection` are gone. Their own members keep
+  their IRIs and are directions of the core's: the failures add `TowardsTarget`,
+  `AwayFromTarget` and `ToAlternative`, the core `HoldSetpoint`, `ReverseChange`,
+  `StopChange` and `ReplaceEstimate`, each module stating them distinct from the core's
+  `Increases` and `Decreases`. `TrajectoryTrend` stays the core's own.
+- `failures:hasDirection`, `core:hasCorrectionDirection`, `core:hasUpdateDirection` and
+  `prehension:hasAdjustmentDirection` range over `ac:ChangeDirection`; a shape of each
+  module closes each to the members it took before (`sh:in`), so a model is offered
+  exactly those.
+- action-core 0.11.0, failures 0.7.0, core 0.9.0, prehension 0.8.0, and their shapes
+  (`0009-change-direction`); recorded answers name the members by the same names.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

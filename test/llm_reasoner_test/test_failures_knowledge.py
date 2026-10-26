@@ -121,7 +121,7 @@ class TestFailureHypothesis:
             for correction in lip_failure.has_correction
             for change in correction.has_change
         ]
-        assert change.has_direction is failures.ParameterChangeDirection.TOWARDS_TARGET
+        assert change.has_direction is action_core.ChangeDirection.TOWARDS_TARGET
 
     def test_its_record_builds_on_the_core_record(self, stored):
         service, core_record, failures_record = stored

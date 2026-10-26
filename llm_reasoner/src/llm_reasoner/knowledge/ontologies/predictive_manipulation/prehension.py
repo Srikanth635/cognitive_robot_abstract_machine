@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing_extensions import ClassVar, List, Optional
 
 from llm_reasoner.knowledge import ontologies
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import object_dynamics
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
@@ -94,7 +95,7 @@ class AnticipatoryGripAdjustment(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#hasAdjustmentDirection",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#CorrectionDirection"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ChangeDirection"
                 ),
             ),
             PropertyRestriction(
@@ -135,7 +136,7 @@ class AnticipatoryGripAdjustment(DescriptionEntity):
     The grip-force target changed before the predicted event.
     """
 
-    has_adjustment_direction: Optional[core.CorrectionDirection] = field(
+    has_adjustment_direction: Optional[action_core.ChangeDirection] = field(
         default=None,
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#hasAdjustmentDirection",

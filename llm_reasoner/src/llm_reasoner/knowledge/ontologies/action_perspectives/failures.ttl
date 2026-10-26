@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.6.0> ;
-    owl:versionInfo "0.6.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.7.0> ;
+    owl:versionInfo "0.7.0" .
 
 # %% classes
 
@@ -60,7 +60,7 @@ failures:ParameterChange a owl:Class ;
             owl:someValuesFrom core:ParameterDimension ],
         [ a owl:Restriction ;
             owl:onProperty failures:hasDirection ;
-            owl:someValuesFrom failures:ParameterChangeDirection ],
+            owl:someValuesFrom core:ChangeDirection ],
         dul:Description .
 
 failures:Correction a owl:Class ;
@@ -119,27 +119,20 @@ failures:PersonObserver a failures:Noticer,
 [] a owl:AllDifferent ;
     owl:distinctMembers ( failures:PersonObserver failures:AgentSensing ) .
 
-failures:AwayFromTarget a failures:ParameterChangeDirection,
+failures:AwayFromTarget a core:ChangeDirection,
         owl:NamedIndividual ;
     rdfs:label "away from target"@en ;
     rdfs:comment "The chosen position or orientation is moved away from a slot or part of one."@en .
 
-failures:ToAlternative a failures:ParameterChangeDirection,
+failures:ToAlternative a core:ChangeDirection,
         owl:NamedIndividual ;
     rdfs:label "to alternative"@en ;
     rdfs:comment "Another of the available alternatives is chosen."@en .
 
-failures:TowardsTarget a failures:ParameterChangeDirection,
+failures:TowardsTarget a core:ChangeDirection,
         owl:NamedIndividual ;
     rdfs:label "towards target"@en ;
     rdfs:comment "The chosen position or orientation is moved towards a slot or part of one."@en .
-
-failures:ParameterChangeDirection a owl:Class ;
-    rdfs:label "parameter change direction"@en ;
-    rdfs:comment "The direction in which a correction moves a parameter choice: larger or smaller, as the action core's change direction says, or towards, away from or to another alternative."@en ;
-    rdfs:subClassOf dul:Concept ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:oneOf ( core:Increases core:Decreases failures:TowardsTarget failures:AwayFromTarget failures:ToAlternative ) ] .
 
 [] a owl:AllDifferent ;
     owl:distinctMembers ( core:Increases core:Decreases failures:TowardsTarget failures:AwayFromTarget failures:ToAlternative ) .
@@ -248,7 +241,7 @@ failures:hasDirection a owl:FunctionalProperty,
     rdfs:label "has direction"@en ;
     rdfs:comment "The direction in which the change moves the choice."@en ;
     rdfs:domain failures:ParameterChange ;
-    rdfs:range failures:ParameterChangeDirection .
+    rdfs:range core:ChangeDirection .
 
 failures:changeTowardsSlot a owl:ObjectProperty ;
     rdfs:label "change towards slot"@en ;

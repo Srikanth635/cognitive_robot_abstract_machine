@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.8.0> ;
-    owl:versionInfo "0.8.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.9.0> ;
+    owl:versionInfo "0.9.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -719,19 +719,12 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:comment "The observation involved a different location or participant."@en .
 [ a owl:AllDifferent ; owl:distinctMembers ( :AbsentEvent :UnexpectedEvent :EarlyEvent :LateEvent :MagnitudeMismatch :DirectionMismatch :SpatialMismatch ) ] .
 
-:CorrectionDirection a owl:Class ;
-    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( ac:Increases ac:Decreases :HoldSetpoint :ReverseChange :StopChange ) ] ;
-    rdfs:label "correction direction"@en ;
-    rdfs:comment "How a corrective response changes its target setpoint."@en ;
-    :evidenceStatus :EmpiricalFinding .
-:HoldSetpoint a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "hold setpoint"@en ;
+:HoldSetpoint a owl:NamedIndividual , ac:ChangeDirection ; rdfs:label "hold setpoint"@en ;
     rdfs:comment "Keep the target at its present value."@en .
-:ReverseChange a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "reverse change"@en ;
+:ReverseChange a owl:NamedIndividual , ac:ChangeDirection ; rdfs:label "reverse change"@en ;
     rdfs:comment "Command a change opposite to the current direction."@en .
-:StopChange a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "stop change"@en ;
+:StopChange a owl:NamedIndividual , ac:ChangeDirection ; rdfs:label "stop change"@en ;
     rdfs:comment "Bring the commanded change to rest."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( ac:Increases ac:Decreases :HoldSetpoint :ReverseChange :StopChange ) ] .
 
 :RecoveryMode a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
@@ -751,16 +744,9 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:comment "Terminate the manipulation safely."@en .
 [ a owl:AllDifferent ; owl:distinctMembers ( :ContinuePhase :AbortAndCorrect :RepeatPhase :Replan :Abort ) ] .
 
-:EstimateUpdateDirection a owl:Class ;
-    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( ac:Increases ac:Decreases :ReplaceEstimate ) ] ;
-    rdfs:label "estimate update direction"@en ;
-    rdfs:comment "How evidence changes a represented estimate."@en ;
-    :evidenceStatus :EmpiricalFinding ;
-    :representsClaim :FJ-010 .
-:ReplaceEstimate a owl:NamedIndividual , :EstimateUpdateDirection ; rdfs:label "replace estimate"@en ;
+:ReplaceEstimate a owl:NamedIndividual , ac:ChangeDirection ; rdfs:label "replace estimate"@en ;
     rdfs:comment "Change an unordered estimate or replace its current value."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( ac:Increases ac:Decreases :ReplaceEstimate ) ] .
+[ a owl:AllDifferent ; owl:distinctMembers ( ac:Increases ac:Decreases :HoldSetpoint :ReverseChange :StopChange :ReplaceEstimate ) ] .
 
 :UpdateTimescale a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
@@ -1346,7 +1332,7 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:subClassOf aicor:dul_Concept , dul:Task ,
         [ a owl:Restriction ; owl:onProperty :triggeredByError ; owl:someValuesFrom :PredictionError ] ,
         [ a owl:Restriction ; owl:onProperty :targetsSetpoint ; owl:someValuesFrom :MotorSetpoint ] ,
-        [ a owl:Restriction ; owl:onProperty :hasCorrectionDirection ; owl:someValuesFrom :CorrectionDirection ] ,
+        [ a owl:Restriction ; owl:onProperty :hasCorrectionDirection ; owl:someValuesFrom ac:ChangeDirection ] ,
         [ a owl:Restriction ; owl:onProperty :intendedEffect ; owl:someValuesFrom :PhaseConditionType ] ,
         [ a owl:Restriction ; owl:onProperty :hasRecoveryMode ; owl:someValuesFrom :RecoveryMode ] ;
     rdfs:label "corrective action"@en ;
@@ -1357,7 +1343,7 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "triggered by error"@en ; rdfs:comment "A prediction error that releases the response or supplies evidence for the update."@en .
 :targetsSetpoint a owl:ObjectProperty ; rdfs:range :MotorSetpoint ;
     rdfs:label "targets setpoint"@en ; rdfs:comment "A motor setpoint the response changes."@en .
-:hasCorrectionDirection a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :CorrectionDirection ;
+:hasCorrectionDirection a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range ac:ChangeDirection ;
     rdfs:label "has correction direction"@en ; rdfs:comment "How the targeted setpoints are changed."@en .
 :intendedEffect a owl:ObjectProperty ; rdfs:range :PhaseConditionType ;
     rdfs:label "intended effect"@en ; rdfs:comment "A condition the correction is meant to establish or preserve."@en .
@@ -1373,7 +1359,7 @@ Classes classify description-level individuals, the knowledge a language model g
         [ a owl:Restriction ; owl:onProperty :triggeredByError ; owl:someValuesFrom :PredictionError ] ,
         [ a owl:Restriction ; owl:onProperty :updatesEstimate ; owl:someValuesFrom :Estimate ] ,
         [ a owl:Restriction ; owl:onProperty :updatesRepresentation ; owl:someValuesFrom :EstimateRepresentation ] ,
-        [ a owl:Restriction ; owl:onProperty :hasUpdateDirection ; owl:someValuesFrom :EstimateUpdateDirection ] ;
+        [ a owl:Restriction ; owl:onProperty :hasUpdateDirection ; owl:someValuesFrom ac:ChangeDirection ] ;
     owl:disjointWith :CorrectiveAction ;
     rdfs:label "model update"@en ;
     rdfs:comment "A revision of represented estimates that changes later predictions with the same object."@en ;
@@ -1383,7 +1369,7 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "updates estimate"@en ; rdfs:comment "An estimate the revision changes."@en .
 :updatesRepresentation a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :EstimateRepresentation ;
     rdfs:label "updates representation"@en ; rdfs:comment "The representation in which the content is changed."@en .
-:hasUpdateDirection a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :EstimateUpdateDirection ;
+:hasUpdateDirection a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range ac:ChangeDirection ;
     rdfs:label "has update direction"@en ; rdfs:comment "How the represented estimates change."@en .
 :hasUpdateTimescale a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :ModelUpdate ; rdfs:range :UpdateTimescale ;
     rdfs:label "has update timescale"@en ; rdfs:comment "Whether one interaction suffices for the update or several are needed."@en .

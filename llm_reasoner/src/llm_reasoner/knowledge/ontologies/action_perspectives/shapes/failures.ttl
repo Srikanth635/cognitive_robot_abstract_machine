@@ -1,4 +1,5 @@
 @prefix :         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/failures#> .
+@prefix core:     <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix failures: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures#> .
 @prefix owl:      <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
@@ -9,7 +10,7 @@
 # restrictions cannot state. Each shape's comment is shown to the language model.
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/shapes/failures> a owl:Ontology ;
-    owl:versionInfo "0.1.0" ;
+    owl:versionInfo "0.2.0" ;
     rdfs:comment "Closed-world structural rules of the failures."@en ;
     sh:declare
         [ sh:prefix "ac" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#"^^xsd:anyURI ] ,
@@ -96,3 +97,10 @@
             }
         """ ;
     ] .
+
+# %% directions
+
+:ParameterChangeDirections a sh:NodeShape ;
+    sh:targetClass failures:ParameterChange ;
+    rdfs:comment "A parameter change moves its choice larger or smaller, towards or away from a target, or to another alternative."@en ;
+    sh:property [ sh:path failures:hasDirection ; sh:in ( core:Increases core:Decreases failures:TowardsTarget failures:AwayFromTarget failures:ToAlternative ) ] .
