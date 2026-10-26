@@ -30,7 +30,7 @@ The action core's class of whether a condition holds.
 """
 
 POLARITY_FIELDS = [
-    (core.ConditionRequirement, "has_condition_polarity"),
+    (core.ConditionRequirement, "has_polarity"),
     (action_core.SlotCondition, "has_polarity"),
 ]
 """
@@ -107,9 +107,7 @@ class TestThePredictiveManipulationCore:
     def test_its_requirements_name_only_members_of_the_term(self, graphs):
         graph = graphs[PredictiveManipulationOntologyFile.CORE]
         prop = URIRef(
-            PropertyTerm.of_field(
-                core.ConditionRequirement, "has_condition_polarity"
-            ).iri
+            PropertyTerm.of_field(core.ConditionRequirement, "has_polarity").iri
         )
         named = {
             graph.value(restriction, OWL.hasValue)

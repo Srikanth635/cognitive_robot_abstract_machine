@@ -190,7 +190,7 @@ def complete_phase() -> core.ActionPhase:
         has_condition_requirement=[
             core.ConditionRequirement(
                 has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
-                has_condition_polarity=action_core.ConditionPolarity.HOLDS,
+                has_polarity=action_core.ConditionPolarity.HOLDS,
             )
         ],
     )
@@ -457,16 +457,16 @@ class TestCoreRules:
     def test_invariant_without_a_violation_event_is_reported(self):
         unguarded = core.ConditionRequirement(
             has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
-            has_condition_polarity=action_core.ConditionPolarity.HOLDS,
+            has_polarity=action_core.ConditionPolarity.HOLDS,
         )
         guarded = core.ConditionRequirement(
             has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
-            has_condition_polarity=action_core.ConditionPolarity.HOLDS,
+            has_polarity=action_core.ConditionPolarity.HOLDS,
             violation_signalled_by=prehension.ObjectCrush(),
         )
         precondition = core.ConditionRequirement(
             has_condition_timing=action_core.ConditionTiming.AT_ENTRY,
-            has_condition_polarity=action_core.ConditionPolarity.HOLDS,
+            has_polarity=action_core.ConditionPolarity.HOLDS,
         )
         required = requirement(
             core.InvariantRequirement,
@@ -577,7 +577,7 @@ class TestCoreRules:
                         core.ConditionRequirement(
                             has_condition_type=[carton_held],
                             has_condition_timing=action_core.ConditionTiming.AT_ENTRY,
-                            has_condition_polarity=action_core.ConditionPolarity.HOLDS,
+                            has_polarity=action_core.ConditionPolarity.HOLDS,
                         )
                     ]
                 )
@@ -591,7 +591,7 @@ class TestCoreRules:
                         core.ConditionRequirement(
                             has_condition_type=[carton_held],
                             has_condition_timing=action_core.ConditionTiming.AT_ENTRY,
-                            has_condition_polarity=action_core.ConditionPolarity.HOLDS,
+                            has_polarity=action_core.ConditionPolarity.HOLDS,
                         )
                     ]
                 ),
@@ -605,7 +605,7 @@ class TestCoreRules:
         requirement = core.ConditionRequirement(
             has_condition_type=[core.PhaseConditionType()],
             has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
-            has_condition_polarity=action_core.ConditionPolarity.HOLDS,
+            has_polarity=action_core.ConditionPolarity.HOLDS,
         )
         structure = core.ActionPhaseStructure(
             defines_phase=[core.ActionPhase(has_condition_requirement=[requirement])]
@@ -626,7 +626,7 @@ class TestCoupledPhasesInTheOntology:
     def invariant() -> core.ConditionRequirement:
         return core.ConditionRequirement(
             has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
-            has_condition_polarity=action_core.ConditionPolarity.HOLDS,
+            has_polarity=action_core.ConditionPolarity.HOLDS,
         )
 
     def test_coupled_phase_without_an_invariant_violates_its_requirement(self):
