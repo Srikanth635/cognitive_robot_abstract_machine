@@ -17,8 +17,8 @@ from llm_reasoner.clients.tools import ScriptedToolRequest, ToolBox
 from llm_reasoner.knowledge.access import (
     AcceptanceSuite,
     ActionPerspectiveFile,
-    ConceptReference,
     CRAM_AICOR_NAMESPACE,
+    ConceptReference,
     DescribedAction,
     DescribedActions,
     HypothesisBackend,
@@ -30,6 +30,7 @@ from llm_reasoner.knowledge.access import (
     action_core,
     action_frame,
     pouring,
+    pouring_frame,
 )
 from llm_reasoner.resolver.action_context import ActionContextProvider
 from llm_reasoner.resolver.backend import LanguageModelBackend
@@ -236,7 +237,7 @@ class TestKnowledgeRequester:
         consultation = requester.consult(
             action, situation_backend("situation_granular.json")
         )
-        granular = action_core.MaterialRegime.GRANULAR
+        granular = pouring_frame.MaterialRegime.GRANULAR
         assert consultation.situation == {
             pouring_feature_taking(granular).field_name: granular
         }
@@ -261,7 +262,7 @@ class TestKnowledgeRequester:
         requester.consult(action, situation_backend("situation_granular.json"))
         (record,) = store.records()
         unknown = pouring_feature_taking(
-            action_core.TransferTerminationReason.SOURCE_EXHAUSTED
+            pouring_frame.TransferTerminationReason.SOURCE_EXHAUSTED
         )
         assert unknown.field_name not in record.fixed_values
 
@@ -561,7 +562,7 @@ TILT_FRAMED_AS_POURING = DescribedAction(
     designator=identifier_of(ActionWithBodyAndValueSlots),
     concept=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring"),
     structure=pouring.PouringPhaseStructure,
-    frame=action_core.PouringFrame,
+    frame=pouring_frame.PouringFrame,
     frame_fields={
         "angle": DimensionDescription(
             quantity=action_core.QuantityKind.POSITION,
@@ -640,7 +641,7 @@ class TestConsultingPerspectives:
         core_record, frame_record = consultation.perspective_record_ids
         core_view = requester.service.view(core_record)
         frame_view = requester.service.view(frame_record)
-        assert isinstance(core_view.root, action_core.PouringFrame)
+        assert isinstance(core_view.root, pouring_frame.PouringFrame)
         assert frame_view.root.stereotype_of is core_view.root
 
     def test_the_tools_read_the_phases_the_core_and_the_frame_together(self, tmp_path):
@@ -943,7 +944,7 @@ class TestSituatedPerspectives:
             tilt_of(body_with_geometry()), situation_backend("situation_granular.json")
         )
         core_record, _ = consultation.perspective_record_ids
-        granular = action_core.MaterialRegime.GRANULAR
+        granular = pouring_frame.MaterialRegime.GRANULAR
         assert requester.service.view(core_record).root.has_material_regime is granular
         assert consultation.situation == {
             pouring_feature_taking(granular).field_name: granular
@@ -996,7 +997,7 @@ class TestSituatedPerspectives:
             tilt_of(body_with_geometry()),
             situation_backend("situation_frame_granular.json"),
         )
-        granular = action_core.MaterialRegime.GRANULAR
+        granular = pouring_frame.MaterialRegime.GRANULAR
         assert consultation.record_id is None
         assert consultation.situation == {"has_material_regime": granular}
         core_record, _ = consultation.perspective_record_ids

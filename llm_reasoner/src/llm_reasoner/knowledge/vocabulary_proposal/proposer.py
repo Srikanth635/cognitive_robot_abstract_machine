@@ -102,7 +102,7 @@ class VocabularyProposer:
         """
         :param perspective: The perspective whose vocabulary is asked for.
         :param action: The CRAM-AICOR concept of the action, such as ``aicor:Pouring``.
-        :param frame: The core's frame of the action, such as ``core:PouringFrame``.
+        :param frame: The core's frame of the action, such as ``pf:PouringFrame``.
         :return: The first answer that follows every rule, as a module.
         :raises ProposalRejected: When no answer does within the repair budget.
         """

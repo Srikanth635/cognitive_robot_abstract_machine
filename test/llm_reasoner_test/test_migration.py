@@ -16,6 +16,7 @@ from rdflib.compare import isomorphic
 
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
+    ActionPerspectiveFile,
     HYPOTHESIS_CONCEPT_NAMESPACE,
     PredictiveManipulationOntologyFile,
 )
@@ -33,7 +34,10 @@ from llm_reasoner.knowledge.storage.migration import (
     StoreMigration,
     shipped_migrations,
 )
-from llm_reasoner.knowledge.storage.record import HypothesisRecord
+from llm_reasoner.knowledge.storage.record import (
+    HypothesisRecord,
+    current_module_versions,
+)
 from llm_reasoner.knowledge.storage.store import HypothesisStore, StoredFile
 
 # %% fixtures
@@ -320,6 +324,20 @@ class TestStoreMigration:
         ).run()
         assert report.migrated == [SAMPLE_RECORD]
         assert sample_record(store).module_versions["pouring.ttl"] == old + ".1"
+
+    def test_a_module_the_record_did_not_name_is_added_to_its_versions(self, store):
+        added = ModuleVersionChange(
+            module=ActionPerspectiveFile.POURING_FRAME.value,
+            old="",
+            new=current_module_versions([ActionPerspectiveFile.POURING_FRAME])[
+                ActionPerspectiveFile.POURING_FRAME.value
+            ],
+        )
+        StoreMigration(
+            directory=store,
+            migrations=[Migration(name="add", module_versions=(added,))],
+        ).run()
+        assert sample_record(store).module_versions[added.module] == added.new
 
     def test_a_record_breaking_its_ontology_keeps_its_versions_and_is_stale(
         self, store

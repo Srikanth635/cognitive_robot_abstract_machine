@@ -5,6 +5,7 @@
 @prefix ns4: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
 @prefix ns5: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
 @prefix ns6: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix ns7: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -12,8 +13,8 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#pour_milk_structure> a ns6:PouringPhaseStructure,
         owl:NamedIndividual ;
     rdfs:label "pour milk from the carton into the bowl" ;
-    ac:hasMaterialRegime ac:Liquid ;
-    ac:hasTerminationReason ac:TargetQuantityAttained ;
+    ns7:hasMaterialRegime ns7:Liquid ;
+    ns7:hasTerminationReason ns7:TargetQuantityAttained ;
     ns1:decomposesTask [ a ns2:Pouring ] ;
     ns1:definesComparison <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_absent>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_match>,

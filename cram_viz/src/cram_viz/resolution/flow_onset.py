@@ -16,9 +16,9 @@ from llm_reasoner.knowledge.access import (
     FlowOnsetQuery,
     MeasurementStore,
     StoredFlowOnset,
-    action_core,
     core,
     flow_onset,
+    pouring_frame,
 )
 from typing_extensions import Optional
 
@@ -196,7 +196,7 @@ class MeasuredFlowOnset:
             liquid, an empty container, or one the liquid never leaves.
         """
         if (
-            query.material_regime is not action_core.MaterialRegime.LIQUID
+            query.material_regime is not pouring_frame.MaterialRegime.LIQUID
             or query.fill_fraction == 0
         ):
             return None

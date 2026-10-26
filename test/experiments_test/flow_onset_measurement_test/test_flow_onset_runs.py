@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 import trimesh
-from llm_reasoner.knowledge.access import action_core, core, flow_onset
+from llm_reasoner.knowledge.access import core, flow_onset, pouring_frame
 
 from experiments.flow_onset_measurement.exceptions import NoSimulatedTilt
 from experiments.flow_onset_measurement.runs import (
@@ -97,7 +97,7 @@ class TestSimulatedFlowOnset:
         assert setup.tilt_rate == settings.tilt_rate
         assert setup.particle_spacing == settings.particle_spacing
         assert setup.simulation_engine_version == settings.engine_version
-        assert measurement.has_material_regime is action_core.MaterialRegime.LIQUID
+        assert measurement.has_material_regime is pouring_frame.MaterialRegime.LIQUID
 
     def test_no_run_gives_no_measurement(self):
         with pytest.raises(NoSimulatedTilt):

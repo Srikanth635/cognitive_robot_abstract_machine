@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import trimesh
-from llm_reasoner.knowledge.access import action_core, core, flow_onset
+from llm_reasoner.knowledge.access import core, flow_onset, pouring_frame
 
 from experiments.flow_onset_measurement.exceptions import NoSimulatedTilt
 
@@ -167,7 +167,7 @@ class SimulatedFlowOnset:
         return flow_onset.FlowOnsetTiltMeasurement(
             measured_for_container=self.container,
             at_fill_fraction=float(np.mean(fills)),
-            has_material_regime=action_core.MaterialRegime.LIQUID,
+            has_material_regime=pouring_frame.MaterialRegime.LIQUID,
             gravity_azimuth=self.gravity_azimuth,
             has_measured_range=core.MagnitudeRange(
                 lower_bound=min(onsets),

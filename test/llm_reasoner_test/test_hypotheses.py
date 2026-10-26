@@ -31,7 +31,7 @@ from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService, StoreRequired
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView, UnknownCitation
 from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     pouring,
@@ -70,7 +70,8 @@ def granular_query() -> object:
     Return a query for one phase structure of pouring a granular substance.
     """
     return the(pouring.PouringPhaseStructure)(
-        decomposes_task=POURING, has_material_regime=action_core.MaterialRegime.GRANULAR
+        decomposes_task=POURING,
+        has_material_regime=pouring_frame.MaterialRegime.GRANULAR,
     )
 
 

@@ -22,7 +22,10 @@ from llm_reasoner.knowledge.acceptance.rules import AcceptanceRule, Severity
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, StructureShapes
 from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.action_perspectives import (
+    action_core,
+    pouring_frame,
+)
 from llm_reasoner.knowledge.ontologies.situation import SituationFeatures
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
@@ -1383,8 +1386,8 @@ def pouring_structure(**fields: object) -> pouring.PouringPhaseStructure:
     Return a pouring structure of liquid ending at the target quantity.
     """
     defaults: dict[str, object] = {
-        "has_material_regime": action_core.MaterialRegime.LIQUID,
-        "has_termination_reason": action_core.TransferTerminationReason.TARGET_QUANTITY_ATTAINED,
+        "has_material_regime": pouring_frame.MaterialRegime.LIQUID,
+        "has_termination_reason": pouring_frame.TransferTerminationReason.TARGET_QUANTITY_ATTAINED,
     }
     defaults.update(fields)
     return pouring.PouringPhaseStructure(**defaults)

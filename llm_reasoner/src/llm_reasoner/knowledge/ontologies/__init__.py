@@ -301,13 +301,26 @@ class ActionPerspectiveFile(ActionPerspectiveModule, StrEnum):
     corrects it.
     """
 
+    POURING_FRAME = "pouring-frame.ttl"
+    """
+    The action core's frame of pouring: the participants and parts a pour names, what it
+    is for, and the material poured and the reason the pour ends.
+    """
+
     @property
     def usable_modules(self) -> set[OntologyModuleFile]:
         """
-        The module and the action core: a perspective describes an action in the core's
-        terms and never in another perspective's.
+        The module and the action core, and for a perspective also the core's frames of
+        particular actions: a perspective describes an action in the core's terms and
+        never in another perspective's.
         """
-        return {ActionPerspectiveFile.ACTION_CORE, self}
+        core = {ActionPerspectiveFile.ACTION_CORE, self}
+        if self in (
+            ActionPerspectiveFile.ACTION_CORE,
+            ActionPerspectiveFile.POURING_FRAME,
+        ):
+            return core
+        return {*core, ActionPerspectiveFile.POURING_FRAME}
 
 
 class ActionCoreAnnotation(StrEnum):

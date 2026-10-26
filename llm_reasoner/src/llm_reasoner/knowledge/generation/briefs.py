@@ -12,6 +12,7 @@ from enum import StrEnum
 from typing_extensions import Tuple
 
 from llm_reasoner.knowledge.ontologies import ActionPerspectiveFile
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.prompt_structure import PromptRule
@@ -48,9 +49,12 @@ class GenerationBrief:
     @classmethod
     def for_root(cls, root: type[DescriptionEntity]) -> GenerationBrief:
         """
-        :return: The brief of a generation rooted in a class: an action perspective
-            module's for a class of one, the predictive manipulation brief otherwise.
+        :return: The brief of a generation rooted in a class: the action core's for a
+            frame, an action perspective module's for another class of one, the
+            predictive manipulation brief otherwise.
         """
+        if issubclass(root, action_core.ActionFrame):
+            return cls.of_action_perspective(ActionPerspectiveFile.ACTION_CORE)
         module_file = Vocabulary().module_file_of(root)
         if isinstance(module_file, ActionPerspectiveFile):
             return cls.of_action_perspective(module_file)

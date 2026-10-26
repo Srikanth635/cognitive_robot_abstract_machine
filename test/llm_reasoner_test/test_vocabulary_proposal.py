@@ -63,7 +63,7 @@ ACTION = "aicor:Pouring"
 The action the vocabulary is proposed for.
 """
 
-FRAME = "core:PouringFrame"
+FRAME = "pf:PouringFrame"
 """
 The action core's frame of that action.
 """
@@ -115,10 +115,13 @@ class RecordedConsistency(ConsistencyCheck):
 @pytest.fixture(scope="module")
 def catalogue() -> TermCatalogue:
     """
-    The terms a proposal may reuse: the action core's, and those of the excerpts.
+    The terms a proposal may reuse: the action core's with its pouring frame, and those
+    of the excerpts.
     """
     return TermCatalogue.from_files(
-        core=ActionPerspectiveFile.ACTION_CORE.path, linked=LINKED_FILES
+        core=ActionPerspectiveFile.ACTION_CORE.path,
+        linked=LINKED_FILES,
+        frames=[ActionPerspectiveFile.POURING_FRAME.path],
     )
 
 
@@ -595,7 +598,7 @@ class TestPrompts:
         (action,) = bodies(request, ProposalSection.ACTION)
         assert json.loads(action) == {"action": ACTION, "frame": FRAME}
         (core,) = bodies(request, ProposalSection.CORE)
-        assert "core:PouringFrame" in {entry["name"] for entry in json.loads(core)}
+        assert FRAME in {entry["name"] for entry in json.loads(core)}
         (linked,) = bodies(request, ProposalSection.LINKED_TERMS)
         assert "aicor:Container" in {entry["name"] for entry in json.loads(linked)}
         (output,) = bodies(request, ProposalSection.OUTPUT)

@@ -31,6 +31,7 @@ from llm_reasoner.knowledge.ontologies import (
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     failures,
+    pouring_frame,
 )
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -364,7 +365,7 @@ class TestScope:
             "has_material_regime"
         )
         assert regime.options == tuple(
-            member.name for member in action_core.MaterialRegime
+            member.name for member in pouring_frame.MaterialRegime
         )
 
 

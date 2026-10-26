@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from krrood.exceptions import DataclassException
-from llm_reasoner.knowledge.access import action_core
+from llm_reasoner.knowledge.access import pouring_frame
 
 # %% container contents
 
@@ -59,5 +59,5 @@ class UnknownMaterialRegime(DataclassException):
         return f"the ontology names no material regime {self.stated_regime!r}"
 
     def suggest_correction(self) -> str:
-        regimes = ", ".join(action_core.MaterialRegime.__members__)
+        regimes = ", ".join(pouring_frame.MaterialRegime.__members__)
         return f"state one of the material regimes {regimes}"

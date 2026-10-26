@@ -892,6 +892,30 @@ classes, and no class requires a concept as an individual.
   causes makes unsatisfiable; the slow alignment test follows the ranges of restricted
   properties to explain it (user, 2026-10-26).
 
+### The pouring frame out of the hub (2026-10-26)
+
+Step 8 of the ontology consolidation: the action core names no action of its own.
+
+- `action_perspectives/pouring-frame.ttl` (`pf:`, 0.1.0, importing the action core) holds
+  `PouringFrame` and its seven variants, the open `MaterialRegime` and
+  `TransferTerminationReason` with their members, and `hasMaterialRegime` and
+  `hasTerminationReason`. It is registered as `ActionPerspectiveFile.POURING_FRAME`, last
+  of its family so the perspectives keep their order, with a description of its own.
+- The predictive manipulation pouring module and the flow-onset measurements import it
+  instead of using the action core's terms. A perspective may use it beside the action
+  core (`usable_modules`), so a frame stereotype still sees the given pouring frame; the
+  action core is still used alone.
+- A frame hypothesis is found by its root being an `action_core.ActionFrame`, not by its
+  module (`KnowledgeOverview`, `GenerationBrief.for_root`), so a pouring frame is still
+  asked with the action core's description and rules. `access.py` exports `pouring_frame`.
+- The proposal catalogue lists the pouring frame's terms beside the core's (`pf:`); the
+  command line's frame is `pf:PouringFrame`.
+- Table `0008-pouring-frame` renames the 19 IRIs, moves action-core to 0.10.0, pouring to
+  0.9.0 and flow-onset to 0.2.0, and adds `pouring-frame.ttl` 0.1.0 to every record (a
+  version change from an empty version adds a module). The cram_viz sample, the six
+  measurements, `described_actions.json` and `pouring_prototype.ttl` (by hand) are
+  migrated; recorded answers name classes and members by name and are unchanged.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

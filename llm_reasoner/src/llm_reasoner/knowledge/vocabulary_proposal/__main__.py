@@ -75,7 +75,7 @@ def arguments_of(argv: List[str]) -> argparse.Namespace:
         "perspective", choices=[perspective.value for perspective in Perspective]
     )
     parser.add_argument("--action", required=True, help="such as aicor:Pouring")
-    parser.add_argument("--frame", required=True, help="such as core:PouringFrame")
+    parser.add_argument("--frame", required=True, help="such as pf:PouringFrame")
     parser.add_argument("--output", required=True, type=Path, help="a directory")
     parser.add_argument("--model", default=SONNET_5_5)
     parser.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS)
@@ -127,11 +127,17 @@ def main(argv: Optional[List[str]] = None) -> None:
         prices=SONNET_5_5_PRICES if arguments.model == SONNET_5_5 else None,
     )
     catalogue = TermCatalogue.from_files(
-        core=ActionPerspectiveFile.ACTION_CORE.path, linked=linked.paths
+        core=ActionPerspectiveFile.ACTION_CORE.path,
+        linked=linked.paths,
+        frames=[ActionPerspectiveFile.POURING_FRAME.path],
     )
     consistency = (
         HermitCheck(
-            background_files=[ActionPerspectiveFile.ACTION_CORE.path, *linked.paths]
+            background_files=[
+                ActionPerspectiveFile.ACTION_CORE.path,
+                ActionPerspectiveFile.POURING_FRAME.path,
+                *linked.paths,
+            ]
         )
         if HermitCheck.shipped_directory() is not None
         else None

@@ -15,9 +15,9 @@ from pathlib import Path
 import pytest
 from llm_reasoner.knowledge.access import (
     MeasurementStore,
-    action_core,
     core,
     flow_onset,
+    pouring_frame,
 )
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
 from typing_extensions import Any, Dict
@@ -195,7 +195,7 @@ class TestMeasuredFlowOnset:
         bundle = stating_contents(
             pouring_bundle,
             ContainerContents(
-                material_regime=action_core.MaterialRegime.GRANULAR, fill_fraction=0.5
+                material_regime=pouring_frame.MaterialRegime.GRANULAR, fill_fraction=0.5
             ),
         )
         measured = MeasuredFlowOnset(bundle=bundle, store=store)

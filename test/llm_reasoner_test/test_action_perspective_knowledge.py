@@ -43,6 +43,7 @@ from llm_reasoner.knowledge.ontologies import (
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     action_frame,
+    pouring_frame,
 )
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
 from llm_reasoner.knowledge.ontologies.perspective_roots import PERSPECTIVE_ROOTS
@@ -95,10 +96,12 @@ class TestVocabularyLookup:
     def test_every_registered_module_is_looked_up(self):
         assert set(Vocabulary().modules) == set(KNOWLEDGE_ONTOLOGY_MODULES)
 
-    def test_a_class_of_the_action_core_is_found_by_its_iri(self):
+    def test_a_class_of_the_pouring_frame_is_found_by_its_iri(self):
         assert (
-            Vocabulary().definition_named(str(CORE.PouringFrame))
-            is action_core.PouringFrame
+            Vocabulary().definition_named(
+                ActionPerspectiveFile.POURING_FRAME.namespace + "PouringFrame"
+            )
+            is pouring_frame.PouringFrame
         )
 
     def test_a_class_of_a_perspective_is_found_by_its_name(self):
@@ -112,9 +115,10 @@ class TestVocabularyLookup:
 
 
 class TestModulesUsed:
-    def test_a_core_hypothesis_uses_only_the_action_core(self):
-        assert GenerationSchema.for_root(action_core.PouringFrame).module_files() == {
-            ActionPerspectiveFile.ACTION_CORE
+    def test_a_core_hypothesis_uses_only_the_action_core_and_the_pouring_frame(self):
+        assert GenerationSchema.for_root(pouring_frame.PouringFrame).module_files() == {
+            ActionPerspectiveFile.ACTION_CORE,
+            ActionPerspectiveFile.POURING_FRAME,
         }
 
     def test_a_frame_hypothesis_uses_the_action_core_and_the_frame(self):
@@ -122,13 +126,17 @@ class TestModulesUsed:
             action_frame.FrameStereotype
         ).module_files() == {
             ActionPerspectiveFile.ACTION_CORE,
+            ActionPerspectiveFile.POURING_FRAME,
             ActionPerspectiveFile.ACTION_FRAME,
         }
 
-    def test_a_phase_structure_uses_no_action_perspective_beyond_the_core(self):
+    def test_a_phase_structure_uses_no_action_perspective_beyond_the_core_and_frame(
+        self,
+    ):
         used = GenerationSchema.for_root(pouring.PouringPhaseStructure).module_files()
         assert used - set(PredictiveManipulationOntologyFile) == {
-            ActionPerspectiveFile.ACTION_CORE
+            ActionPerspectiveFile.ACTION_CORE,
+            ActionPerspectiveFile.POURING_FRAME,
         }
 
     def test_a_core_hypothesis_is_offered_no_specialisation_a_perspective_declares(
@@ -136,12 +144,12 @@ class TestModulesUsed:
     ):
         assert (
             action_frame.AdditionalConsequence.__name__
-            not in GenerationSchema.for_root(action_core.PouringFrame).types
+            not in GenerationSchema.for_root(pouring_frame.PouringFrame).types
         )
 
     def test_a_core_field_accepts_no_specialisation_a_perspective_declares(self):
-        frame = GenerationSchema.for_root(action_core.PouringFrame).get(
-            action_core.PouringFrame.__name__
+        frame = GenerationSchema.for_root(pouring_frame.PouringFrame).get(
+            pouring_frame.PouringFrame.__name__
         )
         assert (
             action_frame.AdditionalConsequence.__name__
@@ -154,13 +162,15 @@ class TestModulesUsed:
         assert GenerationSchema.for_root(core.ActionPhaseStructure).module_files() == {
             *PredictiveManipulationOntologyFile,
             ActionPerspectiveFile.ACTION_CORE,
+            ActionPerspectiveFile.POURING_FRAME,
         }
 
 
 class TestUsableModules:
-    def test_a_perspective_is_used_with_the_action_core_only(self):
+    def test_a_perspective_is_used_with_the_action_core_and_its_frames_only(self):
         assert ActionPerspectiveFile.ACTION_FRAME.usable_modules == {
             ActionPerspectiveFile.ACTION_CORE,
+            ActionPerspectiveFile.POURING_FRAME,
             ActionPerspectiveFile.ACTION_FRAME,
         }
 
@@ -258,7 +268,7 @@ def core_query():
     """
     :return: A query for the core frame of pouring.
     """
-    return the(action_core.PouringFrame)(frames_action=POURING)
+    return the(pouring_frame.PouringFrame)(frames_action=POURING)
 
 
 # %% a core hypothesis
@@ -268,7 +278,7 @@ class TestCoreHypothesis:
     def test_a_core_hypothesis_is_admitted_with_its_slots(self, tmp_path):
         backend = core_backend(HypothesisStore(directory=tmp_path))
         (frame,) = core_query().evaluate(backend=backend)
-        assert isinstance(frame, action_core.PouringFrame)
+        assert isinstance(frame, pouring_frame.PouringFrame)
         assert {type(slot) for slot in frame.defines_slot} == {
             action_core.AgentSlot,
             action_core.SourceSlot,
@@ -277,25 +287,29 @@ class TestCoreHypothesis:
             action_core.PartSlot,
         }
 
-    def test_its_record_keeps_the_version_of_the_action_core_only(self, tmp_path):
+    def test_its_record_keeps_the_versions_of_the_core_and_the_pouring_frame_only(
+        self, tmp_path
+    ):
         backend = core_backend(HypothesisStore(directory=tmp_path))
         list(core_query().evaluate(backend=backend))
         assert backend.last_record.module_versions == current_module_versions(
-            [ActionPerspectiveFile.ACTION_CORE]
+            [ActionPerspectiveFile.ACTION_CORE, ActionPerspectiveFile.POURING_FRAME]
         )
 
-    def test_its_open_world_check_covers_the_action_core(self, tmp_path):
+    def test_its_open_world_check_covers_the_core_and_the_pouring_frame(self, tmp_path):
         consistency = CoverageRecorded()
         backend = core_backend(HypothesisStore(directory=tmp_path), consistency)
         list(core_query().evaluate(backend=backend))
-        assert consistency.covered == [{ActionPerspectiveFile.ACTION_CORE}]
+        assert consistency.covered == [
+            {ActionPerspectiveFile.ACTION_CORE, ActionPerspectiveFile.POURING_FRAME}
+        ]
 
     def test_it_is_read_back_from_the_store_as_the_core_frame(self, tmp_path):
         service = KnowledgeService(
             backend=core_backend(HypothesisStore(directory=tmp_path))
         )
         view = service.view_for(core_query())
-        assert isinstance(view.root, action_core.PouringFrame)
+        assert isinstance(view.root, pouring_frame.PouringFrame)
         assert view.root.frames_action == POURING
 
     def test_it_is_served_from_the_store_without_asking_again(self, tmp_path):
@@ -330,7 +344,7 @@ def system_prompt_for(root: type) -> str:
 class TestGenerationBrief:
     def test_a_core_hypothesis_is_asked_with_the_cores_description(self):
         (role,) = bodies(
-            system_prompt_for(action_core.PouringFrame), GenerationSection.ROLE
+            system_prompt_for(pouring_frame.PouringFrame), GenerationSection.ROLE
         )
         assert ActionPerspectiveFile.ACTION_CORE.description in role
 
@@ -342,7 +356,7 @@ class TestGenerationBrief:
 
     def test_an_action_perspective_is_not_asked_about_phases(self):
         (rules,) = bodies(
-            system_prompt_for(action_core.PouringFrame), GenerationSection.RULES
+            system_prompt_for(pouring_frame.PouringFrame), GenerationSection.RULES
         )
         for rule in PREDICTIVE_MANIPULATION_BRIEF.rules:
             assert rule.render() not in rules
@@ -808,7 +822,7 @@ class TestReadingBesideFlanagan:
             asked(
                 toolbox, KnowledgeToolName.DESCRIBE_FRAGMENT, {"name": core_frame_name}
             )["kind"]["name"]
-            == action_core.PouringFrame.__name__
+            == pouring_frame.PouringFrame.__name__
         )
         assert (
             asked(
@@ -866,7 +880,8 @@ class TestStoredRoot:
 class TestPerspectiveRoots:
     def test_every_perspective_on_the_core_has_a_root(self):
         assert set(PERSPECTIVE_ROOTS) == set(ActionPerspectiveFile) - {
-            ActionPerspectiveFile.ACTION_CORE
+            ActionPerspectiveFile.ACTION_CORE,
+            ActionPerspectiveFile.POURING_FRAME,
         }
 
     def test_the_root_of_a_perspective_belongs_to_its_module(self):

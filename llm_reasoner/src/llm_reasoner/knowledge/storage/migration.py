@@ -162,7 +162,8 @@ class ModuleVersionChange:
 
     old: str
     """
-    The version before the change.
+    The version before the change; empty for a module records did not name before,
+    which the change adds.
     """
 
     new: str
@@ -450,11 +451,12 @@ class Migration:
 
     def versions_of(self, versions: Mapping[str, str]) -> dict[str, str]:
         """
-        :return: The module versions a record names, those this migration moved moved.
+        :return: The module versions a record names, those this migration moved moved
+            and those it adds added.
         """
         moved = dict(versions)
         for change in self.module_versions:
-            if moved.get(change.module) == change.old:
+            if moved.get(change.module, "") == change.old:
                 moved[change.module] = change.new
         return moved
 

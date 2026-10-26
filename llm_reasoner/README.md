@@ -62,6 +62,7 @@ from llm_reasoner.knowledge.access import (
     HypothesisStore,
     KnowledgeService,
     pouring,
+    pouring_frame,
 )
 
 service = KnowledgeService(
@@ -73,7 +74,7 @@ service = KnowledgeService(
 view = service.view_for(
     the(pouring.PouringPhaseStructure)(
         decomposes_task=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring"),
-        has_material_regime=pouring.MaterialRegime.LIQUID,
+        has_material_regime=pouring_frame.MaterialRegime.LIQUID,
     ),
     instruction="pour milk from the carton into the bowl",
 )

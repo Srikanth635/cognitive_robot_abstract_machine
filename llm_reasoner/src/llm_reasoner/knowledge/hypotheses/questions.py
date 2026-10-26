@@ -454,7 +454,7 @@ class KnowledgeQuestions:
             says it goes through, and the frame and the perspectives of an action core.
         """
         phase_view = self.phase_structure_view()
-        core_view = self.view_of_module(ActionPerspectiveFile.ACTION_CORE)
+        core_view = self.frame_view()
         overview = KnowledgeOverview(
             action=self.action_concept(phase_view, core_view),
             frame=None if core_view is None else self.frame_overview(core_view.root),
@@ -525,7 +525,7 @@ class KnowledgeQuestions:
             )
             for view in self.views()
             if isinstance(self.module_of(view), ActionPerspectiveFile)
-            and self.module_of(view) is not ActionPerspectiveFile.ACTION_CORE
+            and not isinstance(view.root, action_core.ActionFrame)
         ]
 
     def action_concept(
@@ -557,14 +557,16 @@ class KnowledgeQuestions:
         """
         return self.vocabulary.module_file_of(type(view.root))
 
-    def view_of_module(
-        self, module_file: OntologyModuleFile
-    ) -> Optional[HypothesisView]:
+    def frame_view(self) -> HypothesisView | None:
         """
-        :return: The first hypothesis read whose root belongs to the module.
+        :return: The first hypothesis read whose root is an action's frame.
         """
         return next(
-            (view for view in self.views() if self.module_of(view) is module_file),
+            (
+                view
+                for view in self.views()
+                if isinstance(view.root, action_core.ActionFrame)
+            ),
             None,
         )
 

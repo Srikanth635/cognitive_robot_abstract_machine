@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.storage.exceptions import InvalidMeasurement
@@ -43,7 +43,7 @@ def measurement(
             mesh_digest=CUP_DIGEST, mesh_file_name="cup.stl"
         ),
         at_fill_fraction=fill,
-        has_material_regime=action_core.MaterialRegime.LIQUID,
+        has_material_regime=pouring_frame.MaterialRegime.LIQUID,
         gravity_azimuth=azimuth,
         has_measured_range=core.MagnitudeRange(
             lower_bound=onset[0],
@@ -81,7 +81,7 @@ def query(fill: float = 0.5, azimuth: float = 90.0) -> FlowOnsetQuery:
     """
     return FlowOnsetQuery(
         mesh_digest=CUP_DIGEST,
-        material_regime=action_core.MaterialRegime.LIQUID,
+        material_regime=pouring_frame.MaterialRegime.LIQUID,
         fill_fraction=fill,
         gravity_azimuth=azimuth,
     )
@@ -166,7 +166,7 @@ class TestFinding:
         assert store.flow_onset(replace(query(), mesh_digest="b" * 64)) is None
         assert (
             store.flow_onset(
-                replace(query(), material_regime=action_core.MaterialRegime.GRANULAR)
+                replace(query(), material_regime=pouring_frame.MaterialRegime.GRANULAR)
             )
             is None
         )
