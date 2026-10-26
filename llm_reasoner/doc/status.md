@@ -1041,8 +1041,10 @@ Step 13 of the ontology consolidation, with the decisions P1, R1 and S1 of
   be placed keeps its list, and its record goes stale. The cram_viz sample's three
   conditions typed only `PhaseConditionType` with two roles were split by hand, the rest by
   the table; two recorded answers and the prototype fixture state the slot.
-- cram_viz's `hypothesis_knowledge_graph.json` still labels edges `condition_on_role`;
-  nothing reads it, only `paths.py` names it.
+- cram_viz's `hypothesis_knowledge_graph.json`, a notebook-exported snapshot that nothing
+  read, is removed with its path in `paths.py`: 32 of its 71 types and 34 of its 51 edge
+  labels (`condition_on_role` among them) are no longer in the vocabulary. The Hypothesis
+  Graph tab builds the graph live.
 
 ### Quantities in the action core (2026-10-26)
 
