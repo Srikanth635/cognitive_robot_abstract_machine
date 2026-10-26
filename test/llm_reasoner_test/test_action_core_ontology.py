@@ -19,6 +19,7 @@ from rdflib import OWL, RDF, RDFS, BNode, Graph, Namespace, URIRef
 from rdflib.collection import Collection
 from typing_extensions import Optional, Set
 
+from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.knowledge.ontologies import (
     ACTION_PERSPECTIVES_NAMESPACE_ROOT,
     CRAM_AICOR_NAMESPACE,
@@ -206,10 +207,14 @@ class TestModuleFile:
                     graph.value(prop, RDFS.domain) is not None or prop in restricted
                 ), prop
 
-    def test_every_property_range_is_a_class_of_the_core(self, graph):
+    def test_every_property_range_is_a_class_of_the_core_or_of_cram_aicor_or_dul(
+        self, graph
+    ):
         for prop in graph.subjects(RDF.type, OWL.ObjectProperty):
             for value_range in graph.objects(prop, RDFS.range):
-                assert str(value_range).startswith(CORE), prop
+                assert str(value_range).startswith(
+                    CORE
+                ) or LinkedOntologyTerms.concerns(str(value_range)), prop
 
 
 # %% frames

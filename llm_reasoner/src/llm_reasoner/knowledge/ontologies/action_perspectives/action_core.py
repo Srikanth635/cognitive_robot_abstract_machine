@@ -263,6 +263,7 @@ class ActionFrame(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#framesAction",
             functional=True,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#ManipulationActionCategory",
         ).as_dict(),
     )
     """
@@ -455,8 +456,8 @@ class PouringFrame(ManipulationActionFrame):
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#framesAction",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Pouring",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(iri="http://aicor.knowledge/l2-ontology.owl#Pouring"),
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasMaterialRegime",
@@ -489,8 +490,10 @@ class PouringFrame(ManipulationActionFrame):
                         ),
                         PropertyRestriction(
                             property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aimsAtState",
-                            quantifier=Quantifier.VALUE,
-                            value="http://aicor.knowledge/l2-ontology.owl#AccumulatedState",
+                            quantifier=Quantifier.SOME,
+                            filler=NamedClass(
+                                iri="http://aicor.knowledge/l2-ontology.owl#AccumulatedState"
+                            ),
                         ),
                     )
                 ),
@@ -601,6 +604,7 @@ class Consequence(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#resultsInState",
             functional=True,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#DiscreteMode",
         ).as_dict(),
     )
     """
@@ -767,6 +771,7 @@ class Objective(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aimsAtState",
             functional=True,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#DiscreteMode",
         ).as_dict(),
     )
     """
@@ -1088,6 +1093,7 @@ class StateCondition(SlotCondition):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionHasState",
             functional=False,
+            linked_range="http://aicor.knowledge/l2-ontology.owl#DiscreteMode",
         ).as_dict(),
     )
     """

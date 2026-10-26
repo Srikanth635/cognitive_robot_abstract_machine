@@ -172,9 +172,11 @@ RULES: List[PromptRule] = [
     PromptRule(
         ProposalRuleName.CONCEPTS,
         "A property whose values are CRAM-AICOR concepts, such as an action category "
-        "(aicor:Grasping) or a state type (aicor:ContainedState), names them by their "
-        "IRI as the core's framesAction and aimsAtState do: give it no range, and say in "
-        "its definition which concepts it names.",
+        "(aicor:Grasping) or a state type (aicor:ContainedState), takes instances of "
+        "them as the core's framesAction and aimsAtState do: give it the CRAM-AICOR "
+        "class they belong to as its range, aicor:ManipulationActionCategory for an "
+        "action category and aicor:DiscreteMode for a state type, and say in its "
+        "definition which concepts it names.",
     ),
     PromptRule(
         ProposalRuleName.WORLD,

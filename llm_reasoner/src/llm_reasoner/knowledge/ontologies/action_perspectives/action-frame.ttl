@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.6.0> ;
-    owl:versionInfo "0.6.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame/0.7.0> ;
+    owl:versionInfo "0.7.0" .
 
 # %% classes
 
@@ -166,6 +166,7 @@ frame:expectsOfSlot a owl:FunctionalProperty,
     rdfs:subPropertyOf dul:usesConcept .
 
 frame:normallyFilledBy a owl:ObjectProperty ;
+    rdfs:range dul:PhysicalObject ;
     rdfs:label "normally filled by"@en ;
     rdfs:comment "A kind of thing that normally fills the slot, as the IRI of a CRAM-AICOR class, such as aicor:Container for the source of a pour."@en ;
     rdfs:domain frame:SlotExpectation .
@@ -238,12 +239,14 @@ frame:decidesWhether a owl:ObjectProperty ;
     rdfs:range core:SlotCondition .
 
 frame:conditionAffordsAction a owl:ObjectProperty ;
+    rdfs:range aicor:ManipulationActionCategory ;
     rdfs:label "condition affords action"@en ;
     rdfs:comment "A kind of action the filler must afford for the condition to hold, as the IRI of a CRAM-AICOR action category, such as aicor:Grasping or aicor:Tilting."@en ;
     rdfs:domain frame:AffordanceCondition ;
     rdfs:subPropertyOf aicor:affordsAction .
 
 frame:conditionAffordsState a owl:ObjectProperty ;
+    rdfs:range aicor:DiscreteMode ;
     rdfs:label "condition affords state"@en ;
     rdfs:comment "A state the filler must be able to be brought into for the condition to hold, as the IRI of a CRAM-AICOR state type, such as aicor:ContainedState for a goal that can contain the substance."@en ;
     rdfs:domain frame:AffordanceCondition .

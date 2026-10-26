@@ -140,8 +140,8 @@ class PouringPhaseStructure(prehension.PrehensionPhaseStructure):
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#decomposesTask",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Pouring",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(iri="http://aicor.knowledge/l2-ontology.owl#Pouring"),
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
@@ -1471,8 +1471,8 @@ class TiltToFlowPhase(core.ActionPhase):
             ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#realizesActionCategory",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Tilting",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(iri="http://aicor.knowledge/l2-ontology.owl#Tilting"),
             ),
         ),
         definition=None,

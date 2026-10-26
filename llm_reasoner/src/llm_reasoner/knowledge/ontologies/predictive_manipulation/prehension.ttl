@@ -10,8 +10,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.6.0> ;
-    owl:versionInfo "0.6.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.7.0> ;
+    owl:versionInfo "0.7.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> ;
     rdfs:label "Predictive manipulation: prehension"@en ;
     rdfs:comment """Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes."""@en .
@@ -38,6 +38,7 @@
     core:evidenceStatus core:EmpiricalFinding ;
     core:representsClaim core:JF09-12 .
 :graspSiteSuitedFor a owl:ObjectProperty ; rdfs:domain :GraspSite ;
+    rdfs:range aicor:ManipulationActionCategory ;
     rdfs:label "grasp site suited for"@en ;
     rdfs:comment "An action the grasp site is chosen for, as the IRI of a CRAM-AICOR action category."@en .
 
@@ -352,14 +353,14 @@
 :ReachPhase a owl:Class ;
     rdfs:subClassOf core:ActionPhase ,
         [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Uncoupled ] ,
-        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Reaching ] ;
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:someValuesFrom aicor:Reaching ] ;
     rdfs:label "reach phase"@en ;
     rdfs:comment "Transport of the uncoupled effector to the grasp site; its goal is marked by grasp contact."@en ;
     core:evidenceStatus core:EmpiricalFinding .
 
 :ContactEstablishmentPhase a owl:Class ;
     rdfs:subClassOf core:ActionPhase ,
-        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Grasping ] ;
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:someValuesFrom aicor:Grasping ] ;
     rdfs:label "contact establishment phase"@en ;
     rdfs:comment "Closing the effector on the manipulandum, for grippers closed separately from the reach."@en ;
     core:evidenceStatus core:EngineeringExtension .
@@ -367,7 +368,7 @@
 :ForceLoadingPhase a owl:Class ;
     rdfs:subClassOf core:ActionPhase ,
         [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Transitional ] ,
-        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Grasping ] ;
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:someValuesFrom aicor:Grasping ] ;
     rdfs:label "force loading phase"@en ;
     rdfs:comment "Grip and load forces increase in parallel, at a rate scaled to the predicted weight, until lift-off."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
@@ -376,7 +377,7 @@
 :LiftPhase a owl:Class ;
     rdfs:subClassOf core:ActionPhase ,
         [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ,
-        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Lifting ] ;
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:someValuesFrom aicor:Lifting ] ;
     rdfs:label "lift phase"@en ;
     rdfs:comment "Vertical transport of the manipulandum away from its initial support."@en ;
     core:evidenceStatus core:EmpiricalFinding .
@@ -391,7 +392,7 @@
 :TransportPhase a owl:Class ;
     rdfs:subClassOf core:ActionPhase ,
         [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ,
-        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Transporting ] ;
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:someValuesFrom aicor:Transporting ] ;
     rdfs:label "transport phase"@en ;
     rdfs:comment "Moving the held manipulandum to a destination."@en ;
     core:evidenceStatus core:EmpiricalFinding ;

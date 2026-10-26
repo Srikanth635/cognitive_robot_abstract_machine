@@ -1,4 +1,5 @@
 @prefix core: <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
 @prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -13,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas/0.3.0> ;
-    owl:versionInfo "0.3.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas/0.4.0> ;
+    owl:versionInfo "0.4.0" .
 
 # %% classes
 
@@ -373,11 +374,13 @@ schemas:requiredRelationKind a owl:FunctionalProperty,
     rdfs:range schemas:RelationKind .
 
 schemas:namesSpatialRelation a owl:ObjectProperty ;
+    rdfs:range aicor:SpatialRelation ;
     rdfs:label "names spatial relation"@en ;
     rdfs:comment "The CRAM-AICOR spatial relation concept, such as aicor:Inside or aicor:On, that the requirement names by its IRI."@en ;
     rdfs:domain schemas:SchemaRequirement .
 
 schemas:namesState a owl:ObjectProperty ;
+    rdfs:range aicor:DiscreteMode ;
     rdfs:label "names state"@en ;
     rdfs:comment "The CRAM-AICOR state type, such as aicor:ContainedState, that the requirement amounts to, named by its IRI."@en ;
     rdfs:domain schemas:SchemaRequirement .

@@ -248,8 +248,8 @@ class TestRestrictionsHold:
                     iri=restriction_on(
                         prehension.ForceLoadingPhase,
                         "realizes_action_category",
-                        Quantifier.VALUE,
-                    ).value
+                        Quantifier.SOME,
+                    ).filler.iri
                 )
             ],
         )
