@@ -33,6 +33,7 @@ from krrood.entity_query_language.predicate import HasType
 from krrood.symbol_graph.symbol_graph import SymbolGraph
 from llm_reasoner.knowledge.access import (
     ConceptReference,
+    action_core,
     core,
     DescriptionEntity,
     gaze,
@@ -1083,7 +1084,7 @@ def fresh_namespace(selected_scene: Optional[str] = None) -> Dict[str, Any]:
         PythonClass=PythonClass,
         RegulationMode=core.RegulationMode,
         CouplingRegime=core.CouplingRegime,
-        ConditionMode=core.ConditionMode,
+        ConditionTiming=action_core.ConditionTiming,
         ComparisonOutcome=core.ComparisonOutcome,
         ForceKind=core.ForceKind,
         HasType=HasType,
@@ -2387,7 +2388,7 @@ def _hypothesis_graph_presets(kb: KB) -> List[Dict[str, str]]:
             "text": "what conditions must hold during the action?",
             "code": (
                 "set_of(pouring_condition_requirement.has_condition_type,"
-                " pouring_condition_requirement.has_condition_mode)"
+                " pouring_condition_requirement.has_condition_timing)"
             ),
         },
         {

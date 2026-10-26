@@ -20,6 +20,7 @@ from llm_reasoner.knowledge.representation.rdf import GraphReader, ReadHypothesi
 from llm_reasoner.knowledge.storage.record import HypothesisRecord
 from llm_reasoner.knowledge.storage.store import StoredHypothesis
 from llm_reasoner.exceptions import LLMReasonerError
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
@@ -209,16 +210,16 @@ class HypothesisView:
         ]
 
     def requirements_of(
-        self, phase: core.ActionPhase, mode: core.ConditionMode
+        self, phase: core.ActionPhase, timing: action_core.ConditionTiming
     ) -> list[core.ConditionRequirement]:
         """
-        :return: The requirements on the phase that hold in the given mode, such as on
+        :return: The requirements on the phase demanded at the given time, such as at
             entry or throughout.
         """
         return [
             requirement
             for requirement in phase.has_condition_requirement
-            if requirement.has_condition_mode is mode
+            if requirement.has_condition_timing is timing
         ]
 
     def world_assumptions(self) -> list[core.ConditionRequirement]:

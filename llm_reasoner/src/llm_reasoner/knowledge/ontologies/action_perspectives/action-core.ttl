@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.11.0> ;
-    owl:versionInfo "0.11.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.12.0> ;
+    owl:versionInfo "0.12.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -257,6 +257,24 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
 :Selection a owl:NamedIndividual , :QuantityKind ; rdfs:label "selection"@en ;
     rdfs:comment "Which of several alternatives is taken, such as the hand that holds the source."@en .
 [ a owl:AllDifferent ; owl:distinctMembers ( :Amount :Rate :Position :Orientation :Distance :Duration :Selection ) ] .
+
+:ConditionTiming a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    :isOpenValuePartition true ;
+    rdfs:label "condition timing"@en ;
+    rdfs:comment "When, relative to a phase or an action, a condition or a relation is demanded."@en .
+:AtEntry a owl:NamedIndividual , :ConditionTiming ; rdfs:label "at entry"@en ;
+    rdfs:comment "Must hold for the phase or the action to begin."@en .
+:Throughout a owl:NamedIndividual , :ConditionTiming ; rdfs:label "throughout"@en ;
+    rdfs:comment "Must hold at every instant of the phase or the action."@en .
+:AtExit a owl:NamedIndividual , :ConditionTiming ; rdfs:label "at exit"@en ;
+    rdfs:comment "Is brought about by completing the phase or the action."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :AtEntry :Throughout :AtExit ) ] .
+
+:hasConditionTiming a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:range :ConditionTiming ;
+    rdfs:label "has condition timing"@en ;
+    rdfs:comment "When, relative to the phase or the action, the condition or the relation is demanded."@en .
 
 :ConditionPolarity a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;

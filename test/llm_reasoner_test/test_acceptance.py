@@ -189,7 +189,7 @@ def complete_phase() -> core.ActionPhase:
         controlled_by=core.ActionPhaseController(),
         has_condition_requirement=[
             core.ConditionRequirement(
-                has_condition_mode=core.ConditionMode.THROUGHOUT,
+                has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
                 has_condition_polarity=action_core.ConditionPolarity.HOLDS,
             )
         ],
@@ -456,16 +456,16 @@ class TestCoreRules:
 
     def test_invariant_without_a_violation_event_is_reported(self):
         unguarded = core.ConditionRequirement(
-            has_condition_mode=core.ConditionMode.THROUGHOUT,
+            has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
             has_condition_polarity=action_core.ConditionPolarity.HOLDS,
         )
         guarded = core.ConditionRequirement(
-            has_condition_mode=core.ConditionMode.THROUGHOUT,
+            has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
             has_condition_polarity=action_core.ConditionPolarity.HOLDS,
             violation_signalled_by=prehension.ObjectCrush(),
         )
         precondition = core.ConditionRequirement(
-            has_condition_mode=core.ConditionMode.AT_ENTRY,
+            has_condition_timing=action_core.ConditionTiming.AT_ENTRY,
             has_condition_polarity=action_core.ConditionPolarity.HOLDS,
         )
         required = requirement(
@@ -576,7 +576,7 @@ class TestCoreRules:
                     has_condition_requirement=[
                         core.ConditionRequirement(
                             has_condition_type=[carton_held],
-                            has_condition_mode=core.ConditionMode.AT_ENTRY,
+                            has_condition_timing=action_core.ConditionTiming.AT_ENTRY,
                             has_condition_polarity=action_core.ConditionPolarity.HOLDS,
                         )
                     ]
@@ -590,7 +590,7 @@ class TestCoreRules:
                     has_condition_requirement=[
                         core.ConditionRequirement(
                             has_condition_type=[carton_held],
-                            has_condition_mode=core.ConditionMode.AT_ENTRY,
+                            has_condition_timing=action_core.ConditionTiming.AT_ENTRY,
                             has_condition_polarity=action_core.ConditionPolarity.HOLDS,
                         )
                     ]
@@ -604,7 +604,7 @@ class TestCoreRules:
     def test_ungrounded_requirement_is_named_by_the_violation(self):
         requirement = core.ConditionRequirement(
             has_condition_type=[core.PhaseConditionType()],
-            has_condition_mode=core.ConditionMode.THROUGHOUT,
+            has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
             has_condition_polarity=action_core.ConditionPolarity.HOLDS,
         )
         structure = core.ActionPhaseStructure(
@@ -625,7 +625,7 @@ class TestCoupledPhasesInTheOntology:
     @staticmethod
     def invariant() -> core.ConditionRequirement:
         return core.ConditionRequirement(
-            has_condition_mode=core.ConditionMode.THROUGHOUT,
+            has_condition_timing=action_core.ConditionTiming.THROUGHOUT,
             has_condition_polarity=action_core.ConditionPolarity.HOLDS,
         )
 

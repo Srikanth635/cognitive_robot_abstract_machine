@@ -118,6 +118,35 @@ class ConditionPolarity(StrEnum):
     """
 
 
+class ConditionTiming(OpenValuePartition):
+    """
+    When, relative to a phase or an action, a condition or a relation is demanded.
+    """
+
+    AT_ENTRY = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AtEntry"
+    """
+    Must hold for the phase or the action to begin.
+    """
+
+    THROUGHOUT = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Throughout"
+    """
+    Must hold at every instant of the phase or the action.
+    """
+
+    AT_EXIT = "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AtExit"
+    """
+    Is brought about by completing the phase or the action.
+    """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            ConditionTiming.AT_ENTRY: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            ConditionTiming.THROUGHOUT: ontologies.ActionPerspectiveFile.ACTION_CORE,
+            ConditionTiming.AT_EXIT: ontologies.ActionPerspectiveFile.ACTION_CORE,
+        }[self]
+
+
 class QuantityKind(OpenValuePartition):
     """
     The kind of quantity a choice an action leaves open sets.

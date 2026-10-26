@@ -934,6 +934,26 @@ action core's open `ac:ChangeDirection` alone.
 - action-core 0.11.0, failures 0.7.0, core 0.9.0, prehension 0.8.0, and their shapes
   (`0009-change-direction`); recorded answers name the members by the same names.
 
+### One condition timing (2026-10-26)
+
+Step 10 of the ontology consolidation: when a condition or a relation is demanded is the
+action core's open `ac:ConditionTiming` (`AtEntry`, `Throughout`, `AtExit`), stated with
+`ac:hasConditionTiming`.
+
+- The predictive manipulation core's `ConditionMode` and `hasConditionMode` and the image
+  schemas' `RequirementPhase` and `holdsInPhase` are gone. `core:ConditionRequirement`
+  requires a timing, and its entry, exit, invariant and prohibition requirements are
+  defined by one; `schemas:SchemaRequirement` may state one.
+- Table `0010-condition-timing` renames the old terms: the image schemas'
+  `BeforeAction`, `ThroughoutAction` and `AfterAction` become `AtEntry`, `Throughout`
+  and `AtExit`. action-core 0.12.0, image-schemas 0.5.0, core 0.10.0 and the core's
+  shapes; the cram_viz sample and four recorded answers are migrated.
+- The action core's properties count as attached to a class when a class of any module
+  restricts them, since the modules using `hasConditionTiming` are the ones that do
+  (user, 2026-10-26).
+- `HypothesisView.requirements_of` takes a timing; cram_viz's query namespace offers
+  `ConditionTiming`.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,
