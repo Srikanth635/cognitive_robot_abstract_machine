@@ -225,9 +225,9 @@ means the lip was not over the opening, so change where relative to the goal. To
 
 The Flanagan modules stay as they are, with their roles (`SourceContainer`, `PouringLip`,
 `TargetReceptacle`) declared as the core's roles, so all perspectives talk about the same
-participants. Since 2026-10-20 `slot-roles.ttl` states this for the classes: each role is put
-under the core slot whose CRAM-AICOR role it already specialises, and `PouringLip` under a part
-slot of the source (§9, phase 7).
+participants. Since 2026-10-20 the classes state this: each role is put under the core slot
+whose CRAM-AICOR role it already specialises, and `PouringLip` under a part slot of the source
+(§9, phase 7); since 2026-10-26 the Flanagan modules state it themselves.
 
 ### 5.6 Later
 
@@ -349,7 +349,9 @@ about the same participants; the Flanagan core's `ConditionPolarity` and the fra
    no term and changes neither family. HermiT finds it consistent with both families,
    CRAM-AICOR and DUL. `SlotRoles` reads it, and a designator's role per field follows from its
    mapping to slots (`DescribedAction.field_roles`), which replaced cram_viz's hand-written
-   table. Generation and prompts are unchanged.
+   table. Generation and prompts are unchanged. Since 2026-10-26 the Flanagan modules state the
+   links themselves, `slot-roles.ttl` is gone, and a hypothesis states the participant a lip or
+   grasp site is part of.
 2. *One polarity, 2026-10-20.* Whether a condition holds is the action core's
    `ConditionPolarity` (`Holds`, `DoesNotHold`). It replaced the Flanagan core's
    `ConditionPolarity` (`MustHold`, `MustNotHold`), the frame's `SlotConditionPolarity` and the

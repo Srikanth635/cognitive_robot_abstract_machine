@@ -2429,6 +2429,7 @@
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_site> a ns3:GraspSite,
         owl:NamedIndividual ;
     rdfs:label "the carton's side panels" ;
+    ac:isPartOfSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
     ns3:graspSiteSuitedFor [ a ns2:Pouring ] .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#counter_end> a ns3:FinalSupport,
@@ -2445,7 +2446,8 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout> a ns6:PouringLip,
         owl:NamedIndividual ;
-    rdfs:label "the carton's spout" .
+    rdfs:label "the carton's spout" ;
+    ac:isPartOfSlot <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl> a ns6:TargetReceptacle,
         owl:NamedIndividual ;

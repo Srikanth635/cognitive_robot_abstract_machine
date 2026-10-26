@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing_extensions import ClassVar, List, Optional
 
 from llm_reasoner.knowledge import ontologies
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -244,7 +245,7 @@ class GazeFixation(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class Obstacle(core.ManipulationRole):
+class Obstacle(core.ManipulationRole, action_core.ParticipantSlot):
     """
     An object or region that the effector or the held object must pass without contact.
     """

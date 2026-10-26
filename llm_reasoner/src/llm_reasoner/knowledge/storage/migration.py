@@ -29,6 +29,7 @@ from llm_reasoner.knowledge.ontologies import (
     PhysicalMeasurementFile,
     PredictiveManipulationOntologyFile,
 )
+from llm_reasoner.knowledge.ontologies.linked import LinkedClassHierarchy
 from llm_reasoner.knowledge.ontologies.terms import local_name, python_attribute_name
 from llm_reasoner.knowledge.ontology_translation.reading import upper_snake_case
 from llm_reasoner.knowledge.representation.rdf import GraphReader
@@ -93,6 +94,21 @@ class MigrationKey(StrEnum):
     DATATYPE = "datatype"
     """
     The IRI of an XML Schema datatype.
+    """
+
+    PART_OF_FILLS = "part_of_fills"
+    """
+    The parts of a participant linked to the participant they are part of.
+    """
+
+    PART = "part"
+    """
+    The IRI of the class of a part.
+    """
+
+    WHOLE = "whole"
+    """
+    The IRI of the class of the participant a part is part of.
     """
 
 
@@ -311,6 +327,91 @@ class LiteralDatatype:
         return migrated
 
 
+@dataclass(frozen=True)
+class PartOfFill:
+    """
+    The individuals of a part's class linked, where they name none, to the one
+    individual of the class of the participant they are part of; nothing is linked where
+    there is no such individual or several.
+    """
+
+    part: str
+    """
+    The IRI of the class of the part.
+    """
+
+    whole: str
+    """
+    The IRI of the class of the participant.
+    """
+
+    property: str
+    """
+    The IRI of the property linking a part to its participant.
+    """
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, str]) -> PartOfFill:
+        """
+        :return: The rule a migration table states.
+        """
+        return cls(
+            part=data[MigrationKey.PART],
+            whole=data[MigrationKey.WHOLE],
+            property=data[MigrationKey.PROPERTY],
+        )
+
+    def unlinked(self, graph: Graph) -> tuple[list[Node], Node | None]:
+        """
+        :return: The individuals of the part's class naming no participant, and the
+            one individual of the participant's class, ``None`` when there is none or
+            several.
+        """
+        hierarchy = LinkedClassHierarchy.pinned()
+
+        def of_class(general: str) -> list[Node]:
+            return sorted(
+                {
+                    individual
+                    for individual, named in graph.subject_objects(RDF.type)
+                    if isinstance(named, URIRef)
+                    and hierarchy.is_subclass(str(named), general)
+                },
+                key=str,
+            )
+
+        wholes = of_class(self.whole)
+        parts = [
+            part
+            for part in of_class(self.part)
+            if graph.value(part, URIRef(self.property)) is None
+        ]
+        return parts, wholes[0] if len(wholes) == 1 else None
+
+    def touches(self, graph: Graph) -> bool:
+        """
+        :return: Whether a part naming no participant can be linked to one.
+        """
+        parts, whole = self.unlinked(graph)
+        return bool(parts) and whole is not None
+
+    def graph(self, graph: Graph) -> Graph:
+        """
+        :return: The graph with every part naming no participant linked to the one
+            participant there is.
+        """
+        migrated = Graph()
+        for prefix, namespace in graph.namespaces():
+            migrated.bind(prefix, namespace)
+        for statement in graph:
+            migrated.add(statement)
+        parts, whole = self.unlinked(graph)
+        if whole is not None:
+            for part in parts:
+                migrated.add((part, URIRef(self.property), whole))
+        return migrated
+
+
 def python_path_of(iri: str) -> str:
     """
     :return: The module path and name of the Python class generated for a class IRI of
@@ -368,6 +469,11 @@ class Migration:
     The properties whose literals take a datatype.
     """
 
+    part_of_fills: tuple[PartOfFill, ...] = ()
+    """
+    The parts of participants linked to the participants they are part of.
+    """
+
     @classmethod
     def from_json(cls, name: str, data: Mapping[str, Any]) -> Migration:
         """
@@ -391,6 +497,10 @@ class Migration:
                 LiteralDatatype.from_json(rule)
                 for rule in data.get(MigrationKey.LITERAL_DATATYPES, [])
             ),
+            part_of_fills=tuple(
+                PartOfFill.from_json(rule)
+                for rule in data.get(MigrationKey.PART_OF_FILLS, [])
+            ),
         )
 
     @property
@@ -409,7 +519,11 @@ class Migration:
         renamed_graph = self.renamed(graph)
         return any(node in renamed for statement in graph for node in statement) or any(
             rule.touches(renamed_graph)
-            for rule in (*self.concept_values, *self.literal_datatypes)
+            for rule in (
+                *self.concept_values,
+                *self.literal_datatypes,
+                *self.part_of_fills,
+            )
         )
 
     def renamed(self, graph: Graph) -> Graph:
@@ -430,7 +544,11 @@ class Migration:
             literals rewritten by the migration's rules.
         """
         migrated = self.renamed(graph)
-        for rule in (*self.concept_values, *self.literal_datatypes):
+        for rule in (
+            *self.concept_values,
+            *self.literal_datatypes,
+            *self.part_of_fills,
+        ):
             migrated = rule.graph(migrated)
         return migrated
 

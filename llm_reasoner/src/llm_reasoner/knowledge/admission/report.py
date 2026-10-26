@@ -23,7 +23,6 @@ from llm_reasoner.knowledge.ontologies import (
 )
 from llm_reasoner.knowledge.ontologies.linked import AlignmentFile, OntologyFiles
 from llm_reasoner.knowledge.ontologies.object_kinds import OBJECT_KINDS_FILE
-from llm_reasoner.knowledge.ontologies.slot_roles import SLOT_ROLES_FILE
 
 # %% the merge
 
@@ -61,14 +60,13 @@ class OntologyMerge:
         """
         :param equated: Whether CRAM-AICOR's copies of DUL's classes are equated with DUL
             by the alignment module.
-        :return: The pinned linked ontologies with every knowledge module, the slot roles
-            and the kinds of object.
+        :return: The pinned linked ontologies with every knowledge module and the kinds
+            of object.
         """
         return cls(
             files=(
                 *OntologyFiles.pinned().paths,
                 *(module_file.path for module_file in KNOWLEDGE_ONTOLOGY_MODULES),
-                SLOT_ROLES_FILE,
                 OBJECT_KINDS_FILE,
                 *((AlignmentFile.DUL_ALIGNMENT,) if equated else ()),
             ),
