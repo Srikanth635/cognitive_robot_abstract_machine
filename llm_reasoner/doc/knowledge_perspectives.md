@@ -332,6 +332,9 @@ proposed (Sonnet 5.5, $0.53, accepted on the second answer, HermiT consistent), 
 registered as `image-schemas.ttl` (5 schema kinds, participations, requirements naming the
 core's parameter dimensions and the quantities that decide them), its statements hanging off
 a `SchemaStereotype`. Scripted knowledge tests pass. Measured with the failures in §13.6.
+Since 2026-10-26 a requirement states when it holds with the action core's `ConditionTiming`
+(`AtEntry`, `Throughout`, `AtExit`), as the Flanagan requirements do, in place of its own
+`RequirementPhase`.
 
 **Phase 6 — failures and corrections (§5.4). Built 2026-10-19**, the same way and seeded with
 the failures measured on pouring (lands beside the opening, tilted too little to flow, the arm
@@ -339,7 +342,9 @@ cannot reach the pour pose; `pour_prediction.md` §5–§7): proposed for $0.50 
 HermiT consistent), reviewed and registered as `failures.ttl` under a `FailureStereotype`; a
 correction is a change to a parameter dimension with a direction, a timing and what the new
 choice must satisfy. Measured in §13.6 (arms `with_image_schemas`, `with_failures`,
-`with_image_schemas_and_failures` in `experiments.frame_comparison`).
+`with_image_schemas_and_failures` in `experiments.frame_comparison`). Since 2026-10-26 a failure
+is a kind of the action core's `ActionFailure`, which a Flanagan failure event type may name as
+the failure it signals (`signalsFailure`).
 
 **Phase 7 — the Flanagan modules on the core's slots (§5.5)**, so every perspective talks
 about the same participants; the Flanagan core's `ConditionPolarity` and the frame's

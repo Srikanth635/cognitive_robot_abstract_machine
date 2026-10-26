@@ -4523,6 +4523,8 @@ code:semantic_digital_twin.robots.tiago.TiagoRightArm a owl:Class ;
 code:semantic_digital_twin.robots.tracy.TracyCamera a owl:Class ;
     rdfs:label "TracyCamera" ;
     code:pythonName "semantic_digital_twin.robots.tracy.TracyCamera" ;
+    rdfs:comment """The camera on the pole above Tracy's table, looking down along the x axis of its
+``camera_link``.""" ;
     rdfs:subClassOf code:semantic_digital_twin.robots.robot_parts.Camera .
 
 code:semantic_digital_twin.robots.tracy.TracyRightArm a owl:Class ;
