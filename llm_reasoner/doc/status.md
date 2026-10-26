@@ -1023,6 +1023,8 @@ for a design of its own (user, 2026-10-26):
   measured against what about a slot is measured); merging them needs a mapping per pair,
   such as `Angle` and `Orientation`.
 - Parameters and conditions appear in nearly every recorded answer.
+- The options and a recommendation for each question are in
+  [`condition_quantity_design.md`](condition_quantity_design.md), for decision.
 
 ## 2a. Moved onto the upstream main (2026-10-21)
 
