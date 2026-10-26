@@ -167,7 +167,7 @@ class Correction(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class Failure(DescriptionEntity):
+class Failure(action_core.ActionFailure):
     """
     A way an action framed by a core:ActionFrame can go wrong, tied to the slots it concerns, the condition that goes wrong, how it is noticed, the parameter dimensions it comes from and how it is corrected.
     """
