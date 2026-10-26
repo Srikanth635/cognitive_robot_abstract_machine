@@ -985,6 +985,34 @@ core's frame slots, stated in the predictive manipulation modules themselves.
   hypothesis (`PartOfFill`); the cram_viz sample's lip and grasp site are the carton's.
   No recorded answer has a lip or a grasp site.
 
+### An action failure in the core (2026-10-26)
+
+Step 15 of the ontology consolidation: what a failure is has one owner in the action core.
+
+- `ac:ActionFailure ⊑ aicor:FailureDescription` is a way an action can go wrong, and
+  `ac:signalsFailure` names one an event or an observation signals. The class is not
+  called `ac:Failure`, as the plan had it: generation schemas name fragment types by their
+  class's name, which `failures:Failure` already takes.
+- `failures:Failure ⊑ ac:ActionFailure`. `core:FailureEventType` may signal one
+  (`allValuesFrom`), so no generation gains required content.
+- action-core 0.14.0, failures 0.8.0, core 0.13.0 (`0013-action-failure`).
+
+### Steps 13 and 14 deferred (2026-10-26)
+
+Making the predictive manipulation core's conditions and parameters kinds of the action
+core's (`PhaseConditionType ⊑ ac:SlotCondition`, `Parameter ⊑ ac:SlotQuantity`) is left
+for a design of its own (user, 2026-10-26):
+
+- `ac:SlotCondition` requires a polarity, while a predictive manipulation condition type
+  is a type of world state whose polarity its requirement states.
+- `ac:conditionOnSlot` and `ac:aboutSlot` take one slot, while `core:conditionOnRole` and
+  `core:parameterOnRole` list one or more roles in no order, so splitting them into the
+  slot a condition is on and the slots it involves cannot be decided from the records.
+- The 14 physical dimensions and the 7 kinds of quantity are different axes (what is
+  measured against what about a slot is measured); merging them needs a mapping per pair,
+  such as `Angle` and `Orientation`.
+- Parameters and conditions appear in nearly every recorded answer.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

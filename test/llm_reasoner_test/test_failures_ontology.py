@@ -30,7 +30,10 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     failures,
 )
+from llm_reasoner.knowledge.acceptance.derived import RangesHold, RestrictionsHold
 from llm_reasoner.knowledge.ontologies.perspective_roots import PERSPECTIVE_ROOTS
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.terms import PropertyRestriction, PropertyTerm
 from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
 
 from .test_predictive_manipulation_ontology import (
@@ -161,6 +164,24 @@ class TestVocabulary:
 
 
 # %% where the knowledge is rooted
+
+
+class TestActionFailure:
+    def test_a_failure_is_an_action_failure_of_the_core(self):
+        assert issubclass(failures.Failure, action_core.ActionFailure)
+
+    def test_a_failure_event_need_not_name_the_failure_it_signals(self):
+        signals = PropertyTerm.of_field(core.FailureEventType, "signals_failure").iri
+        assert [
+            violation
+            for violation in RestrictionsHold().violations([core.FailureEventType()])
+            if isinstance(violation.expression, PropertyRestriction)
+            and violation.expression.property_iri == signals
+        ] == []
+
+    def test_a_failure_event_may_signal_a_failure_of_a_perspective(self):
+        event = core.FailureEventType(signals_failure=[failures.Failure()])
+        assert RangesHold().violations([event]) == []
 
 
 class TestRoot:

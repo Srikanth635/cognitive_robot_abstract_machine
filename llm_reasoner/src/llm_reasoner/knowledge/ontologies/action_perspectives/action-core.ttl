@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.13.0> ;
-    owl:versionInfo "0.13.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.14.0> ;
+    owl:versionInfo "0.14.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -233,6 +233,18 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:range :ConditionPolarity ;
     rdfs:label "has polarity"@en ;
     rdfs:comment "Whether the condition holds or does not hold, or must or must not."@en .
+
+# %% failures
+
+:ActionFailure a owl:Class ;
+    rdfs:subClassOf aicor:FailureDescription ;
+    rdfs:label "action failure"@en ;
+    rdfs:comment "A way an action can go wrong, which a perspective describes and an event or an observation can signal."@en .
+
+:signalsFailure a owl:ObjectProperty ;
+    rdfs:range :ActionFailure ;
+    rdfs:label "signals failure"@en ;
+    rdfs:comment "A way the action goes wrong that the event or the observation signals."@en .
 
 # %% value partitions
 

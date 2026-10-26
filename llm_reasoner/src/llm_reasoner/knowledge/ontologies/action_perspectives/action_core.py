@@ -206,6 +206,25 @@ class QuantityKind(OpenValuePartition):
 
 
 @dataclass(eq=False)
+class ActionFailure(DescriptionEntity):
+    """
+    A way an action can go wrong, which a perspective describes and an event or an observation can signal.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ActionFailure",
+        linked_terms=("http://aicor.knowledge/l2-ontology.owl#FailureDescription",),
+        evidence_status="",
+        claims=(),
+        restrictions=(),
+        definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
 class ActionFrame(DescriptionEntity):
     """
     The frame of a kind of action: the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open. Every perspective on the action refers to the slots its frame defines.
@@ -890,6 +909,13 @@ class LeavesOpen(ObjectPropertyDescriptor):
 class RelativeToSlot(ObjectPropertyDescriptor):
     """
     The slot whose filler the quantity is measured from, such as the goal a position above which is chosen, or the opening the lip ends beside; absent for a quantity measured from nothing in particular.
+    """
+
+
+@dataclass
+class SignalsFailure(ObjectPropertyDescriptor):
+    """
+    A way the action goes wrong that the event or the observation signals.
     """
 
 

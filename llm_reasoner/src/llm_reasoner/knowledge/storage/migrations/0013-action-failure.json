@@ -1,0 +1,19 @@
+{
+  "module_versions": [
+    {
+      "module": "action-core.ttl",
+      "old": "0.13.0",
+      "new": "0.14.0"
+    },
+    {
+      "module": "failures.ttl",
+      "old": "0.7.0",
+      "new": "0.8.0"
+    },
+    {
+      "module": "core.ttl",
+      "old": "0.12.0",
+      "new": "0.13.0"
+    }
+  ]
+}

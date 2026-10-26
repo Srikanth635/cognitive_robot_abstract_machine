@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.12.0> ;
-    owl:versionInfo "0.12.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.13.0> ;
+    owl:versionInfo "0.13.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -501,7 +501,8 @@ Classes classify description-level individuals, the knowledge a language model g
     :evidenceStatus :EngineeringExtension .
 
 :FailureEventType a owl:Class ;
-    rdfs:subClassOf :PhaseBoundaryEventType ;
+    rdfs:subClassOf :PhaseBoundaryEventType ,
+        [ a owl:Restriction ; owl:onProperty ac:signalsFailure ; owl:allValuesFrom ac:ActionFailure ] ;
     rdfs:label "failure event type"@en ;
     rdfs:comment "A boundary event that marks failure rather than intended completion."@en ;
     :evidenceStatus :EngineeringExtension .

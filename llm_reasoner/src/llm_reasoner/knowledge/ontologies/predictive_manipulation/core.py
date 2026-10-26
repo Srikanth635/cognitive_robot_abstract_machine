@@ -2993,11 +2993,31 @@ class FailureEventType(PhaseBoundaryEventType):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#signalsFailure",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ActionFailure"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
     The ontology class this class stands for.
+    """
+
+    signals_failure: List[action_core.ActionFailure] = field(
+        default_factory=list,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#signalsFailure",
+            functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ActionFailure",
+        ).as_dict(),
+    )
+    """
+    A way the action goes wrong that the event or the observation signals.
     """
 
 
@@ -6308,6 +6328,9 @@ class InitiatesStateType(ObjectPropertyDescriptor):
 
 # %% descriptor attachments
 
+FailureEventType.signals_failure = action_core.SignalsFailure(
+    FailureEventType, "signals_failure"
+)
 ForceComponent.acts_on_role = ActsOnRole(ForceComponent, "acts_on_role")
 ActionPhase.aims_for = AimsFor(ActionPhase, "aims_for")
 SensorimotorControlPoint.at_event_type = AtEventType(

@@ -14,8 +14,8 @@
     owl:imports <http://aicor.knowledge/l2-ontology.owl>,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core>,
         <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.7.0> ;
-    owl:versionInfo "0.7.0" .
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/failures/0.8.0> ;
+    owl:versionInfo "0.8.0" .
 
 # %% classes
 
@@ -42,6 +42,7 @@ failures:Failure a owl:Class ;
         [ a owl:Restriction ;
             owl:onProperty failures:failureConcernsSlot ;
             owl:someValuesFrom core:FrameSlot ],
+        core:ActionFailure,
         aicor:FailureDescription .
 
 failures:Indicator a owl:Class ;
