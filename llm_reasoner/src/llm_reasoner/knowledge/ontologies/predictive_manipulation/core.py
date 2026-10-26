@@ -2099,9 +2099,9 @@ class ConditionRequirement(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class PhaseConditionType(DescriptionEntity):
+class PhaseConditionType(action_core.SlotConditionType):
     """
-    A type of world state relevant to a phase, about one or more participant roles.
+    A type of world state relevant to a phase, on the filler of one role and possibly involving the fillers of others. Whether it must hold is said by the requirement on it.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -2109,31 +2109,11 @@ class PhaseConditionType(DescriptionEntity):
         linked_terms=("http://aicor.knowledge/l2-ontology.owl#FluentType",),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#conditionOnRole",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole"
-                ),
-            ),
-        ),
+        restrictions=(),
         definition=None,
     )
     """
     The ontology class this class stands for.
-    """
-
-    condition_on_role: List[ManipulationRole] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#conditionOnRole",
-            functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
-        ).as_dict(),
-    )
-    """
-    A role the condition is about. Without it the condition cannot be bound to the world.
     """
 
 
@@ -5676,13 +5656,6 @@ class ComparesPrediction(ObjectPropertyDescriptor):
 
 
 @dataclass
-class ConditionOnRole(ObjectPropertyDescriptor):
-    """
-    A role the condition is about. Without it the condition cannot be bound to the world.
-    """
-
-
-@dataclass
 class ConfirmsSubgoal(ObjectPropertyDescriptor):
     """
     The subgoal a successful comparison confirms.
@@ -6356,9 +6329,6 @@ PredictionComparison.compares_observation = ComparesObservation(
 )
 PredictionComparison.compares_prediction = ComparesPrediction(
     PredictionComparison, "compares_prediction"
-)
-PhaseConditionType.condition_on_role = ConditionOnRole(
-    PhaseConditionType, "condition_on_role"
 )
 PredictionComparison.confirms_subgoal = ConfirmsSubgoal(
     PredictionComparison, "confirms_subgoal"

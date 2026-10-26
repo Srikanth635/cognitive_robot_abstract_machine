@@ -794,7 +794,22 @@ class LipOverReceptacle(core.PhaseConditionType):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringLip"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1159,7 +1174,15 @@ class SourceUpright(core.PhaseConditionType):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1274,7 +1297,22 @@ class SubstanceAccumulatedInTarget(core.PhaseConditionType):
         linked_terms=("http://aicor.knowledge/l2-ontology.owl#AccumulatedState",),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1293,7 +1331,22 @@ class SubstanceContainedInSource(core.PhaseConditionType):
         linked_terms=("http://aicor.knowledge/l2-ontology.owl#ContainedState",),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1312,7 +1365,22 @@ class SubstanceFlowing(core.PhaseConditionType):
         linked_terms=("http://aicor.knowledge/l2-ontology.owl#FlowingState",),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringLip"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+        ),
         definition=None,
     )
     """

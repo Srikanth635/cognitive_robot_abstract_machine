@@ -13,8 +13,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.10.0> ;
-    owl:versionInfo "0.10.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.11.0> ;
+    owl:versionInfo "0.11.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ,
         <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame> ;
@@ -67,31 +67,40 @@
 # %% conditions
 
 :LipOverReceptacle a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:subClassOf core:PhaseConditionType ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom :PouringLip ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom :TargetReceptacle ] ;
     rdfs:label "lip over receptacle"@en ;
     rdfs:comment "The pouring lip is positioned over the opening of the target receptacle."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :SubstanceContainedInSource a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType , aicor:ContainedState ;
+    rdfs:subClassOf core:PhaseConditionType , aicor:ContainedState ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom :PouredSubstance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom :SourceContainer ] ;
     rdfs:label "substance contained in source"@en ;
     rdfs:comment "Transferable substance remains inside the source container."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :SubstanceFlowing a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType , aicor:FlowingState ;
+    rdfs:subClassOf core:PhaseConditionType , aicor:FlowingState ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom :PouredSubstance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom :PouringLip ] ;
     rdfs:label "substance flowing"@en ;
     rdfs:comment "Substance is crossing the pouring lip toward the target."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :SubstanceAccumulatedInTarget a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType , aicor:AccumulatedState ;
+    rdfs:subClassOf core:PhaseConditionType , aicor:AccumulatedState ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom :PouredSubstance ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom :TargetReceptacle ] ;
     rdfs:label "substance accumulated in target"@en ;
     rdfs:comment "Transferred substance has accumulated in the target receptacle."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :SourceUpright a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:subClassOf core:PhaseConditionType ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom :SourceContainer ] ;
     rdfs:label "source upright"@en ;
     rdfs:comment "The source container stands in a stable upright orientation."@en ;
     core:evidenceStatus core:EngineeringExtension .

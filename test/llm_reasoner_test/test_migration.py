@@ -32,6 +32,7 @@ from llm_reasoner.knowledge.storage.migration import (
     Migration,
     ModuleVersionChange,
     PartOfFill,
+    RoleListSplit,
     RecordedFileMigration,
     StoreMigration,
     shipped_migrations,
@@ -452,6 +453,89 @@ class TestStoreMigration:
         ).back_up(label="test")
         assert sample_record(backup) == sample_record(SAMPLE_STORE)
         assert HypothesisStore(directory=backup).records()
+
+
+CONDITION_ON_ROLE = (
+    PredictiveManipulationOntologyFile.CORE.namespace + "conditionOnRole"
+)
+"""
+The property a condition of the microworld listed its roles with, in no order.
+"""
+
+CONDITION_ROLES_SPLIT = RoleListSplit(
+    property=CONDITION_ON_ROLE,
+    targets=(
+        PropertyTerm.of_field(action_core.SlotConditionType, "condition_on_slot").iri,
+        PropertyTerm.of_field(
+            action_core.SlotConditionType, "condition_involves_slot"
+        ).iri,
+    ),
+)
+"""
+The roles of a condition split into the slot it is on and the slots it involves.
+"""
+
+
+def condition_naming(condition_class: str, *roles: tuple[str, str]) -> Graph:
+    """
+    :param roles: Each role's name and the IRI of its class.
+    :return: A condition listing roles of the given classes.
+    """
+    graph = Graph()
+    graph.add((STRUCTURE, RDF.type, URIRef(condition_class)))
+    for name, role_class in roles:
+        role = URIRef("http://example.org/hypothesis/migration#" + name)
+        graph.add((role, RDF.type, URIRef(role_class)))
+        graph.add((STRUCTURE, URIRef(CONDITION_ON_ROLE), role))
+    return graph
+
+
+class TestRoleListSplit:
+    def test_roles_are_split_by_the_slots_the_class_names(self):
+        migrated = Migration(
+            name="split", role_list_splits=(CONDITION_ROLES_SPLIT,)
+        ).graph(
+            condition_naming(
+                pouring.LipOverReceptacle.term.iri,
+                ("lip", pouring.PouringLip.term.iri),
+                ("bowl", pouring.TargetReceptacle.term.iri),
+            )
+        )
+        (condition,) = [
+            fragment
+            for fragment in GraphReader().read(migrated).fragments
+            if isinstance(fragment, pouring.LipOverReceptacle)
+        ]
+        assert isinstance(condition.condition_on_slot, pouring.PouringLip)
+        assert [type(slot) for slot in condition.condition_involves_slot] == [
+            pouring.TargetReceptacle
+        ]
+        assert (None, URIRef(CONDITION_ON_ROLE), None) not in migrated
+
+    def test_a_single_role_is_the_slot_the_condition_is_on(self):
+        migrated = Migration(
+            name="split", role_list_splits=(CONDITION_ROLES_SPLIT,)
+        ).graph(
+            condition_naming(
+                core.PhaseConditionType.term.iri,
+                ("carton", pouring.SourceContainer.term.iri),
+            )
+        )
+        assert (
+            STRUCTURE,
+            URIRef(CONDITION_ROLES_SPLIT.targets[0]),
+            URIRef("http://example.org/hypothesis/migration#carton"),
+        ) in migrated
+
+    def test_roles_a_class_does_not_tell_apart_are_left_listed(self):
+        graph = condition_naming(
+            core.PhaseConditionType.term.iri,
+            ("carton", pouring.SourceContainer.term.iri),
+            ("bowl", pouring.TargetReceptacle.term.iri),
+        )
+        assert not Migration(
+            name="split", role_list_splits=(CONDITION_ROLES_SPLIT,)
+        ).touches(graph)
 
 
 class TestRecordsBuildingOnOthers:

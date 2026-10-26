@@ -15,12 +15,23 @@ from llm_reasoner.knowledge.ontologies import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     ActionPerspectiveFile,
 )
+from llm_reasoner.knowledge.acceptance.derived import RestrictionsHold
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     action_frame,
     failures,
 )
-from llm_reasoner.knowledge.ontologies.terms import PropertyTerm
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
+    core,
+    pouring,
+    prehension,
+)
+from llm_reasoner.knowledge.ontologies.terms import (
+    DescriptionEntity,
+    PropertyRestriction,
+    PropertyTerm,
+)
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 from .test_action_perspective_knowledge import (
@@ -50,6 +61,49 @@ FRAME_CONDITIONS = [
 ]
 """
 The kinds of condition only the action frame has.
+"""
+
+PREDICTIVE_CONDITION_SLOTS = [
+    (
+        prehension.EffectorObjectContact,
+        prehension.GraspingEffector,
+        (core.Manipulandum, prehension.GraspSite),
+    ),
+    (
+        prehension.EffectorPositioned,
+        prehension.GraspingEffector,
+        (prehension.GraspSite,),
+    ),
+    (prehension.GraspStability, core.Manipulandum, (prehension.GraspingEffector,)),
+    (
+        prehension.ObjectSupportContact,
+        core.Manipulandum,
+        (prehension.InitialSupport, prehension.FinalSupport),
+    ),
+    (
+        prehension.ObjectClearOfSupport,
+        core.Manipulandum,
+        (prehension.InitialSupport, prehension.FinalSupport),
+    ),
+    (prehension.SafeContactForce, prehension.GraspingEffector, (core.Manipulandum,)),
+    (prehension.ObjectIntact, core.Manipulandum, ()),
+    (pouring.LipOverReceptacle, pouring.PouringLip, (pouring.TargetReceptacle,)),
+    (pouring.SourceUpright, pouring.SourceContainer, ()),
+    (
+        pouring.SubstanceContainedInSource,
+        pouring.PouredSubstance,
+        (pouring.SourceContainer,),
+    ),
+    (
+        pouring.SubstanceAccumulatedInTarget,
+        pouring.PouredSubstance,
+        (pouring.TargetReceptacle,),
+    ),
+    (pouring.SubstanceFlowing, pouring.PouredSubstance, (pouring.PouringLip,)),
+]
+"""
+Each condition of the predictive manipulation microworld, with the class of the slot it
+is on and the classes of the slots it may involve.
 """
 
 # %% fixtures
@@ -96,6 +150,92 @@ class TestTheTerm:
         assert set(graph.objects(prop, RDFS.range)) == {
             URIRef(action_core.SlotCondition.term.iri)
         }
+
+
+# %% the conditions of the predictive manipulation microworld
+
+
+def violated_on(
+    fragment: DescriptionEntity, property_term: PropertyTerm
+) -> list[PropertyRestriction]:
+    """
+    :return: The restrictions on a property that a fragment violates.
+    """
+    return [
+        violation.expression
+        for violation in RestrictionsHold().violations([fragment])
+        if isinstance(violation.expression, PropertyRestriction)
+        and violation.expression.property_iri == property_term.iri
+    ]
+
+
+ON_SLOT = PropertyTerm.of_field(action_core.SlotConditionType, "condition_on_slot")
+"""
+The property naming the slot a condition is on.
+"""
+
+INVOLVES_SLOT = PropertyTerm.of_field(
+    action_core.SlotConditionType, "condition_involves_slot"
+)
+"""
+The property naming the other slots a condition relates the first to.
+"""
+
+
+class TestPredictiveManipulationConditions:
+    def test_a_condition_type_of_the_microworld_is_one_of_the_core(self):
+        assert issubclass(core.PhaseConditionType, action_core.SlotConditionType)
+        assert not issubclass(core.PhaseConditionType, action_core.SlotCondition)
+
+    def test_a_core_condition_is_a_condition_type_stated_with_a_polarity(self):
+        assert issubclass(action_core.SlotCondition, action_core.SlotConditionType)
+        assert "has_polarity" not in get_type_hints(action_core.SlotConditionType)
+        assert "has_polarity" in get_type_hints(action_core.SlotCondition)
+
+    def test_no_condition_of_the_microworld_lists_roles_or_states_a_polarity(self):
+        names = {
+            name
+            for generated in Vocabulary().classes
+            if issubclass(generated, core.PhaseConditionType)
+            for name in get_type_hints(generated)
+        }
+        assert {"condition_on_role", "has_polarity"} & names == set()
+
+    @pytest.mark.parametrize("condition, on, involved", PREDICTIVE_CONDITION_SLOTS)
+    def test_a_condition_is_on_the_slot_its_class_names(self, condition, on, involved):
+        assert violated_on(condition(condition_on_slot=on()), ON_SLOT) == []
+        assert violated_on(condition(condition_on_slot=core.Actor()), ON_SLOT)
+
+    @pytest.mark.parametrize(
+        "condition, on, involved",
+        [case for case in PREDICTIVE_CONDITION_SLOTS if case[2]],
+    )
+    def test_a_condition_involves_only_slots_its_class_names(
+        self, condition, on, involved
+    ):
+        assert (
+            violated_on(
+                condition(
+                    condition_on_slot=on(),
+                    condition_involves_slot=[kind() for kind in involved],
+                ),
+                INVOLVES_SLOT,
+            )
+            == []
+        )
+        assert violated_on(
+            condition(condition_on_slot=on(), condition_involves_slot=[core.Actor()]),
+            INVOLVES_SLOT,
+        )
+
+    def test_a_condition_need_not_name_the_slots_it_involves(self):
+        assert (
+            violated_on(
+                pouring.LipOverReceptacle(condition_on_slot=pouring.PouringLip()),
+                INVOLVES_SLOT,
+            )
+            == []
+        )
 
 
 # %% the kinds only a perspective has

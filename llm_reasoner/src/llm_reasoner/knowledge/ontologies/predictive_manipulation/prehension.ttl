@@ -10,8 +10,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.9.0> ;
-    owl:versionInfo "0.9.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.10.0> ;
+    owl:versionInfo "0.10.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> ;
     rdfs:label "Predictive manipulation: prehension"@en ;
     rdfs:comment """Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes."""@en .
@@ -66,45 +66,58 @@
 # %% conditions
 
 :EffectorObjectContact a owl:Class ;
-    rdfs:subClassOf core:ContactCondition ;
+    rdfs:subClassOf core:ContactCondition ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom :GraspingEffector ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom [ a owl:Class ; owl:unionOf ( core:Manipulandum :GraspSite ) ] ] ;
     rdfs:label "effector-object contact"@en ;
     rdfs:comment "The effector is mechanically in contact with the manipulandum."@en ;
     core:evidenceStatus core:EmpiricalFinding .
 
 :ObjectSupportContact a owl:Class ;
-    rdfs:subClassOf core:ContactCondition ;
+    rdfs:subClassOf core:ContactCondition ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom [ a owl:Class ; owl:unionOf ( :InitialSupport :FinalSupport ) ] ] ;
     rdfs:label "object-support contact"@en ;
     rdfs:comment "The manipulandum is mechanically in contact with a support."@en ;
     core:evidenceStatus core:EmpiricalFinding .
 
 :GraspStability a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType , aicor:GraspedState ;
+    rdfs:subClassOf core:PhaseConditionType , aicor:GraspedState ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom :GraspingEffector ] ;
     rdfs:label "grasp stability"@en ;
     rdfs:comment "The manipulandum is held with grip force above the slip limit and below damaging it."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
     core:representsClaim core:FJ-025 , core:JF09-06 , core:JF09-07 .
 
 :ObjectIntact a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:subClassOf core:PhaseConditionType ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom core:Manipulandum ] ;
     rdfs:label "object intact"@en ;
     rdfs:comment "The manipulandum has not been damaged by the forces applied to it."@en ;
     core:evidenceStatus core:SupportedInterpretation ;
     core:representsClaim core:JF09-07 .
 
 :ObjectClearOfSupport a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:subClassOf core:PhaseConditionType ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom core:Manipulandum ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom [ a owl:Class ; owl:unionOf ( :InitialSupport :FinalSupport ) ] ] ;
     rdfs:label "object clear of support"@en ;
     rdfs:comment "No support bears the manipulandum's weight."@en ;
     core:evidenceStatus core:EmpiricalFinding .
 
 :EffectorPositioned a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:subClassOf core:PhaseConditionType ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom :GraspingEffector ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom :GraspSite ] ;
     rdfs:label "effector positioned"@en ;
     rdfs:comment "The effector is positioned for establishing contact at the grasp site."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :SafeContactForce a owl:Class ;
-    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:subClassOf core:PhaseConditionType ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionOnSlot ; owl:someValuesFrom :GraspingEffector ] ,
+        [ a owl:Restriction ; owl:onProperty ac:conditionInvolvesSlot ; owl:allValuesFrom core:Manipulandum ] ;
     rdfs:label "safe contact force"@en ;
     rdfs:comment "Contact force stays within the limit beyond which a protective response is needed."@en ;
     core:evidenceStatus core:EngineeringExtension .

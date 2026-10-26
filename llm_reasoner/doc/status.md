@@ -5,7 +5,7 @@ decided, and what is proposed next. Read it with [`architecture.md`](architectur
 which describes how the package is built. Update both in the same change whenever the
 work moves on.
 
-Last updated: 2026-10-25; code on the branch `feature/physics_backed_knowledge`, which combines `feature/llm_reasoner` with `physics_test` (Isaac Sim) and carries `origin/main` of 2026-10-22.
+Last updated: 2026-10-26; code on the branch `feature/physics_backed_knowledge`, which combines `feature/llm_reasoner` with `physics_test` (Isaac Sim) and carries `origin/main` of 2026-10-22.
 
 ## 1. State at a glance
 
@@ -16,7 +16,7 @@ Last updated: 2026-10-25; code on the branch `feature/physics_backed_knowledge`,
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
 | Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model, which reads the hypothesis through three knowledge tools and cites its fragments as grounds (R1–R7 and I1–I5, verified live). Two vocabulary families: the Flanagan predictive-control modules and the action perspectives (action core and action frame, phases 0–4 of `knowledge_perspectives.md`, offered opt-in). A pour's predicted end and the flow-onset tilt are checked on the resolver side (`pour_prediction.md`) |
-| Offline tests | `python -m pytest test/llm_reasoner_test`: 834 passed, 6 skipped, 29 deselected as slow (2026-10-19) |
+| Offline tests | `python -m pytest test/llm_reasoner_test -m "not slow"`: 1226 passed, 41 deselected as slow (2026-10-26) |
 
 ## 2. Completed
 
@@ -1008,23 +1008,33 @@ record's slots and dimensions looked missing, and it was reported stale. Migrati
 and the frame, schema and failure stereotypes); the four phase structures of 2026-10-07/08,
 generated under the core 0.4 modules, are stale.
 
-### Steps 13 and 14 deferred (2026-10-26)
+### Conditions in the action core (2026-10-26)
 
-Making the predictive manipulation core's conditions and parameters kinds of the action
-core's (`PhaseConditionType ⊑ ac:SlotCondition`, `Parameter ⊑ ac:SlotQuantity`) is left
-for a design of its own (user, 2026-10-26):
+Step 13 of the ontology consolidation, with the decisions P1, R1 and S1 of
+[`condition_quantity_design.md`](condition_quantity_design.md) (user, 2026-10-26):
 
-- `ac:SlotCondition` requires a polarity, while a predictive manipulation condition type
-  is a type of world state whose polarity its requirement states.
-- `ac:conditionOnSlot` and `ac:aboutSlot` take one slot, while `core:conditionOnRole` and
-  `core:parameterOnRole` list one or more roles in no order, so splitting them into the
-  slot a condition is on and the slots it involves cannot be decided from the records.
-- The 14 physical dimensions and the 7 kinds of quantity are different axes (what is
-  measured against what about a slot is measured); merging them needs a mapping per pair,
-  such as `Angle` and `Orientation`.
-- Parameters and conditions appear in nearly every recorded answer.
-- The options and a recommendation for each question are in
-  [`condition_quantity_design.md`](condition_quantity_design.md), for decision.
+- `ac:SlotConditionType` is a kind of condition a world can check about the filler of a
+  slot: on one slot (`conditionOnSlot`), possibly involving others
+  (`conditionInvolvesSlot`). `ac:SlotCondition ⊑ SlotConditionType` states it as holding or
+  not (`hasPolarity`), as the perspectives do. P1 is met this way rather than by moving the
+  polarity onto `SlotCondition`'s subclasses, because the failures' answers state the
+  general `SlotCondition` with a polarity.
+- `core:PhaseConditionType ⊑ aicor:FluentType, ac:SlotConditionType`; its requirement keeps
+  the polarity. Each of the twelve condition classes names the slot it is on (`some`) and
+  the slots it may involve (`only`), as in the design note's table, except that an
+  effector-object contact may involve the grasp site as well as the manipulandum, as the
+  cram_viz sample's does. `core:conditionOnRole` is gone.
+- Table `0014-slot-conditions` moves action-core 0.15.0, core 0.14.0, prehension 0.10.0 and
+  pouring 0.11.0, and splits each condition's roles by the slots its class names
+  (`RoleListSplit`): the first target takes exactly one role, a later functional one takes
+  one where one fits, any other every fitting role left; a condition whose roles cannot all
+  be placed keeps its list, and its record goes stale. The cram_viz sample's three
+  conditions typed only `PhaseConditionType` with two roles were split by hand, the rest by
+  the table; two recorded answers and the prototype fixture state the slot.
+- cram_viz's `hypothesis_knowledge_graph.json` still labels edges `condition_on_role`;
+  nothing reads it, only `paths.py` names it.
+
+Step 14 (quantities) is next.
 
 ## 2a. Moved onto the upstream main (2026-10-21)
 

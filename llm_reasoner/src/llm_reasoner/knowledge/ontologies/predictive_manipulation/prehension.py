@@ -314,7 +314,29 @@ class EffectorObjectContact(core.ContactCondition):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EmpiricalFinding",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=UnionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                        ),
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspSite"
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -333,7 +355,22 @@ class EffectorPositioned(core.PhaseConditionType):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspSite"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -685,7 +722,22 @@ class GraspStability(core.PhaseConditionType):
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-06",
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-07",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1358,7 +1410,29 @@ class ObjectClearOfSupport(core.PhaseConditionType):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EmpiricalFinding",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=UnionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#InitialSupport"
+                        ),
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#FinalSupport"
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1451,7 +1525,15 @@ class ObjectIntact(core.PhaseConditionType):
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-07",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1470,7 +1552,29 @@ class ObjectSupportContact(core.ContactCondition):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EmpiricalFinding",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=UnionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#InitialSupport"
+                        ),
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#FinalSupport"
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1731,7 +1835,22 @@ class SafeContactForce(core.PhaseConditionType):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Manipulandum"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionOnSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """

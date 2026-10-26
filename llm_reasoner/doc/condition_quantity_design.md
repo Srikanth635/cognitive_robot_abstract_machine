@@ -1,11 +1,17 @@
 # Conditions and quantities with one owner each (steps 13 and 14)
 
-Design note of 2026-10-26, for decision. Steps 13 and 14 of the ontology consolidation
+Design note of 2026-10-26. Steps 13 and 14 of the ontology consolidation
 were deferred because the plan left four questions open: where polarity lives, how a list
 of roles becomes the slots a condition or a quantity is about, how the physical dimensions
 relate to the kinds of quantity, and whether the predictive manipulation (PM) terms
 specialise the action core's or point to them. This note sets out each question with
-options, a recommendation and what it costs. Nothing is built yet.
+options, a recommendation and what it costs.
+
+**Decided (user, 2026-10-26):** P1, R1 with the condition table and
+`ac:quantityInvolvesSlot`, D1 with `Magnitude`, `MaterialProperty` and `Ratio` as new
+kinds, and S1. Step 13 is built: P1 is met by a `SlotConditionType` above an unchanged
+`SlotCondition`, and an effector-object contact may also involve the grasp site; see
+[`status.md`](status.md).
 
 ## Why it matters
 

@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.13.0> ;
-    owl:versionInfo "0.13.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.14.0> ;
+    owl:versionInfo "0.14.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -17,7 +17,7 @@
 
 A task is a sensory plan: a sequence of subgoals, each signalled by predicted sensory events. Action-phase controllers execute the phases; at control points predicted and actual signals are compared, and a mismatch launches a corrective programme and updates the represented object properties.
 
-Classes classify description-level individuals, the knowledge a language model generates; executions are described with CRAM-AICOR occurrences, occasions and role bindings. Each concept is linked to CRAM-AICOR and to DUL in the same DUL category, and CRAM-AICOR's dul_* copies are never equated with DUL. Axioms are read under the open-world assumption."""@en .
+Classes classify description-level individuals, the knowledge a language model generates; executions are described with CRAM-AICOR occurrences, occasions and role bindings. Each concept is linked to CRAM-AICOR, and to DUL where that falls into the DUL category CRAM-AICOR gives it; the alignment module equates CRAM-AICOR's dul_* copies with DUL to check this. Axioms are read under the open-world assumption."""@en .
 
 # %% provenance vocabulary
 
@@ -260,7 +260,7 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "defines component"@en ;
     rdfs:comment "A fragment the structure declares; a structure refers only to fragments it declares."@en .
 
-:definesPhase a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent , aicor:hasPhase , dul:definesTask ; rdfs:range :ActionPhase ;
+:definesPhase a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent , aicor:hasPhase ; rdfs:range :ActionPhase ;
     rdfs:label "defines phase"@en ; rdfs:comment "A phase the task is divided into."@en .
 :definesRole a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent , aicor:hasRoleSlot , dul:definesRole ; rdfs:range :ManipulationRole ;
     rdfs:label "defines role"@en ; rdfs:comment "A participant slot of the task."@en .
@@ -268,9 +268,9 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "defines controller"@en ; rdfs:comment "An action-phase controller that executes one of the structure's phases."@en .
 :definesSubgoal a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent ; rdfs:range :Subgoal ;
     rdfs:label "defines subgoal"@en ; rdfs:comment "A subgoal one of the structure's phases pursues."@en .
-:definesEventType a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent , dul:defines ; rdfs:range :PhaseBoundaryEventType ;
+:definesEventType a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent ; rdfs:range :PhaseBoundaryEventType ;
     rdfs:label "defines event type"@en ; rdfs:comment "A boundary event type that begins, ends or gates the structure's phases."@en .
-:definesConditionType a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent , dul:defines ; rdfs:range :PhaseConditionType ;
+:definesConditionType a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :PhaseConditionType ;
     rdfs:label "defines condition type"@en ; rdfs:comment "A world-state type the structure's phases demand, bring about or protect."@en .
 :definesParameter a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent , dul:defines ; rdfs:range :Parameter ;
     rdfs:label "defines parameter"@en ; rdfs:comment "An estimate, setpoint, threshold or margin the phases are parameterised by."@en .
@@ -333,7 +333,7 @@ Classes classify description-level individuals, the knowledge a language model g
 # %% phases and controllers
 
 :ActionPhase a owl:Class ;
-    rdfs:subClassOf aicor:Phase , aicor:ManipulationPhase , dul:Task ,
+    rdfs:subClassOf aicor:Phase , aicor:ManipulationPhase ,
         [ a owl:Restriction ; owl:onProperty :aimsFor ; owl:someValuesFrom :Subgoal ] ,
         [ a owl:Restriction ; owl:onProperty :hasCouplingRegime ; owl:someValuesFrom :CouplingRegime ] ,
         [ a owl:Restriction ; owl:onProperty :terminatedBy ; owl:someValuesFrom :PhaseBoundaryEventType ] ,
@@ -353,11 +353,11 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "initiated by"@en ; rdfs:comment "An event that begins the phase. The first phase of a structure has none."@en .
 :terminatedBy a owl:ObjectProperty ; rdfs:range :PhaseBoundaryEventType ;
     rdfs:label "terminated by"@en ; rdfs:comment "An event that ends the phase. A phase without a boundary is not a phase."@en .
-:involvesRole a owl:ObjectProperty ; rdfs:subPropertyOf dul:isTaskOf ; rdfs:range :ManipulationRole ;
+:involvesRole a owl:ObjectProperty ; rdfs:range :ManipulationRole ;
     rdfs:label "involves role"@en ; rdfs:comment "A participant role taking part in the phase."@en .
 :hasConditionRequirement a owl:ObjectProperty ; rdfs:domain :ActionPhase ; rdfs:range :ConditionRequirement ;
     rdfs:label "has condition requirement"@en ; rdfs:comment "What the phase demands of the world at entry, throughout or at exit."@en .
-:hasActiveParameter a owl:ObjectProperty ; rdfs:domain :ActionPhase ; rdfs:subPropertyOf dul:hasParameter ; rdfs:range :Parameter ;
+:hasActiveParameter a owl:ObjectProperty ; rdfs:domain :ActionPhase ; rdfs:range :Parameter ;
     rdfs:label "has active parameter"@en ; rdfs:comment "A parameter in force during the phase, which its controller is parameterised by in advance."@en .
 :realizesActionCategory a owl:ObjectProperty ;
     rdfs:range aicor:ManipulationActionCategory ;
@@ -417,10 +417,9 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "attainment signalled by"@en ; rdfs:comment "The event whose registration is evidence that the subgoal is reached."@en .
 
 :PhaseConditionType a owl:Class ;
-    rdfs:subClassOf aicor:FluentType , dul:EventType ,
-        [ a owl:Restriction ; owl:onProperty :conditionOnRole ; owl:someValuesFrom :ManipulationRole ] ;
+    rdfs:subClassOf aicor:FluentType , ac:SlotConditionType ;
     rdfs:label "phase condition type"@en ;
-    rdfs:comment "A type of world state relevant to a phase, about one or more participant roles."@en ;
+    rdfs:comment "A type of world state relevant to a phase, on the filler of one role and possibly involving the fillers of others. Whether it must hold is said by the requirement on it."@en ;
     :evidenceStatus :EngineeringExtension .
 
 :ContactCondition a owl:Class ;
@@ -430,8 +429,6 @@ Classes classify description-level individuals, the knowledge a language model g
     :evidenceStatus :EmpiricalFinding ;
     :representsClaim :FJ-003 .
 
-:conditionOnRole a owl:ObjectProperty ; rdfs:range :ManipulationRole ;
-    rdfs:label "condition on role"@en ; rdfs:comment "A role the condition is about. Without it the condition cannot be bound to the world."@en .
 :violationSignalledBy a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :ConditionRequirement ; rdfs:range :FailureEventType ;
     rdfs:label "violation signalled by"@en ; rdfs:comment "The failure event that registers the condition ceasing to hold."@en .
 
@@ -495,7 +492,7 @@ Classes classify description-level individuals, the knowledge a language model g
 # %% boundary events
 
 :PhaseBoundaryEventType a owl:Class ;
-    rdfs:subClassOf aicor:EventType , dul:EventType ;
+    rdfs:subClassOf aicor:EventType ;
     rdfs:label "phase boundary event type"@en ;
     rdfs:comment "A type of discrete transition that can begin, end or gate a phase."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -1139,7 +1136,7 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "signals subgoal"@en ; rdfs:comment "The subgoal whose attainment the predicted sensory event signifies."@en .
 
 :SensoryObservationType a owl:Class ;
-    rdfs:subClassOf aicor:ObservationEvent , dul:EventType ,
+    rdfs:subClassOf aicor:ObservationEvent ,
         [ a owl:Restriction ; owl:onProperty :hasModality ; owl:someValuesFrom :SensoryModality ] ,
         [ a owl:Restriction ; owl:onProperty :observedAt ; owl:someValuesFrom :TemporalWindow ] ,
         [ a owl:Restriction ; owl:onProperty :observedOnRole ; owl:someValuesFrom :ManipulationRole ] ,
