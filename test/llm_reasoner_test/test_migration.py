@@ -42,6 +42,14 @@ from llm_reasoner.knowledge.storage.record import (
 )
 from llm_reasoner.knowledge.storage.store import HypothesisStore, StoredFile
 
+from .test_action_perspective_knowledge import (
+    AnswerCase,
+    answer_text,
+    core_query,
+    frame_query_on,
+    service_answering,
+)
+
 # %% fixtures
 
 SAMPLE_STORE = (
@@ -444,6 +452,25 @@ class TestStoreMigration:
         ).back_up(label="test")
         assert sample_record(backup) == sample_record(SAMPLE_STORE)
         assert HypothesisStore(directory=backup).records()
+
+
+class TestRecordsBuildingOnOthers:
+    def test_a_record_is_checked_with_the_fragments_of_the_records_it_builds_on(
+        self, tmp_path
+    ):
+        service = service_answering(
+            HypothesisStore(directory=tmp_path),
+            answer_text(AnswerCase.CORE),
+            answer_text(AnswerCase.FRAME),
+        )
+        core_view = service.view_for(core_query())
+        frame_record = service.view_for(frame_query_on(core_view)).record
+        report = StoreMigration(
+            directory=tmp_path, migrations=[Migration(name="nothing")]
+        ).run()
+        assert sorted(report.migrated) == sorted(
+            [core_view.record.record_id, frame_record.record_id]
+        )
 
 
 # %% migrating recorded files

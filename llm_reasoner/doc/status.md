@@ -997,6 +997,17 @@ Step 15 of the ontology consolidation: what a failure is has one owner in the ac
   (`allValuesFrom`), so no generation gains required content.
 - action-core 0.14.0, failures 0.8.0, core 0.13.0 (`0013-action-failure`).
 
+### Migrating records that build on others (2026-10-26)
+
+`StoreMigration` migrates a store's records each after the records it builds on, and
+checks a record together with their migrated fragments; a record building on a stale one
+is stale too. Before, a perspective record was checked alone, its references to the core
+record's slots and dimensions looked missing, and it was reported stale. Migrating
+`~/.cram_viz/hypotheses` (backup `hypotheses.backup-2026-10-26`) through tables 0001 to
+0013 migrated the five records of 2026-10-21 (the liquid pouring frame and phase structure,
+and the frame, schema and failure stereotypes); the four phase structures of 2026-10-07/08,
+generated under the core 0.4 modules, are stale.
+
 ### Steps 13 and 14 deferred (2026-10-26)
 
 Making the predictive manipulation core's conditions and parameters kinds of the action
