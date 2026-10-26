@@ -1,4 +1,5 @@
 @prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
 @prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
 @prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
@@ -8,8 +9,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze/0.2.0> ;
-    owl:versionInfo "0.2.1" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze/0.3.0> ;
+    owl:versionInfo "0.3.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> ;
     rdfs:label "Predictive manipulation: gaze"@en ;
     rdfs:comment """Gaze in manipulation: fixations of contact and avoidance landmarks, held until the phase goal, and visual control points."""@en .
@@ -68,7 +69,7 @@
 
 :LandmarkPurpose a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :ContactLandmark :AvoidanceLandmark ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "landmark purpose"@en ;
     rdfs:comment "Why a location is fixated during manipulation."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
@@ -81,7 +82,7 @@
 
 :GazeMode a owl:Class ;
     rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Proactive :Reactive ) ] ;
+    ac:isOpenValuePartition true ;
     rdfs:label "gaze mode"@en ;
     rdfs:comment "Whether gaze predicts or follows the manipulation."@en ;
     core:evidenceStatus core:EmpiricalFinding ;

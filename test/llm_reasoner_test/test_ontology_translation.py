@@ -12,7 +12,7 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
-from rdflib import OWL, RDF, RDFS, Graph, URIRef
+from rdflib import OWL, RDF, RDFS, Graph, Literal, URIRef
 from krrood.class_diagrams.class_diagram import ClassDiagram, WrappedClass
 from krrood.symbol_graph.symbol_graph import SymbolGraph
 from typing_extensions import Any, List, Optional
@@ -20,6 +20,7 @@ from typing_extensions import Any, List, Optional
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
+    ActionCoreAnnotation,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
 )
@@ -122,13 +123,33 @@ def is_microworld_term(term: object) -> bool:
 
 def value_partitions(graph: Graph) -> set[URIRef]:
     """
-    Return every microworld class defined by enumerating its members.
+    Return every microworld class defined by enumerating its members or marked an open
+    value partition.
     """
     return {
         cls
         for cls, equivalent in graph.subject_objects(OWL.equivalentClass)
         if is_microworld_term(cls) and graph.value(equivalent, OWL.oneOf) is not None
+    } | {
+        cls
+        for cls in graph.subjects(
+            URIRef(ActionCoreAnnotation.IS_OPEN_VALUE_PARTITION), Literal(True)
+        )
+        if is_microworld_term(cls)
     }
+
+
+def partition_members(graph: Graph, partition: URIRef) -> set[URIRef]:
+    """
+    Return the individuals the graph states are a value partition's members: those its
+    enumeration lists, or for an open value partition those typed with it.
+    """
+    enumerated = {
+        member
+        for equivalent in graph.objects(partition, OWL.equivalentClass)
+        for member in graph.items(graph.value(equivalent, OWL.oneOf))
+    }
+    return enumerated or set(graph.subjects(RDF.type, partition))
 
 
 def description_classes() -> dict[str, type[DescriptionEntity]]:
@@ -249,8 +270,7 @@ class TestClasses:
         members = {
             member
             for partition in value_partitions(ontology)
-            for equivalent in ontology.objects(partition, OWL.equivalentClass)
-            for member in ontology.items(ontology.value(equivalent, OWL.oneOf))
+            for member in partition_members(ontology, partition)
         }
         values = {URIRef(member) for enum in enumerations() for member in enum}
         assert values == members

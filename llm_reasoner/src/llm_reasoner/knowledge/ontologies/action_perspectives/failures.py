@@ -11,6 +11,7 @@ from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge import ontologies
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -21,6 +22,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     EnumeratedClass,
     IntersectionOf,
     NamedClass,
+    OpenValuePartition,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -30,7 +32,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
-class CorrectionTiming(StrEnum):
+class CorrectionTiming(OpenValuePartition):
     """
     When a correction can be applied.
     """
@@ -45,8 +47,15 @@ class CorrectionTiming(StrEnum):
     The correction can only be applied by trying the action again.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            CorrectionTiming.DURING_ACTION: ontologies.ActionPerspectiveFile.FAILURES,
+            CorrectionTiming.RETRY_ONLY: ontologies.ActionPerspectiveFile.FAILURES,
+        }[self]
 
-class IndicatorForm(StrEnum):
+
+class IndicatorForm(OpenValuePartition):
     """
     The form of the quantity by which a failure is noticed.
     """
@@ -66,8 +75,16 @@ class IndicatorForm(StrEnum):
     Whether something happens or finishes.
     """
 
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            IndicatorForm.MEASURED_VALUE: ontologies.ActionPerspectiveFile.FAILURES,
+            IndicatorForm.ONSET_VALUE: ontologies.ActionPerspectiveFile.FAILURES,
+            IndicatorForm.HAPPENING: ontologies.ActionPerspectiveFile.FAILURES,
+        }[self]
 
-class Noticer(StrEnum):
+
+class Noticer(OpenValuePartition):
     """
     Who notices a failure.
     """
@@ -81,6 +98,13 @@ class Noticer(StrEnum):
     """
     The agent performing the action notices it through its own sensing or motion feedback.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            Noticer.PERSON_OBSERVER: ontologies.ActionPerspectiveFile.FAILURES,
+            Noticer.AGENT_SENSING: ontologies.ActionPerspectiveFile.FAILURES,
+        }[self]
 
 
 class ParameterChangeDirection(StrEnum):

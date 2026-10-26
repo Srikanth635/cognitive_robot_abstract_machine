@@ -7,10 +7,10 @@ Generated from ``action-frame.ttl`` by ``python -m llm_reasoner.knowledge.ontolo
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge import ontologies
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
@@ -21,6 +21,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     EnumeratedClass,
     IntersectionOf,
     NamedClass,
+    OpenValuePartition,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -30,7 +31,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
 # %% value partitions
 
 
-class Posture(StrEnum):
+class Posture(OpenValuePartition):
     """
     How a thing stands relative to the vertical, as a qualitative value of its orientation.
     """
@@ -49,6 +50,14 @@ class Posture(StrEnum):
     """
     Upside down, with an opening facing down.
     """
+
+    @property
+    def declaring_module(self) -> ontologies.OntologyModuleFile:
+        return {
+            Posture.UPRIGHT: ontologies.ActionPerspectiveFile.ACTION_FRAME,
+            Posture.TILTED: ontologies.ActionPerspectiveFile.ACTION_FRAME,
+            Posture.INVERTED: ontologies.ActionPerspectiveFile.ACTION_FRAME,
+        }[self]
 
 
 # %% classes
