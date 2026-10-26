@@ -24,10 +24,6 @@ WEB_ROOT = Path(__file__).resolve().parent / "web"
 #: the packaged static resources
 RESOURCES_ROOT = Path(__file__).resolve().parent / "resources"
 
-#: the notebook-exported cereal-pouring knowledge graph, kept as a reference snapshot
-#: of the graph the Hypothesis Graph tab now builds live
-HYPOTHESIS_KNOWLEDGE_GRAPH_PATH = RESOURCES_ROOT / "hypothesis_knowledge_graph.json"
-
 #: the store holding the checked-in sample hypothesis
 SAMPLE_HYPOTHESES_PATH = RESOURCES_ROOT / "sample_hypotheses"
 
