@@ -1,0 +1,13 @@
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+# The five axioms of CRAM-AICOR from which every one of its classes that is unsatisfiable
+# once its dul_* copies are equated with DUL follows. Tests subtract them from the pinned
+# CRAM-AICOR to check our modules as if CRAM-AICOR had repaired them; CRAM-AICOR itself is
+# not changed.
+
+aicor:ComputationalMedium rdfs:subClassOf aicor:dul_InformationObject .
+aicor:ComputationalProcess rdfs:subClassOf aicor:dul_Process .
+aicor:ReifiedTemporalEntity rdfs:subClassOf aicor:dul_InformationObject .
+aicor:ExecutiveCapability rdfs:subClassOf aicor:dul_Quality .
+aicor:TaskStatus rdfs:subClassOf aicor:dul_InformationObject .

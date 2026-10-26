@@ -763,6 +763,31 @@ working tree, not yet committed.
 HermiT (the closed-world checks pass); the shared writer was left unchanged. The geometric
 derivation covers liquids only.
 
+### Ontology consolidation (from 2026-10-25)
+
+The plan of 2026-10-25 consolidates the knowledge's ontology modules in steps, each its own
+commit on `feature/physics_backed_knowledge`:
+
+- Step 1 (`964ffb2d0`): CRAM-AICOR and DUL are pinned copies in the package
+  (`knowledge/ontologies/linked_ontologies/`, `sources.json` with SHA-256 and origin; DUL's
+  file states no licence, to be confirmed). The environment variables are gone; the 12
+  tests that skipped without them run (1098 passed, none skipped).
+- Step 2 (`49d965ae3`): `knowledge/storage/migration.py` migrates stores, recorded answers
+  and Turtle fixtures through migration tables (`storage/migrations/`), a record that would
+  break its ontology left stale.
+- Step 3: `knowledge/ontologies/alignment/dul-alignment.ttl` equates CRAM-AICOR's 14
+  `dul_*` copies with DUL. Equated, 425 CRAM-AICOR classes and 130 of ours were
+  unsatisfiable; CRAM-AICOR's come from five of its axioms
+  ([`cram_aicor_dul_report.md`](cram_aicor_dul_report.md), a draft for upstream). Ours
+  came from five classes given a DUL Concept parent next to a CRAM-AICOR Description
+  parent (`ActionPhase`, `PhaseBoundaryEventType`, `PhaseConditionType`,
+  `SensoryObservationType`, `gaze:ClosestApproach`) and five sub-property links into DUL;
+  following CRAM-AICOR (user, 2026-10-25), those links are dropped (core 0.6.1, gaze
+  0.2.2). `test_dul_alignment.py` checks that, with the five CRAM-AICOR axioms
+  subtracted, no class of ours falls into two disjoint DUL categories and the merge with
+  the shipped hypotheses is consistent and satisfiable, and that with CRAM-AICOR as it is
+  every unsatisfiable class of ours follows from those axioms.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

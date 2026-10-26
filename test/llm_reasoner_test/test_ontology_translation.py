@@ -240,9 +240,9 @@ class TestClasses:
         assert missing == set()
 
     def test_links_to_cram_aicor_and_dul_are_recorded(self):
-        assert set(core.ActionPhase.term.linked_terms) >= {
-            CRAM_AICOR_NAMESPACE + "Phase",
-            DUL_NAMESPACE + "Task",
+        assert set(core.MagnitudeRange.term.linked_terms) >= {
+            CRAM_AICOR_NAMESPACE + "ParameterInterval",
+            DUL_NAMESPACE + "Amount",
         }
 
     def test_every_value_partition_member_is_an_enumeration_member(self, ontology):

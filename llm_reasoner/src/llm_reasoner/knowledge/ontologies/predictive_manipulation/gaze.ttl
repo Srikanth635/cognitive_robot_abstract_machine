@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze/0.2.0> ;
-    owl:versionInfo "0.2.1" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze/0.2.2> ;
+    owl:versionInfo "0.2.2" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> ;
     rdfs:label "Predictive manipulation: gaze"@en ;
     rdfs:comment """Gaze in manipulation: fixations of contact and avoidance landmarks, held until the phase goal, and visual control points."""@en .
@@ -24,7 +24,7 @@
     core:representsClaim core:JF09-10 .
 
 :ClosestApproach a owl:Class ;
-    rdfs:subClassOf aicor:EventType , dul:EventType ,
+    rdfs:subClassOf aicor:EventType ,
         [ a owl:Restriction ; owl:onProperty aicor:betweenRoleFillers ; owl:someValuesFrom :Obstacle ] ;
     rdfs:label "closest approach"@en ;
     rdfs:comment "The moment a moving effector or held object passes closest to an obstacle, monitored visually."@en ;

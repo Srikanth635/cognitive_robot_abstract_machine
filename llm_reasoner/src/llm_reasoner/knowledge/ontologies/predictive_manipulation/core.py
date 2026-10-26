@@ -3,7 +3,7 @@ The action-neutral core of a microworld for predictive object manipulation, draw
 
 A task is a sensory plan: a sequence of subgoals, each signalled by predicted sensory events. Action-phase controllers execute the phases; at control points predicted and actual signals are compared, and a mismatch launches a corrective programme and updates the represented object properties.
 
-Classes classify description-level individuals, the knowledge a language model generates; executions are described with CRAM-AICOR occurrences, occasions and role bindings. Each concept is linked to CRAM-AICOR and to DUL in the same DUL category, and CRAM-AICOR's dul_* copies are never equated with DUL. Axioms are read under the open-world assumption.
+Classes classify description-level individuals, the knowledge a language model generates; executions are described with CRAM-AICOR occurrences, occasions and role bindings. Each concept is linked to CRAM-AICOR, and to DUL where that falls into the DUL category CRAM-AICOR gives it; the alignment module equates CRAM-AICOR's dul_* copies with DUL to check this. Axioms are read under the open-world assumption.
 
 Generated from ``core.ttl`` by ``python -m llm_reasoner.knowledge.ontology_translation``. Regenerate rather than edit.
 """
@@ -884,7 +884,6 @@ class ActionPhase(DescriptionEntity):
         linked_terms=(
             "http://aicor.knowledge/l2-ontology.owl#ManipulationPhase",
             "http://aicor.knowledge/l2-ontology.owl#Phase",
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Task",
         ),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AuthorHypothesis",
         claims=(
@@ -2047,10 +2046,7 @@ class PhaseConditionType(DescriptionEntity):
 
     term: ClassVar[ClassTerm] = ClassTerm(
         iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseConditionType",
-        linked_terms=(
-            "http://aicor.knowledge/l2-ontology.owl#FluentType",
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#EventType",
-        ),
+        linked_terms=("http://aicor.knowledge/l2-ontology.owl#FluentType",),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
         restrictions=(
@@ -2110,10 +2106,7 @@ class PhaseBoundaryEventType(DescriptionEntity):
 
     term: ClassVar[ClassTerm] = ClassTerm(
         iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
-        linked_terms=(
-            "http://aicor.knowledge/l2-ontology.owl#EventType",
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#EventType",
-        ),
+        linked_terms=("http://aicor.knowledge/l2-ontology.owl#EventType",),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
         restrictions=(),
@@ -4802,10 +4795,7 @@ class SensoryObservationType(DescriptionEntity):
 
     term: ClassVar[ClassTerm] = ClassTerm(
         iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryObservationType",
-        linked_terms=(
-            "http://aicor.knowledge/l2-ontology.owl#ObservationEvent",
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#EventType",
-        ),
+        linked_terms=("http://aicor.knowledge/l2-ontology.owl#ObservationEvent",),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EmpiricalFinding",
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-004",

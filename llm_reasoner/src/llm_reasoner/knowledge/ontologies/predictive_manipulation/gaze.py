@@ -75,10 +75,7 @@ class ClosestApproach(DescriptionEntity):
 
     term: ClassVar[ClassTerm] = ClassTerm(
         iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#ClosestApproach",
-        linked_terms=(
-            "http://aicor.knowledge/l2-ontology.owl#EventType",
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#EventType",
-        ),
+        linked_terms=("http://aicor.knowledge/l2-ontology.owl#EventType",),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EmpiricalFinding",
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-10",
