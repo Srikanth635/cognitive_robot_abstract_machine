@@ -9,8 +9,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze/0.3.0> ;
-    owl:versionInfo "0.3.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze/0.4.0> ;
+    owl:versionInfo "0.4.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> ;
     rdfs:label "Predictive manipulation: gaze"@en ;
     rdfs:comment """Gaze in manipulation: fixations of contact and avoidance landmarks, held until the phase goal, and visual control points."""@en .
@@ -18,7 +18,7 @@
 # %% landmarks
 
 :Obstacle a owl:Class ;
-    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:subClassOf core:ManipulationRole , ac:ParticipantSlot ;
     rdfs:label "obstacle"@en ;
     rdfs:comment "An object or region that the effector or the held object must pass without contact."@en ;
     core:evidenceStatus core:EmpiricalFinding ;

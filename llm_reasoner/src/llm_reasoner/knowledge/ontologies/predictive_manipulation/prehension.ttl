@@ -10,8 +10,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.8.0> ;
-    owl:versionInfo "0.8.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.9.0> ;
+    owl:versionInfo "0.9.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> ;
     rdfs:label "Predictive manipulation: prehension"@en ;
     rdfs:comment """Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes."""@en .
@@ -19,7 +19,7 @@
 # %% roles
 
 :GraspingEffector a owl:Class ;
-    rdfs:subClassOf core:ManipulationRole , aicor:InstrumentRole ;
+    rdfs:subClassOf core:ManipulationRole , ac:InstrumentSlot , aicor:InstrumentRole ;
     rdfs:label "grasping effector"@en ;
     rdfs:comment "The hand, gripper or other effector establishing the grasp."@en ;
     core:evidenceStatus core:EmpiricalFinding .
@@ -32,7 +32,8 @@
     core:evidenceStatus core:EngineeringExtension .
 
 :GraspSite a owl:Class ;
-    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:subClassOf core:ManipulationRole , ac:PartSlot ,
+        [ a owl:Restriction ; owl:onProperty ac:isPartOfSlot ; owl:someValuesFrom ac:PatientSlot ] ;
     rdfs:label "grasp site"@en ;
     rdfs:comment "The region of the manipulandum where the effector makes contact."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
@@ -49,13 +50,13 @@
     core:evidenceStatus core:EmpiricalFinding .
 
 :InitialSupport a owl:Class ;
-    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:subClassOf core:ManipulationRole , ac:ParticipantSlot ;
     rdfs:label "initial support"@en ;
     rdfs:comment "The surface bearing the manipulandum before lift-off."@en ;
     core:evidenceStatus core:EmpiricalFinding .
 
 :FinalSupport a owl:Class ;
-    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:subClassOf core:ManipulationRole , ac:ParticipantSlot ;
     rdfs:label "final support"@en ;
     rdfs:comment "The surface bearing the manipulandum after touchdown."@en ;
     core:evidenceStatus core:EmpiricalFinding .

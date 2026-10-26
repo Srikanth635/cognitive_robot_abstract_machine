@@ -49,7 +49,6 @@ from llm_reasoner.knowledge.access import (
     core,
     DescribedActions,
     HypothesisView,
-    SlotRoles,
 )
 from llm_reasoner.world.classes import identifier_of
 
@@ -198,7 +197,7 @@ def _roles_by_field_name(
     described = DescribedActions().describing(identifier_of(designator_type))
     if described is None:
         return {}
-    return described.field_roles(SlotRoles.shipped())
+    return described.field_roles()
 
 
 # %% reflection

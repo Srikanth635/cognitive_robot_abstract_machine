@@ -23,6 +23,8 @@ from llm_reasoner.knowledge.ontologies import (
     ActionPerspectiveFile,
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
+from llm_reasoner.knowledge.ontologies.exceptions import SeveralRolesFillSlot
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 
@@ -247,6 +249,26 @@ class SlotDescription(FramePartDescription):
 
     def fragments_in(self, frame: action_core.ActionFrame) -> list[DescriptionEntity]:
         return [slot for slot in frame.defines_slot if isinstance(slot, self.slot)]
+
+    def role(self) -> type[core.ManipulationRole] | None:
+        """
+        :return: The manipulation role put directly under the slot, ``None`` when none
+            is.
+        :raises SeveralRolesFillSlot: When several are.
+        """
+        roles = [
+            generated
+            for generated in Vocabulary().classes
+            if self.slot in generated.__bases__
+            and issubclass(generated, core.ManipulationRole)
+            and generated is not core.ManipulationRole
+        ]
+        if len(roles) > 1:
+            raise SeveralRolesFillSlot(
+                slot=self.slot.term.iri,
+                roles=sorted(role.term.iri for role in roles),
+            )
+        return roles[0] if roles else None
 
     @property
     def accepted_field_kinds(self) -> frozenset[CodeFieldKind]:

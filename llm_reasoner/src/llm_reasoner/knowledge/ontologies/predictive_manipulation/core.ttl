@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.11.0> ;
-    owl:versionInfo "0.11.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.12.0> ;
+    owl:versionInfo "0.12.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -306,7 +306,7 @@ Classes classify description-level individuals, the knowledge a language model g
 # %% roles
 
 :ManipulationRole a owl:Class ;
-    rdfs:subClassOf aicor:RoleSlot , aicor:ParticipantRole , dul:Role ,
+    rdfs:subClassOf ac:FrameSlot , aicor:RoleSlot , aicor:ParticipantRole , dul:Role ,
         [ a owl:Restriction ; owl:onProperty :minimumFillerCount ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
     rdfs:label "manipulation role"@en ;
     rdfs:comment "A participant slot of a phase structure. At execution an aicor:RoleBinding binds a world object to it."@en ;
@@ -318,13 +318,13 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:comment "How many world entities must fill the slot; one when not stated."@en .
 
 :Manipulandum a owl:Class ;
-    rdfs:subClassOf :ManipulationRole , aicor:PatientRole ;
+    rdfs:subClassOf :ManipulationRole , ac:PatientSlot , aicor:PatientRole ;
     rdfs:label "manipulandum"@en ;
     rdfs:comment "The object whose state the manipulation is about."@en ;
     :evidenceStatus :SupportedInterpretation .
 
 :Actor a owl:Class ;
-    rdfs:subClassOf :ManipulationRole , aicor:AgentRole ;
+    rdfs:subClassOf :ManipulationRole , ac:AgentSlot , aicor:AgentRole ;
     owl:disjointWith :Manipulandum ;
     rdfs:label "actor"@en ;
     rdfs:comment "The agent performing the manipulation. Distinct from the effector it controls."@en ;

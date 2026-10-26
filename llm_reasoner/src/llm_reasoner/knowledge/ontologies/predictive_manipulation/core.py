@@ -1560,7 +1560,7 @@ class ActionPhaseStructure(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class ManipulationRole(DescriptionEntity):
+class ManipulationRole(action_core.FrameSlot):
     """
     A participant slot of a phase structure. At execution an aicor:RoleBinding binds a world object to it.
     """
@@ -1601,7 +1601,7 @@ class ManipulationRole(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class Actor(ManipulationRole):
+class Actor(action_core.AgentSlot, ManipulationRole):
     """
     The agent performing the manipulation. Distinct from the effector it controls.
     """
@@ -3649,7 +3649,7 @@ class MagnitudeRange(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class Manipulandum(ManipulationRole):
+class Manipulandum(ManipulationRole, action_core.PatientSlot):
     """
     The object whose state the manipulation is about.
     """

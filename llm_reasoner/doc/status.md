@@ -966,6 +966,25 @@ the action core's `ac:hasPolarity` alone, over its closed `ac:ConditionPolarity`
 - action-core 0.13.0, core 0.11.0 and the core's shapes (`0011-polarity`); the cram_viz
   sample and one recorded answer are migrated.
 
+### Roles as slots (2026-10-26)
+
+Step 12 of the ontology consolidation: the manipulation roles are kinds of the action
+core's frame slots, stated in the predictive manipulation modules themselves.
+
+- `core:ManipulationRole ⊑ ac:FrameSlot`; `Actor`, `Manipulandum`, `GraspingEffector`,
+  `SourceContainer`, `TargetReceptacle` and `PouredSubstance` are under the agent,
+  patient, instrument, source, goal and substance slots; `InitialSupport`,
+  `FinalSupport` and `gaze:Obstacle` under the participant slot. `PouringLip` is a part
+  slot of the source and `GraspSite` one of the patient (`isPartOfSlot some`), so a
+  hypothesis states which participant they are part of (user, 2026-10-26).
+- `slot-roles.ttl` and `SlotRoles` are gone; `SlotDescription.role()` is the one
+  manipulation role directly under a slot, read from the generated classes, and refuses
+  a slot several roles are under (`SeveralRolesFillSlot`, `ontologies/exceptions.py`).
+- Table `0012-slot-roles` moves core, prehension, pouring and gaze, and links each lip
+  and grasp site that names no participant to the one source or patient of its
+  hypothesis (`PartOfFill`); the cram_viz sample's lip and grasp site are the carton's.
+  No recorded answer has a lip or a grasp site.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

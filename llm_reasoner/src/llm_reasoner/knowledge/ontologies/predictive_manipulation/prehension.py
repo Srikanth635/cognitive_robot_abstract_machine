@@ -443,7 +443,7 @@ class ExpectedShape(core.CategoricalParameter, core.ObjectPropertyEstimate):
 
 
 @dataclass(eq=False)
-class FinalSupport(core.ManipulationRole):
+class FinalSupport(core.ManipulationRole, action_core.ParticipantSlot):
     """
     The surface bearing the manipulandum after touchdown.
     """
@@ -630,7 +630,7 @@ class GraspRelease(core.ContactEventType):
 
 
 @dataclass(eq=False)
-class GraspSite(core.ManipulationRole):
+class GraspSite(core.ManipulationRole, action_core.PartSlot):
     """
     The region of the manipulandum where the effector makes contact.
     """
@@ -642,7 +642,15 @@ class GraspSite(core.ManipulationRole):
         claims=(
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-12",
         ),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#isPartOfSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PatientSlot"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -686,7 +694,7 @@ class GraspStability(core.PhaseConditionType):
 
 
 @dataclass(eq=False)
-class GraspingEffector(core.ManipulationRole):
+class GraspingEffector(action_core.InstrumentSlot, core.ManipulationRole):
     """
     The hand, gripper or other effector establishing the grasp.
     """
@@ -1058,7 +1066,7 @@ class HoldPhase(core.ActionPhase):
 
 
 @dataclass(eq=False)
-class InitialSupport(core.ManipulationRole):
+class InitialSupport(core.ManipulationRole, action_core.ParticipantSlot):
     """
     The surface bearing the manipulandum before lift-off.
     """

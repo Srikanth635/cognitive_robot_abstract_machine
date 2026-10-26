@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import prehension
@@ -868,7 +869,7 @@ class PourPoseSetpoint(core.CategoricalParameter, core.MotorSetpoint):
 
 
 @dataclass(eq=False)
-class PouredSubstance(core.ManipulationRole):
+class PouredSubstance(core.ManipulationRole, action_core.SubstanceSlot):
     """
     The substance transferred, as distinct from the container that is manipulated.
     """
@@ -925,7 +926,7 @@ class PouredSubstanceBinding(DescriptionEntity):
 
 
 @dataclass(eq=False)
-class PouringLip(core.ManipulationRole):
+class PouringLip(core.ManipulationRole, action_core.PartSlot):
     """
     The edge of the source container over which the substance leaves it.
     """
@@ -935,7 +936,15 @@ class PouringLip(core.ManipulationRole):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#isPartOfSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#SourceSlot"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1018,7 +1027,7 @@ class SloshDynamicsEstimate(core.CategoricalParameter, core.DynamicsEstimate):
 
 
 @dataclass(eq=False)
-class SourceContainer(prehension.PrehensileManipulandum):
+class SourceContainer(prehension.PrehensileManipulandum, action_core.SourceSlot):
     """
     The vessel that is grasped and tilted, from which the substance flows.
     """
@@ -1396,7 +1405,7 @@ class TargetQuantityReached(core.SetpointAttainmentEventType):
 
 
 @dataclass(eq=False)
-class TargetReceptacle(core.ManipulationRole):
+class TargetReceptacle(action_core.GoalSlot, core.ManipulationRole):
     """
     The vessel or surface receiving the substance.
     """

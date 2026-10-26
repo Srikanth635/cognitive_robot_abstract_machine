@@ -2,6 +2,7 @@
 @prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
 @prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
 @prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix gaze:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
 @prefix pf:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#> .
 @prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
@@ -12,8 +13,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.9.0> ;
-    owl:versionInfo "0.9.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.10.0> ;
+    owl:versionInfo "0.10.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ,
         <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame> ;
@@ -23,7 +24,7 @@
 # %% roles
 
 :SourceContainer a owl:Class ;
-    rdfs:subClassOf pre:PrehensileManipulandum , aicor:SourceRole ;
+    rdfs:subClassOf pre:PrehensileManipulandum , ac:SourceSlot , aicor:SourceRole ;
     rdfs:label "source container"@en ;
     rdfs:comment "The vessel that is grasped and tilted, from which the substance flows."@en ;
     core:evidenceStatus core:EngineeringExtension .
@@ -36,13 +37,13 @@
     core:evidenceStatus core:EngineeringExtension .
 
 :TargetReceptacle a owl:Class ;
-    rdfs:subClassOf core:ManipulationRole , aicor:GoalRole ;
+    rdfs:subClassOf core:ManipulationRole , ac:GoalSlot , aicor:GoalRole ;
     rdfs:label "target receptacle"@en ;
     rdfs:comment "The vessel or surface receiving the substance."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :PouredSubstance a owl:Class ;
-    rdfs:subClassOf core:ManipulationRole , aicor:SubstanceRole ;
+    rdfs:subClassOf core:ManipulationRole , ac:SubstanceSlot , aicor:SubstanceRole ;
     rdfs:label "poured substance"@en ;
     rdfs:comment "The substance transferred, as distinct from the container that is manipulated."@en ;
     core:evidenceStatus core:EngineeringExtension .
@@ -55,7 +56,8 @@
     core:evidenceStatus core:EngineeringExtension .
 
 :PouringLip a owl:Class ;
-    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:subClassOf core:ManipulationRole , ac:PartSlot ,
+        [ a owl:Restriction ; owl:onProperty ac:isPartOfSlot ; owl:someValuesFrom ac:SourceSlot ] ;
     rdfs:label "pouring lip"@en ;
     rdfs:comment "The edge of the source container over which the substance leaves it."@en ;
     core:evidenceStatus core:EngineeringExtension .

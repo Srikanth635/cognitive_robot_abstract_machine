@@ -20,6 +20,7 @@ from llm_reasoner.knowledge.ontologies import (
     HYPOTHESIS_CONCEPT_NAMESPACE,
     PredictiveManipulationOntologyFile,
 )
+from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference, PropertyTerm
@@ -30,6 +31,7 @@ from llm_reasoner.knowledge.storage.migration import (
     LiteralDatatype,
     Migration,
     ModuleVersionChange,
+    PartOfFill,
     RecordedFileMigration,
     StoreMigration,
     shipped_migrations,
@@ -308,6 +310,48 @@ class TestConceptValues:
         assert set(migration.graph(graph)) == {
             (STRUCTURE, URIRef(term.iri), Literal(3, datatype=XSD.positiveInteger))
         }
+
+
+# %% parts linked to their participants
+
+
+LIP_OF_SOURCE = PartOfFill(
+    part=pouring.PouringLip.term.iri,
+    whole=action_core.SourceSlot.term.iri,
+    property=PropertyTerm.of_field(action_core.PartSlot, "is_part_of_slot").iri,
+)
+"""
+A pouring lip linked to the source it is part of.
+"""
+
+
+def lip_and_sources(*sources: str) -> Graph:
+    """
+    :return: A pouring lip naming no source, with the given source containers.
+    """
+    graph = Graph()
+    graph.add((STRUCTURE, RDF.type, URIRef(pouring.PouringLip.term.iri)))
+    for source in sources:
+        graph.add((URIRef(source), RDF.type, URIRef(pouring.SourceContainer.term.iri)))
+    return graph
+
+
+class TestPartOfFill:
+    def test_a_part_is_linked_to_the_one_participant_of_its_whole(self):
+        source = "http://example.org/hypothesis/migration#carton"
+        migrated = Migration(name="parts", part_of_fills=(LIP_OF_SOURCE,)).graph(
+            lip_and_sources(source)
+        )
+        assert (STRUCTURE, URIRef(LIP_OF_SOURCE.property), URIRef(source)) in migrated
+
+    def test_a_part_is_not_linked_among_several_participants(self):
+        graph = lip_and_sources(
+            "http://example.org/hypothesis/migration#carton",
+            "http://example.org/hypothesis/migration#jug",
+        )
+        assert not Migration(name="parts", part_of_fills=(LIP_OF_SOURCE,)).touches(
+            graph
+        )
 
 
 # %% migrating a store
