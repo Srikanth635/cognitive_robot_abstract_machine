@@ -954,6 +954,18 @@ action core's open `ac:ConditionTiming` (`AtEntry`, `Throughout`, `AtExit`), sta
 - `HypothesisView.requirements_of` takes a timing; cram_viz's query namespace offers
   `ConditionTiming`.
 
+### One polarity property (2026-10-26)
+
+Step 11 of the ontology consolidation: whether a condition holds, or must, is stated with
+the action core's `ac:hasPolarity` alone, over its closed `ac:ConditionPolarity`.
+
+- `ac:hasPolarity` has no domain; `ac:SlotCondition` and `core:ConditionRequirement`
+  restrict it, and the invariant and prohibition requirements are defined by it. The
+  predictive manipulation core's `hasConditionPolarity` is gone, so a requirement's field
+  is `has_polarity`.
+- action-core 0.13.0, core 0.11.0 and the core's shapes (`0011-polarity`); the cram_viz
+  sample and one recorded answer are migrated.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

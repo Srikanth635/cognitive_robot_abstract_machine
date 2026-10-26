@@ -741,7 +741,7 @@ class SlotCondition(DescriptionEntity):
         ).as_dict(),
     )
     """
-    Whether the condition holds or does not hold.
+    Whether the condition holds or does not hold, or must or must not.
     """
 
 

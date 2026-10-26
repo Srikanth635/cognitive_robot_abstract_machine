@@ -2026,7 +2026,7 @@ class ConditionRequirement(DescriptionEntity):
                 ),
             ),
             PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPolarity",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
                     iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ConditionPolarity"
@@ -2050,15 +2050,15 @@ class ConditionRequirement(DescriptionEntity):
     When, relative to the phase or the action, the condition or the relation is demanded.
     """
 
-    has_condition_polarity: Optional[action_core.ConditionPolarity] = field(
+    has_polarity: Optional[action_core.ConditionPolarity] = field(
         default=None,
         metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
+            iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPolarity",
             functional=True,
         ).as_dict(),
     )
     """
-    Whether the condition is demanded to hold or to be absent.
+    Whether the condition holds or does not hold, or must or must not.
     """
 
     is_world_assumption: Optional[bool] = field(
@@ -3496,7 +3496,7 @@ class InvariantRequirement(ConditionRequirement):
                     value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Throughout",
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPolarity",
                     quantifier=Quantifier.VALUE,
                     value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Holds",
                 ),
@@ -4418,7 +4418,7 @@ class ProhibitionRequirement(ConditionRequirement):
                     value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Throughout",
                 ),
                 PropertyRestriction(
-                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionPolarity",
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPolarity",
                     quantifier=Quantifier.VALUE,
                     value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#DoesNotHold",
                 ),

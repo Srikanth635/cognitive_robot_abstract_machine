@@ -30,7 +30,7 @@ The action core's class of whether a condition holds.
 """
 
 POLARITY_FIELDS = [
-    (core.ConditionRequirement, "has_condition_polarity"),
+    (core.ConditionRequirement, "has_polarity"),
     (action_core.SlotCondition, "has_polarity"),
 ]
 """
@@ -74,7 +74,7 @@ class TestTheTerm:
 
     @pytest.mark.parametrize("owner, field_name", POLARITY_FIELDS)
     def test_every_polarity_property_ranges_over_it(self, graphs, owner, field_name):
-        prop = URIRef(PropertyTerm.of_field(clazz=owner, field_name=field_name).iri)
+        prop = URIRef(PropertyTerm.of_field(owner, field_name).iri)
         ranges = {
             value_range
             for graph in graphs.values()
@@ -107,9 +107,7 @@ class TestThePredictiveManipulationCore:
     def test_its_requirements_name_only_members_of_the_term(self, graphs):
         graph = graphs[PredictiveManipulationOntologyFile.CORE]
         prop = URIRef(
-            PropertyTerm.of_field(
-                clazz=core.ConditionRequirement, field_name="has_condition_polarity"
-            ).iri
+            PropertyTerm.of_field(core.ConditionRequirement, "has_polarity").iri
         )
         named = {
             graph.value(restriction, OWL.hasValue)

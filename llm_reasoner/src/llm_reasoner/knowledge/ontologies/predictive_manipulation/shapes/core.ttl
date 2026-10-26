@@ -12,7 +12,7 @@
 # reported beside it.
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> a owl:Ontology ;
-    owl:versionInfo "0.5.0" ;
+    owl:versionInfo "0.6.0" ;
     rdfs:comment "Closed-world structural rules of the core predictive manipulation module."@en ;
     sh:declare
         [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
@@ -244,7 +244,7 @@
                 $this core:definesPhase ?requiring .
                 ?requiring core:hasConditionRequirement ?value .
                 ?value ac:hasConditionTiming ?mode ;
-                    core:hasConditionPolarity ac:Holds .
+                    ac:hasPolarity ac:Holds .
                 FILTER (?mode IN (ac:AtEntry, ac:Throughout))
                 FILTER NOT EXISTS { ?value core:isWorldAssumption true }
                 FILTER NOT EXISTS {
@@ -258,7 +258,7 @@
                     } UNION {
                         ?establishing core:hasConditionRequirement ?exit .
                         ?exit ac:hasConditionTiming ac:AtExit ;
-                            core:hasConditionPolarity ac:Holds ;
+                            ac:hasPolarity ac:Holds ;
                             aicor:hasConditionType ?condition .
                     }
                 }
