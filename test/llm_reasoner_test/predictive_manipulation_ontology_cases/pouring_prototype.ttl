@@ -149,43 +149,45 @@ case:terminate_to_upright a core:PhaseTransition ;
 
 case:tilt_angle a pour:TiltAngleSetpoint ;
     core:hasValueForm core:Quantitative ;
-    core:hasPhysicalDimension core:Angle ;
+    ac:hasPhysicalDimension ac:Angle ;
     core:hasParameterRange case:tilt_angle_range ;
-    core:parameterOnRole case:source .
+    ac:aboutSlot case:source .
 case:tilt_angle_range a core:MagnitudeRange ;
-    core:lowerBound "40.0"^^xsd:double ; core:upperBound "90.0"^^xsd:double ; core:hasUnit core:Degree .
+    core:lowerBound "40.0"^^xsd:double ; core:upperBound "90.0"^^xsd:double ; core:hasUnit ac:Degree .
 
 case:onset_angle a pour:FlowOnsetThreshold ;
     core:hasValueForm core:Quantitative ;
-    core:hasPhysicalDimension core:Angle ;
+    ac:hasPhysicalDimension ac:Angle ;
     core:hasParameterRange case:onset_angle_range ;
-    core:parameterOnRole case:source , case:substance .
+    ac:aboutSlot case:source ;
+    ac:quantityInvolvesSlot case:substance .
 case:onset_angle_range a core:MagnitudeRange ;
-    core:lowerBound "30.0"^^xsd:double ; core:upperBound "60.0"^^xsd:double ; core:hasUnit core:Degree .
+    core:lowerBound "30.0"^^xsd:double ; core:upperBound "60.0"^^xsd:double ; core:hasUnit ac:Degree .
 
 case:target_volume a pour:TransferredQuantitySetpoint ;
     core:hasValueForm core:Quantitative ;
-    core:hasPhysicalDimension core:Volume ;
+    ac:hasPhysicalDimension ac:Volume ;
     core:hasParameterRange case:target_volume_range ;
-    core:parameterOnRole case:substance , case:target .
+    ac:aboutSlot case:substance ;
+    ac:quantityInvolvesSlot case:target .
 case:target_volume_range a core:MagnitudeRange ;
-    core:lowerBound "180.0"^^xsd:double ; core:upperBound "220.0"^^xsd:double ; core:hasUnit core:Millilitre .
+    core:lowerBound "180.0"^^xsd:double ; core:upperBound "220.0"^^xsd:double ; core:hasUnit ac:Millilitre .
 
 case:flow_rate a pour:FlowRateSetpoint ;
     core:hasValueForm core:Quantitative ;
-    core:hasPhysicalDimension core:VolumetricFlowRate ;
+    ac:hasPhysicalDimension ac:VolumetricFlowRate ;
     core:hasParameterRange case:flow_rate_range ;
-    core:parameterOnRole case:substance .
+    ac:aboutSlot case:substance .
 case:flow_rate_range a core:MagnitudeRange ;
-    core:lowerBound "20.0"^^xsd:double ; core:upperBound "60.0"^^xsd:double ; core:hasUnit core:MillilitrePerSecond .
+    core:lowerBound "20.0"^^xsd:double ; core:upperBound "60.0"^^xsd:double ; core:hasUnit ac:MillilitrePerSecond .
 
 case:upright_angle a pour:UprightAngleSetpoint ;
     core:hasValueForm core:Quantitative ;
-    core:hasPhysicalDimension core:Angle ;
+    ac:hasPhysicalDimension ac:Angle ;
     core:hasParameterRange case:upright_angle_range ;
-    core:parameterOnRole case:source .
+    ac:aboutSlot case:source .
 case:upright_angle_range a core:MagnitudeRange ;
-    core:lowerBound "0.0"^^xsd:double ; core:upperBound "5.0"^^xsd:double ; core:hasUnit core:Degree .
+    core:lowerBound "0.0"^^xsd:double ; core:upperBound "5.0"^^xsd:double ; core:hasUnit ac:Degree .
 
 # %% prediction and comparison
 
@@ -195,7 +197,7 @@ case:lip_flow_sound a core:SensoryFeature .
 case:fill_level a core:SensoryFeature .
 
 case:onset_window a core:TemporalWindow ;
-    core:earliestOffset "0.0"^^xsd:double ; core:latestOffset "300.0"^^xsd:double ; core:hasUnit core:Millisecond .
+    core:earliestOffset "0.0"^^xsd:double ; core:latestOffset "300.0"^^xsd:double ; core:hasUnit ac:Millisecond .
 
 case:onset_sound_prediction a core:SensoryEventPrediction ;
     core:hasModality core:Auditory ;
@@ -229,7 +231,7 @@ case:fill_level_trajectory a core:SignalTrajectory ;
     core:hasExpectedRange case:target_volume_range .
 
 case:fill_level_tolerance a core:MagnitudeRange ;
-    core:lowerBound "0.0"^^xsd:double ; core:upperBound "10.0"^^xsd:double ; core:hasUnit core:Millilitre .
+    core:lowerBound "0.0"^^xsd:double ; core:upperBound "10.0"^^xsd:double ; core:hasUnit ac:Millilitre .
 
 case:fill_level_observation a core:SensoryObservationType ;
     core:hasModality core:Visual ;
@@ -248,7 +250,7 @@ case:fill_level_prediction a core:ContinuousSignalPrediction ;
 # %% correction and gaze
 
 case:correction_latency a core:TemporalWindow ;
-    core:earliestOffset "200.0"^^xsd:double ; core:latestOffset "300.0"^^xsd:double ; core:hasUnit core:Millisecond .
+    core:earliestOffset "200.0"^^xsd:double ; core:latestOffset "300.0"^^xsd:double ; core:hasUnit ac:Millisecond .
 
 case:spill_correction a pour:SpillCorrection ;
     core:targetsSetpoint case:tilt_angle ;

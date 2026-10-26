@@ -8,8 +8,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.14.0> ;
-    owl:versionInfo "0.14.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.15.0> ;
+    owl:versionInfo "0.15.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> ;
     rdfs:label "Predictive manipulation: core"@en ;
@@ -804,66 +804,13 @@ Classes classify description-level individuals, the knowledge a language model g
 :predictedFrom a owl:ObjectProperty ; rdfs:domain :Estimate ; rdfs:range :PredictionSource ;
     rdfs:label "predicted from"@en ; rdfs:comment "A source from which the estimate is predicted before or at contact."@en .
 
-# %% physical dimensions and units
-
-:PhysicalDimension a owl:Class ;
-    rdfs:subClassOf aicor:dul_Region , dul:Region ;
-    ac:isOpenValuePartition true ;
-    rdfs:label "physical dimension"@en ;
-    rdfs:comment "A dimensional space of physical quantities, which in DUL is a maximal region."@en ;
-    :evidenceStatus :EngineeringExtension .
-:Mass a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "mass"@en ; rdfs:comment "Quantity of matter. Distinct from weight, which is a force."@en .
-:MassFlowRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "mass flow rate"@en ; rdfs:comment "Mass transferred per unit time."@en .
-:Force a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "force"@en ; rdfs:comment "Mechanical force, including weight force."@en .
-:ForceRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "force rate"@en ; rdfs:comment "Rate of force change."@en .
-:Torque a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "torque"@en ; rdfs:comment "Moment of force."@en .
-:Length a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "length"@en ; rdfs:comment "Spatial distance or position component."@en .
-:Angle a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "angle"@en ; rdfs:comment "Planar or rotational angle."@en .
-:AngularRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "angular rate"@en ; rdfs:comment "Rate of angular change."@en .
-:Volume a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "volume"@en ; rdfs:comment "Three-dimensional capacity."@en .
-:VolumetricFlowRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "volumetric flow rate"@en ; rdfs:comment "Volume transferred per unit time."@en .
-:DynamicViscosity a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "dynamic viscosity"@en ; rdfs:comment "Resistance of a fluid to shear flow."@en .
-:Frequency a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "frequency"@en ; rdfs:comment "Repetitions of a periodic signal per unit time."@en .
-:Time a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "time"@en ; rdfs:comment "Temporal duration or offset."@en .
-:Dimensionless a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "dimensionless"@en ; rdfs:comment "A ratio or fraction without a physical unit."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :Mass :MassFlowRate :Force :ForceRate :Torque :Length :Angle :AngularRate :Volume :VolumetricFlowRate :DynamicViscosity :Frequency :Time :Dimensionless ) ] .
-
-:MeasurementUnit a owl:Class ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:someValuesFrom :PhysicalDimension ] ;
-    ac:isOpenValuePartition true ;
-    rdfs:label "measurement unit"@en ;
-    rdfs:comment "A unit measuring exactly one physical dimension. Neither CRAM-AICOR nor DUL defines units."@en ;
-    :evidenceStatus :EngineeringExtension .
-:measuresDimension a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PhysicalDimension ;
-    rdfs:label "measures dimension"@en ; rdfs:comment "The single physical dimension a unit measures."@en .
-:Kilogram a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Mass ; rdfs:label "kilogram"@en ; rdfs:comment "Kilogram, a unit of mass."@en .
-:Gram a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Mass ; rdfs:label "gram"@en ; rdfs:comment "Gram, a unit of mass."@en .
-:KilogramPerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :MassFlowRate ; rdfs:label "kilogram per second"@en ; rdfs:comment "Kilogram per second, a unit of mass flow rate."@en .
-:Newton a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Force ; rdfs:label "newton"@en ; rdfs:comment "Newton, a unit of force."@en .
-:NewtonPerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :ForceRate ; rdfs:label "newton per second"@en ; rdfs:comment "Newton per second, a unit of force rate."@en .
-:NewtonMetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Torque ; rdfs:label "newton metre"@en ; rdfs:comment "Newton metre, a unit of torque."@en .
-:Metre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "metre"@en ; rdfs:comment "Metre, a unit of length."@en .
-:Centimetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "centimetre"@en ; rdfs:comment "Centimetre, a unit of length."@en .
-:Millimetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "millimetre"@en ; rdfs:comment "Millimetre, a unit of length."@en .
-:Degree a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Angle ; rdfs:label "degree"@en ; rdfs:comment "Degree, a unit of angle."@en .
-:DegreePerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :AngularRate ; rdfs:label "degree per second"@en ; rdfs:comment "Degree per second, a unit of angular rate."@en .
-:Litre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Volume ; rdfs:label "litre"@en ; rdfs:comment "Litre, a unit of volume."@en .
-:Millilitre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Volume ; rdfs:label "millilitre"@en ; rdfs:comment "Millilitre, a unit of volume."@en .
-:MillilitrePerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :VolumetricFlowRate ; rdfs:label "millilitre per second"@en ; rdfs:comment "Millilitre per second, a unit of volumetric flow rate."@en .
-:Centipoise a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :DynamicViscosity ; rdfs:label "centipoise"@en ; rdfs:comment "Centipoise, a unit of dynamic viscosity."@en .
-:Hertz a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Frequency ; rdfs:label "hertz"@en ; rdfs:comment "Hertz, a unit of frequency."@en .
-:Second a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Time ; rdfs:label "second"@en ; rdfs:comment "Second, a unit of time."@en .
-:Millisecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Time ; rdfs:label "millisecond"@en ; rdfs:comment "Millisecond, a unit of time."@en .
-:Ratio a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Dimensionless ; rdfs:label "ratio"@en ; rdfs:comment "Unit marker for dimensionless ratios and bounded fractions."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :Kilogram :Gram :KilogramPerSecond :Newton :NewtonPerSecond :NewtonMetre :Metre :Centimetre :Millimetre :Degree :DegreePerSecond :Litre :Millilitre :MillilitrePerSecond :Centipoise :Hertz :Second :Millisecond :Ratio ) ] .
-
 # %% quantities
 
 :MagnitudeRange a owl:Class ;
     rdfs:subClassOf aicor:ParameterInterval , dul:Amount ,
         [ a owl:Restriction ; owl:onProperty :lowerBound ; owl:someValuesFrom xsd:double ] ,
         [ a owl:Restriction ; owl:onProperty :upperBound ; owl:someValuesFrom xsd:double ] ,
-        [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:someValuesFrom :MeasurementUnit ] ;
+        [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:someValuesFrom ac:MeasurementUnit ] ;
     rdfs:label "magnitude range"@en ;
     rdfs:comment "An interval of a quantity with its unit; the lower bound does not exceed the upper bound."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -872,8 +819,8 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:subClassOf aicor:dul_Region , dul:TimeInterval ,
         [ a owl:Restriction ; owl:onProperty :earliestOffset ; owl:someValuesFrom xsd:double ] ,
         [ a owl:Restriction ; owl:onProperty :latestOffset ; owl:someValuesFrom xsd:double ] ,
-        [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:someValuesFrom :MeasurementUnit ] ,
-        [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Time ] ] ;
+        [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:someValuesFrom ac:MeasurementUnit ] ,
+        [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Time ] ] ;
     rdfs:label "temporal window"@en ;
     rdfs:comment "A time interval relative to a reference event, in a time unit."@en ;
     :evidenceStatus :EngineeringExtension .
@@ -893,7 +840,7 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "earliest offset"@en ; rdfs:comment "The inclusive beginning of the window, relative to its reference event."@en .
 :latestOffset a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:range xsd:double ;
     rdfs:label "latest offset"@en ; rdfs:comment "The inclusive end of the window, relative to its reference event."@en .
-:hasUnit a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MeasurementUnit ;
+:hasUnit a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range ac:MeasurementUnit ;
     rdfs:label "has unit"@en ; rdfs:comment "The measurement unit shared by both bounds."@en .
 :hasCategory a owl:ObjectProperty , owl:FunctionalProperty ;
     rdfs:label "has category"@en ; rdfs:comment "The term identifying the category, given as the IRI of a concept."@en .
@@ -901,18 +848,17 @@ Classes classify description-level individuals, the knowledge a language model g
 # %% parameters
 
 :Parameter a owl:Class ;
-    rdfs:subClassOf aicor:Parameter , dul:Parameter ,
-        [ a owl:Restriction ; owl:onProperty :hasValueForm ; owl:someValuesFrom :ParameterValueForm ] ,
-        [ a owl:Restriction ; owl:onProperty :parameterOnRole ; owl:someValuesFrom :ManipulationRole ] ;
+    rdfs:subClassOf aicor:Parameter , dul:Parameter , ac:SlotQuantity ,
+        [ a owl:Restriction ; owl:onProperty :hasValueForm ; owl:someValuesFrom :ParameterValueForm ] ;
     rdfs:label "parameter"@en ;
-    rdfs:comment "A quantitative or categorical slot in a phase structure, applying to participant roles."@en ;
+    rdfs:comment "A quantity of a phase structure about the filler of a role, holding a range of magnitudes or a categorical value."@en ;
     :evidenceStatus :EngineeringExtension .
 
 :QuantitativeParameter a owl:Class ;
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Parameter [ a owl:Restriction ; owl:onProperty :hasValueForm ; owl:hasValue :Quantitative ] ) ] ;
     rdfs:subClassOf
         [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:someValuesFrom :MagnitudeRange ] ,
-        [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:someValuesFrom :PhysicalDimension ] ,
+        [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:someValuesFrom ac:PhysicalDimension ] ,
         [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :hasCategoricalValue ; owl:someValuesFrom owl:Thing ] ] ;
     rdfs:label "quantitative parameter"@en ;
     rdfs:comment "A parameter holding a magnitude range in a physical dimension, and never a categorical value."@en ;
@@ -929,73 +875,69 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :hasValueForm a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ParameterValueForm ;
     rdfs:label "has value form"@en ; rdfs:comment "Whether the parameter holds a magnitude range or a categorical value."@en .
-:hasPhysicalDimension a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :Parameter ; rdfs:range :PhysicalDimension ;
-    rdfs:label "has physical dimension"@en ; rdfs:comment "The physical dimension of a quantitative parameter, which the unit of its range must measure."@en .
 :hasParameterRange a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :Parameter ; rdfs:subPropertyOf dul:parametrizes ; rdfs:range :MagnitudeRange ;
     rdfs:label "has parameter range"@en ; rdfs:comment "The value of a quantitative parameter."@en .
 :hasCategoricalValue a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :Parameter ; rdfs:subPropertyOf dul:parametrizes ; rdfs:range :CategoricalValue ;
     rdfs:label "has categorical value"@en ; rdfs:comment "The value of a categorical parameter."@en .
-:parameterOnRole a owl:ObjectProperty ; rdfs:range :ManipulationRole ;
-    rdfs:label "parameter on role"@en ; rdfs:comment "A participant role to which the parameter applies."@en .
 
 :MassParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Mass ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Mass ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:Mass ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Mass ] ] ] ;
     rdfs:label "mass parameter"@en ; rdfs:comment "A quantitative parameter whose values are masses, measured in a unit of mass."@en ;
     :evidenceStatus :EngineeringExtension .
 :MassFlowRateParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :MassFlowRate ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :MassFlowRate ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:MassFlowRate ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:MassFlowRate ] ] ] ;
     rdfs:label "mass flow rate parameter"@en ; rdfs:comment "A quantitative parameter whose values are mass flow rates, measured in a unit of mass flow rate."@en ;
     :evidenceStatus :EngineeringExtension .
 :ForceParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Force ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Force ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:Force ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Force ] ] ] ;
     rdfs:label "force parameter"@en ; rdfs:comment "A quantitative parameter whose values are forces, measured in a unit of force."@en ;
     :evidenceStatus :EngineeringExtension .
 :ForceRateParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :ForceRate ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :ForceRate ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:ForceRate ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:ForceRate ] ] ] ;
     rdfs:label "force rate parameter"@en ; rdfs:comment "A quantitative parameter whose values are rates of force change, measured in a unit of force rate."@en ;
     :evidenceStatus :EngineeringExtension .
 :TorqueParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Torque ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Torque ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:Torque ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Torque ] ] ] ;
     rdfs:label "torque parameter"@en ; rdfs:comment "A quantitative parameter whose values are torques, measured in a unit of torque."@en ;
     :evidenceStatus :EngineeringExtension .
 :LengthParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Length ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Length ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:Length ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Length ] ] ] ;
     rdfs:label "length parameter"@en ; rdfs:comment "A quantitative parameter whose values are lengths, measured in a unit of length."@en ;
     :evidenceStatus :EngineeringExtension .
 :AngleParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Angle ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Angle ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:Angle ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Angle ] ] ] ;
     rdfs:label "angle parameter"@en ; rdfs:comment "A quantitative parameter whose values are angles, measured in a unit of angle."@en ;
     :evidenceStatus :EngineeringExtension .
 :AngularRateParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :AngularRate ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :AngularRate ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:AngularRate ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:AngularRate ] ] ] ;
     rdfs:label "angular rate parameter"@en ; rdfs:comment "A quantitative parameter whose values are angular rates, measured in a unit of angular rate."@en ;
     :evidenceStatus :EngineeringExtension .
 :VolumeParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Volume ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Volume ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:Volume ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Volume ] ] ] ;
     rdfs:label "volume parameter"@en ; rdfs:comment "A quantitative parameter whose values are volumes, measured in a unit of volume."@en ;
     :evidenceStatus :EngineeringExtension .
 :VolumetricFlowRateParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :VolumetricFlowRate ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :VolumetricFlowRate ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:VolumetricFlowRate ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:VolumetricFlowRate ] ] ] ;
     rdfs:label "volumetric flow rate parameter"@en ; rdfs:comment "A quantitative parameter whose values are volumetric flow rates, measured in a unit of volumetric flow rate."@en ;
     :evidenceStatus :EngineeringExtension .
 :DynamicViscosityParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :DynamicViscosity ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :DynamicViscosity ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:DynamicViscosity ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:DynamicViscosity ] ] ] ;
     rdfs:label "dynamic viscosity parameter"@en ; rdfs:comment "A quantitative parameter whose values are dynamic viscosities, measured in a unit of dynamic viscosity."@en ;
     :evidenceStatus :EngineeringExtension .
 :DimensionlessParameter a owl:Class ;
-    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Dimensionless ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Dimensionless ] ] ] ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty ac:hasPhysicalDimension ; owl:hasValue ac:Dimensionless ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Dimensionless ] ] ] ;
     rdfs:label "dimensionless parameter"@en ; rdfs:comment "A quantitative parameter whose values are ratios or fractions without a physical unit."@en ;
     :evidenceStatus :EngineeringExtension .
 
@@ -1036,6 +978,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :ForceRateSetpoint a owl:Class ;
     rdfs:subClassOf :MotorSetpoint , :ForceRateParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Rate ] ,
         [ a owl:Restriction ; owl:onProperty :rateOf ; owl:someValuesFrom :MotorSetpoint ] ;
     rdfs:label "force rate setpoint"@en ;
     rdfs:comment "A commanded rate of force change, scaled in advance to the predicted load."@en ;
@@ -1052,6 +995,7 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :SafetyMargin a owl:Class ;
     rdfs:subClassOf :QuantitativeParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Ratio ] ,
         [ a owl:Restriction ; owl:onProperty :marginOn ; owl:someValuesFrom :MotorSetpoint ] ,
         [ a owl:Restriction ; owl:onProperty :marginOver ; owl:someValuesFrom :MechanicalThreshold ] ;
     rdfs:label "safety margin"@en ;

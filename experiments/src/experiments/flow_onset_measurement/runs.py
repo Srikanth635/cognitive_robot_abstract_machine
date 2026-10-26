@@ -10,7 +10,12 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import trimesh
-from llm_reasoner.knowledge.access import core, flow_onset, pouring_frame
+from llm_reasoner.knowledge.access import (
+    action_core,
+    core,
+    flow_onset,
+    pouring_frame,
+)
 
 from experiments.flow_onset_measurement.exceptions import NoSimulatedTilt
 
@@ -172,7 +177,7 @@ class SimulatedFlowOnset:
             has_measured_range=core.MagnitudeRange(
                 lower_bound=min(onsets),
                 upper_bound=max(onsets),
-                has_unit=core.MeasurementUnit.DEGREE,
+                has_unit=action_core.MeasurementUnit.DEGREE,
             ),
             follows_setup=flow_onset.PhysicsSimulationSetup(
                 simulation_engine=self.settings.engine,
@@ -188,7 +193,7 @@ class SimulatedFlowOnset:
                 has_settled_fill_range=core.MagnitudeRange(
                     lower_bound=min(fills),
                     upper_bound=max(fills),
-                    has_unit=core.MeasurementUnit.RATIO,
+                    has_unit=action_core.MeasurementUnit.UNITLESS,
                 ),
             ),
         )

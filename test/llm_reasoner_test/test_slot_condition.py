@@ -15,7 +15,6 @@ from llm_reasoner.knowledge.ontologies import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     ActionPerspectiveFile,
 )
-from llm_reasoner.knowledge.acceptance.derived import RestrictionsHold
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     action_frame,
@@ -26,14 +25,11 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.knowledge.ontologies.terms import (
-    DescriptionEntity,
-    PropertyRestriction,
-    PropertyTerm,
-)
+from llm_reasoner.knowledge.ontologies.terms import PropertyTerm
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
+from .restriction_violations import violated_on
 from .test_action_perspective_knowledge import (
     AnswerCase,
     answer_text,
@@ -153,20 +149,6 @@ class TestTheTerm:
 
 
 # %% the conditions of the predictive manipulation microworld
-
-
-def violated_on(
-    fragment: DescriptionEntity, property_term: PropertyTerm
-) -> list[PropertyRestriction]:
-    """
-    :return: The restrictions on a property that a fragment violates.
-    """
-    return [
-        violation.expression
-        for violation in RestrictionsHold().violations([fragment])
-        if isinstance(violation.expression, PropertyRestriction)
-        and violation.expression.property_iri == property_term.iri
-    ]
 
 
 ON_SLOT = PropertyTerm.of_field(action_core.SlotConditionType, "condition_on_slot")

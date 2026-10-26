@@ -7,8 +7,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.15.0> ;
-    owl:versionInfo "0.15.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core/0.16.0> ;
+    owl:versionInfo "0.16.0" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Action perspectives: action core"@en ;
     rdfs:comment """The hub every perspective on an action attaches to: the frame of a kind of action, the slots its participants fill, what it is for, what it brings about and the kinds of choice it leaves open.
@@ -170,7 +170,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
         [ a owl:Restriction ; owl:onProperty :aboutSlot ; owl:someValuesFrom :FrameSlot ] ,
         [ a owl:Restriction ; owl:onProperty :hasQuantityKind ; owl:someValuesFrom :QuantityKind ] ;
     rdfs:label "slot quantity"@en ;
-    rdfs:comment "A kind of quantity about the filler of a slot, possibly measured from the filler of another slot, such as the tilt of the source or the height of the lip above the goal; it carries no value. What it is for is said by its kind: a choice the action leaves open, a quantity deciding whether a relation holds, or one a failure is noticed by."@en .
+    rdfs:comment "A kind of quantity about the filler of a slot, possibly measured from the filler of another slot or acting between it and the fillers of others, such as the tilt of the source, the height of the lip above the goal or the grip force on the source; it carries no value of its own. What it is for is said by its class: a choice the action leaves open, a quantity deciding whether a relation holds, one a failure is noticed by, or a parameter of a phase, which holds a value."@en .
 
 :ParameterDimension a owl:Class ;
     rdfs:subClassOf :SlotQuantity , dul:Parameter , aicor:ActionParameterSpace ;
@@ -189,10 +189,22 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:label "relative to slot"@en ;
     rdfs:comment "The slot whose filler the quantity is measured from, such as the goal a position above which is chosen, or the opening the lip ends beside; absent for a quantity measured from nothing in particular."@en .
 
+:quantityInvolvesSlot a owl:ObjectProperty ;
+    rdfs:domain :SlotQuantity ;
+    rdfs:range :FrameSlot ;
+    rdfs:label "quantity involves slot"@en ;
+    rdfs:comment "Another slot whose filler the quantity acts between the first filler and, such as the effector a grip force on the source is exerted by, or the goal a transferred amount ends up in; unlike relative_to_slot, it is no reference the quantity is measured from."@en .
+
 :hasQuantityKind a owl:ObjectProperty , owl:FunctionalProperty ;
     rdfs:range :QuantityKind ;
     rdfs:label "has quantity kind"@en ;
     rdfs:comment "What kind of quantity something about an action is about, such as the quantity a choice sets, a condition constrains or a change changes."@en .
+
+:hasPhysicalDimension a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain :SlotQuantity ;
+    rdfs:range :PhysicalDimension ;
+    rdfs:label "has physical dimension"@en ;
+    rdfs:comment "The physical dimension a quantity is measured in, which one of its kind's dimensions is and the unit of its value measures."@en .
 
 # %% conditions on slots
 
@@ -257,7 +269,7 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
     :isOpenValuePartition true ;
     rdfs:label "quantity kind"@en ;
-    rdfs:comment "The kind of quantity a choice an action leaves open sets."@en .
+    rdfs:comment "What a quantity about the filler of a slot is: how much, how fast, where, which way it faces, how far, how long, how strongly it acts, a property of its material, a ratio, its shape, or which of several."@en .
 :Amount a owl:NamedIndividual , :QuantityKind ; rdfs:label "amount"@en ;
     rdfs:comment "How much of something, such as the volume poured."@en .
 :Rate a owl:NamedIndividual , :QuantityKind ; rdfs:label "rate"@en ;
@@ -272,7 +284,79 @@ Each concept is linked to CRAM-AICOR and to DUL: frames are descriptions, slots 
     rdfs:comment "How long something lasts."@en .
 :Selection a owl:NamedIndividual , :QuantityKind ; rdfs:label "selection"@en ;
     rdfs:comment "Which of several alternatives is taken, such as the hand that holds the source."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :Amount :Rate :Position :Orientation :Distance :Duration :Selection ) ] .
+:Magnitude a owl:NamedIndividual , :QuantityKind ; rdfs:label "magnitude"@en ;
+    rdfs:comment "How strongly one filler acts on another, such as the grip force on the source or the torque about the grasp."@en .
+:MaterialProperty a owl:NamedIndividual , :QuantityKind ; rdfs:label "material property"@en ;
+    rdfs:comment "A property of the material of a filler or of its surface, such as the viscosity of the substance, the friction of the grasp or how the substance flows."@en .
+:Ratio a owl:NamedIndividual , :QuantityKind ; rdfs:label "ratio"@en ;
+    rdfs:comment "How large one quantity is against another, such as the grip force against the load force or the filled fraction of the goal."@en .
+:Shape a owl:NamedIndividual , :QuantityKind ; rdfs:label "shape"@en ;
+    rdfs:comment "What form a filler or its surface has, such as the geometry of the grasp surfaces."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Amount :Rate :Position :Orientation :Distance :Duration :Selection :Magnitude :MaterialProperty :Ratio :Shape ) ] .
+
+:measuredIn a owl:ObjectProperty ;
+    rdfs:domain :QuantityKind ;
+    rdfs:range :PhysicalDimension ;
+    rdfs:label "measured in"@en ;
+    rdfs:comment "A physical dimension a kind of quantity may be measured in, such as an angle for an orientation; a kind measured in none, such as a selection or a shape, constrains none."@en .
+:Amount :measuredIn :Mass , :Volume .
+:Rate :measuredIn :MassFlowRate , :VolumetricFlowRate , :AngularRate , :ForceRate , :Frequency .
+:Position :measuredIn :Length .
+:Orientation :measuredIn :Angle .
+:Distance :measuredIn :Length .
+:Duration :measuredIn :Time .
+:Magnitude :measuredIn :Force , :Torque .
+:MaterialProperty :measuredIn :DynamicViscosity , :Dimensionless .
+:Ratio :measuredIn :Dimensionless .
+
+:PhysicalDimension a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    :isOpenValuePartition true ;
+    rdfs:label "physical dimension"@en ;
+    rdfs:comment "A dimensional space of physical quantities, which in DUL is a maximal region."@en .
+:Mass a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "mass"@en ; rdfs:comment "Quantity of matter. Distinct from weight, which is a force."@en .
+:MassFlowRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "mass flow rate"@en ; rdfs:comment "Mass transferred per unit time."@en .
+:Force a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "force"@en ; rdfs:comment "Mechanical force, including weight force."@en .
+:ForceRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "force rate"@en ; rdfs:comment "Rate of force change."@en .
+:Torque a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "torque"@en ; rdfs:comment "Moment of force."@en .
+:Length a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "length"@en ; rdfs:comment "Spatial distance or position component."@en .
+:Angle a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "angle"@en ; rdfs:comment "Planar or rotational angle."@en .
+:AngularRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "angular rate"@en ; rdfs:comment "Rate of angular change."@en .
+:Volume a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "volume"@en ; rdfs:comment "Three-dimensional capacity."@en .
+:VolumetricFlowRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "volumetric flow rate"@en ; rdfs:comment "Volume transferred per unit time."@en .
+:DynamicViscosity a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "dynamic viscosity"@en ; rdfs:comment "Resistance of a fluid to shear flow."@en .
+:Frequency a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "frequency"@en ; rdfs:comment "Repetitions of a periodic signal per unit time."@en .
+:Time a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "time"@en ; rdfs:comment "Temporal duration or offset."@en .
+:Dimensionless a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "dimensionless"@en ; rdfs:comment "A ratio or fraction without a physical unit."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Mass :MassFlowRate :Force :ForceRate :Torque :Length :Angle :AngularRate :Volume :VolumetricFlowRate :DynamicViscosity :Frequency :Time :Dimensionless ) ] .
+
+:MeasurementUnit a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:someValuesFrom :PhysicalDimension ] ;
+    :isOpenValuePartition true ;
+    rdfs:label "measurement unit"@en ;
+    rdfs:comment "A unit measuring exactly one physical dimension. Neither CRAM-AICOR nor DUL defines units."@en .
+:measuresDimension a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PhysicalDimension ;
+    rdfs:label "measures dimension"@en ; rdfs:comment "The single physical dimension a unit measures."@en .
+:Kilogram a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Mass ; rdfs:label "kilogram"@en ; rdfs:comment "Kilogram, a unit of mass."@en .
+:Gram a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Mass ; rdfs:label "gram"@en ; rdfs:comment "Gram, a unit of mass."@en .
+:KilogramPerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :MassFlowRate ; rdfs:label "kilogram per second"@en ; rdfs:comment "Kilogram per second, a unit of mass flow rate."@en .
+:Newton a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Force ; rdfs:label "newton"@en ; rdfs:comment "Newton, a unit of force."@en .
+:NewtonPerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :ForceRate ; rdfs:label "newton per second"@en ; rdfs:comment "Newton per second, a unit of force rate."@en .
+:NewtonMetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Torque ; rdfs:label "newton metre"@en ; rdfs:comment "Newton metre, a unit of torque."@en .
+:Metre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "metre"@en ; rdfs:comment "Metre, a unit of length."@en .
+:Centimetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "centimetre"@en ; rdfs:comment "Centimetre, a unit of length."@en .
+:Millimetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "millimetre"@en ; rdfs:comment "Millimetre, a unit of length."@en .
+:Degree a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Angle ; rdfs:label "degree"@en ; rdfs:comment "Degree, a unit of angle."@en .
+:DegreePerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :AngularRate ; rdfs:label "degree per second"@en ; rdfs:comment "Degree per second, a unit of angular rate."@en .
+:Litre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Volume ; rdfs:label "litre"@en ; rdfs:comment "Litre, a unit of volume."@en .
+:Millilitre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Volume ; rdfs:label "millilitre"@en ; rdfs:comment "Millilitre, a unit of volume."@en .
+:MillilitrePerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :VolumetricFlowRate ; rdfs:label "millilitre per second"@en ; rdfs:comment "Millilitre per second, a unit of volumetric flow rate."@en .
+:Centipoise a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :DynamicViscosity ; rdfs:label "centipoise"@en ; rdfs:comment "Centipoise, a unit of dynamic viscosity."@en .
+:Hertz a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Frequency ; rdfs:label "hertz"@en ; rdfs:comment "Hertz, a unit of frequency."@en .
+:Second a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Time ; rdfs:label "second"@en ; rdfs:comment "Second, a unit of time."@en .
+:Millisecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Time ; rdfs:label "millisecond"@en ; rdfs:comment "Millisecond, a unit of time."@en .
+:Unitless a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Dimensionless ; rdfs:label "unitless"@en ; rdfs:comment "The unit of a dimensionless ratio or bounded fraction."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Kilogram :Gram :KilogramPerSecond :Newton :NewtonPerSecond :NewtonMetre :Metre :Centimetre :Millimetre :Degree :DegreePerSecond :Litre :Millilitre :MillilitrePerSecond :Centipoise :Hertz :Second :Millisecond :Unitless ) ] .
 
 :ConditionTiming a owl:Class ;
     rdfs:subClassOf aicor:dul_Concept , dul:Concept ;

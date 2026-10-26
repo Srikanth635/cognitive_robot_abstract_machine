@@ -29,7 +29,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_2003f10c88b1423aa0ba478de1758be5fb33c6fa909bd43ec4d1523497fe718e_liquid_fill-0.505_azimuth-0.0_PhysicsSimulationSetup/fragment_2> a ns3:MagnitudeRange,
         owl:NamedIndividual ;
-    ns3:hasUnit ns3:Degree ;
+    ns3:hasUnit <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Degree> ;
     ns3:lowerBound 6.9e+01 ;
     ns3:upperBound 6.9e+01 .
 
@@ -40,7 +40,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/measurement/flow-onset_2003f10c88b1423aa0ba478de1758be5fb33c6fa909bd43ec4d1523497fe718e_liquid_fill-0.505_azimuth-0.0_PhysicsSimulationSetup/fragment_4> a ns3:MagnitudeRange,
         owl:NamedIndividual ;
-    ns3:hasUnit ns3:Ratio ;
+    ns3:hasUnit <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Unitless> ;
     ns3:lowerBound 5.052809e-01 ;
     ns3:upperBound 5.052809e-01 .
 

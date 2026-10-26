@@ -13,6 +13,7 @@
     rdfs:comment "Closed-world structural rules of the object dynamics module."@en ;
     sh:declare
         [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
+        [ sh:prefix "ac" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#"^^xsd:anyURI ] ,
         [ sh:prefix "dyn" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#"^^xsd:anyURI ] ,
         [ sh:prefix "aicor" ; sh:namespace "http://aicor.knowledge/l2-ontology.owl#"^^xsd:anyURI ] ,
         [ sh:prefix "rdf" ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ] ,
@@ -122,7 +123,7 @@
         sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/object-dynamics> ;
         sh:select """
             SELECT DISTINCT $this ?value WHERE {
-                $this core:holdsEstimate/core:parameterOnRole ?value .
+                $this core:holdsEstimate/(ac:aboutSlot|ac:relativeToSlot|ac:quantityInvolvesSlot) ?value .
                 FILTER NOT EXISTS { $this dyn:representsRole ?value }
             }
         """ ;

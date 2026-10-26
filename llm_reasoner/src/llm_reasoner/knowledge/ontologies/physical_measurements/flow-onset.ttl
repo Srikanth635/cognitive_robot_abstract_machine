@@ -1,5 +1,6 @@
 @prefix :      <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#> .
 @prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix ac:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#> .
 @prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
 @prefix pf:    <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame#> .
 @prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
@@ -10,8 +11,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset/0.2.0> ;
-    owl:versionInfo "0.2.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset/0.3.0> ;
+    owl:versionInfo "0.3.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> ,
         <http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/pouring-frame> ;
     rdfs:label "Physical measurements: flow onset"@en ;
@@ -32,7 +33,7 @@
         [ a owl:Restriction ; owl:onProperty pf:hasMaterialRegime ; owl:someValuesFrom pf:MaterialRegime ] ,
         [ a owl:Restriction ; owl:onProperty :gravityAzimuth ; owl:someValuesFrom xsd:double ] ,
         [ a owl:Restriction ; owl:onProperty :hasMeasuredRange ; owl:someValuesFrom core:MagnitudeRange ] ,
-        [ a owl:Restriction ; owl:onProperty :hasMeasuredRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:measuresDimension ; owl:hasValue core:Angle ] ] ] ,
+        [ a owl:Restriction ; owl:onProperty :hasMeasuredRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Angle ] ] ] ,
         [ a owl:Restriction ; owl:onProperty :followsSetup ; owl:someValuesFrom :MeasurementSetup ] ;
     rdfs:label "flow onset tilt measurement"@en ;
     rdfs:comment "The tilt from upright at which a substance filling a kind of container to a fraction starts to leave it, for gravity pulling from one direction in the container's own frame."@en ;
@@ -104,7 +105,7 @@
         [ a owl:Restriction ; owl:onProperty :fluidCohesion ; owl:someValuesFrom xsd:double ] ,
         [ a owl:Restriction ; owl:onProperty :fluidSurfaceTension ; owl:someValuesFrom xsd:double ] ,
         [ a owl:Restriction ; owl:onProperty :hasSettledFillRange ; owl:someValuesFrom core:MagnitudeRange ] ,
-        [ a owl:Restriction ; owl:onProperty :hasSettledFillRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:measuresDimension ; owl:hasValue core:Dimensionless ] ] ] ;
+        [ a owl:Restriction ; owl:onProperty :hasSettledFillRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty ac:measuresDimension ; owl:hasValue ac:Dimensionless ] ] ] ;
     rdfs:label "physics simulation setup"@en ;
     rdfs:comment "A value measured by tilting the container, filled with simulated particles, at a constant rate until the particles start to leave it."@en ;
     core:evidenceStatus core:EngineeringExtension .

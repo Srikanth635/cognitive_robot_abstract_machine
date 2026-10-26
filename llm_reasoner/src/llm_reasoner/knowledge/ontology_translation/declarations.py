@@ -105,7 +105,7 @@ class MemberDeclaration:
 @dataclass(frozen=True)
 class MemberValue:
     """
-    The value a member property takes for one member.
+    The values a member property takes for one member.
     """
 
     member: str
@@ -113,18 +113,18 @@ class MemberValue:
     The enumeration member name.
     """
 
-    value: PythonName
+    values: tuple[PythonName, ...]
     """
-    The member of another enumeration the property takes, as its enumeration and
-    member name.
+    The members of another enumeration the property takes, each as its enumeration and
+    member name, in that enumeration's order.
     """
 
 
 @dataclass(frozen=True)
 class MemberPropertyDeclaration:
     """
-    A functional property stated of every member of a value partition, written as a
-    property of the enumeration.
+    A property stated of the members of a value partition, written as a property of the
+    enumeration: the one value of a functional property, every value of any other.
     """
 
     name: str
@@ -149,7 +149,12 @@ class MemberPropertyDeclaration:
 
     values: tuple[MemberValue, ...]
     """
-    The value of every member, in member order.
+    The values of every member, in member order.
+    """
+
+    functional: bool = True
+    """
+    Whether every member takes exactly one value.
     """
 
 

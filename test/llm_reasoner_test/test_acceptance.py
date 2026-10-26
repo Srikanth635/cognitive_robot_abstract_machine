@@ -302,9 +302,11 @@ class TestRestrictionsHold:
     def test_force_threshold_with_a_mass_unit_violates_its_dimension(self):
         threshold = prehension.LiftoffThreshold(
             has_value_form=core.ParameterValueForm.QUANTITATIVE,
-            has_physical_dimension=core.PhysicalDimension.FORCE,
+            has_physical_dimension=action_core.PhysicalDimension.FORCE,
             has_parameter_range=core.MagnitudeRange(
-                lower_bound=0.2, upper_bound=0.4, has_unit=core.MeasurementUnit.KILOGRAM
+                lower_bound=0.2,
+                upper_bound=0.4,
+                has_unit=action_core.MeasurementUnit.KILOGRAM,
             ),
         )
         violated_expressions = {
@@ -484,12 +486,12 @@ class TestCoreRules:
     def test_safety_margin_relating_different_participants_is_reported(self):
         gripper, carton = core.ManipulationRole(), core.ManipulationRole()
         mismatched = core.SafetyMargin(
-            margin_on=prehension.GripForceSetpoint(parameter_on_role=[gripper]),
-            margin_over=prehension.SlipThreshold(parameter_on_role=[carton]),
+            margin_on=prehension.GripForceSetpoint(about_slot=gripper),
+            margin_over=prehension.SlipThreshold(about_slot=carton),
         )
         matched = core.SafetyMargin(
-            margin_on=prehension.GripForceSetpoint(parameter_on_role=[gripper]),
-            margin_over=prehension.SlipThreshold(parameter_on_role=[gripper]),
+            margin_on=prehension.GripForceSetpoint(about_slot=gripper),
+            margin_over=prehension.SlipThreshold(about_slot=gripper),
         )
         assert shape_violators(
             CORE_SHAPES.SafetyMarginOnOneParticipant, [mismatched, matched]
@@ -1023,15 +1025,21 @@ class TestContinuousPredictionRules:
 
     def test_tolerance_in_another_dimension_than_the_trajectory_is_reported(self):
         trajectory = core.SignalTrajectory(
-            has_expected_range=core.MagnitudeRange(has_unit=core.MeasurementUnit.NEWTON)
+            has_expected_range=core.MagnitudeRange(
+                has_unit=action_core.MeasurementUnit.NEWTON
+            )
         )
         mismatched = core.ContinuousSignalPrediction(
             predicts_trajectory=trajectory,
-            has_tolerance=core.MagnitudeRange(has_unit=core.MeasurementUnit.MILLILITRE),
+            has_tolerance=core.MagnitudeRange(
+                has_unit=action_core.MeasurementUnit.MILLILITRE
+            ),
         )
         matched = core.ContinuousSignalPrediction(
             predicts_trajectory=trajectory,
-            has_tolerance=core.MagnitudeRange(has_unit=core.MeasurementUnit.NEWTON),
+            has_tolerance=core.MagnitudeRange(
+                has_unit=action_core.MeasurementUnit.NEWTON
+            ),
         )
         assert shape_violators(
             CORE_SHAPES.ToleranceMatchesTrajectory, [mismatched, matched]
@@ -1279,7 +1287,7 @@ class TestObjectDynamicsRules:
 
     def test_representation_missing_a_role_its_estimates_concern_is_reported(self):
         carton = core.ManipulationRole()
-        estimate = prehension.ExpectedMass(parameter_on_role=[carton])
+        estimate = prehension.ExpectedMass(about_slot=carton)
         uncovered = object_dynamics.ObjectDynamicsModel(holds_estimate=[estimate])
         covered = object_dynamics.ObjectDynamicsModel(
             holds_estimate=[estimate], represents_role=[carton]

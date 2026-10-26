@@ -11,7 +11,7 @@ import shutil
 from pathlib import Path
 
 import pytest
-from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, Literal, URIRef
+from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, Literal, Namespace, URIRef
 from rdflib.compare import isomorphic
 
 from llm_reasoner.knowledge.ontologies import (
@@ -22,7 +22,11 @@ from llm_reasoner.knowledge.ontologies import (
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
+    core,
+    pouring,
+    prehension,
+)
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference, PropertyTerm
 from llm_reasoner.knowledge.representation.rdf import GraphReader
 from llm_reasoner.knowledge.storage.migration import (
@@ -92,8 +96,8 @@ A property renamed, which changes its IRI and its field name.
 """
 
 RENAMED_MEMBER = IriRename(
-    old=core.MeasurementUnit.DEGREE.value,
-    new=core.MeasurementUnit.DEGREE.value.replace("Degree", "AngularDegree"),
+    old=action_core.MeasurementUnit.DEGREE.value,
+    new=action_core.MeasurementUnit.DEGREE.value.replace("Degree", "AngularDegree"),
 )
 """
 An enumeration member renamed, which changes its IRI and its member name.
@@ -535,17 +539,44 @@ The roles of a condition split into the slot it is on and the slots it involves.
 """
 
 
-def condition_naming(condition_class: str, *roles: tuple[str, str]) -> Graph:
+PARAMETER_ON_ROLE = (
+    PredictiveManipulationOntologyFile.CORE.namespace + "parameterOnRole"
+)
+"""
+The property a parameter of the microworld listed its roles with, in no order.
+"""
+
+PARAMETER_ROLES_SPLIT = RoleListSplit(
+    property=PARAMETER_ON_ROLE,
+    targets=tuple(
+        PropertyTerm.of_field(action_core.SlotQuantity, name).iri
+        for name in ("about_slot", "relative_to_slot", "quantity_involves_slot")
+    ),
+)
+"""
+The roles of a parameter split into the slot it is about, the slot it is measured from
+and the slots it involves.
+"""
+
+ROLES = Namespace("http://example.org/hypothesis/migration#")
+"""
+The namespace of the roles a listing names.
+"""
+
+
+def listing_roles(
+    property_iri: str, individual_class: str, *roles: tuple[str, str]
+) -> Graph:
     """
+    :param property_iri: The property listing the roles.
     :param roles: Each role's name and the IRI of its class.
-    :return: A condition listing roles of the given classes.
+    :return: An individual of a class listing roles of the given classes.
     """
     graph = Graph()
-    graph.add((STRUCTURE, RDF.type, URIRef(condition_class)))
+    graph.add((STRUCTURE, RDF.type, URIRef(individual_class)))
     for name, role_class in roles:
-        role = URIRef("http://example.org/hypothesis/migration#" + name)
-        graph.add((role, RDF.type, URIRef(role_class)))
-        graph.add((STRUCTURE, URIRef(CONDITION_ON_ROLE), role))
+        graph.add((ROLES[name], RDF.type, URIRef(role_class)))
+        graph.add((STRUCTURE, URIRef(property_iri), ROLES[name]))
     return graph
 
 
@@ -554,7 +585,8 @@ class TestRoleListSplit:
         migrated = Migration(
             name="split", role_list_splits=(CONDITION_ROLES_SPLIT,)
         ).graph(
-            condition_naming(
+            listing_roles(
+                CONDITION_ON_ROLE,
                 pouring.LipOverReceptacle.term.iri,
                 ("lip", pouring.PouringLip.term.iri),
                 ("bowl", pouring.TargetReceptacle.term.iri),
@@ -575,7 +607,8 @@ class TestRoleListSplit:
         migrated = Migration(
             name="split", role_list_splits=(CONDITION_ROLES_SPLIT,)
         ).graph(
-            condition_naming(
+            listing_roles(
+                CONDITION_ON_ROLE,
                 core.PhaseConditionType.term.iri,
                 ("carton", pouring.SourceContainer.term.iri),
             )
@@ -583,17 +616,62 @@ class TestRoleListSplit:
         assert (
             STRUCTURE,
             URIRef(CONDITION_ROLES_SPLIT.targets[0]),
-            URIRef("http://example.org/hypothesis/migration#carton"),
+            ROLES.carton,
         ) in migrated
 
     def test_roles_a_class_does_not_tell_apart_are_left_listed(self):
-        graph = condition_naming(
+        graph = listing_roles(
+            CONDITION_ON_ROLE,
             core.PhaseConditionType.term.iri,
             ("carton", pouring.SourceContainer.term.iri),
             ("bowl", pouring.TargetReceptacle.term.iri),
         )
         assert not Migration(
             name="split", role_list_splits=(CONDITION_ROLES_SPLIT,)
+        ).touches(graph)
+
+
+class TestParameterRoleListSplit:
+    def test_an_interaction_is_about_one_role_and_involves_the_other(self):
+        migrated = Migration(
+            name="split", role_list_splits=(PARAMETER_ROLES_SPLIT,)
+        ).graph(
+            listing_roles(
+                PARAMETER_ON_ROLE,
+                prehension.GripForceSetpoint.term.iri,
+                ("gripper", prehension.GraspingEffector.term.iri),
+                ("carton", pouring.SourceContainer.term.iri),
+            )
+        )
+        about, relative, involves = PARAMETER_ROLES_SPLIT.targets
+        assert set(migrated.predicate_objects(STRUCTURE)) - {
+            (RDF.type, URIRef(prehension.GripForceSetpoint.term.iri))
+        } == {(URIRef(about), ROLES.carton), (URIRef(involves), ROLES.gripper)}
+
+    def test_a_geometric_quantity_is_measured_from_the_other_role(self):
+        migrated = Migration(
+            name="split", role_list_splits=(PARAMETER_ROLES_SPLIT,)
+        ).graph(
+            listing_roles(
+                PARAMETER_ON_ROLE,
+                pouring.LipAlignmentSetpoint.term.iri,
+                ("bowl", pouring.TargetReceptacle.term.iri),
+                ("lip", pouring.PouringLip.term.iri),
+            )
+        )
+        about, relative, involves = PARAMETER_ROLES_SPLIT.targets
+        assert set(migrated.predicate_objects(STRUCTURE)) - {
+            (RDF.type, URIRef(pouring.LipAlignmentSetpoint.term.iri))
+        } == {(URIRef(about), ROLES.lip), (URIRef(relative), ROLES.bowl)}
+
+    def test_a_role_no_slot_of_the_class_takes_is_left_listed(self):
+        graph = listing_roles(
+            PARAMETER_ON_ROLE,
+            pouring.TransferredQuantitySetpoint.term.iri,
+            ("bowl", pouring.TargetReceptacle.term.iri),
+        )
+        assert not Migration(
+            name="split", role_list_splits=(PARAMETER_ROLES_SPLIT,)
         ).touches(graph)
 
 

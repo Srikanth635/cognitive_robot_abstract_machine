@@ -8,7 +8,12 @@ from __future__ import annotations
 import numpy as np
 import pytest
 import trimesh
-from llm_reasoner.knowledge.access import core, flow_onset, pouring_frame
+from llm_reasoner.knowledge.access import (
+    action_core,
+    core,
+    flow_onset,
+    pouring_frame,
+)
 
 from experiments.flow_onset_measurement.exceptions import NoSimulatedTilt
 from experiments.flow_onset_measurement.runs import (
@@ -75,7 +80,10 @@ class TestSimulatedFlowOnset:
         ).measurement()
         assert measurement.has_measured_range.lower_bound == 71.0
         assert measurement.has_measured_range.upper_bound == 73.5
-        assert measurement.has_measured_range.has_unit is core.MeasurementUnit.DEGREE
+        assert (
+            measurement.has_measured_range.has_unit
+            is action_core.MeasurementUnit.DEGREE
+        )
 
     def test_the_fill_is_the_one_the_particles_settled_to(self):
         measurement = simulated(

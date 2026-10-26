@@ -9,8 +9,8 @@
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> a owl:Ontology ;
-    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics/0.4.0> ;
-    owl:versionInfo "0.4.0" ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics/0.5.0> ;
+    owl:versionInfo "0.5.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> ;
     rdfs:label "Predictive manipulation: object dynamics"@en ;
     rdfs:comment """Represented object and limb dynamics: efference copies, dynamics models, prediction sources, sensorimotor memory and transfer between perturbation contexts."""@en .
@@ -104,7 +104,8 @@
     core:representsClaim core:FJ-031 .
 
 :LoadForceEstimate a owl:Class ;
-    rdfs:subClassOf core:DynamicsEstimate , core:ForceParameter ;
+    rdfs:subClassOf core:DynamicsEstimate , core:ForceParameter ,
+        [ a owl:Restriction ; owl:onProperty ac:hasQuantityKind ; owl:hasValue ac:Magnitude ] ;
     rdfs:label "load force estimate"@en ;
     rdfs:comment "An estimate of the force arising from object or limb dynamics."@en ;
     core:evidenceStatus core:EmpiricalFinding ;

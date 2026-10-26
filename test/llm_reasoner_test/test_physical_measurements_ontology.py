@@ -36,7 +36,10 @@ from llm_reasoner.knowledge.ontologies import (
     PhysicalMeasurementFile,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
+from llm_reasoner.knowledge.ontologies.action_perspectives import (
+    action_core,
+    pouring_frame,
+)
 from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
@@ -77,7 +80,9 @@ def measurement() -> flow_onset.FlowOnsetTiltMeasurement:
         has_material_regime=pouring_frame.MaterialRegime.LIQUID,
         gravity_azimuth=90.0,
         has_measured_range=core.MagnitudeRange(
-            lower_bound=48.0, upper_bound=48.0, has_unit=core.MeasurementUnit.DEGREE
+            lower_bound=48.0,
+            upper_bound=48.0,
+            has_unit=action_core.MeasurementUnit.DEGREE,
         ),
         follows_setup=flow_onset.GeometricDerivationSetup(voxel_pitch=0.001),
     )
@@ -209,7 +214,8 @@ class TestRules:
 
     def test_a_tilt_in_a_length_unit_breaks_a_restriction(self, measurement):
         measurement.has_measured_range = replace(
-            measurement.has_measured_range, has_unit=core.MeasurementUnit.MILLIMETRE
+            measurement.has_measured_range,
+            has_unit=action_core.MeasurementUnit.MILLIMETRE,
         )
         assert any(
             isinstance(violation, RestrictionViolation)

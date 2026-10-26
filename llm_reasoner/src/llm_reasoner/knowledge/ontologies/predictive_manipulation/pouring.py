@@ -42,7 +42,27 @@ class AlignmentErrorEstimate(core.AngleParameter, core.ObjectStateEstimate):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringLip"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Orientation",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#relativeToSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -86,7 +106,27 @@ class CenterOfMassShiftEstimate(core.DynamicsEstimate, core.LengthParameter):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Distance",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -105,7 +145,20 @@ class CohesiveFlowDynamicsEstimate(core.CategoricalParameter, core.DynamicsEstim
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialProperty",
+            ),
+        ),
         definition=None,
     )
     """
@@ -382,7 +435,20 @@ class DynamicViscosityEstimate(
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialProperty",
+            ),
+        ),
         definition=None,
     )
     """
@@ -517,7 +583,27 @@ class FlowOnsetThreshold(core.AngleParameter, core.MechanicalThreshold):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Orientation",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -537,6 +623,18 @@ class FlowRateSetpoint(core.TaskSetpoint):
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Rate",
+            ),
             UnionOf(
                 operands=(
                     NamedClass(
@@ -634,7 +732,20 @@ class GranularFlowDynamicsEstimate(core.CategoricalParameter, core.DynamicsEstim
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialProperty",
+            ),
+        ),
         definition=None,
     )
     """
@@ -775,7 +886,27 @@ class LipAlignmentSetpoint(core.AngleParameter, core.MotorSetpoint):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringLip"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Orientation",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#relativeToSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -875,7 +1006,27 @@ class PourPoseSetpoint(core.CategoricalParameter, core.MotorSetpoint):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Selection",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#relativeToSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -979,6 +1130,25 @@ class RemainingSourceQuantityEstimate(core.ObjectStateEstimate):
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Amount",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
             UnionOf(
                 operands=(
                     NamedClass(
@@ -1033,7 +1203,27 @@ class SloshDynamicsEstimate(core.CategoricalParameter, core.DynamicsEstimate):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MaterialProperty",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1268,6 +1458,25 @@ class SpillThreshold(core.MechanicalThreshold):
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Rate",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
+                ),
+            ),
             UnionOf(
                 operands=(
                     NamedClass(
@@ -1399,7 +1608,27 @@ class TargetFillStateEstimate(core.DimensionlessParameter, core.ObjectStateEstim
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Ratio",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1502,7 +1731,20 @@ class TiltAngleSetpoint(core.AngleParameter, core.MotorSetpoint):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Orientation",
+            ),
+        ),
         definition=None,
     )
     """
@@ -1521,7 +1763,20 @@ class TiltRateSetpoint(core.AngularRateParameter, core.MotorSetpoint):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Rate",
+            ),
+        ),
         definition=None,
     )
     """
@@ -1570,7 +1825,27 @@ class TorqueSetpoint(core.MotorSetpoint, core.TorqueParameter):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Magnitude",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspingEffector"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1628,6 +1903,25 @@ class TransferredQuantitySetpoint(core.TaskSetpoint):
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Amount",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot",
+                quantifier=Quantifier.ONLY,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
+                ),
+            ),
             UnionOf(
                 operands=(
                     NamedClass(
@@ -1657,7 +1951,20 @@ class UprightAngleSetpoint(core.AngleParameter, core.MotorSetpoint):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasQuantityKind",
+                quantifier=Quantifier.VALUE,
+                value="http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Orientation",
+            ),
+        ),
         definition=None,
     )
     """

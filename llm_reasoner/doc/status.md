@@ -1044,7 +1044,34 @@ Step 13 of the ontology consolidation, with the decisions P1, R1 and S1 of
 - cram_viz's `hypothesis_knowledge_graph.json` still labels edges `condition_on_role`;
   nothing reads it, only `paths.py` names it.
 
-Step 14 (quantities) is next.
+### Quantities in the action core (2026-10-26)
+
+Step 14 of the ontology consolidation, with the decisions D1, R1 and S1 of
+[`condition_quantity_design.md`](condition_quantity_design.md) (user, 2026-10-26; `Shape`, `Unitless` and the multi-valued member properties approved the same day):
+
+- The action core owns both axes of a quantity: what it is about a slot
+  (`QuantityKind`, now also `Magnitude`, `MaterialProperty`, `Ratio` and `Shape`) and the
+  physical dimension it is measured in (`PhysicalDimension`, `MeasurementUnit`,
+  `measuresDimension` and `hasPhysicalDimension`, moved from the predictive manipulation
+  core; `hasPhysicalDimension` is now a field of every `SlotQuantity`). Each kind names the
+  dimensions it may be measured in (`measuredIn`, read in Python as
+  `QuantityKind.measured_in`, a tuple: the translator now writes a property of partition
+  members that holds several values), and the shape `QuantityMeasuredInItsKind` refuses a
+  quantity measured in another. `Shape` is a fourth new kind, since `ExpectedShape` fits no
+  other. The unit `core:Ratio` is `ac:Unitless`, since the kind
+  `ac:Ratio` takes its name.
+- `ac:quantityInvolvesSlot` names the other slots a quantity acts between, beside the slot
+  it is about and the one it is measured from.
+- `core:Parameter ⊑ ac:SlotQuantity`. Every parameter class fixes its kind
+  (`hasQuantityKind value`), so the kind is entailed; the classes about one participant
+  name it (`aboutSlot some`), and those measured from or acting between two name the other
+  (`relativeToSlot only`, `quantityInvolvesSlot only`). `core:SafetyMargin` and
+  `dyn:LoadForceEstimate` name no slot. `core:parameterOnRole` is gone.
+- Table `0015-slot-quantities` renames the dimensions and units, moves action-core 0.16.0,
+  core 0.15.0, object-dynamics 0.5.0, prehension 0.11.0, pouring 0.12.0 and flow-onset
+  0.3.0, and splits each parameter's roles by the slots its class names. The cram_viz
+  sample's safety margin, which no class tells apart, was split by hand; the shipped
+  measurement records use the moved units.
 
 ## 2a. Moved onto the upstream main (2026-10-21)
 

@@ -1,0 +1,194 @@
+{
+  "renames": [
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhysicalDimension",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#PhysicalDimension"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MeasurementUnit",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MeasurementUnit"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#measuresDimension",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#measuresDimension"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPhysicalDimension",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#hasPhysicalDimension"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Mass",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Mass"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MassFlowRate",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MassFlowRate"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Force",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Force"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceRate",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#ForceRate"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Torque",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Torque"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Length",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Length"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Angle",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Angle"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AngularRate",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#AngularRate"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Volume",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Volume"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#VolumetricFlowRate",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#VolumetricFlowRate"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#DynamicViscosity",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#DynamicViscosity"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Frequency",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Frequency"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Time",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Time"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Dimensionless",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Dimensionless"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Kilogram",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Kilogram"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Gram",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Gram"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#KilogramPerSecond",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#KilogramPerSecond"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Newton",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Newton"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#NewtonPerSecond",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#NewtonPerSecond"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#NewtonMetre",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#NewtonMetre"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Metre",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Metre"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Centimetre",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Centimetre"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Millimetre",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Millimetre"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Degree",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Degree"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#DegreePerSecond",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#DegreePerSecond"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Litre",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Litre"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Millilitre",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Millilitre"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MillilitrePerSecond",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#MillilitrePerSecond"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Centipoise",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Centipoise"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Hertz",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Hertz"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Second",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Second"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Millisecond",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Millisecond"
+    },
+    {
+      "old": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Ratio",
+      "new": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#Unitless"
+    }
+  ],
+  "module_versions": [
+    {
+      "module": "action-core.ttl",
+      "old": "0.15.0",
+      "new": "0.16.0"
+    },
+    {
+      "module": "core.ttl",
+      "old": "0.14.0",
+      "new": "0.15.0"
+    },
+    {
+      "module": "object-dynamics.ttl",
+      "old": "0.4.0",
+      "new": "0.5.0"
+    },
+    {
+      "module": "prehension.ttl",
+      "old": "0.10.0",
+      "new": "0.11.0"
+    },
+    {
+      "module": "pouring.ttl",
+      "old": "0.11.0",
+      "new": "0.12.0"
+    },
+    {
+      "module": "flow-onset.ttl",
+      "old": "0.2.0",
+      "new": "0.3.0"
+    }
+  ],
+  "role_list_splits": [
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#parameterOnRole",
+      "targets": [
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aboutSlot",
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#relativeToSlot",
+        "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#quantityInvolvesSlot"
+      ]
+    }
+  ]
+}
