@@ -717,6 +717,18 @@ class Migration:
         )
         return migrated
 
+    def still_applies_to(self, versions: Mapping[str, str]) -> bool:
+        """
+        :param versions: The module versions a record names.
+        :return: Whether the record has not been migrated through the migration: it
+            names a version the migration moves on; a module the migration adds is not
+            counted.
+        """
+        return any(
+            change.old and versions.get(change.module) == change.old
+            for change in self.module_versions
+        )
+
     def versions_of(self, versions: Mapping[str, str]) -> dict[str, str]:
         """
         :return: The module versions a record names, those this migration moved moved
@@ -828,9 +840,9 @@ class StoreMigration:
     def run(self) -> MigrationReport:
         """
         Migrate every record through the migrations not yet applied, in order, and
-        check each record once all of them are applied, together with the migrated
-        fragments of the records it builds on; a record building on a stale record is
-        stale too.
+        through those applied that it missed by being left stale, and check each record
+        once all of them are applied, together with the migrated fragments of the
+        records it builds on; a record building on a stale record is stale too.
 
         :return: Which records were migrated and which were left stale.
         """
@@ -841,7 +853,7 @@ class StoreMigration:
         report = MigrationReport()
         read: dict[str, dict[str, DescriptionEntity]] = {}
         for location in self.records_after_their_bases() if pending else []:
-            self.migrate_record(pending, location, report, read)
+            self.migrate_record(applied, location, report, read)
         applied.extend(migration.name for migration in pending)
         (self.directory / MigrationFile.APPLIED).write_text(
             json.dumps(applied, indent=2)
@@ -870,18 +882,51 @@ class StoreMigration:
         }
         return [locations[name] for name in TopologicalSorter(bases).static_order()]
 
+    def migrations_for(
+        self, versions: Mapping[str, str], applied: Sequence[str]
+    ) -> list[Migration] | None:
+        """
+        :param versions: The module versions a record names.
+        :param applied: The names of the migrations the store has been migrated through.
+        :return: The migrations the record takes, in order: the applied ones it missed by
+            being left stale, then those not yet applied; ``None`` when the record is
+            behind the versions the applied migrations reached even after those it missed.
+        """
+        missed: list[Migration] = []
+        reached: dict[str, str] = {}
+        caught_up = dict(versions)
+        for migration in self.migrations:
+            if migration.name not in applied:
+                continue
+            reached.update(
+                {change.module: change.new for change in migration.module_versions}
+            )
+            if migration.still_applies_to(caught_up):
+                missed.append(migration)
+                caught_up = migration.versions_of(caught_up)
+        if any(
+            module in reached and version != reached[module]
+            for module, version in caught_up.items()
+        ):
+            return None
+        return missed + [
+            migration for migration in self.migrations if migration.name not in applied
+        ]
+
     def migrate_record(
         self,
-        migrations: Sequence[Migration],
+        applied: Sequence[str],
         location: Path,
         report: MigrationReport,
         read: dict[str, dict[str, DescriptionEntity]],
     ) -> None:
         """
-        Migrate one record through migrations, writing it only when the migrated
-        hypothesis still meets its ontology, and its Turtle only when a migration
-        changes it.
+        Migrate one record through the migrations it takes (:meth:`migrations_for`),
+        writing it only when the migrated hypothesis still meets its ontology, and its
+        Turtle only when a migration changes it; a record no migrations bring to the
+        store's versions is stale.
 
+        :param applied: The names of the migrations the store has been migrated through.
         :param read: The migrated fragments of every record migrated so far, by the IRI
             they are stored under, by record; the record's own are added.
         """
@@ -891,6 +936,10 @@ class StoreMigration:
         record = json.loads(record_file.read_text())
         bases = record.get(RecordField.BUILDS_ON, [])
         if any(base in report.stale for base in bases):
+            report.stale.append(location.name)
+            return
+        migrations = self.migrations_for(record[RecordField.MODULE_VERSIONS], applied)
+        if migrations is None:
             report.stale.append(location.name)
             return
         changed = False

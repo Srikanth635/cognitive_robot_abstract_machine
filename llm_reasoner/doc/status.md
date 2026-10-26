@@ -16,7 +16,7 @@ Last updated: 2026-10-26; code on the branch `feature/physics_backed_knowledge`,
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
 | Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model, which reads the hypothesis through three knowledge tools and cites its fragments as grounds (R1–R7 and I1–I5, verified live). Two vocabulary families: the Flanagan predictive-control modules and the action perspectives (action core and action frame, phases 0–4 of `knowledge_perspectives.md`, offered opt-in). A pour's predicted end and the flow-onset tilt are checked on the resolver side (`pour_prediction.md`) |
-| Offline tests | `python -m pytest test/llm_reasoner_test -m "not slow"`: 1226 passed, 41 deselected as slow (2026-10-26) |
+| Offline tests | `python -m pytest test/llm_reasoner_test -m "not slow"`: 1229 passed, 41 deselected as slow (2026-10-26) |
 
 ## 2. Completed
 
@@ -1007,6 +1007,16 @@ record's slots and dimensions looked missing, and it was reported stale. Migrati
 0013 migrated the five records of 2026-10-21 (the liquid pouring frame and phase structure,
 and the frame, schema and failure stereotypes); the four phase structures of 2026-10-07/08,
 generated under the core 0.4 modules, are stale.
+
+### Records an earlier migration left stale (2026-10-26)
+
+`StoreMigration` gives each record the migrations it takes (`migrations_for`): the ones the
+store has not been migrated through, after those it has whose module versions the record
+still names (`Migration.still_applies_to`), which a record left stale by an earlier run
+missed. A record those leave behind the versions the applied migrations reached, such as
+one generated under modules older than the first table, is stale without being read.
+Before, such a record took only the pending tables and could not be read, which stopped
+the run.
 
 ### Conditions in the action core (2026-10-26)
 
