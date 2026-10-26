@@ -11,13 +11,22 @@ import shutil
 from pathlib import Path
 
 import pytest
-from rdflib import Graph, Literal, URIRef
+from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, Literal, URIRef
 from rdflib.compare import isomorphic
 
-from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.ontologies import (
+    CRAM_AICOR_NAMESPACE,
+    HYPOTHESIS_CONCEPT_NAMESPACE,
+    PredictiveManipulationOntologyFile,
+)
+from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference, PropertyTerm
+from llm_reasoner.knowledge.representation.rdf import GraphReader
 from llm_reasoner.knowledge.storage.migration import (
+    ConceptValueAsInstance,
     IriRename,
+    LiteralDatatype,
     Migration,
     ModuleVersionChange,
     RecordedFileMigration,
@@ -92,6 +101,52 @@ def sample_record(directory: Path) -> HypothesisRecord:
     return HypothesisRecord.from_json(
         json.loads((directory / SAMPLE_RECORD / StoredFile.RECORD).read_text())
     )
+
+
+STRUCTURE = URIRef("http://example.org/hypothesis/migration#structure")
+"""
+The fragment the concept and literal tests write.
+"""
+
+
+def decomposed_task() -> URIRef:
+    """
+    :return: The property naming the task a structure decomposes.
+    """
+    return URIRef(
+        PropertyTerm.of_field(core.ActionPhaseStructure, "decomposes_task").iri
+    )
+
+
+def structure_decomposing(task: URIRef) -> Graph:
+    """
+    :return: A structure decomposing a task written as an individual, as records were
+        written before concepts became instances of their classes.
+    """
+    graph = Graph()
+    graph.add((STRUCTURE, RDF.type, OWL.NamedIndividual))
+    graph.add((STRUCTURE, RDF.type, URIRef(core.ActionPhaseStructure.term.iri)))
+    graph.add((STRUCTURE, decomposed_task(), task))
+    return graph
+
+
+def concepts_as_individuals(graph: Graph) -> Graph:
+    """
+    :return: The graph with every concept written as the individual its class names,
+        as records were written before concepts became instances of their classes.
+    """
+    individuals = Graph()
+    for subject, predicate, value in graph:
+        if isinstance(subject, BNode) or (predicate == RDF.type and value == OWL.Class):
+            continue
+        if predicate == RDFS.subClassOf and str(subject).startswith(
+            HYPOTHESIS_CONCEPT_NAMESPACE
+        ):
+            continue
+        if isinstance(value, BNode):
+            (value,) = graph.objects(value, RDF.type)
+        individuals.add((subject, predicate, value))
+    return individuals
 
 
 def pouring_version_moved(old: str) -> ModuleVersionChange:
@@ -171,6 +226,86 @@ class TestRenamingTerms:
         assert migration.record(record) == record
 
 
+# %% concepts as instances of their classes
+
+
+class TestConceptValues:
+    def test_a_concept_written_as_an_individual_becomes_an_instance_of_its_class(self):
+        pouring_task = URIRef(CRAM_AICOR_NAMESPACE + "Pouring")
+        migration = Migration(
+            name="concepts",
+            concept_values=(ConceptValueAsInstance(property=str(decomposed_task())),),
+        )
+        (structure,) = (
+            GraphReader()
+            .read(migration.graph(structure_decomposing(pouring_task)))
+            .fragments
+        )
+        assert structure.decomposes_task == ConceptReference(iri=str(pouring_task))
+
+    def test_a_concept_of_the_hypothesis_becomes_a_class_under_the_range(self):
+        decanting = URIRef(HYPOTHESIS_CONCEPT_NAMESPACE + "Decanting")
+        task_range = URIRef(CRAM_AICOR_NAMESPACE + "ManipulationActionCategory")
+        migrated = Migration(
+            name="concepts",
+            concept_values=(
+                ConceptValueAsInstance(
+                    property=str(decomposed_task()), range=str(task_range)
+                ),
+            ),
+        ).graph(structure_decomposing(decanting))
+        assert set(migrated.predicate_objects(decanting)) == {
+            (RDF.type, OWL.Class),
+            (RDFS.subClassOf, task_range),
+        }
+
+    def test_a_range_given_later_is_added_to_a_migrated_concept(self):
+        decanting = URIRef(HYPOTHESIS_CONCEPT_NAMESPACE + "Decanting")
+        task_range = URIRef(CRAM_AICOR_NAMESPACE + "ManipulationActionCategory")
+        without_range = Migration(
+            name="concepts",
+            concept_values=(ConceptValueAsInstance(property=str(decomposed_task())),),
+        )
+        with_range = Migration(
+            name="ranges",
+            concept_values=(
+                ConceptValueAsInstance(
+                    property=str(decomposed_task()), range=str(task_range)
+                ),
+            ),
+        )
+        migrated = with_range.graph(
+            without_range.graph(structure_decomposing(decanting))
+        )
+        assert (decanting, RDFS.subClassOf, task_range) in migrated
+
+    def test_migrating_concepts_twice_is_migrating_them_once(self):
+        migration = Migration(
+            name="concepts",
+            concept_values=(ConceptValueAsInstance(property=str(decomposed_task())),),
+        )
+        once = migration.graph(
+            structure_decomposing(URIRef(CRAM_AICOR_NAMESPACE + "Pouring"))
+        )
+        assert isomorphic(migration.graph(once), once)
+        assert not migration.touches(once)
+
+    def test_a_literal_takes_the_datatype_its_property_now_ranges_over(self):
+        term = PropertyTerm.of_field(flow_onset.PhysicsSimulationSetup, "run_count")
+        graph = Graph()
+        graph.add((STRUCTURE, URIRef(term.iri), Literal(3.0)))
+        migration = Migration(
+            name="datatypes",
+            literal_datatypes=(
+                LiteralDatatype(property=term.iri, datatype=str(XSD.positiveInteger)),
+            ),
+        )
+        assert migration.touches(graph)
+        assert set(migration.graph(graph)) == {
+            (STRUCTURE, URIRef(term.iri), Literal(3, datatype=XSD.positiveInteger))
+        }
+
+
 # %% migrating a store
 
 
@@ -212,6 +347,30 @@ class TestStoreMigration:
         report = StoreMigration(directory=store, migrations=[migration]).run()
         assert report.migrated == []
         assert sample_record(store).module_versions["pouring.ttl"] == old + ".1"
+
+    def test_a_record_is_read_back_only_once_every_pending_migration_applied(
+        self, store
+    ):
+        hypothesis_file = store / SAMPLE_RECORD / StoredFile.HYPOTHESIS
+        concepts_as_individuals(
+            Graph().parse(hypothesis_file, format="turtle")
+        ).serialize(hypothesis_file, format="turtle")
+        old = sample_record(store).module_versions["pouring.ttl"]
+        report = StoreMigration(
+            directory=store,
+            migrations=[
+                Migration(name="move", module_versions=(pouring_version_moved(old),)),
+                Migration(
+                    name="concepts",
+                    concept_values=tuple(
+                        rule
+                        for migration in shipped_migrations()
+                        for rule in migration.concept_values
+                    ),
+                ),
+            ],
+        ).run()
+        assert report.migrated == [SAMPLE_RECORD]
 
     def test_a_backup_holds_the_store_as_it_was(self, store):
         old = sample_record(store).module_versions["pouring.ttl"]

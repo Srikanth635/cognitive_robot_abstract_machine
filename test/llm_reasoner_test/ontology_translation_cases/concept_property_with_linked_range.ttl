@@ -1,0 +1,7 @@
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+# The task a structure decomposes, whose values are instances of a class of CRAM-AICOR.
+
+core:decomposesTask rdfs:range aicor:ManipulationActionCategory .

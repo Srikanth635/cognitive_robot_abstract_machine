@@ -1,0 +1,70 @@
+{
+  "module_versions": [
+    {
+      "module": "core.ttl",
+      "old": "0.7.0",
+      "new": "0.7.1"
+    }
+  ],
+  "concept_values": [
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#aimsAtState"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#conditionHasState"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#framesAction"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-core#resultsInState"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionAffordsAction"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#conditionAffordsState"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/action-frame#normallyFilledBy"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#namesSpatialRelation"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/action-perspectives/image-schemas#namesState"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#decomposesTask"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCategory"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasJustification"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#realizesActionCategory"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#triggeredBy"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#graspSiteSuitedFor"
+    }
+  ],
+  "literal_datatypes": [
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#onsetParticleCount",
+      "datatype": "http://www.w3.org/2001/XMLSchema#positiveInteger"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#runCount",
+      "datatype": "http://www.w3.org/2001/XMLSchema#positiveInteger"
+    },
+    {
+      "property": "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#minimumFillerCount",
+      "datatype": "http://www.w3.org/2001/XMLSchema#positiveInteger"
+    }
+  ]
+}

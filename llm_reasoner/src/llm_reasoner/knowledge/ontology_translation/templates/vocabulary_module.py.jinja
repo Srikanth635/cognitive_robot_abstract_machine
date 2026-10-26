@@ -113,6 +113,12 @@ class {{ cls.python_name.name }}({{ bases(cls) }}):
 {% if declared.range_iri %}
             range={{ declared.range_iri | python_string }},
 {% endif %}
+{% if declared.linked_range_iri %}
+            linked_range={{ declared.linked_range_iri | python_string }},
+{% endif %}
+{% if declared.datatype_iri %}
+            datatype={{ declared.datatype_iri | python_string }},
+{% endif %}
         ).as_dict(),
     )
     """

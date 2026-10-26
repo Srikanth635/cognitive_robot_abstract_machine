@@ -832,6 +832,41 @@ partitions now; their `owl:oneOf` is replaced by `ac:isOpenValuePartition true`.
 - The eight changed modules moved a minor version (`0005-open-lists`); the cram_viz sample
   record was migrated through it.
 
+### Concept values as instances (2026-10-26)
+
+Step 6 of the ontology consolidation (code; the ontology's restrictions and ranges follow in
+step 7):
+
+- A concept is written as an anonymous instance of its class (`_:x a aicor:Pouring`)
+  rather than the class's IRI as an individual, and read back from one. A class of the
+  hypothesis's own (`hypothesis:`) is declared `owl:Class`, under its property's range
+  once the property states one (`PropertyTerm.linked_range`). Literals take their
+  property's range datatype (`PropertyTerm.datatype`), so `runCount` is an
+  `xsd:positiveInteger` instead of an `xsd:double`.
+- `LinkedClassHierarchy` is the told `rdfs:subClassOf`/`owl:equivalentClass` closure
+  over the pinned files, the alignment and our modules. The closed-world checks place a
+  concept by it: a restriction `some <linked class>` accepts a concept of a subclass,
+  `RangesHold` checks a concept against its property's range, and such a restriction on a
+  concept field, naming a class of CRAM-AICOR or DUL, entails the concept where none of
+  its class or a subclass is stated (`some owl:Thing` entails nothing).
+- The decoder always checks a concept in the namespaces of CRAM-AICOR and DUL against
+  the classes the pinned files declare; a property or individual is refused.
+- The shape `TaskIsNotItsOwnPhase` compares the classes of the task and of the phase's
+  category (shapes/core 0.3.1).
+- `StoreMigration` applies every pending table to a record before reading it back. Table
+  `0006-concept-values-as-instances` rewrites the 15 concept properties and the three
+  integer literals; the cram_viz sample, the six measurement records and
+  `pouring_prototype.ttl` are migrated (the fixture by hand, to keep its comments).
+- `core:ActionPhase owl:disjointWith aicor:Prediction` (core 0.7.1): dropping
+  `ActionPhase ⊑ dul:Task` in step 3 had left an individual typed both a phase and a
+  sensory event prediction consistent (user, 2026-10-26).
+- Classifying every individual of a merge became far slower once concepts are instances
+  of CRAM-AICOR's classes (the pouring prototype: 708 s before, over 25 min after;
+  checking consistency stays at about 2 s). `test_pouring_prototype_is_inferred_to_be`
+  therefore proves the inferred types by refutation with `HermitCheck` (user,
+  2026-10-26). The told hierarchy holds every superclass HermiT infers for the concepts
+  in use (`TestHierarchyAgainstReasoner`).
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

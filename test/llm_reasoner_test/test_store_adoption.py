@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import shutil
 
+from rdflib.compare import isomorphic
+
 from llm_reasoner.knowledge.storage.store import INCOMING_PREFIX, HypothesisStore
 
 from .test_generation import GenerationCase
@@ -43,7 +45,7 @@ class TestAdoption:
         source = store_holding_one(tmp_path / "source")
         target = HypothesisStore(directory=tmp_path / "target")
         (record_id,) = target.adopt_new_records(source)
-        assert set(target.get(record_id).graph) == set(source.get(record_id).graph)
+        assert isomorphic(target.get(record_id).graph, source.get(record_id).graph)
 
     def test_an_adopted_hypothesis_is_served_without_asking_a_model(self, tmp_path):
         source = store_holding_one(tmp_path / "source")

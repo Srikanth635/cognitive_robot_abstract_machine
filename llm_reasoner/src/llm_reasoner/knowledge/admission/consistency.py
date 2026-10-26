@@ -12,10 +12,11 @@ parts of the hypothesis.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections import deque
 from dataclasses import dataclass
 from enum import StrEnum
 
-from rdflib import Graph
+from rdflib import OWL, RDF, Graph
 from rdflib.term import Node
 from typing_extensions import Iterable, Sequence
 
@@ -87,12 +88,36 @@ class ContradictionLocaliser:
         graph: Graph,
     ) -> dict[Node, list[tuple[Node, Node, Node]]]:
         """
-        :return: The graph's statements, grouped by the individual they are about.
+        :return: The graph's statements, grouped by the fragment they are about: a
+            statement about a concept's anonymous instance, or about a class of the
+            hypothesis's own, goes with every fragment citing it.
         """
+        fragments = set(graph.subjects(RDF.type, OWL.NamedIndividual))
         grouped: dict[Node, list[tuple[Node, Node, Node]]] = {}
         for statement in graph:
-            grouped.setdefault(statement[0], []).append(statement)
+            for fragment in ContradictionLocaliser.citing(
+                graph, statement[0], fragments
+            ):
+                grouped.setdefault(fragment, []).append(statement)
         return grouped
+
+    @staticmethod
+    def citing(graph: Graph, node: Node, fragments: set[Node]) -> set[Node]:
+        """
+        :return: The fragments citing a node, directly or through nodes that are no
+            fragments; the node itself when it is a fragment or nothing cites it.
+        """
+        if node in fragments:
+            return {node}
+        citing, reached, pending = set(), {node}, deque([node])
+        while pending:
+            for subject in graph.subjects(None, pending.popleft()):
+                if subject in fragments:
+                    citing.add(subject)
+                elif subject not in reached:
+                    reached.add(subject)
+                    pending.append(subject)
+        return citing or {node}
 
     def consistent(
         self,

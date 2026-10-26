@@ -249,6 +249,18 @@ class PropertyTerm(FieldMetadata):
     generated in a later module than the field.
     """
 
+    linked_range: str = ""
+    """
+    The IRI of the class of a linked ontology the property's values are instances of,
+    when they are concepts.
+    """
+
+    datatype: str = ""
+    """
+    The IRI of the XML Schema datatype of the property's values, when they are
+    literals.
+    """
+
 
 class OpenValuePartition(StrEnum):
     """
@@ -267,12 +279,13 @@ class OpenValuePartition(StrEnum):
 @dataclass(frozen=True)
 class ConceptReference:
     """
-    A term of an ontology the vocabulary does not compile, such as ``aicor:Pouring``.
+    An instance of a class the vocabulary does not compile, such as an instance of
+    ``aicor:Pouring``, named by its class.
     """
 
     iri: str
     """
-    The IRI of the referenced term.
+    The IRI of the class.
     """
 
 

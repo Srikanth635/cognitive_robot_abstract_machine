@@ -786,6 +786,7 @@ class OntologyReader:
             value_type = self.visible_type(value_type, host)
         if kind == ValueKind.ENUMERATION and not self.is_visible(value_type, host):
             raise FieldTypeOutOfReach(str(prop))
+        stated_range = self.graph.value(prop, RDFS.range)
         return FieldDeclaration(
             name=python_attribute_name(str(prop)),
             property_iri=str(prop),
@@ -796,6 +797,12 @@ class OntologyReader:
             value_type=value_type,
             literal_type=literal_type,
             range_iri=str(range_class) if range_class is not None else "",
+            linked_range_iri=(
+                str(stated_range)
+                if kind == ValueKind.CONCEPT_REFERENCE and stated_range is not None
+                else ""
+            ),
+            datatype_iri=str(stated_range) if kind == ValueKind.LITERAL else "",
         )
 
     def descriptor_declaration(self, prop: URIRef) -> DescriptorDeclaration:

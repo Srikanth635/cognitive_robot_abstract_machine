@@ -67,6 +67,7 @@ class ContainerModel(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#meshDigest",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#string",
         ).as_dict(),
     )
     """
@@ -78,6 +79,7 @@ class ContainerModel(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#meshFileName",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#string",
         ).as_dict(),
     )
     """
@@ -174,6 +176,7 @@ class FlowOnsetTiltMeasurement(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#atFillFraction",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -197,6 +200,7 @@ class FlowOnsetTiltMeasurement(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#gravityAzimuth",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -279,6 +283,7 @@ class GeometricDerivationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#voxelPitch",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -384,6 +389,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#fluidCohesion",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -395,6 +401,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#fluidSurfaceTension",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -406,6 +413,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#fluidViscosity",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -429,6 +437,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#onsetParticleCount",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#positiveInteger",
         ).as_dict(),
     )
     """
@@ -440,6 +449,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#particleSpacing",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -451,6 +461,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#runCount",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#positiveInteger",
         ).as_dict(),
     )
     """
@@ -462,6 +473,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#simulationEngine",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#string",
         ).as_dict(),
     )
     """
@@ -473,6 +485,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#simulationEngineVersion",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#string",
         ).as_dict(),
     )
     """
@@ -484,6 +497,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#tiltRate",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -495,6 +509,7 @@ class PhysicsSimulationSetup(MeasurementSetup):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/physical-measurements/flow-onset#timeStep",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """

@@ -1160,6 +1160,7 @@ class ActionPhase(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#isOptional",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#boolean",
         ).as_dict(),
     )
     """
@@ -1674,6 +1675,7 @@ class ManipulationRole(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#minimumFillerCount",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#positiveInteger",
         ).as_dict(),
     )
     """
@@ -2147,6 +2149,7 @@ class ConditionRequirement(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#isWorldAssumption",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#boolean",
         ).as_dict(),
     )
     """
@@ -3708,6 +3711,7 @@ class MagnitudeRange(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#lowerBound",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -3719,6 +3723,7 @@ class MagnitudeRange(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#upperBound",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -5428,6 +5433,7 @@ class TemporalWindow(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#earliestOffset",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
@@ -5450,6 +5456,7 @@ class TemporalWindow(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#latestOffset",
             functional=True,
+            datatype="http://www.w3.org/2001/XMLSchema#double",
         ).as_dict(),
     )
     """
