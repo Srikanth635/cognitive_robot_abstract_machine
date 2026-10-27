@@ -1152,6 +1152,25 @@ execute backend into it as `cramera.resolution` on 2026-10-21/22; that package, 
   change that keeps earlier runs from being read adds a `RunFormat` member. The 21 runs in
   `~/.cram_viz/runs` stay on disk, and nothing reads them by default now.
 
+### OpenAI as a provider (2026-10-27)
+
+The user asked for OpenAI as a selectable provider. `OpenAIClient` now lets the model
+call tools (a written-out loop over the Responses API, `max_tool_turns = 10`, each turn's
+output items resent with its reasoning encrypted, since nothing is stored with the
+service) and reports its usage (`UsageReporting`; the cached and cache-written input
+tokens counted apart from the rest). An answer cut off at its output limit raises
+`ResponseTruncated`, as Anthropic's does. cramera chooses the resolver's model and the
+knowledge model in the environment (`CRAMERA_RESOLVER_MODEL`, `CRAMERA_KNOWLEDGE_MODEL`,
+as `provider:model`; Claude Sonnet 5.5 by default), checks the key of each chosen
+provider, and reaches the vendor clients through `llm_reasoner.clients`, so the OpenAI
+SDK is imported only when it is chosen. The user chose that a model's cost is unknown
+unless its prices are known (only Sonnet 5.5's are) or stated in the environment
+(`CRAMERA_RESOLVER_PRICES`, `CRAMERA_KNOWLEDGE_PRICES`); a resolution's `cost` is then
+`None`, shown as unknown. An OpenAI model keeps the client's own output limit (64,000
+tokens, its reasoning included) instead of the resolver's 8,192. Tests mock the OpenAI
+service; no live OpenAI call has been made, so whether the generation and the resolver
+are admitted with an OpenAI model is unmeasured.
+
 ## 2a. Moved onto the upstream main (2026-10-21)
 
 `origin/main` had moved 1347 commits since the last common commit (2026-09-22). `krrood`,

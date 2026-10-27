@@ -84,7 +84,7 @@
     });
     html += trialsHtml(resolution.trials || []);
     html += '<p class="hint-txt">' + consultedText(resolution) +
-      ' · resolver cost $' + resolution.cost.toFixed(3) +
+      ' · resolver cost ' + costText(resolution.cost) +
       ' · run ' + esc(resolution.run) +
       (viewer ? ' · <a href="' + attributeText(viewer) + '" target="_blank" rel="noopener">' +
         'inspect it in the llm_reasoner viewer</a>' : '') +
@@ -106,6 +106,11 @@
       ' click to copy it into the box anyway, but Resolve will refuse it here';
   }
 
+  // what the resolver's conversations cost: unknown for a model whose prices are not known
+  function costText(cost) {
+    return cost === null ? 'unknown' : '$' + cost.toFixed(3);
+  }
+
   // one run of the list: which scene and designator, and the query it was made from; a
   // stale run, kept in a format this version cannot read, only that it is one
   function runText(run) {
@@ -117,7 +122,7 @@
     if (run.stale) {
       return 'run ' + run.name + ' · ' + run.at + ' · kept in an older format, which this version cannot show';
     }
-    return 'run ' + run.name + ' · ' + run.at + ' · resolver cost $' + run.cost.toFixed(3) +
+    return 'run ' + run.name + ' · ' + run.at + ' · resolver cost ' + costText(run.cost) +
       ' · ' + run.trials + ' pour' + (run.trials === 1 ? '' : 's') + ' tried — click to show it';
   }
 

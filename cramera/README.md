@@ -93,7 +93,25 @@ package. New recordings are written under `CRAMERA_DATA/scenes`.
 `cramera.resolution` resolves underspecified action designators with `llm_reasoner`, shows the
 knowledge generated for them and performs what was resolved under the live viewer. It needs
 ROS's `rclpy` (coraplex builds on it); without it the viewer is served as before and the
-routes below say so. Resolving needs an Anthropic API key in the environment.
+routes below say so.
+
+Resolving and generating knowledge ask Claude Sonnet 5.5 unless the environment, or the
+`.env` file found from the working directory upwards, chooses another model:
+`CRAMERA_RESOLVER_MODEL` and `CRAMERA_KNOWLEDGE_MODEL` each name one as `provider:model`,
+the provider `anthropic` or `openai`, for example:
+
+```bash
+CRAMERA_RESOLVER_MODEL=openai:gpt-5.6-sol
+CRAMERA_KNOWLEDGE_MODEL=openai:gpt-5.6-sol
+```
+
+Each provider needs its key, `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`. Only Sonnet 5.5's
+prices are known; the cost of what another model is asked is shown as unknown unless
+`CRAMERA_RESOLVER_PRICES` or `CRAMERA_KNOWLEDGE_PRICES` states them, as a JSON object of
+dollars per million tokens:
+`{"input_tokens": …, "output_tokens": …, "cache_creation_input_tokens": …, "cache_read_input_tokens": …}`.
+An OpenAI model keeps its own output limit (`OpenAIClient.max_output_tokens`), since it
+counts the model's reasoning as well.
 
 The panels are in `web/panels/resolution`:
 - *Underspecified Action Designators* shares one frame with the EQL panel, as two tabs

@@ -34,6 +34,7 @@ from cramera.resolution.hypothesis_knowledge.generation import (
     MissingCredentialsError,
     ModelHypothesisSource,
 )
+from cramera.resolution.model_choice import ModelProvider, ModelVariable
 
 INSTRUCTION = "pour milk from the carton into the bowl"
 """
@@ -197,6 +198,39 @@ class TestModelHypothesisSourceCredentials:
             client=ScriptedClient(),
             environment_file=tmp_path / "absent.env",
         ).load_credentials()
+
+
+class TestModelHypothesisSourceModel:
+    def test_the_environment_chooses_the_model_generating_hypotheses(
+        self, monkeypatch, tmp_path
+    ):
+        monkeypatch.setenv(ModelVariable.KNOWLEDGE_MODEL, "openai:gpt-5.4")
+        monkeypatch.setenv(ModelProvider.OPENAI.api_key_variable, "a-key")
+        source = ModelHypothesisSource(store_directory=tmp_path)
+        assert source.client_for_generation().identity == "openai:gpt-5.4"
+
+    def test_the_key_of_the_chosen_provider_is_needed(self, monkeypatch, tmp_path):
+        monkeypatch.setenv(ModelVariable.KNOWLEDGE_MODEL, "openai:gpt-5.4")
+        monkeypatch.setenv(ModelProvider.ANTHROPIC.api_key_variable, "a-key")
+        monkeypatch.delenv(ModelProvider.OPENAI.api_key_variable, raising=False)
+        source = ModelHypothesisSource(
+            store_directory=tmp_path, environment_file=tmp_path / "absent.env"
+        )
+        with pytest.raises(MissingCredentialsError):
+            source.load_credentials()
+
+    def test_the_choice_is_read_from_the_environment_file_too(
+        self, monkeypatch, tmp_path
+    ):
+        monkeypatch.setattr(os, "environ", os.environ.copy())
+        monkeypatch.setenv(ModelProvider.OPENAI.api_key_variable, "a-key")
+        environment_file = tmp_path / ".env"
+        environment_file.write_text(f"{ModelVariable.KNOWLEDGE_MODEL}=openai:gpt-5.4\n")
+        source = ModelHypothesisSource(
+            store_directory=tmp_path, environment_file=environment_file
+        )
+        source.load_credentials()
+        assert source.chosen_model().identity == "openai:gpt-5.4"
 
 
 # %% live generation

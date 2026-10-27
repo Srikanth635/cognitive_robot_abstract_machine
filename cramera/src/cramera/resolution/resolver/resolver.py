@@ -18,7 +18,6 @@ from coraplex.robot_plans.actions.composite.tool_based import PouringAction
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.clients.usage import SONNET_5_5_PRICES, TokenPrices
-from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.knowledge.access import (
     ActionPerspectiveFile,
     Citation,
@@ -42,6 +41,7 @@ from typing_extensions import Any, Callable, Dict, List, Optional, Sequence, Tup
 from cramera.resolution import paths
 from cramera.resolution.events import reporting_run
 from cramera.resolution.hypothesis_knowledge.generation import ModelHypothesisSource
+from cramera.resolution.model_choice import ModelChoice, ModelVariable
 from cramera.resolution.neem import NeemRecording
 from cramera.resolution.query_source import QuerySource
 from cramera.resolution.resolver.designators import (
@@ -195,10 +195,10 @@ class ResolvedDesignator:
     action.
     """
 
-    cost: float
+    cost: Optional[float]
     """
     What the resolver's conversations cost, in dollars; a hypothesis generated for it is
-    not included.
+    not included. ``None`` when the prices of the resolver's model are not known.
     """
 
     run: str
@@ -281,9 +281,16 @@ class DesignatorResolver:
     The world of the scene last resolved in.
     """
 
-    prices: TokenPrices = SONNET_5_5_PRICES
+    prices: Optional[TokenPrices] = SONNET_5_5_PRICES
     """
-    What the model charges, to report a resolution's cost.
+    What the model charges, to report a resolution's cost; ``None`` when that is not
+    known, which leaves the cost unknown.
+    """
+
+    knowledge_prices: Optional[TokenPrices] = SONNET_5_5_PRICES
+    """
+    What the knowledge component's model charges, to report what its generation for a
+    run cost; ``None`` when that is not known.
     """
 
     neem_database: Optional[Path] = None
@@ -334,13 +341,25 @@ class DesignatorResolver:
         :param source: The viewer's knowledge source, with its credentials, model and
             store.
         :param worlds: The scene worlds the viewer shares with its designator menu.
-        :return: A resolver asking the source's model, every run starting from the
-            source's knowledge, the runs kept in the viewer's runs directory, its pours'
-            flow onsets read from the checked-in measurements.
+        :return: A resolver asking the model the environment chooses (see
+            :attr:`~cramera.resolution.model_choice.ModelVariable.RESOLVER_MODEL`),
+            every run starting from the source's knowledge, the runs kept in the
+            viewer's runs directory, its pours' flow onsets read from the checked-in
+            measurements.
+        :raises MissingCredentialsError: When the key of the resolver's or the
+            knowledge model's provider is not available.
         """
         source.load_credentials()
+        model = ModelChoice.from_environment(
+            ModelVariable.RESOLVER_MODEL,
+            ModelVariable.RESOLVER_PRICES,
+            default=source.default_model,
+        )
+        model.require_api_key()
         return cls(
-            client=AnthropicClient(model=source.model, max_tokens=RESOLVER_MAX_TOKENS),
+            client=model.client(answer_token_limit=RESOLVER_MAX_TOKENS),
+            prices=model.prices,
+            knowledge_prices=source.chosen_model().prices,
             baseline=source.knowledge_service(),
             runs=ResolutionRuns(directory=paths.resolution_runs_dir()),
             worlds=worlds,
@@ -431,7 +450,7 @@ class DesignatorResolver:
                     self.baseline.backend.client,
                     sink,
                     Component.KNOWLEDGE,
-                    prices=self.prices,
+                    prices=self.knowledge_prices,
                 ),
                 store=run.knowledge_store,
                 observer=sink,
@@ -636,10 +655,13 @@ class DesignatorResolver:
             return value.name
         return str(value)
 
-    def cost_of(self, backend: LanguageModelBackend) -> float:
+    def cost_of(self, backend: LanguageModelBackend) -> Optional[float]:
         """
-        :return: What the backend's conversations, its situation's included, cost.
+        :return: What the backend's conversations, its situation's included, cost;
+            ``None`` when the model's prices are not known.
         """
+        if self.prices is None:
+            return None
         situation = (
             []
             if backend.situation_backend is None
