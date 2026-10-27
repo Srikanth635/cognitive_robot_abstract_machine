@@ -19,19 +19,15 @@ from semantic_digital_twin.semantic_annotations.semantic_annotations import (
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world import World
 
-from cramera.resolution.model_choice import ModelVariable
-
 
 @pytest.fixture(autouse=True)
 def isolated_cramera_directories(monkeypatch, tmp_path):
     """
-    No scene bundles, an empty data directory and no model chosen, so the viewer reads
-    nothing of the machine it runs on.
+    No scene bundles and an empty data directory, so the viewer reads nothing of the
+    machine it runs on.
     """
     monkeypatch.setenv("CRAMERA_SCENES", str(tmp_path / "scenes"))
     monkeypatch.setenv("CRAMERA_DATA", str(tmp_path / "data"))
-    for variable in ModelVariable:
-        monkeypatch.delenv(variable, raising=False)
 
 
 @pytest.fixture()

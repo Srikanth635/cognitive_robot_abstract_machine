@@ -163,16 +163,6 @@ test('a run says when it was kept, what it cost and how many pours it tried', fu
   );
 });
 
-test('a run of a model whose prices are unknown says its cost is unknown', function () {
-  const run = { name: 'r', at: 'x', cost: null, trials: 1 };
-  assert.ok(view.runTitle(run).includes('resolver cost unknown'));
-});
-
-test('the answer of a model whose prices are unknown says its cost is unknown', function () {
-  const html = view.resolutionHtml(resolution({ cost: null }), null);
-  assert.ok(html.includes('resolver cost unknown'));
-});
-
 test('a single pour is not written in the plural', function () {
   const run = { name: 'r', at: 'x', cost: 0, trials: 1 };
   assert.ok(view.runTitle(run).includes('1 pour tried'));
