@@ -301,20 +301,27 @@ class ResolutionService:
     def summary_of(run: RunDirectory) -> dict[str, Any]:
         """
         :param run: A run kept.
-        :return: What the list of runs shows of it.
+        :return: What the list of runs shows of it; of a stale run, only its name and
+            when it was kept.
         """
-        resolution = run.resolution()
         kept_at = (run.directory / RunFile.RESOLUTION).stat().st_mtime
-        return {
+        listed = {
             PayloadKey.NAME: run.name,
+            PayloadKey.AT: datetime.fromtimestamp(kept_at).isoformat(
+                timespec="seconds"
+            ),
+            PayloadKey.STALE: run.is_stale,
+        }
+        if run.is_stale:
+            return listed
+        resolution = run.resolution()
+        return {
+            **listed,
             PayloadKey.SCENE: run.environment().scene,
             PayloadKey.DESIGNATOR: resolution.designator,
             PayloadKey.QUERY: QuerySource(text=resolution.query).on_one_line,
             PayloadKey.COST: resolution.cost,
             PayloadKey.TRIALS: len(resolution.trials),
-            PayloadKey.AT: datetime.fromtimestamp(kept_at).isoformat(
-                timespec="seconds"
-            ),
         }
 
     def view(self, name: str, requested_scene: str | None) -> dict[str, Any]:

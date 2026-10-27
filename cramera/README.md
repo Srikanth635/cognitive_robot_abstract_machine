@@ -117,7 +117,7 @@ The routes, all under `/api/resolution/`, answer JSON, and an error as
 
 | Route | What it does |
 | --- | --- |
-| `GET runs` | The runs kept, newest first, each with its scene, designator, query, cost and pours tried |
+| `GET runs` | The runs kept, newest first, each with its scene, designator, query, cost and pours tried; a run kept in an older format (each run names its format in `format`) is listed as `stale`, with only its name and when it was kept, and cannot be opened |
 | `GET designators?scene=` | The predefined designators the scene offers, the action designators and parameters to suggest, and the knowledge to choose from |
 | `POST resolve` | Resolves a designator query in a scene |
 | `GET run?name=&scene=` | Shows a kept run as it was made |

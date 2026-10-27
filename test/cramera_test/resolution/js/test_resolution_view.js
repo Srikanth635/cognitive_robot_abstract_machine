@@ -167,3 +167,16 @@ test('a single pour is not written in the plural', function () {
   const run = { name: 'r', at: 'x', cost: 0, trials: 1 };
   assert.ok(view.runTitle(run).includes('1 pour tried'));
 });
+
+test('a stale run is read as the run kept in an older format', function () {
+  const run = { name: 'r', at: '2026-10-21T10:00:00', stale: true };
+  assert.strictEqual(view.runText(run), 'run r · kept in an older format');
+});
+
+test('a stale run says when it was kept and that it cannot be shown', function () {
+  const run = { name: 'r', at: '2026-10-21T10:00:00', stale: true };
+  assert.strictEqual(
+    view.runTitle(run),
+    'run r · 2026-10-21T10:00:00 · kept in an older format, which this version cannot show',
+  );
+});

@@ -106,12 +106,17 @@
       ' click to copy it into the box anyway, but Resolve will refuse it here';
   }
 
-  // one run of the list: which scene and designator, and the query it was made from
+  // one run of the list: which scene and designator, and the query it was made from; a
+  // stale run, kept in a format this version cannot read, only that it is one
   function runText(run) {
+    if (run.stale) return 'run ' + run.name + ' · kept in an older format';
     return run.scene + ' · ' + run.designator + ' · ' + run.query;
   }
 
   function runTitle(run) {
+    if (run.stale) {
+      return 'run ' + run.name + ' · ' + run.at + ' · kept in an older format, which this version cannot show';
+    }
     return 'run ' + run.name + ' · ' + run.at + ' · resolver cost $' + run.cost.toFixed(3) +
       ' · ' + run.trials + ' pour' + (run.trials === 1 ? '' : 's') + ' tried — click to show it';
   }

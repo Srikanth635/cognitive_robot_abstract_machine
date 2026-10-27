@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import shutil
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 from pathlib import Path
 from uuid import uuid4
 
@@ -19,9 +19,12 @@ from krrood.adapters.json_serializer import (
     from_json,
     to_json,
 )
+from krrood.ormatic.utils import classproperty
 from llm_reasoner.knowledge.access import HypothesisStore
 from llm_reasoner.observation.sinks import JsonLinesSink
 from typing_extensions import Any, Dict, Self
+
+from cramera.resolution.resolver.exceptions import StaleRun
 
 
 class RunFile(StrEnum):
@@ -55,6 +58,35 @@ class RunFile(StrEnum):
     A marker that is written to ask a performance of the run, which waits for it, to
     begin.
     """
+
+    FORMAT = "format"
+    """
+    The format the run is kept in, as the number of its :class:`RunFormat`.
+    """
+
+
+class RunFormat(IntEnum):
+    """
+    The formats runs are kept in, oldest first, each named for what it keeps.
+
+    A run kept in another format, or before runs named theirs, is stale: this version
+    cannot read it.
+
+    .. note:: A change that keeps a run kept earlier from being read adds a member.
+    """
+
+    MEASURED_FLOW_ONSET = 1
+    """
+    Runs of :mod:`cramera.resolution` whose pours tried state the flow onset in degrees,
+    with the method and the measurement it comes from.
+    """
+
+    @classproperty
+    def current(cls) -> RunFormat:
+        """
+        :return: The format runs are kept in now.
+        """
+        return max(cls)
 
 
 class EnvironmentField(StrEnum):
@@ -163,6 +195,16 @@ class RunDirectory:
         """
         (self.directory / RunFile.START_REQUEST).unlink(missing_ok=True)
 
+    @property
+    def is_stale(self) -> bool:
+        """
+        :return: Whether the run is kept in a format other than the current one.
+        """
+        kept_format = self.directory / RunFile.FORMAT
+        return not kept_format.is_file() or kept_format.read_text() != str(
+            RunFormat.current.value
+        )
+
     def environment(self) -> RunEnvironment:
         """
         :return: The environment the run started from.
@@ -174,7 +216,10 @@ class RunDirectory:
     def resolution(self) -> Any:
         """
         :return: What the run resolved.
+        :raises StaleRun: When the run is kept in a format other than the current one.
         """
+        if self.is_stale:
+            raise StaleRun(run=self.name)
         return from_json(json.loads((self.directory / RunFile.RESOLUTION).read_text()))
 
     def keep(self, resolution: Any) -> None:
@@ -207,11 +252,12 @@ class ResolutionRuns:
         :param baseline: The store every run starts from; a run never writes it while
             it runs, only adds what it admitted once it ends.
         :param environment: The environment the run starts from.
-        :return: A new run, its knowledge store a copy of the baseline, keeping the
-            environment it started from.
+        :return: A new run in the current format, its knowledge store a copy of the
+            baseline, keeping the environment it started from.
         """
         run = RunDirectory(directory=self.directory / uuid4().hex)
         self.copy_store(baseline, run.knowledge_store)
+        (run.directory / RunFile.FORMAT).write_text(str(RunFormat.current.value))
         (run.directory / RunFile.ENVIRONMENT).write_text(
             json.dumps(environment.to_json(), indent=2)
         )

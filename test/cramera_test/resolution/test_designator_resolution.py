@@ -7,6 +7,7 @@ reports, replayed from recorded answers.
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from dataclasses import fields, replace
 from pathlib import Path
@@ -54,11 +55,13 @@ from cramera.resolution.resolver.resolver import (
     WORLD_MODEL_MODULES,
     DesignatorResolver,
 )
+from cramera.resolution.resolver.exceptions import StaleRun
 from cramera.resolution.resolver.runs import (
     ResolutionRuns,
     RunDirectory,
     RunEnvironment,
     RunFile,
+    RunFormat,
     UnknownRun,
 )
 from cramera.resolution.resolver.scene_geometry import SceneGeometry
@@ -71,6 +74,11 @@ from cramera.resolution.resolver.scene_world import (
 from cramera.resolution.resolver.trial import OutcomeKey
 
 from .resolutions import LANDS, MISSES, resolver_replaying
+
+OLDER_RUN = Path(__file__).parent / "run_format_cases" / "older"
+"""
+A run kept before runs named their format, by the module the add-on had then.
+"""
 
 SOURCES = Path(__file__).parent / "query_sources"
 """
@@ -657,6 +665,45 @@ class TestRuns:
         kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
         assert (kept.directory / RunFile.RESOLUTION).is_file()
         assert kept.resolution() == run.resolution
+
+
+# %% the format a run is kept in
+
+
+class TestRunFormat:
+    def test_a_run_started_now_is_not_stale(self, tmp_path):
+        run = ResolutionRuns(directory=tmp_path / "runs").start(
+            HypothesisStore(directory=tmp_path / "store"),
+            RunEnvironment(scene="pouring", bundle=tmp_path / "pouring"),
+        )
+        assert not run.is_stale
+
+    def test_a_run_whose_directory_names_no_format_is_stale(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
+        kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
+        (kept.directory / RunFile.FORMAT).unlink()
+        assert kept.is_stale
+
+    def test_a_run_naming_a_format_other_than_the_current_one_is_stale(
+        self, pouring_bundle_with_arms, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle_with_arms, tmp_path)
+        kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
+        (kept.directory / RunFile.FORMAT).write_text(str(RunFormat.current + 1))
+        assert kept.is_stale
+
+    def test_what_a_stale_run_resolved_is_not_read(self, tmp_path):
+        older = tmp_path / "runs" / OLDER_RUN.name
+        shutil.copytree(OLDER_RUN, older)
+        with pytest.raises(StaleRun):
+            RunDirectory(directory=older).resolution()
+
+    def test_a_stale_run_cannot_be_reopened(self, tmp_path):
+        shutil.copytree(OLDER_RUN, tmp_path / "runs" / OLDER_RUN.name)
+        with pytest.raises(StaleRun):
+            reopening_resolver(tmp_path).reopen(OLDER_RUN.name)
 
 
 # %% what the resolver's model may answer with

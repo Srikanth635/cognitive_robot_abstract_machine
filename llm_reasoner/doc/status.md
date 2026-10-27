@@ -1140,13 +1140,17 @@ execute backend into it as `cramera.resolution` on 2026-10-21/22; that package, 
   `PlanNodeChanged`), and Execute without a run starting coraplex's kitchen-counter demo.
   The demos named after cram_viz (`coraplex/demos/coraplex_gcs_demo/cram_viz`,
   `kitchen_pouring/cram_viz_simple_pouring.py`) import nothing of it and keep their names.
-- **Open: kept runs of an earlier format.** The runs list reads every kept run, and a run
-  the current code cannot read fails the whole list (`GET /api/resolution/runs`). None of
-  the three runs in `~/.cramera/runs` can be read (two name the flow-onset outcome key
-  `FLOW_ONSET_TILT_RADIANS`, gone since the measured flow onset; one names the add-on's
-  old module `cramera_resolution`). The 21 runs in `~/.cram_viz/runs`, 8 of them
-  unreadable as well, stay on disk, and nothing reads them by default now. How old runs
-  are to be treated is undecided.
+- **Kept runs of an earlier format are listed as stale.** The runs list read every kept
+  run, and one the current code could not read failed the whole list
+  (`GET /api/resolution/runs`): none of the three runs in `~/.cramera/runs` could be read
+  (two name the flow-onset outcome key `FLOW_ONSET_TILT_RADIANS`, gone since the measured
+  flow onset; one names the add-on's old module `cramera_resolution`). The user chose to
+  list them as stale: a run now names the format it is kept in (`format` in its
+  directory, a `RunFormat`), the list reads what a run resolved only when its format is
+  the current one and otherwise lists it as `stale` with its name and when it was kept,
+  and reading a stale run raises `StaleRun`, so it is neither reopened nor performed. A
+  change that keeps earlier runs from being read adds a `RunFormat` member. The 21 runs in
+  `~/.cram_viz/runs` stay on disk, and nothing reads them by default now.
 
 ## 2a. Moved onto the upstream main (2026-10-21)
 
