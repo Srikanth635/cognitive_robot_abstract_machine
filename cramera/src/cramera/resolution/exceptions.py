@@ -1,13 +1,12 @@
 """
-What the add-on cannot do, because of what it was asked for, because the viewer it
-extends is not as it expects, or because the environment does not say what it needs.
+What the add-on cannot do, because of what it was asked for or because the viewer it
+extends is not as it expects.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from krrood.exceptions import DataclassException
 
@@ -98,81 +97,3 @@ class NoPerformanceWaiting(DataclassException):
 
     def suggest_correction(self) -> str:
         return "press Execute on a run first, and start it while it is waiting"
-
-
-# %% the models the add-on asks
-
-
-@dataclass
-class MissingCredentialsError(DataclassException):
-    """
-    Raised when the key a model's client authenticates with is not available.
-    """
-
-    variable: str
-    """
-    The environment variable that should hold the key.
-    """
-
-    searched: Optional[Path] = None
-    """
-    The ``.env`` file that was read for it, if any.
-    """
-
-    def error_message(self) -> str:
-        location = f" or in {self.searched}" if self.searched else ""
-        return f"{self.variable} is not set{location}"
-
-    def suggest_correction(self) -> str:
-        return "export it or add it to a .env file, then retry"
-
-
-@dataclass
-class UnreadableModelChoice(DataclassException):
-    """
-    Raised when the environment chooses a model in words that name no provider and
-    model.
-    """
-
-    stated: str
-    """
-    The choice as the environment states it.
-    """
-
-    providers: str
-    """
-    The providers a model can be asked through, listed.
-    """
-
-    def error_message(self) -> str:
-        return f"{self.stated!r} names no provider and model"
-
-    def suggest_correction(self) -> str:
-        return f"write it as provider:model, with a provider among {self.providers}"
-
-
-@dataclass
-class UnreadablePrices(DataclassException):
-    """
-    Raised when the prices the environment states for a model are not one price for each
-    kind of token.
-    """
-
-    stated: str
-    """
-    The prices as the environment states them.
-    """
-
-    kinds: str
-    """
-    The kinds of token a price is stated for, listed.
-    """
-
-    def error_message(self) -> str:
-        return f"{self.stated!r} is not one price for each kind of token"
-
-    def suggest_correction(self) -> str:
-        return (
-            "state a JSON object of dollars per million tokens with exactly the keys "
-            f"{self.kinds}"
-        )

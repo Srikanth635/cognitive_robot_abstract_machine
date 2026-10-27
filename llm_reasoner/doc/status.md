@@ -1179,24 +1179,15 @@ into cram_viz's code, stays out (`cramera-live` runs any demo).
   derived. llm_reasoner_viz reads `StepChanged` as before; `PlanNodeChanged` is still not
   shown (the deferred viewer work of 2026-10-15).
 
-### OpenAI as a provider (2026-10-27)
+### OpenAI as a provider, added and taken out again (2026-10-27)
 
-The user asked for OpenAI as a selectable provider. `OpenAIClient` now lets the model
-call tools (a written-out loop over the Responses API, `max_tool_turns = 10`, each turn's
-output items resent with its reasoning encrypted, since nothing is stored with the
-service) and reports its usage (`UsageReporting`; the cached and cache-written input
-tokens counted apart from the rest). An answer cut off at its output limit raises
-`ResponseTruncated`, as Anthropic's does. cramera chooses the resolver's model and the
-knowledge model in the environment (`CRAMERA_RESOLVER_MODEL`, `CRAMERA_KNOWLEDGE_MODEL`,
-as `provider:model`; Claude Sonnet 5.5 by default), checks the key of each chosen
-provider, and reaches the vendor clients through `llm_reasoner.clients`, so the OpenAI
-SDK is imported only when it is chosen. The user chose that a model's cost is unknown
-unless its prices are known (only Sonnet 5.5's are) or stated in the environment
-(`CRAMERA_RESOLVER_PRICES`, `CRAMERA_KNOWLEDGE_PRICES`); a resolution's `cost` is then
-`None`, shown as unknown. An OpenAI model keeps the client's own output limit (64,000
-tokens, its reasoning included) instead of the resolver's 8,192. Tests mock the OpenAI
-service; no live OpenAI call has been made, so whether the generation and the resolver
-are admitted with an OpenAI model is unmeasured.
+The user asked for OpenAI as a selectable provider, and it was added (`9bb44f41b`: tool
+calls and usage reporting in `OpenAIClient`, cramera choosing the resolver's and the
+knowledge model in the environment, a cost left unknown without prices). After a run
+with `gpt-5.4-mini` for both failed to generate its knowledge, the user had it taken out
+again, to be added later: cramera asks Claude Sonnet 5.5 only, and `OpenAIClient` makes
+plain and structured completions only, as before. That run showed a weakness of the
+repair loop that does not depend on the model (§7).
 
 ## 2a. Moved onto the upstream main (2026-10-21)
 
@@ -1646,8 +1637,13 @@ beyond the Flanagan microworld* (several perspectives); see §4.
 ## 7. Known issues
 
 **In `llm_reasoner`:**
-- None open (cram_viz's needless rebuild of krrood's symbol graph went with cram_viz,
-  2026-10-27).
+- A repair can gut the answer it repairs. A patch's `remove` list is applied as written,
+  and the answer with the fewest problems is kept as the one repaired. In run
+  `d7f4ad4f` (2026-10-27, `gpt-5.4-mini`) a patch removed all 65 fragments and wrote
+  the root again alone; the root alone broke 25 rules where the full answer broke 132,
+  so every later repair started from it and the generation failed with "defines_phase
+  has a AlignmentPhase". Proposed and not built: a repaired answer becomes the one
+  repaired only when it has fewer problems and at least as many fragments.
 
 **Outside `llm_reasoner`** (to report to their owners, not to change here):
 - krrood's verbalizer writes contradictory bounds as "between 0.01 and 0.005" and enum

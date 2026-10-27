@@ -55,8 +55,6 @@ from cramera.resolution.resolver.resolver import (
     WORLD_MODEL_MODULES,
     DesignatorResolver,
 )
-from cramera.resolution.exceptions import MissingCredentialsError
-from cramera.resolution.model_choice import ModelProvider, ModelVariable
 from cramera.resolution.resolver.exceptions import StaleRun
 from cramera.resolution.resolver.runs import (
     ResolutionRuns,
@@ -736,77 +734,6 @@ class TestResolverTokenCeiling:
             if field.name == "max_tokens"
         )
         assert RESOLVER_MAX_TOKENS > ordinary
-
-
-# %% the model the viewer's resolver asks
-
-
-class TestViewerResolverModel:
-    @staticmethod
-    def viewer_resolver(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-        """
-        :return: The resolver the viewer builds, every provider's key stood in for.
-        """
-        for provider in ModelProvider:
-            monkeypatch.setenv(provider.api_key_variable, "a-key-for-the-test")
-        source = ModelHypothesisSource(
-            client=ScriptedClient(), store_directory=tmp_path / "store"
-        )
-        return DesignatorResolver.for_viewer(source, SceneWorlds())
-
-    def test_by_default_it_asks_the_default_model_at_its_prices(
-        self, monkeypatch, tmp_path
-    ):
-        resolver = self.viewer_resolver(monkeypatch, tmp_path)
-        default = ModelHypothesisSource.default_model
-        assert resolver.client.identity == default.identity
-        assert resolver.prices == default.prices
-
-    def test_it_asks_the_model_the_environment_chooses(self, monkeypatch, tmp_path):
-        monkeypatch.setenv(ModelVariable.RESOLVER_MODEL, "openai:gpt-5.4")
-        resolver = self.viewer_resolver(monkeypatch, tmp_path)
-        assert resolver.client.identity == "openai:gpt-5.4"
-
-    def test_a_model_of_unknown_prices_leaves_its_resolutions_unpriced(
-        self, monkeypatch, tmp_path
-    ):
-        monkeypatch.setenv(ModelVariable.RESOLVER_MODEL, "openai:gpt-5.4")
-        resolver = self.viewer_resolver(monkeypatch, tmp_path)
-        assert resolver.prices is None
-
-    def test_the_knowledge_is_priced_at_the_prices_of_the_knowledge_model(
-        self, monkeypatch, tmp_path
-    ):
-        monkeypatch.setenv(ModelVariable.KNOWLEDGE_MODEL, "openai:gpt-5.4")
-        resolver = self.viewer_resolver(monkeypatch, tmp_path)
-        assert resolver.knowledge_prices is None
-        assert resolver.prices == ModelHypothesisSource.default_model.prices
-
-    def test_it_needs_the_key_of_the_provider_it_asks(self, monkeypatch, tmp_path):
-        monkeypatch.setenv(ModelVariable.RESOLVER_MODEL, "openai:gpt-5.4")
-        monkeypatch.setenv(ModelProvider.ANTHROPIC.api_key_variable, "a-key")
-        monkeypatch.delenv(ModelProvider.OPENAI.api_key_variable, raising=False)
-        source = ModelHypothesisSource(
-            client=ScriptedClient(), store_directory=tmp_path / "store"
-        )
-        with pytest.raises(MissingCredentialsError):
-            DesignatorResolver.for_viewer(source, SceneWorlds())
-
-    def test_a_resolution_by_a_model_of_unknown_prices_has_no_cost(
-        self, pouring_bundle_with_arms, tmp_path
-    ):
-        resolver = resolver_replaying(
-            PouringDesignator.OBJECTS_GIVEN,
-            HypothesisStore(directory=tmp_path / "store"),
-            tmp_path / "runs",
-        )
-        resolver.prices = None
-        run = resolver.resolve(
-            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
-            "pouring",
-            pouring_bundle_with_arms,
-        )
-        assert run.resolution.cost is None
 
 
 # %% keeping the NEEMs of the trials
