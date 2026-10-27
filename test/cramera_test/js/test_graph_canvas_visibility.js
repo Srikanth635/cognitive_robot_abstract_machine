@@ -64,6 +64,7 @@ function makeRoot() {
     '#graph-zoom-in': makeButton(),
     '#graph-zoom-out': makeButton(),
     '#graph-zoom-fit': makeButton(),
+    '#graph-pop-out': makeButton(),
   };
   const buttons = ['knowledge', 'plan', 'chart', 'kinematics', 'transforms'].map(makeButton);
   byId['#graph-tabs'] = { querySelectorAll() { return buttons; } };

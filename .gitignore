@@ -18,6 +18,7 @@ msg/*Result.msg
 msg/_*.py
 *muh*
 *.txt
+!cramera/src/cramera/web/vendor/licenses/*.txt
 *.png
 *.lprof
 tmp_data/
@@ -107,6 +108,9 @@ test/krrood_test/test_ripple_down_rules/test_generated_rdrs
 *.lo
 *.o
 *.obj
+!test/cramera_test/dataset/material.obj
+!cramera/scenes/**/*.obj
+!cramera/scenes/**/*.png
 
 # Precompiled Headers
 *.gch
@@ -171,12 +175,13 @@ CLAUDE.local.md
 # copy, which is what git refuses to overwrite.
 **/ormatic_interface.py
 
+# A .env file holds credentials, such as the model API key. It is never tracked, so that a
+# blanket `git add` cannot commit it.
+.env
+
 # Local data produced by the Python coverage checks.
 /.coverage
 /.coverage.*
 
 # Some robokudo annotators have default models downloaded
 robokudo/src/robokudo/models/
-# A .env file holds credentials, such as the model API key. It is never tracked, so that a
-# blanket `git add` cannot commit it.
-.env

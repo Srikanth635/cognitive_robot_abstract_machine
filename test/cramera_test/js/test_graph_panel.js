@@ -74,6 +74,7 @@ function makeRoot() {
     '#graph-zoom-in': makeButton(),
     '#graph-zoom-out': makeButton(),
     '#graph-zoom-fit': makeButton(),
+    '#graph-pop-out': makeButton(),
   };
   const buttons = ['knowledge', 'plan', 'chart', 'kinematics', 'transforms'].map(makeButton);
   byId['#graph-tabs'] = { querySelectorAll() { return buttons; } };
@@ -132,7 +133,9 @@ function loadPanel(responses, search) {
     resize() { resizes.push(1); },
   };
   const listeners = {};
+  const opened = [];
   const window = {
+    open(url, target) { opened.push({ url: url, target: target }); },
     addEventListener(name, handler) { (listeners[name] = listeners[name] || []).push(handler); },
     setTimeout(handler) { handler(); return 1; },
     clearTimeout() {},
@@ -148,6 +151,7 @@ function loadPanel(responses, search) {
     requested: requested,
     zooms: zooms,
     resizes: resizes,
+    opened: opened,
     statuses: statuses,
     fire: function (name) { (listeners[name] || []).forEach(function (h) { h(); }); },
   };
@@ -815,3 +819,20 @@ for (const fromPalette of [true, false]) {
     }
   });
 }
+
+// %% pop out
+test('the pop-out button is part of the panel\'s markup', function () {
+  const root = makeRoot();
+  loadPanel({}, '?scene=g1-warehouse').factory(root, makeBus());
+  assert.ok(root.innerHTML.indexOf('id="graph-pop-out"') >= 0);
+});
+
+test('the pop-out opens the graph panel alone, for the scene shown, in a window of its own', async function () {
+  const panel = loadPanel({ '/api/knowledge?scene=g1-warehouse': { ok: true, nodes: [], edges: [], details: {} } }, '?scene=g1-warehouse');
+  const root = makeRoot();
+  panel.factory(root, makeBus());
+  root.control('#graph-pop-out').click();
+  assert.deepStrictEqual(panel.opened, [
+    { url: loadSceneContext('?scene=g1-warehouse').popOutUrl('graph'), target: 'cramera-graph' },
+  ]);
+});
