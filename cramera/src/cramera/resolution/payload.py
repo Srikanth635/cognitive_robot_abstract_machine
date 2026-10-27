@@ -59,6 +59,7 @@ class PayloadKey(StrEnum):
     TRIALS = "trials"
     AT = "at"
     STALE = "stale"
+    WAITING = "waiting"
 
 
 class ViewName(StrEnum):

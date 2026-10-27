@@ -274,6 +274,13 @@ class ResolutionService:
         self.launcher.request_start()
         return {PayloadKey.OK: True}
 
+    def performance(self) -> dict[str, Any]:
+        """
+        :return: Whether a performance waits for its start, so that a page opened anew
+            can offer it.
+        """
+        return {PayloadKey.OK: True, PayloadKey.WAITING: self.launcher.is_waiting}
+
     def kept_runs(self) -> dict[str, Any]:
         """
         :return: A summary of every run kept, the newest first.

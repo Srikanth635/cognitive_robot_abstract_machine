@@ -487,8 +487,29 @@ class LauncherRecordingTheRuns:
     def request_start(self):
         self.starts += 1
 
+    @property
+    def is_waiting(self):
+        return len(self.performed) > self.starts
+
 
 class TestPerformingARun:
+    def test_no_performance_waits_before_one_is_launched(self, served):
+        served.service.launcher = LauncherRecordingTheRuns()
+        payload = served.get(Route.PERFORMANCE)
+        assert payload[PayloadKey.WAITING] is False
+
+    def test_a_launched_performance_is_said_to_wait_until_it_is_started(
+        self, served, tmp_path
+    ):
+        run = tmp_path / "data" / "runs" / "a-run"
+        run.mkdir(parents=True)
+        (run / RunFile.RESOLUTION).write_text("{}")
+        served.service.launcher = LauncherRecordingTheRuns()
+        served.post(Route.EXECUTE, {"run": "a-run"})
+        assert served.get(Route.PERFORMANCE)[PayloadKey.WAITING] is True
+        served.post(Route.START, {})
+        assert served.get(Route.PERFORMANCE)[PayloadKey.WAITING] is False
+
     def test_the_named_run_is_performed(self, served, tmp_path):
         run = tmp_path / "data" / "runs" / "a-run"
         run.mkdir(parents=True)

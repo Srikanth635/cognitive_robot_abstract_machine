@@ -126,6 +126,54 @@ class TestPlanStepReporter:
         assert [event.step for event in sink.events] == ["ParkArmsAction"]
 
 
+class TestStepsOfNativeLifecycles:
+    """
+    Coraplex leaves an action's own status at not started while the motions below it
+    run, so a step is followed by the nodes below it.
+    """
+
+    def test_a_step_runs_once_a_node_below_it_runs(self):
+        sink = MemorySink()
+        PlanStepReporter(sink=sink, run=RUN).observe(
+            plan_at(NOT_STARTED, NOT_STARTED, RUNNING, NOT_STARTED)
+        )
+        assert [(event.step, event.status) for event in sink.events] == [
+            ("ParkArmsAction", RUNNING.name)
+        ]
+
+    def test_a_step_whose_motions_ended_still_runs_until_the_plan_moves_on(self):
+        sink = MemorySink()
+        reporter = PlanStepReporter(sink=sink, run=RUN)
+        reporter.observe(plan_at(NOT_STARTED, NOT_STARTED, RUNNING, NOT_STARTED))
+        reporter.observe(plan_at(NOT_STARTED, NOT_STARTED, SUCCEEDED, RUNNING))
+        assert [(event.step, event.status) for event in sink.events] == [
+            ("ParkArmsAction", RUNNING.name),
+            ("NavigateAction", RUNNING.name),
+        ]
+
+    def test_a_step_fails_when_a_node_below_it_fails(self):
+        sink = MemorySink()
+        PlanStepReporter(sink=sink, run=RUN).observe(
+            plan_at(NOT_STARTED, NOT_STARTED, LifeCycleValues.FAILED, NOT_STARTED)
+        )
+        assert [event.status for event in sink.events] == [LifeCycleValues.FAILED.name]
+
+    def test_a_node_deeper_below_a_step_moves_it_too(self):
+        sink = MemorySink()
+        snapshot = PlanSnapshot(
+            nodes=[
+                entry("root", None, "SequentialNode", RUNNING),
+                entry("pick-up", "root", "PickUpAction", NOT_STARTED),
+                entry("sequence", "pick-up", "SequentialNode", NOT_STARTED),
+                entry("motion", "sequence", "MoveGripperMotion", RUNNING),
+            ]
+        )
+        PlanStepReporter(sink=sink, run=RUN).observe(snapshot)
+        assert [(event.step, event.status) for event in sink.events] == [
+            ("PickUpAction", RUNNING.name)
+        ]
+
+
 # %% every node
 
 

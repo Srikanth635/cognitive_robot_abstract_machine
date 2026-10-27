@@ -49,11 +49,19 @@ class PlanProgressReporter(ABC):
         :param snapshot: The plan as the bridge snapshot it.
         """
         for node in self.followed(snapshot.nodes):
-            status = node.status.name
+            status = self.status_of(node, snapshot.nodes)
             if self.statuses.get(node.id, self.unseen_status) == status:
                 continue
             self.statuses[node.id] = status
-            self.sink.emit(self.change_of(node))
+            self.sink.emit(self.change_of(node, status))
+
+    def status_of(self, node: PlanNodeEntry, nodes: Sequence[PlanNodeEntry]) -> str:
+        """
+        :param node: A followed node.
+        :param nodes: Every node of the plan.
+        :return: The status the node is reported in: its own.
+        """
+        return node.status.name
 
     @property
     @abstractmethod
@@ -71,9 +79,10 @@ class PlanProgressReporter(ABC):
         """
 
     @abstractmethod
-    def change_of(self, node: PlanNodeEntry) -> Event:
+    def change_of(self, node: PlanNodeEntry, status: str) -> Event:
         """
         :param node: A node whose status changed.
+        :param status: The status it changed to.
         :return: The event reporting the change.
         """
 
@@ -92,8 +101,42 @@ class PlanStepReporter(PlanProgressReporter):
         roots = {node.id for node in nodes if node.parent is None}
         return [node for node in nodes if node.parent in roots]
 
-    def change_of(self, node: PlanNodeEntry) -> StepChanged:
-        return StepChanged(run=self.run, step=node.label, status=node.status.name)
+    def status_of(self, node: PlanNodeEntry, nodes: Sequence[PlanNodeEntry]) -> str:
+        """
+        :meth:`PlanProgressReporter.status_of`, except that a step whose own status is
+        still not started, as coraplex leaves an action's while its motions run, is
+        failed or interrupted when a node below it is, and running once one has started;
+        it ends when the step after it starts.
+        """
+        if node.status is not LifeCycleValues.NOT_STARTED:
+            return node.status.name
+        below = {entry.status for entry in self.descendants_of(node, nodes)}
+        for ending in (LifeCycleValues.FAILED, LifeCycleValues.INTERRUPTED):
+            if ending in below:
+                return ending.name
+        if below - {LifeCycleValues.NOT_STARTED}:
+            return LifeCycleValues.RUNNING.name
+        return LifeCycleValues.NOT_STARTED.name
+
+    @staticmethod
+    def descendants_of(
+        node: PlanNodeEntry, nodes: Sequence[PlanNodeEntry]
+    ) -> list[PlanNodeEntry]:
+        """
+        :param node: A node of the plan.
+        :param nodes: Every node of the plan.
+        :return: The nodes below the node, at any depth.
+        """
+        below: list[PlanNodeEntry] = []
+        parents = {node.id}
+        for entry in nodes:
+            if entry.parent in parents:
+                below.append(entry)
+                parents.add(entry.id)
+        return below
+
+    def change_of(self, node: PlanNodeEntry, status: str) -> StepChanged:
+        return StepChanged(run=self.run, step=node.label, status=status)
 
 
 @dataclass
@@ -109,14 +152,14 @@ class PlanNodeReporter(PlanProgressReporter):
     def followed(self, nodes: Sequence[PlanNodeEntry]) -> list[PlanNodeEntry]:
         return list(nodes)
 
-    def change_of(self, node: PlanNodeEntry) -> PlanNodeChanged:
+    def change_of(self, node: PlanNodeEntry, status: str) -> PlanNodeChanged:
         return PlanNodeChanged(
             run=self.run,
             node=node.id,
             parent=node.parent,
             kind=node.kind,
             label=node.label,
-            status=node.status.name,
+            status=status,
             derived=node.derived,
         )
 

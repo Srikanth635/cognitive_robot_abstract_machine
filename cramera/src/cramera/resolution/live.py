@@ -240,18 +240,27 @@ class LiveRunLauncher:
             )
         self._run = run
 
+    @property
+    def is_waiting(self) -> bool:
+        """
+        :return: Whether the performance started last is running and waits for a start
+            that has not been requested yet.
+        """
+        return (
+            self._run is not None
+            and self.waits_for_start
+            and self._process.poll() is None
+            and not self._run.start_requested
+        )
+
     def request_start(self) -> None:
         """
         Ask the performance that waits to begin.
 
-        :raises NoPerformanceWaiting: When the process started last is not running, or
-            was not set to wait.
+        :raises NoPerformanceWaiting: When no performance waits: the process started
+            last is not running, was not set to wait, or was asked to start already.
         """
-        if (
-            self._run is None
-            or not self.waits_for_start
-            or self._process.poll() is not None
-        ):
+        if not self.is_waiting:
             raise NoPerformanceWaiting()
         self._run.request_start()
 

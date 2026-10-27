@@ -25,6 +25,7 @@ const ROUTES = {
   resolve: '/api/resolution/resolve',
   execute: '/api/resolution/execute',
   start: '/api/resolution/start',
+  performance: '/api/resolution/performance',
 };
 
 // %% a page to mount the panel into
@@ -157,6 +158,9 @@ function loadPanel(options) {
       return answer(settings.executeFails
         ? { ok: false, error: 'UnknownRun: no run of that name is kept' }
         : { ok: true });
+    }
+    if (url === ROUTES.performance) {
+      return answer({ ok: true, waiting: !!settings.performanceWaits });
     }
     if (url === ROUTES.start) {
       return answer(settings.startFails
@@ -632,6 +636,16 @@ async function executed(options) {
 
 test('Start is not offered before a run is executed', async function () {
   const panel = await mounted();
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, 'none');
+});
+
+test('a page opened while a performance waits offers Start', async function () {
+  const panel = await mounted({ performanceWaits: true });
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, '');
+});
+
+test('a page opened while nothing waits does not offer Start', async function () {
+  const panel = await mounted({ performanceWaits: false });
   assert.strictEqual(panel.elements['#resolution-start'].style.display, 'none');
 });
 
