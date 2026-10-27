@@ -27,6 +27,7 @@ from pathlib import Path
 
 from krrood.entity_query_language.factories import the
 from krrood.entity_query_language.query.match import Match
+from krrood.ormatic.utils import classproperty
 from llm_reasoner.knowledge.access import (
     AcceptanceSuite,
     ConceptReference,
@@ -41,12 +42,19 @@ from llm_reasoner.knowledge.access import (
     pouring,
     predictive_manipulation_suite,
 )
-from llm_reasoner.clients import AnthropicClient
 from llm_reasoner.clients.base import LanguageModelClient
+from llm_reasoner.clients.usage import SONNET_5_5_PRICES
 from typing_extensions import Optional
 
 from cramera.resolution import paths
+from cramera.resolution.exceptions import MissingCredentialsError
 from cramera.resolution.hypothesis_knowledge import HypothesisKnowledge, activate
+from cramera.resolution.model_choice import (
+    ApiKeyVariable,
+    ModelChoice,
+    ModelProvider,
+    ModelVariable,
+)
 
 POURING_TASK = ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring")
 """
@@ -64,9 +72,9 @@ The model generating hypotheses when no client is given: answers describe a few 
 linked fragments, which smaller models type inconsistently.
 """
 
-ANTHROPIC_API_KEY_NAME = "ANTHROPIC_API_KEY"
+ANTHROPIC_API_KEY_NAME = ApiKeyVariable.ANTHROPIC
 """
-The environment variable holding the key the default client authenticates with.
+The environment variable holding the key the default model's client authenticates with.
 """
 
 
@@ -76,19 +84,6 @@ def pouring_query() -> Match:
         else open.
     """
     return the(pouring.PouringPhaseStructure)(decomposes_task=POURING_TASK)
-
-
-class MissingCredentialsError(RuntimeError):
-    """
-    Raised when no API key is available to authenticate the generation client.
-    """
-
-    def __init__(self, variable_name: str, searched: Optional[Path]) -> None:
-        location = f" or in {searched}" if searched else ""
-        super().__init__(
-            f"{variable_name} is not set{location}. "
-            f"Generation needs it; export it or add it to a .env file, then retry."
-        )
 
 
 # %% credentials
@@ -159,7 +154,7 @@ class ModelHypothesisSource(HypothesisSource):
 
     client: Optional[LanguageModelClient] = None
     """
-    The model client; an :class:`AnthropicClient` is built on demand when unset.
+    The model client; one asking :meth:`chosen_model` is built on demand when unset.
     """
 
     environment_file: Optional[Path] = None
@@ -168,9 +163,10 @@ class ModelHypothesisSource(HypothesisSource):
     upwards when unset.
     """
 
-    model: str = GENERATION_MODEL
+    model: Optional[ModelChoice] = None
     """
-    The model the default client generates with.
+    The model the default client generates with; the one the environment chooses
+    (:attr:`~cramera.resolution.model_choice.ModelVariable.KNOWLEDGE_MODEL`) when unset.
     """
 
     suite: AcceptanceSuite = field(default_factory=predictive_manipulation_suite)
@@ -197,32 +193,54 @@ class ModelHypothesisSource(HypothesisSource):
     The knowledge service, built on first use.
     """
 
+    @classproperty
+    def default_model(cls) -> ModelChoice:
+        """
+        :return: The model asked unless the environment chooses another, at its prices.
+        """
+        return ModelChoice(
+            provider=ModelProvider.ANTHROPIC,
+            model=GENERATION_MODEL,
+            prices=SONNET_5_5_PRICES,
+        )
+
+    def chosen_model(self) -> ModelChoice:
+        """
+        :return: The model generating hypotheses: the one given, else the one the
+            environment chooses.
+        """
+        return self.model or ModelChoice.from_environment(
+            ModelVariable.KNOWLEDGE_MODEL,
+            ModelVariable.KNOWLEDGE_PRICES,
+            default=self.default_model,
+        )
+
     def load_credentials(self) -> None:
         """
-        Make the API key visible to the client.
+        Make the API key and the model choices visible to the client.
 
         The viewer is normally started from a shell that never sourced ``.env``, so the
         file the notebooks rely on is read here too. Values already exported win, and an
         injected client is assumed to carry its own credentials.
 
-        :raises MissingCredentialsError: if no key is available.
+        :raises MissingCredentialsError: if the key of the chosen model's provider is
+            not available.
         """
         if self.client is not None:
             return
         environment_file = self.environment_file or _find_environment_file()
         if environment_file is not None and environment_file.is_file():
             _load_environment_file(environment_file)
-        if not os.environ.get(ANTHROPIC_API_KEY_NAME):
-            raise MissingCredentialsError(ANTHROPIC_API_KEY_NAME, environment_file)
+        self.chosen_model().require_api_key(environment_file)
 
     def view_for(self, instruction: str) -> HypothesisView:
         return self.knowledge_service().view_for(pouring_query(), instruction)
 
     def client_for_generation(self) -> LanguageModelClient:
         """
-        :return: The given client, or an Anthropic client for the generation model.
+        :return: The given client, or a client asking the chosen model.
         """
-        return self.client or AnthropicClient(model=self.model)
+        return self.client or self.chosen_model().client()
 
     def knowledge_service(self) -> KnowledgeService:
         """
