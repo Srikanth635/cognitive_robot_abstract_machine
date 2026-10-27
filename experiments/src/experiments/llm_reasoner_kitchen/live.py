@@ -34,7 +34,7 @@ The most tokens the resolver's model may answer one turn with.
 
 GENERATION_REPAIRS = 4
 """
-How many times a rejected hypothesis is returned for repair, as cram_viz generates.
+How many times a rejected hypothesis is returned for repair, as cramera generates.
 """
 
 OPT_IN = "1"

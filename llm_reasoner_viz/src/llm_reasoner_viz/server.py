@@ -4,7 +4,7 @@ NEEMs the simulations kept, and a stream that follows a run's log as it grows.
 
 The requests it answers:
 
-- ``GET /api/config``: where cram_viz is, for the page to link to.
+- ``GET /api/config``: where cramera is, for the page to link to.
 - ``GET /api/runs``: the runs that have a log, newest first.
 - ``GET /api/runs/<run>/events``: the events of a run in one batch; ``?after=<offset>``
   goes on from where a reader stopped, ``?limit=<n>`` takes at most that many.
@@ -45,7 +45,7 @@ from llm_reasoner_viz.neems import (
     UnknownNeemSchema,
 )
 from llm_reasoner_viz.paths import (
-    cram_viz_url,
+    cramera_url,
     default_runs_directory,
     neem_database_path,
 )
@@ -178,9 +178,9 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
 
     def config(self, query: Query) -> None:
         """
-        Send where cram_viz is, for the page to link to.
+        Send where cramera is, for the page to link to.
         """
-        self.send_json({"ok": True, "cram_viz_url": cram_viz_url()})
+        self.send_json({"ok": True, "cramera_url": cramera_url()})
 
     def runs(self, query: Query) -> None:
         """
@@ -318,7 +318,7 @@ def make_server(
     :param host: The address to listen on.
     :param port: The port to listen on; zero for any that is free, as tests ask.
     :param web_root: The directory of the front end.
-    :param neems: The NEEMs to show; those of the database cram_viz keeps by default.
+    :param neems: The NEEMs to show; those of the database cramera keeps by default.
     :return: A server ready to serve, each request on a thread of its own so a stream does
         not keep the others waiting.
     """
@@ -384,7 +384,7 @@ def main(argv: Optional[List[str]] = None) -> None:
             (
                 ""
                 if arguments.runs.is_dir()
-                else "  (none yet: resolve a designator in cram-viz)"
+                else "  (none yet: resolve a designator in cramera)"
             ),
         )
         logger.info("NEEMs: %s", arguments.neems)

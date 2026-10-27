@@ -2,7 +2,7 @@
 The knowledge component as other packages reach it: every name another package may use,
 gathered in one module so that the component's own layout can change without them.
 
-Another package, such as cram_viz, imports from this module only.
+Another package, such as cramera, imports from this module only.
 """
 
 from llm_reasoner.knowledge.acceptance.derived import described

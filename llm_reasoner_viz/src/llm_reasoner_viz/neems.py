@@ -33,7 +33,7 @@ class NeemDatabaseBusy(RuntimeError):
 class UnknownNeemSchema(LookupError):
     """
     The database does not have a table or a column the viewer reads, so it is not one
-    the NEEMs of cram_viz are kept in, or not one of this version.
+    the NEEMs of cramera are kept in, or not one of this version.
     """
 
     missing: str
@@ -148,7 +148,7 @@ The error codes that say another connection is writing.
 @dataclass
 class NeemDatabase:
     """
-    The database cram_viz keeps the NEEMs of its simulations in, opened to read only.
+    The database cramera keeps the NEEMs of its simulations in, opened to read only.
     """
 
     path: Path

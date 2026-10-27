@@ -1,31 +1,31 @@
 # llm_reasoner_viz
 
-A browser viewer for `llm_reasoner` at work, beside `cram_viz`. cram_viz shows the scene
+A browser viewer for `llm_reasoner` at work, beside `cramera`. cramera shows the scene
 and the knowledge; this shows the system doing its job: the resolver, the world injector,
 the knowledge component and the model, the calls between them, and the prompts and
 answers they exchange, as they happen and afterwards.
 
 It is read-only. It shows what the processes working on a resolution run wrote to the
-run's log, `events.jsonl` in the run's directory (by default `~/.cram_viz/runs/<run>/`):
-the cram-viz server, the process trying a pour in the simulation, and the live runner
+run's log, `events.jsonl` in the run's directory (by default `~/.cramera/runs/<run>/`):
+the cramera server, the process trying a pour in the simulation, and the live runner
 performing the resolved action all append to it. A run is followed live while its log
 grows and replayed from the same log once it has ended. A run from before the logs has
 none, and is not shown.
 
 ```bash
 llm-reasoner-viz                       # http://127.0.0.1:8721
-llm-reasoner-viz --port 8722 --runs ~/.cram_viz/runs --neems ~/.cram_viz/neems.sqlite
+llm-reasoner-viz --port 8722 --runs ~/.cramera/runs --neems ~/.cramera/neems.sqlite
 python -m llm_reasoner_viz.server      # without installing the command
 ```
 
-cram-viz links to the viewer from the answer of every resolution (`LLM_REASONER_VIZ_URL`
-sets the address it links to), and the viewer links back: *open in cram-viz* in the top bar
-opens cram-viz at the run's scene with `?run=<run>`, which shows what the run resolved, the
+cramera links to the viewer from the answer of every resolution (`LLM_REASONER_VIZ_URL`
+sets the address it links to), and the viewer links back: *open in cramera* in the top bar
+opens cramera at the run's scene with `?run=<run>`, which shows what the run resolved, the
 hypothesis it consulted, and can perform it there, the viewer following the steps in the
-run's log. `CRAM_VIZ_URL` sets the address of cram-viz (`http://localhost:8711`).
+run's log. `CRAMERA_URL` sets the address of cramera (`http://localhost:8711`).
 
-The NEEMs of the simulations are kept in one SQLite database (`CRAM_VIZ_NEEM_DATABASE`, or
-`neems.sqlite` in cram-viz's data directory). The viewer opens it read-only, never changes
+The NEEMs of the simulations are kept in one SQLite database (`CRAMERA_NEEM_DATABASE`, or
+`neems.sqlite` in cramera's data directory, `CRAMERA_DATA` or `~/.cramera`). The viewer opens it read-only, never changes
 it, reports it as busy while a simulation is writing, and joins each plan to the run whose
 log says it was kept.
 
@@ -48,7 +48,7 @@ modules with no build step and no library loaded from elsewhere.
   red failed. *fit* shows the whole run, *−* and *+* zoom, *follow* keeps the newest work in
   view.
 - **NEEMs**: a pour tried in the simulation and the performed run each keep their plan as a
-  NEEM in a database (see cram_viz's README). A bar that has one carries a dot; the inspector
+  NEEM in a database (see cramera's README). A bar that has one carries a dot; the inspector
   of the trial or the execution says which plan it is, where it is kept and how long saving it
   took, with the `sqlite3` command that reads it, or why it could not be kept; the top bar
   counts the NEEMs saved. The *neems* button of the top bar, there only when the run saved
@@ -104,7 +104,7 @@ at what it points to.
 
 | Request | Answer |
 |---|---|
-| `GET /api/config` | Where cram-viz is, for the page to link to |
+| `GET /api/config` | Where cramera is, for the page to link to |
 | `GET /api/runs` | The runs that have a log, newest first, each summed up: its query, scene, how resolving and performing went, how many events and model calls, tokens and cost |
 | `GET /api/runs/<run>/events` | The events of a run as one batch, with `next`, the offset to go on from; `?after=<offset>`, `?limit=<n>` |
 | `GET /api/neems` | The plans of the NEEM database, newest first, each with how the node it was performed from ended, how long it lasted in the simulation, how many nodes and steps it has, and where it came from (a trial or an execution of a run; none when no log names it); `?run=<run>` takes only those the run kept. `503` while the database is being written |
@@ -129,7 +129,7 @@ src/llm_reasoner_viz/
         prompts.mjs     a prompt read as its tagged sections
         replay.mjs      what a run looked like at any moment, and how a replay moves
         filters.mjs     picking out the spans that say some words or went wrong
-        links.mjs       the address that opens a run in cram-viz
+        links.mjs       the address that opens a run in cramera
         neems.mjs       where to ask for the NEEMs, which are shown and how each is worded
         neem.mjs        one NEEM: the tree of its steps and what each was asked to do
         neem_compare.mjs  two NEEMs: which steps are the same and what differs in them

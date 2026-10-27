@@ -6,11 +6,11 @@ settled particles leave it at.
 from __future__ import annotations
 
 import pytest
-from cram_viz.resolution.basin_geometry import ContainerBasin
+from cramera.resolution.resolver.basin_geometry import ContainerBasin
 
 from experiments.flow_onset_measurement.filling import ParticleFilling
 
-from ...cram_viz_test.walled_boxes import WalledBox
+from ...cramera_test.resolution.walled_boxes import WalledBox
 
 # %% fixtures
 
@@ -63,7 +63,9 @@ class TestParticleFilling:
 
     def test_a_liquid_settling_smaller_is_started_fuller(self, filling):
         assert filling.start_fill_settling_at(0.5, 0.5, 0.25) == pytest.approx(1.0)
-        assert filling.start_fill_settling_at(0.4, 0.4, 0.3) == pytest.approx(0.4 * 0.4 / 0.3)
+        assert filling.start_fill_settling_at(0.4, 0.4, 0.3) == pytest.approx(
+            0.4 * 0.4 / 0.3
+        )
 
     def test_a_start_fill_is_never_above_full(self, filling):
         assert filling.start_fill_settling_at(0.75, 0.75, 0.3) == 1.0

@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-from cram_viz.resolution.basin_geometry import ContainerBasin
+from cramera.resolution.resolver.basin_geometry import ContainerBasin
 from scipy import ndimage
 
 # %% filling

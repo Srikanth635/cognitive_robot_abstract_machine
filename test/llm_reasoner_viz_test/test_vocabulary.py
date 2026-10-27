@@ -1,15 +1,17 @@
 """
 Tests of the names of events the viewer reads, which the processes writing a run's log
-spell the same way: the events of llm_reasoner and of cram_viz are checked here.
+spell the same way: the events of llm_reasoner and of cramera are checked here.
 """
 
 from __future__ import annotations
 
-from cram_viz.events import (
+from dataclasses import fields
+
+from cramera.resolution.events import (
     ExecutionFailed,
     ExecutionFinished,
     ExecutionStarted,
-    NeemKind as CramVizNeemKind,
+    NeemKind as CrameraNeemKind,
     NeemNotRecorded,
     NeemRecorded,
     RunFailed,
@@ -17,7 +19,6 @@ from cram_viz.events import (
     RunStarted,
     TrialFinished,
 )
-from dataclasses import fields
 
 from llm_reasoner.clients.usage import TokenUsage
 from llm_reasoner.observation.events import EventKey, ModelAnswered
@@ -32,12 +33,12 @@ class TestVocabulary:
     def test_a_model_answering_is_named_as_llm_reasoner_names_it(self):
         assert KnownEvent.MODEL_ANSWERED == ModelAnswered.__name__
 
-    def test_the_events_of_a_run_are_named_as_cram_viz_names_them(self):
+    def test_the_events_of_a_run_are_named_as_cramera_names_them(self):
         assert KnownEvent.RUN_STARTED == RunStarted.__name__
         assert KnownEvent.RUN_FINISHED == RunFinished.__name__
         assert KnownEvent.RUN_FAILED == RunFailed.__name__
 
-    def test_the_events_of_performing_a_run_are_named_as_cram_viz_names_them(self):
+    def test_the_events_of_performing_a_run_are_named_as_cramera_names_them(self):
         assert KnownEvent.EXECUTION_STARTED == ExecutionStarted.__name__
         assert KnownEvent.EXECUTION_FINISHED == ExecutionFinished.__name__
         assert KnownEvent.EXECUTION_FAILED == ExecutionFailed.__name__
@@ -57,14 +58,14 @@ class TestVocabulary:
             EventField.CACHE_READ_INPUT_TOKENS,
         } <= reported
 
-    def test_the_events_of_keeping_a_neem_are_named_as_cram_viz_names_them(self):
+    def test_the_events_of_keeping_a_neem_are_named_as_cramera_names_them(self):
         assert KnownEvent.NEEM_RECORDED == NeemRecorded.__name__
         assert KnownEvent.NEEM_NOT_RECORDED == NeemNotRecorded.__name__
 
-    def test_a_pour_tried_ending_is_named_as_cram_viz_names_it(self):
+    def test_a_pour_tried_ending_is_named_as_cramera_names_it(self):
         assert KnownEvent.TRIAL_FINISHED == TrialFinished.__name__
 
-    def test_what_a_neem_is_the_episode_of_is_named_as_cram_viz_names_it(self):
+    def test_what_a_neem_is_the_episode_of_is_named_as_cramera_names_it(self):
         assert {kind.value for kind in NeemKind} == {
-            kind.value for kind in CramVizNeemKind
+            kind.value for kind in CrameraNeemKind
         }

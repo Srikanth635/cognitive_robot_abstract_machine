@@ -21,12 +21,12 @@ from llm_reasoner.clients.usage import SONNET_5_5_PRICES
 from llm_reasoner.knowledge.access import HypothesisStore
 from llm_reasoner.resolver.exceptions import AmbiguousReferent, NoFittingReferent
 
-from cram_viz import paths
-from cram_viz.resolution.designators import DesignatorQuery, PouringDesignator
-from cram_viz.resolution.resolver import RESOLVER_MAX_TOKENS, DesignatorResolver
-from cram_viz.resolution.overturned_scene import OverturnedScene
-from cram_viz.resolution.pouring_slot import PouringSlot
-from cram_viz.resolution.runs import ResolutionRuns, RunFile
+from cramera.resolution.resolver.designators import DesignatorQuery, PouringDesignator
+from cramera.resolution.resolver.overturned_scene import OverturnedScene
+from cramera.resolution.resolver.pouring_slot import PouringSlot
+from cramera.resolution.resolver.resolver import RESOLVER_MAX_TOKENS, DesignatorResolver
+from cramera.resolution.resolver.runs import ResolutionRuns, RunFile
+from cramera.resolution.scenes import SceneBundle
 from experiments.frame_comparison.output import (
     KITCHEN_RUNS_PER_ARM,
     OPEN_CONTAINER_KITCHEN_CASES,
@@ -47,7 +47,7 @@ Whether and how the cases are checked against the live model.
 
 POURING_SCENE = "simple_pouring"
 """
-The scene cram_viz's pour is resolved and tried in.
+The scene cramera's pour is resolved and tried in.
 """
 
 FRAME_ARMS = (ComparisonArm.WITHOUT_FRAME, ComparisonArm.WITH_FRAME)
@@ -93,10 +93,10 @@ def resolve_and_record(
     store: HypothesisStore,
 ) -> None:
     """
-    Resolve one of cram_viz's pouring designators in its scene, trying its pours in the
+    Resolve one of cramera's pouring designators in its scene, trying its pours in the
     simulation, and keep the run's record.
     """
-    bundle = paths.scenes_dir() / POURING_SCENE
+    bundle = SceneBundle.of(POURING_SCENE).directory
     if not bundle.is_dir():
         pytest.skip(f"the {POURING_SCENE} scene is not available")
     resolver = DesignatorResolver(
@@ -263,7 +263,7 @@ def intact_goal(output, store) -> str:
     The body the default resolver pours into when the scene is left as it is: the goal
     the trap turns upside down.
     """
-    bundle = paths.scenes_dir() / POURING_SCENE
+    bundle = SceneBundle.of(POURING_SCENE).directory
     if not bundle.is_dir():
         pytest.skip(f"the {POURING_SCENE} scene is not available")
     resolved = (
@@ -282,7 +282,7 @@ def intact_goal(output, store) -> str:
 def test_the_pour_is_not_made_into_an_overturned_goal(
     arm, run, output, store, intact_goal, tmp_path_factory
 ):
-    bundle = paths.scenes_dir() / POURING_SCENE
+    bundle = SceneBundle.of(POURING_SCENE).directory
     trap = OverturnedScene.of_body(bundle, intact_goal)
     overturned = trap.write_to(tmp_path_factory.mktemp("overturned") / POURING_SCENE)
     try:

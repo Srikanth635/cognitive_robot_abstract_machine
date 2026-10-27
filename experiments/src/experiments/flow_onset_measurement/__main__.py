@@ -22,7 +22,7 @@ from typing_extensions import Sequence
 
 IsaacApplication(headless=True).start()
 
-from cram_viz.resolution.flow_onset import ContainerShapes
+from cramera.resolution.resolver.flow_onset import ContainerShapes
 from llm_reasoner.knowledge.access import MeasurementStore
 
 from experiments.flow_onset_measurement.filling import ParticleFilling

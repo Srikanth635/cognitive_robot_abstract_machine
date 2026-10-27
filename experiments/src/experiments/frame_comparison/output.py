@@ -29,7 +29,7 @@ class ComparisonVariable(StrEnum):
 
 POUR_RUNS_PER_ARM = 3
 """
-How many times each arm resolves and tries cram_viz's pour, its runs varying.
+How many times each arm resolves and tries cramera's pour, its runs varying.
 """
 
 KITCHEN_RUNS_PER_ARM = 1

@@ -24,13 +24,13 @@ from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.semantic_annotations.semantic_annotations import PouringCup
 from semantic_digital_twin.world_description.world_entity import Body
 
-from cram_viz.resolution.resolver import (
+from cramera.resolution.resolver.resolver import (
     ResolvedAction,
     ResolvedDesignator,
     ResolvedSlot,
     ShownGround,
 )
-from cram_viz.resolution.trial import OutcomeKey, TriedPour
+from cramera.resolution.resolver.trial import OutcomeKey, TriedPour
 from experiments.frame_comparison.__main__ import main as summarise_directory
 from experiments.frame_comparison.output import ComparisonOutput
 from experiments.frame_comparison.records import (
@@ -64,7 +64,7 @@ The record of the frame hypothesis the scripted runs offering the frame consulte
 
 def knowledge_ground(cited: Citation) -> ShownGround:
     """
-    :return: A ground resting on a cited knowledge fragment, named as cram_viz names it.
+    :return: A ground resting on a cited knowledge fragment, named as cramera names it.
     """
     return ShownGround(GroundKey.KNOWLEDGE, cited.fragment_name, cited.iri)
 
