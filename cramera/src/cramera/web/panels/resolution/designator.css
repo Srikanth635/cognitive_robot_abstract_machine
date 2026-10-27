@@ -49,6 +49,11 @@
 .panel-resolution-designators .designator-query:hover{background:var(--accent);color:#04121a}
 .panel-resolution-designators .designator-query.unavailable{border-color:var(--line2);color:var(--faint)}
 .panel-resolution-designators .designator-query.unavailable:hover{border-color:var(--accent);color:var(--muted)}
+/* a run kept in an older format: listed, but it cannot be shown */
+.panel-resolution-designators .designator-query.stale,
+.panel-resolution-designators .designator-query.stale:hover{
+  border-color:var(--line2);background:var(--bg);color:var(--faint);cursor:default
+}
 .panel-resolution-designators .resolved-query{
   margin:4px 0 8px;font-family:var(--mono);font-size:11px;line-height:1.45;
   white-space:pre;overflow-x:auto;color:var(--ink)

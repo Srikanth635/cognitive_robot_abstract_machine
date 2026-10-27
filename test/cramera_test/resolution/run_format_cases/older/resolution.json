@@ -1,0 +1,5 @@
+{
+  "__json_type__": "cramera_resolution.resolution.resolver.ResolvedDesignator",
+  "query": "the(PouringAction)()\n",
+  "designator": "PouringAction"
+}

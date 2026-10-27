@@ -1,6 +1,6 @@
 """
-Errors in what a scene bundle states about its objects and in what is derived from it
-while resolving designators against the scene.
+Errors in what a scene bundle states about its objects, in what is derived from it while
+resolving designators against the scene, and in reading the runs kept.
 """
 
 from __future__ import annotations
@@ -61,3 +61,25 @@ class UnknownMaterialRegime(DataclassException):
     def suggest_correction(self) -> str:
         regimes = ", ".join(pouring_frame.MaterialRegime.__members__)
         return f"state one of the material regimes {regimes}"
+
+
+# %% runs kept
+
+
+@dataclass
+class StaleRun(DataclassException):
+    """
+    Raised when what a run resolved is read although the run is kept in a format other
+    than the current one, which this version cannot read.
+    """
+
+    run: str
+    """
+    The name of the run.
+    """
+
+    def error_message(self) -> str:
+        return f"run {self.run!r} is kept in a format this version cannot read"
+
+    def suggest_correction(self) -> str:
+        return "resolve the designator again, or open the run with the version that kept it"

@@ -58,6 +58,7 @@ class PayloadKey(StrEnum):
     COST = "cost"
     TRIALS = "trials"
     AT = "at"
+    STALE = "stale"
 
 
 class ViewName(StrEnum):

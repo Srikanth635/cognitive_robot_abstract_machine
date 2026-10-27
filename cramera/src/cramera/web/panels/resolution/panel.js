@@ -249,10 +249,10 @@
       }
       payload.runs.forEach(function (run) {
         const entry = document.createElement('pre');
-        entry.className = 'designator-query';
+        entry.className = 'designator-query' + (run.stale ? ' stale' : '');
         entry.textContent = view.runText(run);
         entry.title = view.runTitle(run);
-        entry.addEventListener('click', function () { openRun(run.name); });
+        if (!run.stale) entry.addEventListener('click', function () { openRun(run.name); });
         runsEl.appendChild(entry);
       });
     }

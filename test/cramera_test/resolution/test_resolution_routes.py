@@ -42,6 +42,7 @@ from cramera.resolution.resolver.designators import (
 )
 from cramera.resolution.resolver.perspective_choice import UnknownPerspective
 from cramera.resolution.resolver.resolver import DesignatorResolver
+from cramera.resolution.resolver.exceptions import StaleRun
 from cramera.resolution.resolver.runs import RunFile, UnknownRun
 from cramera.resolution.query_source import QuerySource
 from cramera.resolution.resolver.scene_world import SCENE_FILE, SceneKey
@@ -50,6 +51,11 @@ from cramera.server import ViewerServer
 from cramera.resolution.service import ResolutionService
 
 from .resolutions import resolver_replaying
+
+OLDER_RUN = Path(__file__).parent / "run_format_cases" / "older"
+"""
+A run kept before runs named their format, by the module the add-on had then.
+"""
 
 # %% helpers
 
@@ -376,6 +382,41 @@ class TestKeptRuns:
         )
         assert listed[PayloadKey.COST] == resolution["cost"]
         assert listed[PayloadKey.TRIALS] == len(resolution["trials"])
+
+    def test_a_run_made_now_is_not_listed_as_stale(
+        self, served, resolver_keeping_runs_in_the_data_directory, objects_given_query
+    ):
+        served.service.resolver = resolver_keeping_runs_in_the_data_directory
+        served.post(Route.RESOLVE, {"query": objects_given_query, "scene": "pouring"})
+        (listed,) = served.get(Route.RUNS)[PayloadKey.RUNS]
+        assert listed[PayloadKey.STALE] is False
+
+    def test_a_run_of_an_older_format_is_listed_as_stale(self, served):
+        shutil.copytree(OLDER_RUN, paths.resolution_runs_dir() / OLDER_RUN.name)
+        listed = served.get(Route.RUNS)[PayloadKey.RUNS]
+        assert [(run[PayloadKey.NAME], run[PayloadKey.STALE]) for run in listed] == [
+            (OLDER_RUN.name, True)
+        ]
+
+    def test_a_run_of_an_older_format_keeps_no_other_run_from_being_listed(
+        self, served, resolver_keeping_runs_in_the_data_directory, objects_given_query
+    ):
+        served.service.resolver = resolver_keeping_runs_in_the_data_directory
+        made = served.post(
+            Route.RESOLVE, {"query": objects_given_query, "scene": "pouring"}
+        )[PayloadKey.RESOLUTION]["run"]
+        shutil.copytree(OLDER_RUN, paths.resolution_runs_dir() / OLDER_RUN.name)
+        listed = served.get(Route.RUNS)[PayloadKey.RUNS]
+        assert {run[PayloadKey.NAME]: run[PayloadKey.STALE] for run in listed} == {
+            made: False,
+            OLDER_RUN.name: True,
+        }
+
+    def test_a_run_of_an_older_format_is_not_reopened(self, served):
+        shutil.copytree(OLDER_RUN, paths.resolution_runs_dir() / OLDER_RUN.name)
+        payload = served.get(Route.RUN, name=OLDER_RUN.name, scene="pouring")
+        assert payload[PayloadKey.OK] is False
+        assert payload[PayloadKey.ERROR].startswith(StaleRun.__name__)
 
 
 # %% what the request chooses to consult
