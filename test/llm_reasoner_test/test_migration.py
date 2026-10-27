@@ -60,14 +60,15 @@ from .test_action_perspective_knowledge import (
 
 SAMPLE_STORE = (
     Path(__file__).parents[2]
-    / "cram_viz"
+    / "cramera"
     / "src"
-    / "cram_viz"
+    / "cramera"
+    / "resolution"
     / "resources"
     / "sample_hypotheses"
 )
 """
-The store of the hand-authored pouring hypothesis cram_viz ships, which meets its
+The store of the hand-authored pouring hypothesis cramera ships, which meets its
 ontology.
 """
 

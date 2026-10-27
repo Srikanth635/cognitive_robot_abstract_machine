@@ -51,22 +51,26 @@ CLASHING_CLASSES = {
 The classes the dropped links put into two disjoint DUL categories.
 """
 
-SHIPPED_HYPOTHESES = tuple(
-    (Path(__file__).parents[2] / "cram_viz" / "src" / "cram_viz" / "resources").glob(
-        "sample_hypotheses/*/hypothesis.ttl"
-    )
+CRAMERA_RESOURCES = (
+    Path(__file__).parents[2]
+    / "cramera"
+    / "src"
+    / "cramera"
+    / "resolution"
+    / "resources"
 )
 """
-The hypotheses shipped with cram_viz.
+The resources shipped with cramera's resolution add-on.
 """
 
-SHIPPED_MEASUREMENTS = tuple(
-    (Path(__file__).parents[2] / "cram_viz" / "src" / "cram_viz" / "resources").glob(
-        "measurements/*.ttl"
-    )
-)
+SHIPPED_HYPOTHESES = tuple(CRAMERA_RESOURCES.glob("sample_hypotheses/*/hypothesis.ttl"))
 """
-The physical measurement records shipped with cram_viz.
+The hypotheses shipped with cramera.
+"""
+
+SHIPPED_MEASUREMENTS = tuple(CRAMERA_RESOURCES.glob("measurements/*.ttl"))
+"""
+The physical measurement records shipped with cramera.
 """
 
 # %% reading told axioms

@@ -16,15 +16,16 @@ from dataclasses import dataclass
 from http import HTTPStatus
 from http.server import ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
+from cramera import server as cramera_server
+from cramera.resolution import paths as cramera_paths
 from typing_extensions import Any, Dict, Iterator, List
 
 from llm_reasoner_viz.paths import (
-    CRAM_VIZ_ENVIRONMENT,
-    DEFAULT_CRAM_VIZ_URL,
-    DATA_ENVIRONMENT,
-    RUNS_ENVIRONMENT,
+    CrameraAddress,
+    EnvironmentVariable,
     default_runs_directory,
     neem_database_path,
 )
@@ -369,21 +370,24 @@ class TestStream:
         assert status_of(viewer.url + "/api/runs/no-such-run/stream") == 404
 
 
-# %% where cram-viz is
+# %% where cramera is
 
 
 class TestConfiguration:
-    def test_the_viewer_says_where_cram_viz_is(self, viewer, monkeypatch):
-        monkeypatch.delenv(CRAM_VIZ_ENVIRONMENT, raising=False)
+    def test_the_viewer_says_where_cramera_is(self, viewer, monkeypatch):
+        monkeypatch.delenv(EnvironmentVariable.CRAMERA_URL, raising=False)
         payload = get_json(viewer.url + "/api/config")
-        assert payload == {"ok": True, "cram_viz_url": DEFAULT_CRAM_VIZ_URL}
+        assert payload == {"ok": True, "cramera_url": CrameraAddress.DEFAULT}
 
-    def test_where_cram_viz_is_can_be_set_without_a_trailing_slash(
+    def test_by_default_cramera_is_at_the_port_it_listens_on(self):
+        assert urlparse(CrameraAddress.DEFAULT).port == cramera_server.DEFAULT_PORT
+
+    def test_where_cramera_is_can_be_set_without_a_trailing_slash(
         self, viewer, monkeypatch
     ):
-        monkeypatch.setenv(CRAM_VIZ_ENVIRONMENT, "http://elsewhere:9000/")
+        monkeypatch.setenv(EnvironmentVariable.CRAMERA_URL, "http://elsewhere:9000/")
         payload = get_json(viewer.url + "/api/config")
-        assert payload["cram_viz_url"] == "http://elsewhere:9000"
+        assert payload["cramera_url"] == "http://elsewhere:9000"
 
 
 # %% the pages
@@ -448,20 +452,20 @@ class TestStarting:
 
 class TestRunsDirectory:
     def test_a_directory_named_in_the_environment_wins(self, monkeypatch, tmp_path):
-        monkeypatch.setenv(RUNS_ENVIRONMENT, str(tmp_path / "mine"))
+        monkeypatch.setenv(EnvironmentVariable.RUNS, str(tmp_path / "mine"))
         assert default_runs_directory() == tmp_path / "mine"
 
-    def test_otherwise_the_runs_are_where_cram_viz_keeps_them(
+    def test_otherwise_the_runs_are_where_cramera_keeps_them(
         self, monkeypatch, tmp_path
     ):
-        monkeypatch.delenv(RUNS_ENVIRONMENT, raising=False)
-        monkeypatch.setenv(DATA_ENVIRONMENT, str(tmp_path))
-        assert default_runs_directory() == tmp_path / "runs"
+        monkeypatch.delenv(EnvironmentVariable.RUNS, raising=False)
+        monkeypatch.setenv(EnvironmentVariable.CRAMERA_DATA, str(tmp_path))
+        assert default_runs_directory() == cramera_paths.resolution_runs_dir()
 
-    def test_without_either_they_are_in_the_users_data_directory(
+    def test_without_either_they_are_where_cramera_keeps_them_by_default(
         self, monkeypatch, tmp_path
     ):
-        monkeypatch.delenv(RUNS_ENVIRONMENT, raising=False)
-        monkeypatch.delenv(DATA_ENVIRONMENT, raising=False)
+        monkeypatch.delenv(EnvironmentVariable.RUNS, raising=False)
+        monkeypatch.delenv(EnvironmentVariable.CRAMERA_DATA, raising=False)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        assert default_runs_directory() == tmp_path / ".cram_viz" / "runs"
+        assert default_runs_directory() == cramera_paths.resolution_runs_dir()

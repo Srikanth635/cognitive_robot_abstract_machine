@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+from cramera.resolution import paths as cramera_paths
 
 from llm_reasoner_viz import paths
 from llm_reasoner_viz.neem_schema import Table
@@ -25,18 +26,26 @@ from .neem_files import Change, being_written, change_database, write_neem_datab
 
 
 class TestWhereTheDatabaseIs:
-    def test_by_default_it_is_the_database_of_cram_viz_in_its_data_directory(
+    def test_by_default_it_is_the_database_cramera_keeps_in_its_data_directory(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.delenv(paths.NEEM_DATABASE_ENVIRONMENT, raising=False)
-        monkeypatch.setenv(paths.DATA_ENVIRONMENT, str(tmp_path))
-        assert paths.neem_database_path() == tmp_path / paths.NEEM_DATABASE_FILE
+        monkeypatch.delenv(paths.EnvironmentVariable.NEEM_DATABASE, raising=False)
+        monkeypatch.setenv(paths.EnvironmentVariable.CRAMERA_DATA, str(tmp_path))
+        assert paths.neem_database_path() == cramera_paths.neem_database_path()
 
     def test_the_environment_can_name_another_database(self, tmp_path, monkeypatch):
         monkeypatch.setenv(
-            paths.NEEM_DATABASE_ENVIRONMENT, str(tmp_path / "elsewhere.sqlite")
+            paths.EnvironmentVariable.NEEM_DATABASE, str(tmp_path / "elsewhere.sqlite")
         )
         assert paths.neem_database_path() == tmp_path / "elsewhere.sqlite"
+
+    def test_the_environment_names_another_database_as_it_does_for_cramera(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.setenv(
+            paths.EnvironmentVariable.NEEM_DATABASE, str(tmp_path / "elsewhere.sqlite")
+        )
+        assert paths.neem_database_path() == cramera_paths.neem_database_path()
 
 
 # %% finding the database

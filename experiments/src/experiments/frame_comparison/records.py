@@ -24,8 +24,8 @@ from typing_extensions import Any, List, Optional, Sequence
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world_description.world_entity import Body
 
-from cram_viz.resolution.resolver import ResolvedDesignator
-from cram_viz.resolution.trial import OutcomeKey, TriedPour
+from cramera.resolution.resolver.resolver import ResolvedDesignator
+from cramera.resolution.resolver.trial import OutcomeKey, TriedPour
 from experiments.llm_reasoner_kitchen.cases import name_of
 from experiments.llm_reasoner_kitchen.resolution import Resolution
 
@@ -51,7 +51,7 @@ class Measurement(StrEnum):
 
     SIMULATED_POUR = "simulated_pour"
     """
-    cram_viz's pour, each answer poured in the simulation.
+    Cramera's pour, each answer poured in the simulation.
     """
 
     KITCHEN = "kitchen"
@@ -270,9 +270,9 @@ class RunRecord:
         run: int,
     ) -> RunRecord:
         """
-        :param resolved: What cram_viz resolved, with the pours it tried.
+        :param resolved: What cramera resolved, with the pours it tried.
         :param events: The events the run logged.
-        :return: The record of a run of cram_viz's pour.
+        :return: The record of a run of cramera's pour.
         """
         (action,) = resolved.actions
         perspective_records = set(resolved.perspective_record_ids)

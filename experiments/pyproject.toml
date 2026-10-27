@@ -11,7 +11,7 @@ dynamic = ["version"]
 dependencies = [
     "line_profiler",
     "coraplex",
-    "cram_viz",
+    "cramera",
     "giskardpy",
     "krrood",
     "llm_reasoner",
@@ -31,7 +31,7 @@ version = {attr = "experiments._version.__version__"}
 [dependency-groups]
 workspace = [
     "coraplex",
-    "cram_viz",
+    "cramera",
     "giskardpy",
     "krrood",
     "llm_reasoner",

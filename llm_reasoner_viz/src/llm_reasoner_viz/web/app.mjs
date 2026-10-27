@@ -9,7 +9,7 @@ import { EventsView } from './events_view.mjs';
 import { FilterView } from './filter_view.mjs';
 import { SpanFilter } from './filters.mjs';
 import { InspectorView } from './inspector_view.mjs';
-import { cramVizAddress } from './links.mjs';
+import { crameraAddress } from './links.mjs';
 import { mapState } from './map.mjs';
 import { MapView } from './map_view.mjs';
 import { KIND, RunModel, STATUS } from './model.mjs';
@@ -74,8 +74,8 @@ class Viewer {
     this.connection = find('connection');
     this.drawer = find('events-drawer');
     this.eventsToggle = find('events-toggle');
-    this.cramVizLink = find('cram-viz-link');
-    this.cramVizUrl = null;
+    this.crameraLink = find('cramera-link');
+    this.crameraUrl = null;
     this.replayToggle = find('replay-toggle');
     this.replayBar = find('replay-bar');
     this.replayView = new ReplayView(this.replayBar, () => this.replayChanged());
@@ -135,23 +135,23 @@ class Viewer {
 
   // %% runs
 
-  // Learns where cram-viz is, so the page can link to it.
+  // Learns where cramera is, so the page can link to it.
   async loadConfig() {
     const response = await fetch(Address.CONFIG).catch(() => null);
     if (response === null) return;
     const payload = await response.json();
-    if (payload.ok) this.cramVizUrl = payload.cram_viz_url;
+    if (payload.ok) this.crameraUrl = payload.cramera_url;
     this.changed = true;
   }
 
-  // Points the link to cram-viz at the scene and the run being shown.
-  showCramVizLink(model) {
-    this.cramVizLink.hidden = this.cramVizUrl === null || this.run === null;
-    if (this.cramVizLink.hidden) return;
+  // Points the link to cramera at the scene and the run being shown.
+  showCrameraLink(model) {
+    this.crameraLink.hidden = this.crameraUrl === null || this.run === null;
+    if (this.crameraLink.hidden) return;
     const started = model.spans.find((span) => span.kind === KIND.RUN);
     const summary = this.runs.find((run) => run.run === this.run);
     const scene = started ? started.data.started.scene : (summary ? summary.scene : '');
-    this.cramVizLink.href = cramVizAddress(this.cramVizUrl, scene, this.run);
+    this.crameraLink.href = crameraAddress(this.crameraUrl, scene, this.run);
   }
 
   async loadRuns() {
@@ -168,7 +168,7 @@ class Viewer {
       const wanted = this.runs.find((run) => run.run === this.wantedRun);
       this.followRun((wanted || this.runs[0]).run);
     }
-    if (this.runs.length === 0) this.inspector.empty('No run yet. Resolve a designator in cram-viz, or point the viewer at a directory of runs.');
+    if (this.runs.length === 0) this.inspector.empty('No run yet. Resolve a designator in cramera, or point the viewer at a directory of runs.');
   }
 
   showRuns() {
@@ -414,7 +414,7 @@ class Viewer {
     const status = this.statusOf(model, live);
     this.statusBadge.textContent = status;
     this.statusBadge.className = 'badge status-' + status;
-    this.showCramVizLink(model);
+    this.showCrameraLink(model);
     this.replayBar.hidden = this.replay === null || this.neemId !== null;
     this.replayToggle.classList.toggle('on', this.replay !== null);
     this.replayToggle.disabled = this.replay === null && (this.isLive() || this.model.events.length === 0);

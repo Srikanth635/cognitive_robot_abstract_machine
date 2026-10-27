@@ -22,7 +22,7 @@ const MILLISECONDS_PER_SECOND = 1000;
 
 const Say = Object.freeze({
   LOADING: 'Looking for the NEEMs…',
-  NO_DATABASE: 'No NEEM database yet. A NEEM is saved when a designator is resolved or executed in cram-viz.',
+  NO_DATABASE: 'No NEEM database yet. A NEEM is saved when a designator is resolved or executed in cramera.',
   NONE_IN_RUN: 'This run saved no NEEMs.',
   NONE_AT_ALL: 'The database holds no NEEMs.',
   NONE_OF_KIND: 'None of this kind.',

@@ -1,84 +1,116 @@
 """
-Where the runs the viewer shows are kept, and where cram_viz, which it links to, is.
+Where the runs the viewer shows are kept, and where cramera, which it links to, is.
 """
 
 from __future__ import annotations
 
 import os
+from enum import StrEnum
 from pathlib import Path
 
-RUNS_ENVIRONMENT = "LLM_REASONER_VIZ_RUNS"
-"""
-The environment variable that names the directory of runs to show.
-"""
+# %% what the environment names
 
-DATA_ENVIRONMENT = "CRAM_VIZ_DATA"
-"""
-The environment variable that names cram_viz's data directory, in which it keeps runs.
-"""
 
-CRAM_VIZ_ENVIRONMENT = "CRAM_VIZ_URL"
-"""
-The environment variable that names the address cram_viz is served at.
-"""
+class EnvironmentVariable(StrEnum):
+    """
+    The environment variables that move what the viewer shows or links to.
+    """
 
-DEFAULT_CRAM_VIZ_URL = "http://localhost:8711"
-"""
-The address cram_viz is served at unless told otherwise.
-"""
+    RUNS = "LLM_REASONER_VIZ_RUNS"
+    """
+    The directory of runs to show.
+    """
 
-NEEM_DATABASE_ENVIRONMENT = "CRAM_VIZ_NEEM_DATABASE"
-"""
-The environment variable that names the database cram_viz keeps the NEEMs of its
-simulations in.
-"""
+    CRAMERA_DATA = "CRAMERA_DATA"
+    """
+    cramera's data directory, in which it keeps its runs and its NEEM database.
+    """
 
-NEEM_DATABASE_FILE = "neems.sqlite"
-"""
-The name of the database the NEEMs are kept in, in cram_viz's data directory.
-"""
+    CRAMERA_URL = "CRAMERA_URL"
+    """
+    The address cramera is served at.
+    """
 
-RUNS_DIRECTORY = "runs"
-"""
-The directory of cram_viz's data directory that holds a run in a directory of its own.
-"""
+    NEEM_DATABASE = "CRAMERA_NEEM_DATABASE"
+    """
+    The database cramera keeps the NEEMs of its simulations in.
+    """
 
-USER_DATA_DIRECTORY = ".cram_viz"
-"""
-The directory of the user's home that cram_viz keeps its data in unless told otherwise.
-"""
+
+class CrameraDataName(StrEnum):
+    """
+    The names of what cramera keeps in its data directory, and of that directory in the
+    user's home.
+    """
+
+    USER_DATA_DIRECTORY = ".cramera"
+    """
+    The directory of the user's home cramera keeps its data in unless told otherwise.
+    """
+
+    RUNS = "runs"
+    """
+    The directory holding a run in a directory of its own.
+    """
+
+    NEEM_DATABASE = "neems.sqlite"
+    """
+    The database the NEEMs are kept in.
+    """
+
+
+class CrameraAddress(StrEnum):
+    """
+    Where cramera is served.
+    """
+
+    DEFAULT = "http://localhost:8711"
+    """
+    The address it is served at unless the environment says otherwise.
+    """
+
+
+# %% where things are
+
+
+def cramera_data_directory() -> Path:
+    """
+    :return: cramera's data directory: the one the environment names, else the one in
+        the user's home.
+    """
+    data = os.environ.get(EnvironmentVariable.CRAMERA_DATA)
+    if data:
+        return Path(data).expanduser()
+    return Path.home() / CrameraDataName.USER_DATA_DIRECTORY
 
 
 def default_runs_directory() -> Path:
     """
     :return: The directory of runs to show: the one the environment names, else where
-        cram_viz keeps its runs.
+        cramera keeps its runs.
     """
-    runs = os.environ.get(RUNS_ENVIRONMENT)
+    runs = os.environ.get(EnvironmentVariable.RUNS)
     if runs:
         return Path(runs).expanduser()
-    data = os.environ.get(DATA_ENVIRONMENT)
-    if data:
-        return Path(data).expanduser() / RUNS_DIRECTORY
-    return Path.home() / USER_DATA_DIRECTORY / RUNS_DIRECTORY
+    return cramera_data_directory() / CrameraDataName.RUNS
 
 
-def cram_viz_url() -> str:
+def cramera_url() -> str:
     """
-    :return: The address cram_viz is served at: the one the environment names, else the
+    :return: The address cramera is served at: the one the environment names, else the
         default, without a closing slash.
     """
-    return os.environ.get(CRAM_VIZ_ENVIRONMENT, DEFAULT_CRAM_VIZ_URL).rstrip("/")
+    return os.environ.get(
+        EnvironmentVariable.CRAMERA_URL, CrameraAddress.DEFAULT
+    ).rstrip("/")
 
 
 def neem_database_path() -> Path:
     """
     :return: The database the NEEMs are kept in: the one the environment names, else
-        where cram_viz keeps it in its data directory.
+        where cramera keeps it in its data directory.
     """
-    database = os.environ.get(NEEM_DATABASE_ENVIRONMENT)
+    database = os.environ.get(EnvironmentVariable.NEEM_DATABASE)
     if database:
         return Path(database).expanduser()
-    data = os.environ.get(DATA_ENVIRONMENT)
-    base = Path(data).expanduser() if data else Path.home() / USER_DATA_DIRECTORY
-    return base / NEEM_DATABASE_FILE
+    return cramera_data_directory() / CrameraDataName.NEEM_DATABASE

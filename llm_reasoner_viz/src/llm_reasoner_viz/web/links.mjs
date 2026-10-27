@@ -1,11 +1,11 @@
-// Where the viewer sends the reader: cram-viz, at the scene and the run it is showing.
+// Where the viewer sends the reader: cramera, at the scene and the run it is showing.
 
-// The parameters of the address cram-viz reads.
+// The parameters of the address cramera reads.
 const PARAMETER = Object.freeze({ SCENE: 'scene', RUN: 'run' });
 
-// The address that opens a run in cram-viz, in its scene when the log names one: cram-viz
+// The address that opens a run in cramera, in its scene when the log names one: cramera
 // shows what the run resolved and the hypothesis it consulted, and can perform it.
-export function cramVizAddress(baseUrl, scene, run) {
+export function crameraAddress(baseUrl, scene, run) {
   const address = new URL(baseUrl);
   if (!address.pathname.endsWith('/')) address.pathname += '/';
   if (scene) address.searchParams.set(PARAMETER.SCENE, scene);
