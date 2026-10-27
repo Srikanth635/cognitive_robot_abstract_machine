@@ -1185,7 +1185,12 @@ into cram_viz's code, stays out (`cramera-live` runs any demo).
 - **Start after Live.** Live on a recorded scene opens the live scene by loading the
   page anew, which lost the panel's Start button while the performance still waited.
   The panel now asks `GET /api/resolution/performance` when it loads and offers Start
-  while a performance waits (`LiveRunLauncher.is_waiting`).
+  while a performance waits (`LiveRunLauncher.is_waiting`); Start no longer needs a run
+  shown, since the server knows which run waits. The run shown is written into the
+  page's address (`?run=`), so the live page shows it again and Execute stays offered,
+  and a Stop button (`POST /api/resolution/stop`, `LiveRunLauncher.stop`) ends a
+  performance, which otherwise keeps its world up for the viewer after the pour until
+  the next Execute.
 
 ### OpenAI as a provider, added and taken out again (2026-10-27)
 

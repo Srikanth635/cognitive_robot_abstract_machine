@@ -106,7 +106,7 @@ The panels are in `web/panels/resolution`:
   begins, so there is something to watch (stop the recording in the viewer afterwards to keep
   it as an episode, and play it back at any speed). The box suggests the action designators
   and, inside one's argument list, their parameters, through the EQL box's own suggestion menu. A page
-  opened with `?run=<name>` shows that run.
+  opened with `?run=<name>` shows that run, and the run shown is written there, so the live scene Live opens still shows it and Execute performs it anew. Stop ends the performance, which otherwise keeps its world up for the viewer until the next Execute.
 - The graph panel has three more tabs, *Hypothesis Graph*, *Ontology Graph* and *Designator*
   (`web/panels/graph/knowledge_views.js`), that draw the knowledge a resolution consulted. A
   freshly generated hypothesis redraws them, and marks the Hypothesis Graph tab until it is
@@ -124,7 +124,8 @@ The routes, all under `/api/resolution/`, answer JSON, and an error as
 | `POST hypothesis` | Generates hypothesis knowledge for an instruction |
 | `POST execute` | Brings the simulation of a kept run up under the live viewer, waiting to be started |
 | `POST start` | Has the waiting simulation begin the pour |
-| `GET performance` | Whether a performance waits for its start, so a page opened anew (Live opens the live scene) offers Start again |
+| `POST stop` | Ends the performance, whether it waits, pours, or keeps its world up after the pour |
+| `GET performance` | Whether a performance runs and whether it waits for its start, so a page opened anew (Live opens the live scene) offers Stop and Start again |
 | `GET view?name=&scene=` | The hypothesis, ontology or designator view |
 
 Under `CRAMERA_DATA` (default `~/.cramera`) it keeps `runs/`, `hypotheses/` and the NEEM

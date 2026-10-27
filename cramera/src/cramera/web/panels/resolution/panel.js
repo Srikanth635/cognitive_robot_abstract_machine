@@ -24,7 +24,11 @@
     execute: '/api/resolution/execute',
     start: '/api/resolution/start',
     performance: '/api/resolution/performance',
+    stop: '/api/resolution/stop',
   });
+
+  // the parameters of the page's address the panel reads and writes
+  const ADDRESS = Object.freeze({ RUN: 'run' });
 
   Panels.define('resolution-designators', function (root, bus) {
     const view = window.ResolutionView;
@@ -38,6 +42,7 @@
       '    <button id="resolution-resolve" class="primary" title="Resolve the query in the box with llm_reasoner in this scene">Resolve</button>' +
       '    <button id="resolution-execute" title="Perform the resolved designator in the simulation, under the live viewer" disabled>Execute</button>' +
       '    <button id="resolution-start" class="primary" style="display:none" title="Begin the pour that is waiting in the simulation — click the 3D scene\'s Live button first to watch it">▶ Start</button>' +
+      '    <button id="resolution-stop" style="display:none" title="End the performance: its simulation and the live world it keeps up for the viewer">■ Stop</button>' +
       '  </div>' +
       '  <div class="knowledge-choices">' +
       '    <div id="resolution-phase-structure" class="perspectives" title="The phase structure Resolve consults; untick it to leave it out"></div>' +
@@ -60,6 +65,7 @@
     const resolveBtn = root.querySelector('#resolution-resolve');
     const executeBtn = root.querySelector('#resolution-execute');
     const startBtn = root.querySelector('#resolution-start');
+    const stopBtn = root.querySelector('#resolution-stop');
     const designatorsEl = root.querySelector('#resolution-designators');
     const runsEl = root.querySelector('#resolution-runs');
     const phaseStructureEl = root.querySelector('#resolution-phase-structure');
@@ -67,6 +73,7 @@
     const adjustmentEl = root.querySelector('#resolution-adjustment');
     executeBtn.disabled = true;  // nothing to execute before a run is shown
     startBtn.style.display = 'none';  // nothing waits to start before a run is executed
+    stopBtn.style.display = 'none';  // nothing runs to stop before a run is executed
 
     // ---- the box suggests the action designators and their parameters -------------------
     let vocabulary = [];  // what the server offers to complete
@@ -220,11 +227,16 @@
     resolveBtn.addEventListener('click', function () { resolve(queryEl.value); });
 
     // The answer a resolution gave, whether just made or opened from a run kept earlier:
-    // the answer area, the hypothesis it consulted, and Execute for its run.
+    // the answer area, the hypothesis it consulted, and Execute for its run. The run is
+    // named in the page's address, so a page opened anew, as Live opens the live scene,
+    // shows it again and can execute it.
     function showResolution(payload) {
       answerEl.innerHTML = view.resolutionHtml(payload.resolution, payload.viewer);
       shownRun = payload.resolution.run;
       executeBtn.disabled = false;
+      const parameters = new URLSearchParams(window.location.search);
+      parameters.set(ADDRESS.RUN, shownRun);
+      window.history.replaceState(null, '', '?' + parameters.toString());
       bus.emit('hypothesis:generated', payload.hypothesis);
     }
 
@@ -294,8 +306,9 @@
             '<p class="hint-txt">Starting the simulation from the run\'s initial environment ' +
             'under the live viewer. It then waits: once the 3D scene\'s Live button appears, ' +
             'click it (the page opens the live scene), then press Start here and the pour ' +
-            'begins.</p>';
+            'begins. Stop ends the performance; Execute again performs the run anew.</p>';
           startBtn.style.display = '';
+          stopBtn.style.display = '';
         } else {
           failure('execution failed', '', payload.error || 'execution failed');
         }
@@ -307,15 +320,17 @@
       executeBtn.disabled = false;
     }
 
-    // Start has the waiting simulation begin the pour.
+    // Start has the waiting simulation begin the pour; the server knows which run waits,
+    // so a page opened anew, which shows none, starts it too.
     let starting = false;
     async function startPouring() {
-      if (!shownRun || starting) return;
+      if (starting) return;
       starting = true;
       try {
         const payload = await postJson(ROUTES.start, {});
         if (payload.ok) {
-          answerEl.innerHTML = '<div class="goal">performing run ' + view.esc(shownRun) + '</div>' +
+          const performed = shownRun ? 'run ' + view.esc(shownRun) : 'the run that waited';
+          answerEl.innerHTML = '<div class="goal">performing ' + performed + '</div>' +
             '<p class="hint-txt">The pour has begun. It takes a few seconds; the live viewer ' +
             'shows it as it happens. Stop the recording there to keep it as an episode.</p>';
           startBtn.style.display = 'none';
@@ -331,22 +346,48 @@
     executeBtn.addEventListener('click', execute);
     startBtn.addEventListener('click', startPouring);
 
+    // Stop ends the performance, whether it waits, pours, or keeps its world up after the
+    // pour; Execute performs the run anew.
+    let stopping = false;
+    async function stopPerformance() {
+      if (stopping) return;
+      stopping = true;
+      try {
+        const payload = await postJson(ROUTES.stop, {});
+        if (payload.ok) {
+          answerEl.innerHTML = '<div class="goal">stopped the performance</div>' +
+            '<p class="hint-txt">Execute performs the run shown anew.</p>';
+          startBtn.style.display = 'none';
+          stopBtn.style.display = 'none';
+        } else {
+          failure('stop failed', '', payload.error || 'stop failed');
+        }
+      } catch (error) {
+        failure('stop failed', '', String(error));
+      }
+      stopping = false;
+    }
+
+    stopBtn.addEventListener('click', stopPerformance);
+
     // A page opened anew, as Live opens the live scene, offers Start for the
-    // performance that still waits for it.
+    // performance that still waits for it, and Stop for one that still runs.
     async function loadPerformance() {
       try {
         const response = await fetch(ROUTES.performance);
         const payload = await response.json();
-        if (payload.ok && payload.waiting) startBtn.style.display = '';
+        if (!payload.ok) return;
+        if (payload.waiting) startBtn.style.display = '';
+        if (payload.running) stopBtn.style.display = '';
       } catch (error) {
-        // Start stays as it is; Execute offers it again
+        // Start and Stop stay as they are; Execute offers them again
       }
     }
 
     loadDesignators();
     loadRuns();
     loadPerformance();
-    const named = new URLSearchParams(window.location.search).get('run');
+    const named = new URLSearchParams(window.location.search).get(ADDRESS.RUN);
     if (named) openRun(named);
 
     return {};

@@ -207,6 +207,11 @@ class LiveRunLauncher:
     killed, so restarting never hangs waiting on it.
     """
 
+    termination_poll_seconds: float = 0.1
+    """
+    How often a process asked to exit is looked at, until it has.
+    """
+
     _process: Any | None = field(default=None, init=False, repr=False)
     """
     The process started last.
@@ -225,7 +230,7 @@ class LiveRunLauncher:
 
         :param run: The run to perform.
         """
-        self._stop_running_process()
+        self.stop()
         run.clear_start_request()
         log_directory = paths.data_dir()
         log_directory.mkdir(parents=True, exist_ok=True)
@@ -241,16 +246,21 @@ class LiveRunLauncher:
         self._run = run
 
     @property
+    def is_running(self) -> bool:
+        """
+        :return: Whether the process started last still runs: waiting for its start,
+            performing, or, having performed, keeping its world up for the viewer.
+        """
+        return self._process is not None and self._process.poll() is None
+
+    @property
     def is_waiting(self) -> bool:
         """
         :return: Whether the performance started last is running and waits for a start
             that has not been requested yet.
         """
         return (
-            self._run is not None
-            and self.waits_for_start
-            and self._process.poll() is None
-            and not self._run.start_requested
+            self.is_running and self.waits_for_start and not self._run.start_requested
         )
 
     def request_start(self) -> None:
@@ -264,18 +274,20 @@ class LiveRunLauncher:
             raise NoPerformanceWaiting()
         self._run.request_start()
 
-    def _stop_running_process(self) -> None:
+    def stop(self) -> None:
         """
-        Terminate the process started before, killing it if it hangs.
+        End the performance started last, if it still runs: it is asked to exit, and
+        killed when it has not within :attr:`termination_timeout_seconds`.
         """
-        if self._process is None or self._process.poll() is not None:
+        if not self.is_running:
             return
         self._process.terminate()
-        try:
-            self._process.wait(timeout=self.termination_timeout_seconds)
-        except subprocess.TimeoutExpired:
+        deadline = time.monotonic() + self.termination_timeout_seconds
+        while self._process.poll() is None and time.monotonic() < deadline:
+            time.sleep(self.termination_poll_seconds)
+        if self._process.poll() is None:
             self._process.kill()
-            self._process.wait(timeout=self.termination_timeout_seconds)
+            self._process.wait()
 
 
 if __name__ == "__main__":

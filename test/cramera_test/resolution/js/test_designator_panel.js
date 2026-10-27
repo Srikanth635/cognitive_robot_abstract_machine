@@ -26,6 +26,7 @@ const ROUTES = {
   execute: '/api/resolution/execute',
   start: '/api/resolution/start',
   performance: '/api/resolution/performance',
+  stop: '/api/resolution/stop',
 };
 
 // %% a page to mount the panel into
@@ -127,7 +128,7 @@ function loadPanel(options) {
     '#resolution-answer', '#resolution-query', '#resolution-resolve', '#resolution-execute',
     '#resolution-designators', '#resolution-runs', '#resolution-phase-structure',
     '#resolution-perspectives', '#resolution-adjustment', '#resolution-tab-designators',
-    '#resolution-tab-runs', '.query-box', '#resolution-start',
+    '#resolution-tab-runs', '.query-box', '#resolution-start', '#resolution-stop',
   ].forEach(function (name) { elements[name] = element(); });
 
   const root = { innerHTML: '', querySelector(selector) { return elements[selector]; } };
@@ -160,7 +161,16 @@ function loadPanel(options) {
         : { ok: true });
     }
     if (url === ROUTES.performance) {
-      return answer({ ok: true, waiting: !!settings.performanceWaits });
+      return answer({
+        ok: true,
+        waiting: !!settings.performanceWaits,
+        running: !!(settings.performanceRuns || settings.performanceWaits),
+      });
+    }
+    if (url === ROUTES.stop) {
+      return answer(settings.stopFails
+        ? { ok: false, error: 'RuntimeError: the performance could not be stopped' }
+        : { ok: true });
     }
     if (url === ROUTES.start) {
       return answer(settings.startFails
@@ -176,7 +186,12 @@ function loadPanel(options) {
     withScene(url) { return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'scene=simple_pouring'; },
   };
   const layout = settings.layout || { left: ['robot-scene'], right: ['eql', 'graph'] };
-  global.window = { location: { search: settings.search || '' }, CRAMERA_CONFIG: { layout: layout } };
+  const addresses = [];
+  global.window = {
+    location: { search: settings.search || '' },
+    history: { replaceState(state, title, address) { addresses.push(address); } },
+    CRAMERA_CONFIG: { layout: layout },
+  };
 
   const defined = {};
   global.Panels = { define(identifier, factory) { defined[identifier] = factory; } };
@@ -195,7 +210,7 @@ function loadPanel(options) {
   });
   global.DesignatorCompletion = global.window.DesignatorCompletion;
   return {
-    root, bus, elements, requests, emitted, defined, layout, menus, menuKeys,
+    root, bus, elements, requests, emitted, defined, layout, menus, menuKeys, addresses,
     mount() { return defined[PANEL_ID](root, bus); },
   };
 }
@@ -570,6 +585,33 @@ test('a page opened with a run in its address shows that run', async function ()
   assert.strictEqual(panel.elements['#resolution-query'].value, resolvedPayload().resolution.query);
 });
 
+// the parameters of the address the page was last given
+function lastAddress(panel) {
+  const address = panel.addresses[panel.addresses.length - 1];
+  return new URLSearchParams(address.slice(address.indexOf('?') + 1));
+}
+
+test('a run resolved is named in the page address, so a page opened anew shows it', async function () {
+  const panel = await mounted();
+  resolve(panel, 'the(PouringAction)()');
+  await settle();
+  assert.strictEqual(lastAddress(panel).get('run'), resolvedPayload().resolution.run);
+});
+
+test('a run opened from the list is named in the page address', async function () {
+  const panel = await mounted();
+  runEntries(panel)[1].listeners.click();
+  await settle();
+  assert.strictEqual(lastAddress(panel).get('run'), resolvedPayload().resolution.run);
+});
+
+test('naming the run keeps the rest of the address', async function () {
+  const panel = await mounted({ search: '?scene=__live__' });
+  resolve(panel, 'the(PouringAction)()');
+  await settle();
+  assert.strictEqual(lastAddress(panel).get('scene'), '__live__');
+});
+
 test('a page opened with no run in its address shows none', async function () {
   const panel = await mounted();
   assert.ok(!panel.requests.some(function (r) { return r.url === ROUTES.run; }));
@@ -644,6 +686,14 @@ test('a page opened while a performance waits offers Start', async function () {
   assert.strictEqual(panel.elements['#resolution-start'].style.display, '');
 });
 
+test('Start on a page opened while a performance waits starts it', async function () {
+  const panel = await mounted({ performanceWaits: true });
+  panel.elements['#resolution-start'].listeners.click();
+  await settle();
+  assert.strictEqual(post(panel, ROUTES.start).length, 1);
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, 'none');
+});
+
 test('a page opened while nothing waits does not offer Start', async function () {
   const panel = await mounted({ performanceWaits: false });
   assert.strictEqual(panel.elements['#resolution-start'].style.display, 'none');
@@ -657,6 +707,39 @@ test('Start is offered once the run is executing', async function () {
 test('Start is not offered when the execution fails', async function () {
   const panel = await executed({ executeFails: true });
   assert.strictEqual(panel.elements['#resolution-start'].style.display, 'none');
+});
+
+// %% stopping what runs
+test('Stop is not offered before a run is executed', async function () {
+  const panel = await mounted();
+  assert.strictEqual(panel.elements['#resolution-stop'].style.display, 'none');
+});
+
+test('Stop is offered once the run is executing', async function () {
+  const panel = await executed();
+  assert.strictEqual(panel.elements['#resolution-stop'].style.display, '');
+});
+
+test('a page opened while a performance runs offers Stop', async function () {
+  const panel = await mounted({ performanceRuns: true });
+  assert.strictEqual(panel.elements['#resolution-stop'].style.display, '');
+});
+
+test('Stop ends the performance, and neither Start nor Stop stays offered', async function () {
+  const panel = await executed();
+  panel.elements['#resolution-stop'].listeners.click();
+  await settle();
+  assert.strictEqual(post(panel, ROUTES.stop).length, 1);
+  assert.strictEqual(panel.elements['#resolution-stop'].style.display, 'none');
+  assert.strictEqual(panel.elements['#resolution-start'].style.display, 'none');
+});
+
+test('a stop that fails says why and stays offered', async function () {
+  const panel = await executed({ stopFails: true });
+  panel.elements['#resolution-stop'].listeners.click();
+  await settle();
+  assert.ok(panel.elements['#resolution-answer'].innerHTML.includes('stop failed'));
+  assert.strictEqual(panel.elements['#resolution-stop'].style.display, '');
 });
 
 test('Start asks the server to start the performance that waits', async function () {
