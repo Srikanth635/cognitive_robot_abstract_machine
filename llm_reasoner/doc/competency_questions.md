@@ -17,7 +17,7 @@ require typed answers rather than free text.
 | Decision | Consequence |
 |---|---|
 | A language model hypothesises, physics confirms | The model's pretrained understanding of actions — procedures, roles, phases, events and their order, forces, constraints, failures — is the source of the generic knowledge, always as a hypothesis (Generated, §3). Every part that a physics result reaches is confirmed or refuted by it: a quantity derived or measured, an event observed to occur, an order observed in time, a limit found by a sweep. What no physics result reaches stays Generated, and says so |
-| `llm_reasoner` stays independent of any world model | It imports krrood (and `random_events`, `probabilistic_model` through it) and never `semantic_digital_twin`, `coraplex`, `cram_viz` or a simulator. Physics results reach it as records in its own ontology terms (§4); the world reaches it only through `WorldAccess` over krrood's symbol graph |
+| `llm_reasoner` stays independent of any world model | It imports krrood (and `random_events`, `probabilistic_model` through it) and never `semantic_digital_twin`, `coraplex`, `cramera` or a simulator. Physics results reach it as records in its own ontology terms (§4); the world reaches it only through `WorldAccess` over krrood's symbol graph |
 | Other packages are used as they are | krrood, `semantic_digital_twin`, `coraplex`, `giskardpy`, `physics_simulators` and the others are read and called, never changed; what they lack is built on our side or asked about. segmind is not used |
 | The knowledge has two consumers: the resolver and a question answerer | Questions are read through the same knowledge graph, measurement store and world access as resolutions; neither consumer changes the other |
 | An answer is typed: the fragments, measurements and world individuals it consists of, each cited by its IRI or handle | A language model may write the answer in prose afterwards, citing what it rests on; it adds no fact |
@@ -92,7 +92,7 @@ It then compares two things with the hypothesis:
 | Part | Where | Depends on |
 |---|---|---|
 | Vocabulary of observed changes and episodes | A module of the physical measurement family | The predictive manipulation core and action core |
-| Recording an episode from a simulation: binding each body to the role it fills (the world side knows which body is the source, the target, the support), and writing the observed changes | Outside `llm_reasoner`: the physics harnesses in `experiments`, and cram_viz's trials | `physics_simulators`, `semantic_digital_twin` and coraplex, used as they are |
+| Recording an episode from a simulation: binding each body to the role it fills (the world side knows which body is the source, the target, the support), and writing the observed changes | Outside `llm_reasoner`: the physics harnesses in `experiments`, and cramera's trials | `physics_simulators`, `semantic_digital_twin` and coraplex, used as they are |
 | Classifying observed changes into events, comparing them with a hypothesis, writing verdicts | `llm_reasoner` | krrood and its own modules only |
 
 ### 4.2 What a simulation can back

@@ -128,21 +128,15 @@ The routes, all under `/api/resolution/`, answer JSON, and an error as
 
 Under `CRAMERA_DATA` (default `~/.cramera`) it keeps `runs/`, `hypotheses/` and the NEEM
 database `neems.sqlite`; `CRAMERA_HYPOTHESIS_STORE` and `CRAMERA_NEEM_DATABASE` move the last
-two. The runs are the ones the `llm_reasoner_viz` viewer shows
-(`LLM_REASONER_VIZ_RUNS=$CRAMERA_DATA/runs llm-reasoner-viz`), which the answers link to at
-`LLM_REASONER_VIZ_URL` (default `http://localhost:8721`).
+two. The runs are the ones the `llm_reasoner_viz` viewer shows by default, which the answers
+link to at `LLM_REASONER_VIZ_URL` (default `http://localhost:8721`).
 
 Not available yet: plan steps are not written to a run's log as they change (a run's start and
 end are), the knowledge cannot be queried from the EQL panel, and the NEEM of a performance
 is kept only where the generated ORM interface exists (`scripts/regenerate_all_orm.py`).
 
-`cramera/scenes` holds the bundles of `cram_viz/scenes` in the format `cramera` reads (a
-`placeTarget` stores `position`, and the PR2's `<transmission>` elements, which `cramera`'s URDF
-reader refuses, are left out). Write it again after `cram_viz`'s bundles are regenerated:
-
-```bash
-python -m cramera.resolution.scene_conversion cram_viz/scenes cramera/scenes
-```
+`cramera/scenes` holds the scenes the designators are resolved in, converted from cram_viz's
+archive (see [its README](scenes/README.md), which says how to convert another).
 
 ## Pop out panels
 

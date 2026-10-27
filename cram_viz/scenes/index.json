@@ -1,8 +1,0 @@
-{
- "default": "pr2_kitchen",
- "scenes": [
-  "pr2_kitchen",
-  "garmi_apartment",
-  "simple_pouring"
- ]
-}

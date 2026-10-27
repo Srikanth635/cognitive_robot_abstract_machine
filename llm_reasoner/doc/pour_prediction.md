@@ -41,7 +41,7 @@ opening, and whether it lands in the opening.
   predicting what an answer brings about and the rule saying how to use them; the
   backend offers its tools beside the world tools and states its rule. llm_reasoner
   imports nothing of coraplex for it.
-- cram_viz's `PourPrediction` implements it with one tool, `predict_pour_end`, taking a
+- cramera's `PourPrediction` implements it with one tool, `predict_pour_end`, taking a
   pour's values as the answer writes them and answering with the predicted outcome. The
   simulated pour stays as the check after the answer.
 

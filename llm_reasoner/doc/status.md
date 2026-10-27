@@ -14,7 +14,7 @@ Last updated: 2026-10-27; code on the branch `feature/physics_backed_knowledge`,
 | World injector (`world/`) | Built and tested; eight tools; world-access contract 1.0 with declared answer shapes |
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
-| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cramera, the visualiser since 2026-10-27, logs every run, as cram_viz did; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
+| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cramera, the visualiser since 2026-10-27, logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model, which reads the hypothesis through three knowledge tools and cites its fragments as grounds (R1–R7 and I1–I5, verified live). Two vocabulary families: the Flanagan predictive-control modules and the action perspectives (action core and action frame, phases 0–4 of `knowledge_perspectives.md`, offered opt-in). A pour's predicted end and the flow-onset tilt are checked on the resolver side (`pour_prediction.md`) |
 | Offline tests | `python -m pytest test/llm_reasoner_test -m "not slow"`: 1350 passed, 41 deselected as slow, which pass on their own (2026-10-26) |
 
@@ -1128,16 +1128,25 @@ execute backend into it as `cramera.resolution` on 2026-10-21/22; that package, 
   0001 to 0015 after the backup `hypotheses.backup-2026-10-27`. Four are current; the
   liquid phase structure (`fe4b3742`) stays stale, because its flow-onset threshold is
   about no source container, which the pouring module requires.
-- **Not moved.** cram_viz keeps its copy of the backend until it is retired;
-  `llm_reasoner_viz` still defaults to cram_viz's data directory
-  (`LLM_REASONER_VIZ_RUNS=~/.cramera/runs` shows cramera's runs), and the experiments
-  still import cram_viz.
+- **cram_viz removed.** `llm_reasoner_viz` defaults to cramera's data directory
+  (`CRAMERA_DATA`, else `~/.cramera`: its runs and its NEEM database) and links to cramera
+  (`CRAMERA_URL`, default `http://localhost:8711`); its tests check these defaults against
+  `cramera.resolution.paths` and cramera's port. The experiments import
+  `cramera.resolution.resolver`, and llm_reasoner's tests read the sample hypothesis and
+  the measurements cramera ships. `cram_viz`, `test/cram_viz_test` and their workspace
+  entries are gone; cramera's `test_paths` now covers its link to the viewer. What cram_viz
+  offered that cramera does not yet: the knowledge in the EQL panel's namespace with its
+  preset questions, plan steps written to a run's log as they change (`StepChanged`,
+  `PlanNodeChanged`), and Execute without a run starting coraplex's kitchen-counter demo.
+  The demos named after cram_viz (`coraplex/demos/coraplex_gcs_demo/cram_viz`,
+  `kitchen_pouring/cram_viz_simple_pouring.py`) import nothing of it and keep their names.
 - **Open: kept runs of an earlier format.** The runs list reads every kept run, and a run
   the current code cannot read fails the whole list (`GET /api/resolution/runs`). None of
   the three runs in `~/.cramera/runs` can be read (two name the flow-onset outcome key
   `FLOW_ONSET_TILT_RADIANS`, gone since the measured flow onset; one names the add-on's
-  old module `cramera_resolution`), nor 8 of the 21 in `~/.cram_viz/runs`, so cram_viz's
-  list fails the same way. How old runs are to be treated is undecided.
+  old module `cramera_resolution`). The 21 runs in `~/.cram_viz/runs`, 8 of them
+  unreadable as well, stay on disk, and nothing reads them by default now. How old runs
+  are to be treated is undecided.
 
 ## 2a. Moved onto the upstream main (2026-10-21)
 
@@ -1496,7 +1505,7 @@ approval.
 | Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | **Done** (R1–R7, I1–I5; `architecture.md` §3.6, §3.7): the resolver obtains the hypothesis before every request to its model and reads it with the knowledge tools |
 | Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below. Designed in [`knowledge_perspectives.md`](knowledge_perspectives.md): an action core and one module per perspective, each importing `cram-aicor-ontology.ttl`; the model proposes each perspective's vocabulary, which is checked and reviewed before use. Built: the core and the action frame, with knowledge, tools, roles-to-slots and the phase 4 measurement (phases 0–4, §2). Not built: image schemas (5), failures and corrections (6), the Flanagan modules on the core's slots (7), more actions (8). Trap cases come before any further perspective |
 | Structured prompts for the knowledge component | Its system, initial and repair prompts were prose built in Python, unlike the resolver's tagged sections | **Done** 2026-10-12 (`architecture.md` §3.2): tagged sections, JSON data and named rules; the system prompt grew from about 80k to 130k characters (the types as indented JSON) |
-| Live check of the consolidated modules (step 16 of the ontology consolidation) | Shows whether generation is still admitted, and at what cost, once each shared notion has one owner | Deferred by the user on 2026-10-26 until there is API credit: one hypothesis per root (liquid `PouringPhaseStructure`, liquid `pf:PouringFrame`, `FrameStereotype`, `SchemaStereotype`, `FailureStereotype`) with Sonnet 5.5, recording admission, repairs, warnings, HermiT's verdict, tokens, cost and time against the store's records of 2026-10-21; then one cram_viz `simple_pouring` resolution by the resolver's model |
+| Live check of the consolidated modules (step 16 of the ontology consolidation) | Shows whether generation is still admitted, and at what cost, once each shared notion has one owner | Deferred by the user on 2026-10-26 until there is API credit: one hypothesis per root (liquid `PouringPhaseStructure`, liquid `pf:PouringFrame`, `FrameStereotype`, `SchemaStereotype`, `FailureStereotype`) with Sonnet 5.5, recording admission, repairs, warnings, HermiT's verdict, tokens, cost and time against the store's records of 2026-10-21; then one cramera `simple_pouring` resolution by the resolver's model |
 | Designator slots supplied from the SDT world (containers, arms) | Replaces hand-written bindings | Deferred |
 | Choosing smaller pouring structures from the world state | The full 12-phase pouring structure is always required | Deferred |
 | An MCP server over the world-access contract | For consumers outside the resolver's process | When a second consumer needs it |
@@ -1568,9 +1577,8 @@ beyond the Flanagan microworld* (several perspectives); see §4.
 ## 7. Known issues
 
 **In `llm_reasoner`:**
-- cram_viz's `kb.build_symbol_graph` still rebuilds krrood's symbol graph and gives
-  the knowledge vocabulary as its reason, which no longer holds since I1; whether
-  cram_viz's own symbols still need the rebuild is unchecked.
+- None open (cram_viz's needless rebuild of krrood's symbol graph went with cram_viz,
+  2026-10-27).
 
 **Outside `llm_reasoner`** (to report to their owners, not to change here):
 - krrood's verbalizer writes contradictory bounds as "between 0.01 and 0.005" and enum

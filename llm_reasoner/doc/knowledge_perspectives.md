@@ -720,7 +720,7 @@ Decided: both stay opt-in, like the frame.
 ### 13.7 A goal that cannot receive the pour (2026-10-20)
 
 The first trap case: the scene's only bowl stands upside down
-(`cram_viz.resolution.overturned_scene`), and the scene geometry in the prompt now states
+(`cramera.resolution.resolver.overturned_scene`), and the scene geometry in the prompt now states
 which way each object's own up axis points (`"up": [0, 0, -1]` for the bowl), since an
 upside-down bowl has the same bounding box as an upright one. `objects_open` leaves the goal
 to the resolver, so the other bodies, among them a milk carton and a cereal box, are the
@@ -764,7 +764,7 @@ runs, $2.28 for 8 runs; one refusal carries no cost):
   changed a choice; the repetition below did not reproduce it.
 - Where the opening comes from (2026-10-20): the runs above took it from a hand-written list
   of container classes and a 45 degree rule for up, down and sideways. Both are gone. It is
-  now measured from each object's mesh (`cram_viz.resolution.mesh_opening`): rays are sent in
+  now measured from each object's mesh (`cramera.resolution.resolver.mesh_opening`): rays are sent in
   through each side, and a side is open when at least half of the rays that meet the object
   hit the mesh after crossing at least half of the stretch they spend inside its convex hull,
   so a ray that hits nothing has found no floor and does not count. The opening faces up when
