@@ -60,6 +60,7 @@ class PayloadKey(StrEnum):
     AT = "at"
     STALE = "stale"
     WAITING = "waiting"
+    RUNNING = "running"
 
 
 class ViewName(StrEnum):

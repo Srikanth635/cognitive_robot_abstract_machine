@@ -480,6 +480,7 @@ class LauncherRecordingTheRuns:
     def __init__(self):
         self.performed = []
         self.starts = 0
+        self.stops = 0
 
     def launch(self, run):
         self.performed.append(run.directory)
@@ -489,10 +490,35 @@ class LauncherRecordingTheRuns:
 
     @property
     def is_waiting(self):
-        return len(self.performed) > self.starts
+        return self.is_running and len(self.performed) > self.starts
+
+    @property
+    def is_running(self):
+        return len(self.performed) > self.stops
+
+    def stop(self):
+        self.stops = len(self.performed)
 
 
 class TestPerformingARun:
+    def test_a_launched_performance_runs_until_it_is_stopped(self, served, tmp_path):
+        run = tmp_path / "data" / "runs" / "a-run"
+        run.mkdir(parents=True)
+        (run / RunFile.RESOLUTION).write_text("{}")
+        served.service.launcher = LauncherRecordingTheRuns()
+        served.post(Route.EXECUTE, {"run": "a-run"})
+        assert served.get(Route.PERFORMANCE)[PayloadKey.RUNNING] is True
+        assert served.post(Route.STOP, {})[PayloadKey.OK] is True
+        performance = served.get(Route.PERFORMANCE)
+        assert (performance[PayloadKey.RUNNING], performance[PayloadKey.WAITING]) == (
+            False,
+            False,
+        )
+
+    def test_stopping_with_nothing_running_is_answered(self, served):
+        served.service.launcher = LauncherRecordingTheRuns()
+        assert served.post(Route.STOP, {})[PayloadKey.OK] is True
+
     def test_no_performance_waits_before_one_is_launched(self, served):
         served.service.launcher = LauncherRecordingTheRuns()
         payload = served.get(Route.PERFORMANCE)

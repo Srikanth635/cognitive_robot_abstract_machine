@@ -65,9 +65,14 @@ class ResolutionRoute(StrEnum):
     Starts the performance of a run that waits for it.
     """
 
+    STOP = "/api/resolution/stop"
+    """
+    Ends the performance of a run, if one runs.
+    """
+
     PERFORMANCE = "/api/resolution/performance"
     """
-    Whether a performance waits for its start.
+    Whether a performance runs, and whether it waits for its start.
     """
 
     VIEW = "/api/resolution/view"
@@ -187,6 +192,8 @@ class ResolutionRoutes:
             )
         elif route == ResolutionRoute.START:
             self._answer(self.server.resolution.start_performance)
+        elif route == ResolutionRoute.STOP:
+            self._answer(self.server.resolution.stop_performance)
         else:
             return False
         return True

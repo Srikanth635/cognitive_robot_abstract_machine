@@ -199,6 +199,40 @@ class TestWaitingPerformance:
         assert not launcher.is_waiting
 
 
+class TestStopping:
+    def test_stopping_ends_the_performance_that_runs(self, a_run):
+        a_run.directory.mkdir(parents=True)
+        process = ProcessReportingItsState()
+        launcher = LiveRunLauncher(spawn=SpawnHandingOutProcesses([process]))
+        launcher.launch(a_run)
+        assert launcher.is_running
+        launcher.stop()
+        assert process.terminated
+        assert not launcher.is_running
+
+    def test_a_performance_that_finished_still_runs_until_it_is_stopped(self, a_run):
+        a_run.directory.mkdir(parents=True)
+        launcher = LiveRunLauncher(
+            spawn=SpawnHandingOutProcesses([ProcessReportingItsState()])
+        )
+        launcher.launch(a_run)
+        launcher.request_start()
+        assert launcher.is_running
+
+    def test_stopping_before_anything_was_launched_does_nothing(self):
+        launcher = LiveRunLauncher(spawn=SpawnHandingOutProcesses([]))
+        launcher.stop()
+        assert not launcher.is_running
+
+    def test_a_process_that_exited_is_not_running(self, a_run):
+        a_run.directory.mkdir(parents=True)
+        launcher = LiveRunLauncher(
+            spawn=SpawnHandingOutProcesses([ProcessReportingItsState(exit_code=0)])
+        )
+        launcher.launch(a_run)
+        assert not launcher.is_running
+
+
 class TestRequestStart:
     def test_the_performance_that_waits_is_asked_to_start(self, a_run):
         a_run.directory.mkdir(parents=True)
