@@ -2,8 +2,7 @@
 What the add-on's routes do: offering the designators a scene has, resolving one with
 llm_reasoner, generating hypothesis knowledge, showing a run, and performing one.
 
-The state the routes share, which cram_viz kept in module-level caches, is held here by
-one object the server owns.
+The state the routes share is held here by one object the server owns.
 """
 
 from __future__ import annotations

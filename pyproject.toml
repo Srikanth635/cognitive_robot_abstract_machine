@@ -14,20 +14,17 @@ authors = [{ name = "AICOR Institute", email = "you@example.com" }]
 # Add dependencies on all workspace members by their distribution names
 # uv will resolve these to editable installs via [tool.uv.sources]
 dependencies = [
-  "coraplex>=26.10.0",
-  "giskardpy>=26.10.0",
-  "cramph>=26.10.0",
-  "semantic_digital_twin>=26.10.0",
-  "krrood>=26.10.0",
-  "random-events>=26.10.0",
-  "probabilistic_model>=26.10.0",
-  "robokudo>=26.10.0",
-  "physics_simulators>=26.10.0",
-  "experiments>=26.10.0",
-  "segmind>=26.10.0",
-  "krrood_spatial_math>=26.10.0",
-  "cram_viz",
-  "llm_reasoner>=26.10.0",
+  "coraplex",
+  "giskardpy",
+  "semantic_digital_twin",
+  "krrood",
+  "random-events",
+  "probabilistic_model",
+  "robokudo",
+  "physics_simulators",
+  "experiments",
+  "segmind",
+  "llm_reasoner",
   "llm_reasoner_viz",
   "cramera",
   "ipykernel>=7.2.0",
@@ -48,7 +45,7 @@ dev = [
     "treon",
     "bokeh",
     "mypy>=1.8",
-    "krrood[development-tools]",
+    "docformatter",
 ]
 
 doc = [
@@ -90,7 +87,6 @@ exclude-dependencies = [
 members = [
   "coraplex",
   "giskardpy",
-  "cramph",
   "semantic_digital_twin",
   "krrood",
   "random_events",
@@ -99,8 +95,6 @@ members = [
   "robokudo",
   "experiments",
   "segmind",
-  "domain_models/krrood_spatial_math",
-  "cram_viz",
   "llm_reasoner",
   "llm_reasoner_viz",
   "cramera"
@@ -109,7 +103,6 @@ members = [
 [tool.uv.sources]
 coraplex       = { workspace = true }
 giskardpy             = { workspace = true }
-cramph                = { workspace = true }
 semantic_digital_twin = { workspace = true }
 krrood                = { workspace = true }
 probabilistic_model   = { workspace = true }
@@ -118,8 +111,6 @@ robokudo              = { workspace = true }
 physics_simulators    = { workspace = true }
 segmind               = { workspace = true }
 experiments           = { workspace = true }
-krrood_spatial_math   = { workspace = true }
-cram_viz              = { workspace = true }
 llm_reasoner           = { workspace = true }
 llm_reasoner_viz       = { workspace = true }
 cramera                = { workspace = true }
@@ -130,7 +121,6 @@ package-mode = false
 [tool.poetry.dependencies]
 coraplex = { path = "coraplex", develop = true }
 giskardpy = { path = "giskardpy", develop = true }
-cramph = { path = "cramph", develop = true }
 semantic_digital_twin = { path = "semantic_digital_twin", develop = true }
 krrood = { path = "krrood", develop = true }
 random_events = { path = "random_events", develop = true }
@@ -140,7 +130,6 @@ physics_simulators = { path = "physics_simulators", develop = true }
 experiments = { path = "experiments", develop = true }
 segmind = { path = "segmind", develop = true }
 cramera = { path = "cramera", develop = true }
-krrood_spatial_math = { path = "domain_models/krrood_spatial_math", develop = true }
 
 [tool.setuptools]
 packages = ["cognitive_robot_abstract_machine"]
@@ -148,3 +137,9 @@ package-dir = {"" = "."}
 
 [tool.setuptools.dynamic]
 version = {attr = "cognitive_robot_abstract_machine._version.__version__"}
+
+[tool.docformatter]
+make-summary-multi-line = true
+pre-summary-newline = true
+close-quotes-on-newline = true
+black = true
