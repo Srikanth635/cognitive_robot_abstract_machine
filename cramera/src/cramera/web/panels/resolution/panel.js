@@ -23,6 +23,7 @@
     resolve: '/api/resolution/resolve',
     execute: '/api/resolution/execute',
     start: '/api/resolution/start',
+    performance: '/api/resolution/performance',
   });
 
   Panels.define('resolution-designators', function (root, bus) {
@@ -292,7 +293,8 @@
           answerEl.innerHTML = '<div class="goal">executing run ' + view.esc(shownRun) + '</div>' +
             '<p class="hint-txt">Starting the simulation from the run\'s initial environment ' +
             'under the live viewer. It then waits: once the 3D scene\'s Live button appears, ' +
-            'click it, then press Start here and the pour begins.</p>';
+            'click it (the page opens the live scene), then press Start here and the pour ' +
+            'begins.</p>';
           startBtn.style.display = '';
         } else {
           failure('execution failed', '', payload.error || 'execution failed');
@@ -329,8 +331,21 @@
     executeBtn.addEventListener('click', execute);
     startBtn.addEventListener('click', startPouring);
 
+    // A page opened anew, as Live opens the live scene, offers Start for the
+    // performance that still waits for it.
+    async function loadPerformance() {
+      try {
+        const response = await fetch(ROUTES.performance);
+        const payload = await response.json();
+        if (payload.ok && payload.waiting) startBtn.style.display = '';
+      } catch (error) {
+        // Start stays as it is; Execute offers it again
+      }
+    }
+
     loadDesignators();
     loadRuns();
+    loadPerformance();
     const named = new URLSearchParams(window.location.search).get('run');
     if (named) openRun(named);
 

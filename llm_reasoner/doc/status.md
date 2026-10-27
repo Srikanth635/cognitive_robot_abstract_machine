@@ -1175,9 +1175,17 @@ into cram_viz's code, stays out (`cramera-live` runs any demo).
   (`PlanStepReporter`, `PlanNodeReporter`), which `ResolvedRun.run` attaches for the
   performance, so `StepChanged` and `PlanNodeChanged` reach the log between
   `ExecutionStarted` and its end. Statuses are coraplex's own lifecycle names
-  (`NOT_STARTED`, `RUNNING`, `SUCCEEDED`, ...), no longer cram_viz's aliases, and none is
-  derived. llm_reasoner_viz reads `StepChanged` as before; `PlanNodeChanged` is still not
-  shown (the deferred viewer work of 2026-10-15).
+  (`NOT_STARTED`, `RUNNING`, `SUCCEEDED`, ...), no longer cram_viz's aliases. coraplex
+  leaves an action's own status not started while its motions run (the first real
+  Execute, run `d2eb7ddc`, logged 72 node changes and no step), so a step's status is
+  derived from the nodes below it: running once one has started, failed or interrupted
+  when one is; it ends when the next step starts, as cram_viz's did. llm_reasoner_viz
+  reads `StepChanged` as before; `PlanNodeChanged` is still not shown (the deferred
+  viewer work of 2026-10-15).
+- **Start after Live.** Live on a recorded scene opens the live scene by loading the
+  page anew, which lost the panel's Start button while the performance still waited.
+  The panel now asks `GET /api/resolution/performance` when it loads and offers Start
+  while a performance waits (`LiveRunLauncher.is_waiting`).
 
 ### OpenAI as a provider, added and taken out again (2026-10-27)
 

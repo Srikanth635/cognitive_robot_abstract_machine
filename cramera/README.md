@@ -124,6 +124,7 @@ The routes, all under `/api/resolution/`, answer JSON, and an error as
 | `POST hypothesis` | Generates hypothesis knowledge for an instruction |
 | `POST execute` | Brings the simulation of a kept run up under the live viewer, waiting to be started |
 | `POST start` | Has the waiting simulation begin the pour |
+| `GET performance` | Whether a performance waits for its start, so a page opened anew (Live opens the live scene) offers Start again |
 | `GET view?name=&scene=` | The hypothesis, ontology or designator view |
 
 Under `CRAMERA_DATA` (default `~/.cramera`) it keeps `runs/`, `hypotheses/` and the NEEM
@@ -142,7 +143,9 @@ a term is written with its prefix. The add-on offers this through
 
 While a run is performed, every step of its plan and every node of it is written to the run's
 log as its status changes (`StepChanged`, `PlanNodeChanged`, from the live bridge's plan
-snapshots), between the performance's start and end.
+snapshots), between the performance's start and end. coraplex leaves an action's own status
+not started while its motions run, so a step runs once a node below it has started, fails
+when one fails, and ends when the next step starts.
 
 Not available yet: the NEEM of a performance is kept only where the generated ORM interface
 exists (`scripts/regenerate_all_orm.py`).

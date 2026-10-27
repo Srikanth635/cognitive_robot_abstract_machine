@@ -65,6 +65,11 @@ class ResolutionRoute(StrEnum):
     Starts the performance of a run that waits for it.
     """
 
+    PERFORMANCE = "/api/resolution/performance"
+    """
+    Whether a performance waits for its start.
+    """
+
     VIEW = "/api/resolution/view"
     """
     One of the views of the knowledge: the hypothesis graph, the ontology graph or the
@@ -134,6 +139,8 @@ class ResolutionRoutes:
             self._answer(lambda: {PayloadKey.OK: True, PayloadKey.ADDON: __package__})
         elif route == ResolutionRoute.RUNS:
             self._answer(self.server.resolution.kept_runs)
+        elif route == ResolutionRoute.PERFORMANCE:
+            self._answer(self.server.resolution.performance)
         elif route == ResolutionRoute.DESIGNATORS:
             self._answer(
                 lambda: self.server.resolution.offered_designators(
