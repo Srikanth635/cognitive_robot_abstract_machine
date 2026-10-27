@@ -1152,6 +1152,33 @@ execute backend into it as `cramera.resolution` on 2026-10-21/22; that package, 
   change that keeps earlier runs from being read adds a `RunFormat` member. The 21 runs in
   `~/.cram_viz/runs` stay on disk, and nothing reads them by default now.
 
+### What cramera lacked of cram_viz (2026-10-27)
+
+The user asked for the first two of the three things cramera did not do that cram_viz did;
+the third, Execute without a run starting coraplex's kitchen-counter demo, a path written
+into cram_viz's code, stays out (`cramera-live` runs any demo).
+
+- **The knowledge in the EQL panel.** `cramera.knowledge.query_contribution.QueryContribution`
+  lets a viewer extension add variables, names, presets and an `AnswerRendering` to the
+  recorded scene's queries (`EqlSession.contributions`, the server's `/api/eql`,
+  `/api/eql/vocabulary`, `/api/eql/members`, `/api/knowledge` and `/api/question`).
+  `cramera.resolution.hypothesis_queries.HypothesisQueries` is the resolution add-on's: the
+  14 variables of cram_viz's EQL namespace over the active phase structure's fragments,
+  its vocabulary (`ConditionTiming`, `RegulationMode`, `CouplingRegime`,
+  `ComparisonOutcome`, `ForceKind`, `HasType`, the modules) and its 10 preset questions,
+  now in `resolution/resources/hypothesis_presets.json`. A fragment is answered by its
+  label (or its kind) alone and lights up in the Hypothesis Graph; a term of a known
+  ontology is written with its prefix. The EQL panel reloads its presets when a
+  resolution is shown.
+- **Plan steps in a run's log.** cramera's bridge hands every plan snapshot to its
+  `plan_observers`; `cramera.resolution.plan_progress` ports cram_viz's two reporters
+  (`PlanStepReporter`, `PlanNodeReporter`), which `ResolvedRun.run` attaches for the
+  performance, so `StepChanged` and `PlanNodeChanged` reach the log between
+  `ExecutionStarted` and its end. Statuses are coraplex's own lifecycle names
+  (`NOT_STARTED`, `RUNNING`, `SUCCEEDED`, ...), no longer cram_viz's aliases, and none is
+  derived. llm_reasoner_viz reads `StepChanged` as before; `PlanNodeChanged` is still not
+  shown (the deferred viewer work of 2026-10-15).
+
 ### OpenAI as a provider (2026-10-27)
 
 The user asked for OpenAI as a selectable provider. `OpenAIClient` now lets the model

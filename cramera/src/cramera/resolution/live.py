@@ -22,6 +22,11 @@ from cramera.resolution import configure_console_logging, paths
 from cramera.resolution.exceptions import NoPerformanceWaiting
 from cramera.resolution.events import NeemKind, reporting_execution
 from cramera.resolution.neem import NeemRecorder, NeemRecording, NoNeemRecorder
+from cramera.resolution.plan_progress import (
+    PlanNodeReporter,
+    PlanObservation,
+    PlanStepReporter,
+)
 from cramera.resolution.resolver.execution import PouringExecution
 from cramera.resolution.resolver.runs import RunDirectory
 
@@ -90,7 +95,8 @@ class ResolvedRun:
         """
         Perform the run's resolved action in the simulation, serving the world and the
         plan to cramera's viewer, keep the plan as a NEEM when there is a database, and
-        report the performance to the run's log.
+        report the performance to the run's log, each step and every node of the plan as
+        its status changes.
 
         A performance that waits for a start begins once one is requested, so the time it
         waited is part of the seconds its log reports.
@@ -103,11 +109,16 @@ class ResolvedRun:
             viewer = start(execution.world)
             if self.waits_for_start:
                 self.wait_for_start(run)
-            execution.perform(
-                observe_plan=lambda root: root.plan.node_callbacks.append(
-                    viewer.plan_callback(root.plan)
+            steps = PlanStepReporter(sink=sink, run=run.name)
+            nodes = PlanNodeReporter(sink=sink, run=run.name)
+            with PlanObservation(viewer.bridge, steps.observe), PlanObservation(
+                viewer.bridge, nodes.observe
+            ):
+                execution.perform(
+                    observe_plan=lambda root: root.plan.node_callbacks.append(
+                        viewer.plan_callback(root.plan)
+                    )
                 )
-            )
 
     def wait_for_start(self, run: RunDirectory) -> None:
         """

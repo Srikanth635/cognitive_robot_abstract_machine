@@ -29,6 +29,31 @@ from cramera.recording_fields import SceneField
 
 from .dataset.plan_metadata import AnnotationTargetMotion
 
+# %% plan observers
+
+
+def test_every_plan_snapshot_is_handed_to_the_plan_observers() -> None:
+    """
+    An observer of the bridge's plan receives each snapshot the bridge takes, as taken.
+    """
+    plan = Plan()
+    node = PlanNode(status=LifeCycleValues.NOT_STARTED)
+    plan.add_node(node)
+    bridge = Bridge()
+    observed = []
+    bridge.plan_observers.append(observed.append)
+
+    bridge.begin_plan(plan)
+    node.status = LifeCycleValues.RUNNING
+    bridge.snapshot_plan()
+
+    assert [snapshot.nodes[0].status for snapshot in observed] == [
+        LifeCycleValues.NOT_STARTED,
+        LifeCycleValues.RUNNING,
+    ]
+    assert observed[-1] == bridge.plan_state
+
+
 # %% lifecycle publication
 
 
