@@ -16,6 +16,7 @@ from typing_extensions import Any
 
 from cramera.resolution import hypothesis_knowledge, paths
 from cramera.resolution.exceptions import EmptyInstruction
+from cramera.resolution.hypothesis_queries import HypothesisQueries
 from cramera.resolution.hypothesis_knowledge.generation import (
     HypothesisGenerationService,
     ModelHypothesisSource,
@@ -323,6 +324,12 @@ class ResolutionService:
             PayloadKey.COST: resolution.cost,
             PayloadKey.TRIALS: len(resolution.trials),
         }
+
+    def query_contributions(self) -> list[HypothesisQueries]:
+        """
+        :return: What the EQL panel can ask of the hypothesis the views show now.
+        """
+        return [HypothesisQueries.of_active()]
 
     def view(self, name: str, requested_scene: str | None) -> dict[str, Any]:
         """

@@ -8,6 +8,7 @@ are queried through the same runner.
 from __future__ import annotations
 
 import ast
+from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import MISSING, dataclass, field, fields, is_dataclass
 from datetime import datetime
@@ -68,6 +69,34 @@ class HighlightsRelatedNodes(Protocol):
     def related_highlight_ids(self) -> List[str]:
         """
         Ids of the further graph nodes a row for this entity highlights.
+        """
+
+
+class AnswerRendering(ABC):
+    """
+    How answers about values a viewer extension contributes read: how each is written,
+    and the graph nodes it lights up.
+    """
+
+    @abstractmethod
+    def renders(self, value: Any) -> bool:
+        """
+        :param value: A value an answer holds.
+        :return: Whether the value is one this rendering writes.
+        """
+
+    @abstractmethod
+    def rendered(self, value: Any) -> Any:
+        """
+        :param value: A value this rendering writes.
+        :return: The value as an answer shows it, as plain JSON.
+        """
+
+    @abstractmethod
+    def highlights_of(self, value: Any) -> List[str]:
+        """
+        :param value: A value this rendering writes.
+        :return: The ids of the graph nodes an answer holding the value lights up.
         """
 
 
@@ -218,6 +247,12 @@ class RowRenderer:
     Ids of the graph nodes the rendered rows should highlight.
     """
 
+    renderings: Tuple[AnswerRendering, ...] = ()
+    """
+    How the values viewer extensions contribute are written, consulted before the
+    viewer's own rendering.
+    """
+
     def rows_of(self, result: Any) -> _RenderedRows:
         """
         Render a query result into answer rows.
@@ -293,6 +328,15 @@ class RowRenderer:
 
         :param item: The entity to render as a row.
         """
+        rendering = self._rendering_of(item)
+        if rendering is not None:
+            self.highlight.extend(rendering.highlights_of(item))
+            return AnswerRow(
+                {
+                    "__entity__": rendering.rendered(item),
+                    "__type__": type(item).__name__,
+                }
+            )
         name = self._row_title(item)
         if name:
             self.highlight.append(name)
@@ -323,6 +367,10 @@ class RowRenderer:
 
         :param value: The raw query result value to render.
         """
+        rendering = self._rendering_of(value)
+        if rendering is not None:
+            self.highlight.extend(rendering.highlights_of(value))
+            return rendering.rendered(value)
         if isinstance(value, NumericPose):
             return value.label
         if isinstance(value, Point3):
@@ -347,11 +395,24 @@ class RowRenderer:
         """
         The name a row for this value is titled and highlighted by, or None.
 
-        :param value: The query result value to title.
+        :param value: The query result value to title; one a viewer extension writes is
+            titled where it is written instead.
         """
+        if self._rendering_of(value) is not None:
+            return None
         if isinstance(value, self.entity_types):
             return str(value.name)
         return self._entity_name(value)
+
+    def _rendering_of(self, value: Any) -> Optional[AnswerRendering]:
+        """
+        :param value: A query result value.
+        :return: The rendering of a viewer extension that writes the value, if any.
+        """
+        return next(
+            (rendering for rendering in self.renderings if rendering.renders(value)),
+            None,
+        )
 
     @staticmethod
     def _entity_name(value: Any) -> Optional[str]:
@@ -396,6 +457,12 @@ class EqlQueryRunner:
     highlightable_ids: FrozenSet[str] = frozenset()
     """
     Ids the viewer can light up; see :attr:`RowRenderer.highlightable_ids`.
+    """
+
+    renderings: Tuple[AnswerRendering, ...] = ()
+    """
+    How the values viewer extensions contribute are written; see
+    :attr:`RowRenderer.renderings`.
     """
 
     @property
@@ -520,6 +587,7 @@ class EqlQueryRunner:
             limit=limit,
             entity_types=self.entity_types,
             highlightable_ids=self.highlightable_ids,
+            renderings=self.renderings,
         ).rows_of(result)
         kind = (
             "rows"

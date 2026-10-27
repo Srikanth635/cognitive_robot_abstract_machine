@@ -32,7 +32,9 @@ from typing_extensions import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from cramera.resolution import paths
 from cramera.resolution.hypothesis_knowledge.consulted import ConsultedHypotheses
-from cramera.resolution.hypothesis_knowledge.phase_hierarchy import PhaseHierarchyOverlay
+from cramera.resolution.hypothesis_knowledge.phase_hierarchy import (
+    PhaseHierarchyOverlay,
+)
 
 if TYPE_CHECKING:
     from cramera.resolution.resolver.resolver import ResolvedDesignator
@@ -49,7 +51,9 @@ def sample_view() -> HypothesisView:
         milk from a carton into a bowl.
     """
     return HypothesisView.of(
-        HypothesisStore(directory=paths.ResolutionDirectory.SAMPLE_HYPOTHESES).get(SAMPLE_RECORD_ID)
+        HypothesisStore(directory=paths.ResolutionDirectory.SAMPLE_HYPOTHESES).get(
+            SAMPLE_RECORD_ID
+        )
     )
 
 
@@ -184,9 +188,6 @@ def activate(
 ) -> Optional[HypothesisKnowledge]:
     """
     Replace what the viewer displays and queries; ``None`` clears it.
-
-    The caller is responsible for resetting :mod:`cramera.resolution.kb` afterwards, so the EQL
-    domains are rebuilt against the new hypothesis.
     """
     global _active
     _active = knowledge
@@ -201,8 +202,6 @@ def activate_resolution(
     frame and the perspectives it consulted beside it, and the resolution; the core
     first when the phase structure was left out; nothing changes when no knowledge was
     consulted.
-
-    The caller is responsible for resetting :mod:`cramera.resolution.kb` afterwards.
     """
     record_ids = [
         record_id

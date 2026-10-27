@@ -149,9 +149,21 @@ database `neems.sqlite`; `CRAMERA_HYPOTHESIS_STORE` and `CRAMERA_NEEM_DATABASE` 
 two. The runs are the ones the `llm_reasoner_viz` viewer shows by default, which the answers
 link to at `LLM_REASONER_VIZ_URL` (default `http://localhost:8721`).
 
-Not available yet: plan steps are not written to a run's log as they change (a run's start and
-end are), the knowledge cannot be queried from the EQL panel, and the NEEM of a performance
-is kept only where the generated ORM interface exists (`scripts/regenerate_all_orm.py`).
+The EQL panel can query the hypothesis the views show (`cramera.resolution.hypothesis_queries`):
+a variable per kind of fragment of its phase structure (`pouring_phase`, `pouring_role`,
+`pouring_transition`, `pouring_condition_requirement`, ...), the vocabulary its values are
+terms of (`ConditionTiming`, `RegulationMode`, the modules `core`, `pouring`, ...), and preset
+questions about it (`resolution/resources/hypothesis_presets.json`), which appear once a
+resolution is shown. A fragment is answered by its name and lights up in the Hypothesis Graph;
+a term is written with its prefix. The add-on offers this through
+`cramera.knowledge.query_contribution.QueryContribution`, which any extension can implement.
+
+While a run is performed, every step of its plan and every node of it is written to the run's
+log as its status changes (`StepChanged`, `PlanNodeChanged`, from the live bridge's plan
+snapshots), between the performance's start and end.
+
+Not available yet: the NEEM of a performance is kept only where the generated ORM interface
+exists (`scripts/regenerate_all_orm.py`).
 
 `cramera/scenes` holds the scenes the designators are resolved in, converted from cram_viz's
 archive (see [its README](scenes/README.md), which says how to convert another).

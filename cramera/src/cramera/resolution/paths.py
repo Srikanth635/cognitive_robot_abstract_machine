@@ -36,6 +36,17 @@ class ResolutionDirectory(PathEnumeration):
     """
 
 
+class ResolutionFile(PathEnumeration):
+    """
+    The files packaged with the resolution feature.
+    """
+
+    HYPOTHESIS_PRESETS = ResolutionDirectory.RESOURCES / "hypothesis_presets.json"
+    """
+    The questions the EQL panel offers about the active hypothesis.
+    """
+
+
 class EnvironmentVariable(StrEnum):
     """
     The environment variables that move what the add-on keeps or links to.

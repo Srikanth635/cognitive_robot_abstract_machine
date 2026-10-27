@@ -8,9 +8,12 @@ from __future__ import annotations
 import logging
 from enum import StrEnum
 
-from typing_extensions import Any, Callable
+from typing_extensions import TYPE_CHECKING, Any, Callable
 
 from cramera.resolution.payload import PayloadKey, ViewName
+
+if TYPE_CHECKING:
+    from cramera.knowledge.query_contribution import QueryContribution
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +109,15 @@ class ResolutionRoutes:
     ``query_lock`` and the :class:`~cramera.resolution.service.ResolutionService` as
     ``resolution``, which is ``None`` where the service cannot be imported.
     """
+
+    def query_contributions(self) -> list[QueryContribution]:
+        """
+        :return: The knowledge the resolution feature adds to what the EQL panel can
+            query in a recorded scene; none where the service cannot be imported.
+        """
+        if self.server.resolution is None:
+            return []
+        return self.server.resolution.query_contributions()
 
     def answer_resolution_get(self, route: str) -> bool:
         """

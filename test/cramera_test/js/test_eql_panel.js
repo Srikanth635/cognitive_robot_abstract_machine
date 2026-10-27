@@ -531,6 +531,45 @@ function runTyped(panel, code) {
   panel.root.part('#query-run').click();
 }
 
+// a question about the knowledge a resolution consulted
+const HYPOTHESIS_PRESET = {
+  text: 'what are the different action phases involved in the action?',
+  code: 'an(entity(pouring_phase))',
+  requires_live: false,
+  scope: 'current_state',
+  verbalization: null,
+};
+
+// whether the presets area shows a button for the preset
+function offers(panel, preset) {
+  return presetButtons(panel.root.part('#presets')).some(function (button) {
+    return button.textContent === preset.text;
+  });
+}
+
+test('a resolution shown offers the presets about the knowledge it consulted', async function () {
+  const knowledge = { ok: true, status: 'EQL ready', presets: [WORDED_PRESET], details: {} };
+  const panel = mountPanel({ '/api/knowledge': knowledge });
+  await flush();
+  assert.strictEqual(offers(panel, HYPOTHESIS_PRESET), false);
+  knowledge.presets = [WORDED_PRESET, HYPOTHESIS_PRESET];
+  panel.bus.emit('hypothesis:generated', {});
+  await flush();
+  assert.strictEqual(offers(panel, HYPOTHESIS_PRESET), true);
+});
+
+test('a resolution shown while live keeps the live presets', async function () {
+  const knowledge = { ok: true, status: 'EQL ready', presets: [WORDED_PRESET], details: {} };
+  const panel = mountPanel({ '/api/knowledge': knowledge, 'http://bridge/presets': LIVE_PRESETS });
+  await flush();
+  attach(panel, true);
+  await flush();
+  knowledge.presets = [WORDED_PRESET, HYPOTHESIS_PRESET];
+  panel.bus.emit('hypothesis:generated', {});
+  await flush();
+  assert.strictEqual(offers(panel, HYPOTHESIS_PRESET), false);
+});
+
 test('late live presets cannot replace the recorded source after detach', async function () {
   const pending = new PendingAnswer();
   const panel = mountPanel({'http://bridge/presets': pending.promise});

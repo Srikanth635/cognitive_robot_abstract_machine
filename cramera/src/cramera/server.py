@@ -269,9 +269,7 @@ class Handler(ResolutionRoutes, http.server.SimpleHTTPRequestHandler):
             return self._serve_scene_file(route)
         scene = self._requested_scene()
         if route == "/api/knowledge":
-            return self._guarded(
-                lambda: GraphPanelViews.of_scene(scene).for_tab("knowledge")
-            )
+            return self._guarded(lambda: self._knowledge_overview(scene))
         if route == "/api/knowledge/view":
             name = (self._query_parameters().get("name") or ["knowledge"])[0]
             return self._guarded(lambda: GraphPanelViews.of_scene(scene).for_tab(name))
@@ -280,12 +278,15 @@ class Handler(ResolutionRoutes, http.server.SimpleHTTPRequestHandler):
             return self._guarded(lambda: self._expanded_node(node, scene))
         if route == "/api/eql/vocabulary":
             return self._guarded(
-                lambda: EqlSession.of_scene(scene).runner().vocabulary().to_payload()
+                lambda: EqlSession.of_scene(scene, self.query_contributions())
+                .runner()
+                .vocabulary()
+                .to_payload()
             )
         if route == "/api/eql/members":
             name = (self._query_parameters().get("name") or [""])[0]
             return self._guarded(
-                lambda: EqlSession.of_scene(scene)
+                lambda: EqlSession.of_scene(scene, self.query_contributions())
                 .runner()
                 .vocabulary()
                 .members_payload(name)
@@ -353,6 +354,27 @@ class Handler(ResolutionRoutes, http.server.SimpleHTTPRequestHandler):
             return self._send_json({"ok": False, "error": str(error)}, 409)
         self._send_json({"ok": True, "scene": name})
 
+    def _knowledge_overview(self, scene: Optional[str]) -> Any:
+        """
+        The knowledge-graph overview of a scene, its presets followed by those of the
+        knowledge viewer extensions add.
+
+        :param scene: Name of the scene, or None for the active one.
+        """
+        overview = GraphPanelViews.of_scene(scene).for_tab("knowledge")
+        overview.presets.extend(self._contributed_presets())
+        return overview
+
+    def _contributed_presets(self) -> List[Preset]:
+        """
+        The questions viewer extensions offer about the knowledge they add.
+        """
+        return [
+            preset
+            for contribution in self.query_contributions()
+            for preset in contribution.presets()
+        ]
+
     def _discard_recording(self) -> None:
         """
         Drop the on-disk ``__recording__`` bundle, if one exists.
@@ -372,7 +394,9 @@ class Handler(ResolutionRoutes, http.server.SimpleHTTPRequestHandler):
             if not code:
                 return self._send_error("empty query")
             with self.server.query_lock:
-                session = EqlSession.of_scene(self._requested_scene())
+                session = EqlSession.of_scene(
+                    self._requested_scene(), self.query_contributions()
+                )
                 return self._send_json(session.run(code))
         except Exception as error:
             # a SyntaxError from the query is named by its own type, like any other
@@ -396,7 +420,7 @@ class Handler(ResolutionRoutes, http.server.SimpleHTTPRequestHandler):
                     preset
                     for preset in Preset.of_scene(self._requested_scene())
                     if not preset.requires_live
-                ]
+                ] + self._contributed_presets()
                 return self._send_json(QuestionMatcher(answerable).match(text))
         except Exception as error:
             return self._send_exception(error)

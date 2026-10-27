@@ -93,6 +93,17 @@ Panels.define('eql', function (root, bus) {
     bus.emit('knowledge:ready', { payload: payload });
   }
 
+  // %% the knowledge a resolution consulted
+  // A resolution shown, made or opened again, changes the hypothesis the recorded
+  // presets ask about; a failed reload leaves the presets shown as they are.
+  bus.on('hypothesis:generated', function () {
+    fetch(SceneContext.withScene('/api/knowledge')).then(ResponseUtil.parseJson).then(function (payload) {
+      if (!payload.ok) return;
+      knowledge = payload;
+      if (!source.live) showSource(recordedStatus, payload.presets || []);
+    }).catch(function () {});
+  });
+
   // %% which source answers
   bus.on('live:changed', function (live) {
     source = QuerySource.of(live);

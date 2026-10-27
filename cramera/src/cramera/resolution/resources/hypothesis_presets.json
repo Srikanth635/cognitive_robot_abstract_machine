@@ -1,0 +1,42 @@
+[
+  {
+    "text": "what are the different action phases involved in the action?",
+    "code": "an(entity(pouring_phase))"
+  },
+  {
+    "text": "what are the force dynamic events involved in the action?",
+    "code": "an(entity(pouring_force_dynamic_event))"
+  },
+  {
+    "text": "what is the source container the substance is poured from?",
+    "code": "an(entity(pouring_role).where(HasType(pouring_role, pouring.SourceContainer)))"
+  },
+  {
+    "text": "what is the destination the substance is poured into?",
+    "code": "an(entity(pouring_role).where(HasType(pouring_role, pouring.TargetReceptacle)))"
+  },
+  {
+    "text": "what substance is poured?",
+    "code": "an(entity(pouring_role).where(HasType(pouring_role, pouring.PouredSubstance)))"
+  },
+  {
+    "text": "which effector grasps and moves the source container?",
+    "code": "an(entity(pouring_role).where(HasType(pouring_role, prehension.GraspingEffector)))"
+  },
+  {
+    "text": "how do the phases follow each other, and which event triggers each step?",
+    "code": "set_of(pouring_transition.from_phase, pouring_transition.to_phase, pouring_transition.gated_by)"
+  },
+  {
+    "text": "what conditions must hold during the action?",
+    "code": "set_of(pouring_condition_requirement.has_condition_type, pouring_condition_requirement.has_condition_timing)"
+  },
+  {
+    "text": "what sensory events does the robot expect during the action?",
+    "code": "set_of(pouring_sensory_prediction.predicts_event, pouring_sensory_prediction.has_modality)"
+  },
+  {
+    "text": "which failures can occur during the action?",
+    "code": "an(entity(pouring_event_type).where(HasType(pouring_event_type, core.FailureEventType)))"
+  }
+]

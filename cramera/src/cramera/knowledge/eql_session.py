@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typing_extensions import Any, Dict, List, Optional
+from typing_extensions import Any, Dict, List, Optional, Sequence
 
 from cramera.robot_parts import ArmSide
 from semantic_digital_twin.spatial_types import Point3
@@ -22,6 +22,7 @@ from cramera.knowledge.entities import (
 )
 from cramera.knowledge.detected_events import EVENT_VARIABLE, DetectedEventRecord
 from cramera.knowledge.knowledge_base import EpisodeKnowledgeBase
+from cramera.knowledge.query_contribution import QueryContribution
 from cramera.knowledge.query_domain import QueryDomain
 from cramera.knowledge.query_runner import (
     DEFAULT_ROW_LIMIT,
@@ -44,26 +45,47 @@ class EqlSession:
     The recorded episode every query of this session ranges over.
     """
 
-    @classmethod
-    def of_active_scene(cls) -> "EqlSession":
-        """
-        A session against the scene bundle the server currently serves.
-        """
-        return cls.of_scene(None)
+    contributions: Sequence[QueryContribution] = ()
+    """
+    The knowledge viewer extensions add to what the session's queries range over.
+    """
 
     @classmethod
-    def of_scene(cls, scene: Optional[str]) -> "EqlSession":
+    def of_active_scene(
+        cls, contributions: Sequence[QueryContribution] = ()
+    ) -> "EqlSession":
+        """
+        A session against the scene bundle the server currently serves.
+
+        :param contributions: The knowledge viewer extensions add.
+        """
+        return cls.of_scene(None, contributions)
+
+    @classmethod
+    def of_scene(
+        cls, scene: Optional[str], contributions: Sequence[QueryContribution] = ()
+    ) -> "EqlSession":
         """
         A session against one named scene bundle.
 
         :param scene: Name of the scene to query, or None for the active one.
+        :param contributions: The knowledge viewer extensions add.
         """
-        return cls(knowledge_base=EpisodeKnowledgeBase.of_scene(scene))
+        return cls(
+            knowledge_base=EpisodeKnowledgeBase.of_scene(scene),
+            contributions=contributions,
+        )
 
     def domains(self) -> List[QueryDomain]:
         """
-        One ready-made query variable per entity type of the recorded episode.
+        One ready-made query variable per entity type of the recorded episode, and those
+        the contributions add.
         """
+        contributed = [
+            domain
+            for contribution in self.contributions
+            for domain in contribution.domains()
+        ]
         return [
             QueryDomain("scene_object", BenchObject, self.knowledge_base.objects),
             QueryDomain("episode", ActionEpisode, self.knowledge_base.episodes),
@@ -76,15 +98,25 @@ class EqlSession:
             QueryDomain("package", Package, self.knowledge_base.packages),
             QueryDomain("subpackage", SubPackage, self.knowledge_base.subpackages),
             QueryDomain("python_class", PythonClass, self.knowledge_base.classes),
+            *contributed,
         ]
 
     def runner(self) -> EqlQueryRunner:
         """
         The runner this session's queries are executed by.
         """
+        contributed_names = {
+            name: value
+            for contribution in self.contributions
+            for name, value in contribution.names().items()
+        }
         return EqlQueryRunner(
             domains=self.domains(),
-            extra_names={
+            renderings=tuple(
+                contribution.answers() for contribution in self.contributions
+            ),
+            extra_names=contributed_names
+            | {
                 "Point3": Point3,
                 "Gripper": Gripper,
                 "Arm": RecordedArm,

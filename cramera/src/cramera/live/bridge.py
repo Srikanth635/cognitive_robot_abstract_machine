@@ -14,6 +14,7 @@ from pathlib import Path
 
 from typing_extensions import (
     Any,
+    Callable,
     ClassVar,
     Dict,
     FrozenSet,
@@ -420,6 +421,12 @@ class Bridge:
     plan_state: PlanSnapshot = field(default_factory=PlanSnapshot)
     """
     The newest plan-tree snapshot (see :meth:`snapshot_plan`).
+    """
+
+    plan_observers: List[Callable[[PlanSnapshot], None]] = field(default_factory=list)
+    """
+    Called with every plan-tree snapshot as it is taken, on the thread taking it; they
+    must not touch the world.
     """
 
     chart_state: ChartSnapshot = field(default_factory=ChartSnapshot)
@@ -1348,8 +1355,11 @@ class Bridge:
         nodes: List[PlanNodeEntry] = []
         order: List[str] = []
         self._serialize_plan_node(root, None, nodes, order)
+        snapshot = PlanSnapshot(signature="|".join(order), nodes=nodes)
         with self._lock:
-            self.plan_state = PlanSnapshot(signature="|".join(order), nodes=nodes)
+            self.plan_state = snapshot
+        for observer in list(self.plan_observers):
+            observer(snapshot)
 
     def _serialize_plan_node(
         self,
