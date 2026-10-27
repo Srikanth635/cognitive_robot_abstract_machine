@@ -1,0 +1,194 @@
+[
+ {
+  "values": {
+   "arm": "PR2RightArm",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": 0.0,
+   "pour_approach_offset": 0.0,
+   "pour_height": 0.13
+  },
+  "mouth": [
+   2.401,
+   2.262,
+   1.126
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.182,
+  "ahead": -0.036,
+  "distance": 0.186,
+  "above": 0.096
+ },
+ {
+  "values": {
+   "arm": "PR2RightArm",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": -0.18,
+   "pour_approach_offset": 0.04,
+   "pour_height": 0.13
+  },
+  "mouth": [
+   2.391,
+   2.434,
+   1.126
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.011,
+  "ahead": -0.012,
+  "distance": 0.016,
+  "above": 0.097
+ },
+ {
+  "values": {
+   "arm": "PR2RightArm",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": -0.188,
+   "pour_approach_offset": 0.0,
+   "pour_height": 0.13
+  },
+  "mouth": [
+   2.401,
+   2.45,
+   1.127
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": -0.003,
+  "ahead": 0.001,
+  "distance": 0.003,
+  "above": 0.098
+ },
+ {
+  "values": {
+   "arm": "PR2RightArm",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": -0.17,
+   "pour_approach_offset": 0.0,
+   "pour_height": 0.13
+  },
+  "mouth": [
+   2.401,
+   2.432,
+   1.126
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.015,
+  "ahead": -0.003,
+  "distance": 0.015,
+  "above": 0.097
+ },
+ {
+  "values": {
+   "arm": "PR2RightArm",
+   "tilt_angle": 1.85,
+   "pour_side": "RIGHT",
+   "pour_side_offset": -0.184,
+   "pour_approach_offset": 0.038,
+   "pour_height": 0.09
+  },
+  "mouth": [
+   2.393,
+   2.438,
+   1.089
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.008,
+  "ahead": -0.009,
+  "distance": 0.012,
+  "above": 0.06
+ },
+ {
+  "values": {
+   "arm": "PR2RightArm",
+   "tilt_angle": 1.85,
+   "pour_side": null,
+   "pour_side_offset": null,
+   "pour_approach_offset": null,
+   "pour_height": null
+  },
+  "mouth": [
+   2.401,
+   2.262,
+   1.126
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.182,
+  "ahead": -0.036,
+  "distance": 0.186,
+  "above": 0.096
+ },
+ {
+  "values": {
+   "arm": "PR2RightArm",
+   "tilt_angle": 1.5708,
+   "pour_side": null,
+   "pour_side_offset": null,
+   "pour_approach_offset": null,
+   "pour_height": null
+  },
+  "mouth": [
+   2.4,
+   2.249,
+   1.147
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.195,
+  "ahead": -0.039,
+  "distance": 0.199,
+  "above": 0.117
+ },
+ {
+  "values": {
+   "arm": "PR2RightArm",
+   "tilt_angle": 1.57,
+   "pour_side": null,
+   "pour_side_offset": null,
+   "pour_approach_offset": null,
+   "pour_height": null
+  },
+  "mouth": [
+   2.4,
+   2.249,
+   1.147
+  ],
+  "opening": [
+   2.4,
+   2.448,
+   1.029
+  ],
+  "right": 0.195,
+  "ahead": -0.039,
+  "distance": 0.199,
+  "above": 0.117
+ }
+]

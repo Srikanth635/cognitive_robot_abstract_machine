@@ -14,8 +14,8 @@ quantities are to get one owner across the two families is open for decision in
 
 - **A base layer on krrood.** `llm_reasoner` belongs to the krrood layer of CRAM. It
   imports krrood (and `random_events` / `probabilistic_model` through it) and never a
-  world model, robot or plan package such as `semantic_digital_twin`, `coraplex` or
-  `cram_viz`. It learns about a world only through krrood's symbol graph and the
+  world model, robot, plan or viewer package such as `semantic_digital_twin`, `coraplex`
+  or `cramera`. It learns about a world only through krrood's symbol graph and the
   dataclasses and docstrings of the classes it finds there.
 - **Components with one responsibility each**, connected by declared contracts, not by
   reaching into each other's internals (dependency inversion).
@@ -41,7 +41,7 @@ quantities are to get one owner across the two families is open for decision in
 
 ```mermaid
 flowchart LR
-    caller["Caller<br/>(plan, cram_viz, test)"] -- "krrood query<br/>+ optional task" --> resolver
+    caller["Caller<br/>(plan, cramera, test)"] -- "krrood query<br/>+ optional task" --> resolver
     subgraph llm_reasoner
         resolver["Resolver<br/>resolver/"]
         world["World injector<br/>world/"]
@@ -306,7 +306,7 @@ each package imports only the packages above it in this table, which a test chec
 | `storage/` | `record.py`, `store.py`, `citation.py`, `measurements.py`, `migration.py` and `migrations/`, `migrate.py` | Records of admitted hypotheses, the store, citations of stored fragments, physical measurements, and migrating stored knowledge and recorded answers through the changes of the ontology modules (one table per change, applied once per store: renames, module versions, concepts rewritten as anonymous instances of their classes, literals given their datatype, parts linked to the participant they are part of, lists of roles split into the slots their class names; a record is checked once every pending table is applied, after the records it builds on and together with their migrated fragments, and one that would break its ontology, or builds on one that would, is left stale) |
 | `generation/` | `request.py`, `schema.py`, `briefs.py`, `prompts.py`, `wire.py`, `assessment.py`, `dialogue.py`, `recording.py`, `backend.py` | The request a query makes; output shape, what the model is asked to describe for the root's module, prompts, decoding and merging patches; judging an answer (`HypothesisAssessor`); asking and repairing (`GenerationDialogue`); recording and storing (`HypothesisRecorder`); `HypothesisBackend` orchestrating them as a krrood generative backend |
 | `hypotheses/` | `service.py`, `knowledge_access.py`, `questions.py`, `tools.py` and `tool_definitions/`, `knowledge_graph.py`, `view.py`, `graph.py` | The service, which fulfils the knowledge-access contract (`KnowledgeAccess`, version 1.0: `serve`, `tools(record_id)`, `instances_of`, `is_vocabulary_class`); the knowledge tools (§3.7); the knowledge component's own graph (`KnowledgeGraph`: every stored hypothesis read once, so fragments keep their identity, and `instances_of(kind)` as EQL's domain over knowledge); cross-fragment questions (`HypothesisView`, with `instances_of` within one hypothesis); the graph projection drawn by cram_viz |
-| `access.py` | — | **The public module**: every name another package may use; cram_viz imports only from it (a test checks) |
+| `access.py` | — | **The public module**: every name another package may use; cramera and cram_viz import only from it (a test checks each) |
 
 Records store Python module paths (the record class and the root type), so moving a
 module that a record names requires migrating stored records.
@@ -460,7 +460,7 @@ shows them three ways: a map of the components with the number of calls over eac
 connection and what each is doing, a timeline with a row per component whose bars grow
 while the run goes on, and an inspector with the prompts of a model call as the tagged
 sections they are made of, the tools offered and called, answers, slots, why an attempt was
-rejected, and the outcome of a pour. cram_viz's answer panel links to it by run
+rejected, and the outcome of a pour. cramera's answer panel links to it by run
 (`LLM_REASONER_VIZ_URL`). The viewer spells the events' names as the writers do, which its
 tests check.
 
@@ -479,14 +479,15 @@ generated flow-onset thresholds disagreed between generations of the same situat
 
 **Who fills and reads it** (outside `llm_reasoner`, which names no world):
 
-- cram_viz's `MeasuredFlowOnset` (`resolution/flow_onset.py`) reads what the scene bundle
-  states a container holds (`contents` in `scene.json`), asks the store, and on a miss
-  for a liquid derives the onset from the mesh (`resolution/basin_geometry.py`, the
+- cramera's `MeasuredFlowOnset` (`cramera.resolution.resolver.flow_onset`) reads what the
+  scene bundle states a container holds (`contents` in `scene.json`), asks the store, and
+  on a miss for a liquid derives the onset from the mesh (`resolver/basin_geometry.py`, the
   quasi-static basin) and stores it. `SimulatedPouring` compares the source's measured
   tilt after the trial (`source_tilt_degrees`, `source_gravity_azimuth_degrees`) with it
   and states the onset, its method and the measurement's IRI in the outcome. The viewer's
-  resolver uses the checked-in store `cram_viz/resources/measurements`; without a store
-  the tilt is not checked.
+  resolver uses the checked-in store `cramera/resolution/resources/measurements`; without a
+  store the tilt is not checked. cram_viz, from which this was moved, keeps the same code
+  until it is retired.
 - `python -m experiments.flow_onset_measurement MESH --fills … --store DIR` measures
   onsets in Isaac Sim (PhysX PBD particles on the GPU, the container a kinematic body with
   its exact mesh as collider) and stores them.
@@ -647,7 +648,7 @@ conversation with its text as the answer.
 |---|---|
 | Knowledge component → clients | `LanguageModelClient.complete_structured(system, user, json_schema)`; no tools |
 | Caller → knowledge component | `KnowledgeService.serve(query, instruction)` returns the record identifier of the hypothesis answering a request, generating it first when none is stored; `view_for(query, instruction)` returns its view. cram_viz's Hypothesis Graph and Designator tabs read it |
-| cram_viz → the system | cram_viz shows the system at work: its predefined pouring designators (`cram_viz.resolution`), each an underspecified krrood match query shown as written, are resolved by a `Reasoner` over a semantic_digital_twin world built from the selected scene bundle, its robot annotated when a robot class is kept for it, with the world model's robot predicates loaded by name (`WORLD_MODEL_MODULES`), consulting cram_viz's knowledge store; the answer panel shows the chosen slots, the explanation and the grounds, and the consulted hypothesis is displayed with the resolution in the Hypothesis Graph, Ontology Graph and Designator tabs. Each run logs what it does to `events.jsonl` in its directory (`cram_viz.events`: the run starting and ending, each pour tried in the simulation, beside the events of §2.5, the knowledge component's model client wrapped as the knowledge component's). A chip copies its query into the search bar, Generate resolves the query there, and Execute performs the resolved action in coraplex's simulation from the run's own initial environment. Before a pouring resolution is accepted, `SimulatedPouring` (an `OutcomeCheck`) performs it in a process of its own and sends a pour whose mouth misses the target's opening back to the resolver with where it ended, for up to three repairs; when no pour lands, the one that was performed and flows and ended nearest the opening is kept, and one whose motion failed or that tilted too little to flow never is. Each run consults a copy of the viewer's store, and the hypotheses it admitted are added to that store when it ends, so later runs are served them. Generate offers a box for the phase structure and one per perspective on the action core (`PERSPECTIVE_ROOTS`), all ticked by default; the ticked ones are consulted (`KnowledgeRequester.consults_phase_structure`, `perspectives`) |
+| cramera → the system | cramera shows the system at work (since 2026-10-27; cram_viz, from which `cramera.resolution` was moved, keeps the same backend until it is retired): its predefined pouring designators (`cramera.resolution.resolver`), each an underspecified krrood match query shown as written, are resolved by a `Reasoner` over a semantic_digital_twin world built from the selected scene bundle, its robot annotated when a robot class is kept for it, with the world model's robot predicates loaded by name (`WORLD_MODEL_MODULES`), consulting cramera's knowledge store (`~/.cramera/hypotheses`); the answer panel shows the chosen slots, the explanation and the grounds, and the consulted hypothesis is displayed with the resolution in the graph panel's Hypothesis Graph, Ontology Graph and Designator tabs. The routes are under `/api/resolution/` (`cramera.resolution.routes`). Each run logs what it does to `events.jsonl` in its directory (`cramera.resolution.events`: the run starting and ending, each pour tried in the simulation, beside the events of §2.5, the knowledge component's model client wrapped as the knowledge component's). The *Underspecified Action Designators* panel, a tab beside the EQL panel, offers each designator as a chip that copies its query into its box, Resolve resolves the query there, and Execute performs the resolved action in coraplex's simulation from the run's own initial environment. Before a pouring resolution is accepted, `SimulatedPouring` (an `OutcomeCheck`) performs it in a process of its own and sends a pour whose mouth misses the target's opening back to the resolver with where it ended, for up to three repairs; when no pour lands, the one that was performed and flows and ended nearest the opening is kept, and one whose motion failed or that tilted too little to flow never is. Each run consults a copy of the viewer's store, and the hypotheses it admitted are added to that store when it ends, so later runs are served them. The panel offers a box for the phase structure and one per perspective on the action core (`PERSPECTIVE_ROOTS`), all ticked by default; the ticked ones are consulted (`KnowledgeRequester.consults_phase_structure`, `perspectives`) |
 | Resolver → knowledge component | Through `knowledge/access.py` only (a test checks this): the knowledge request (§3.6) before every request to the model, serving or generating the hypothesis for the action's situation, and the knowledge-access contract (§3.7), whose tools the request's model reads that hypothesis with |
 | Knowledge component ↔ world injector | None, by design: world facts reach the knowledge only through the resolver; the two keep separate sources |
 

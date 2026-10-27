@@ -5,7 +5,7 @@ decided, and what is proposed next. Read it with [`architecture.md`](architectur
 which describes how the package is built. Update both in the same change whenever the
 work moves on.
 
-Last updated: 2026-10-26; code on the branch `feature/physics_backed_knowledge`, which combines `feature/llm_reasoner` with `physics_test` (Isaac Sim) and carries `origin/main` of 2026-10-22.
+Last updated: 2026-10-27; code on the branch `feature/physics_backed_knowledge`, which combines `feature/llm_reasoner` with `physics_test` (Isaac Sim) and carries `origin/main` of 2026-10-22.
 
 ## 1. State at a glance
 
@@ -14,7 +14,7 @@ Last updated: 2026-10-26; code on the branch `feature/physics_backed_knowledge`,
 | World injector (`world/`) | Built and tested; eight tools; world-access contract 1.0 with declared answer shapes |
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
-| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
+| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cramera, the visualiser since 2026-10-27, logs every run, as cram_viz did; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model, which reads the hypothesis through three knowledge tools and cites its fragments as grounds (R1–R7 and I1–I5, verified live). Two vocabulary families: the Flanagan predictive-control modules and the action perspectives (action core and action frame, phases 0–4 of `knowledge_perspectives.md`, offered opt-in). A pour's predicted end and the flow-onset tilt are checked on the resolver side (`pour_prediction.md`) |
 | Offline tests | `python -m pytest test/llm_reasoner_test -m "not slow"`: 1350 passed, 41 deselected as slow, which pass on their own (2026-10-26) |
 
@@ -1100,6 +1100,44 @@ Step 16 of the ontology consolidation, without its live check:
   changed the docstring of semantic_digital_twin's `TracyCamera`, which `test_cram_classes`
   reported.
 - Deferred (user, 2026-10-26): the live check, which waits for API credit (§6).
+
+### cramera as the visualiser (2026-10-27)
+
+The user decided that cramera, upstream's viewer, is the visualiser from now on, not
+cram_viz. `feature/cramera_with_resolution` had moved cram_viz's resolution, hypothesis and
+execute backend into it as `cramera.resolution` on 2026-10-21/22; that package, its panels,
+`cramera/scenes` and `test/cramera_test` are copied onto this branch, which leaves
+`feature/cramera_with_resolution` as it was.
+
+- **Brought up to date.** What cram_viz gained since the move is replayed onto cramera's
+  copies, file by file, as a three-way merge (cram_viz of 2026-10-21 as the base, its
+  imports renamed): the stated container contents, the basin geometry, the measured flow
+  onset with its checked-in measurements (`ResolutionDirectory.MEASUREMENTS`), the pinned
+  linked ontologies, the consolidated vocabulary and the migrated sample hypothesis.
+  `cramera/scenes` is written again from `cram_viz/scenes` with
+  `python -m cramera.resolution.scene_conversion`, which carries the pitcher's contents.
+- **Tests.** cram_viz's tests of these come along. Two cram_viz-specific ones are kept
+  in cramera in another form: the onboarder keeping a container's contents is cram_viz's
+  (cramera has no onboarder), so cramera's copy checks that converting an archive keeps
+  them; and `test_knowledge_access` checks that cramera reaches the knowledge component
+  only through `access.py`. Two slow tests of the pour prediction, copied before, called
+  cram_viz's `paths.scenes_dir()` through cramera's `paths`, which has none; they read the
+  committed `cramera/scenes` now and pass. The slow NEEM store test needs the generated ORM
+  interface, as cram_viz's does.
+- **Its store.** `~/.cramera/hypotheses` (five records of 2026-10-21) is migrated through
+  0001 to 0015 after the backup `hypotheses.backup-2026-10-27`. Four are current; the
+  liquid phase structure (`fe4b3742`) stays stale, because its flow-onset threshold is
+  about no source container, which the pouring module requires.
+- **Not moved.** cram_viz keeps its copy of the backend until it is retired;
+  `llm_reasoner_viz` still defaults to cram_viz's data directory
+  (`LLM_REASONER_VIZ_RUNS=~/.cramera/runs` shows cramera's runs), and the experiments
+  still import cram_viz.
+- **Open: kept runs of an earlier format.** The runs list reads every kept run, and a run
+  the current code cannot read fails the whole list (`GET /api/resolution/runs`). None of
+  the three runs in `~/.cramera/runs` can be read (two name the flow-onset outcome key
+  `FLOW_ONSET_TILT_RADIANS`, gone since the measured flow onset; one names the add-on's
+  old module `cramera_resolution`), nor 8 of the 21 in `~/.cram_viz/runs`, so cram_viz's
+  list fails the same way. How old runs are to be treated is undecided.
 
 ## 2a. Moved onto the upstream main (2026-10-21)
 

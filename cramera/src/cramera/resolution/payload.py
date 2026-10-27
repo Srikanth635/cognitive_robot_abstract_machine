@@ -1,0 +1,81 @@
+"""
+The names of the fields in the payloads the add-on's routes answer with.
+"""
+
+from __future__ import annotations
+
+from enum import StrEnum
+
+
+class PayloadKey(StrEnum):
+    """
+    A field of an answer, by the name the panels read it by.
+    """
+
+    OK = "ok"
+    ERROR = "error"
+    ADDON = "addon"
+    CRUMB = "crumb"
+    ROOT = "root"
+    NODES = "nodes"
+    EDGES = "edges"
+    DETAILS = "details"
+    EMPTY = "empty"
+    ID = "id"
+    LABEL = "label"
+    KIND = "kind"
+    FROM = "from"
+    TO = "to"
+    GROUP = "group"
+    LINES = "lines"
+    INSTRUCTION = "instruction"
+    CATEGORY = "category"
+    COUNT = "count"
+    SOURCE = "source"
+    TARGET = "target"
+    IRI = "iri"
+    PREFIXED = "prefixed"
+    DESCRIPTION = "description"
+    EVIDENCE = "evidence"
+    CLAIMS = "claims"
+    TEXT = "text"
+    REQUIREMENTS = "requirements"
+    DEFINITION = "definition"
+    INSTANCES = "instances"
+    DESIGNATOR = "designator"
+    SCENE = "scene"
+    DESIGNATORS = "designators"
+    ACTION_VOCABULARY = "action_vocabulary"
+    PHASE_STRUCTURE = "phase_structure"
+    GEOMETRY_ADJUSTMENT = "geometry_adjustment"
+    PERSPECTIVES = "perspectives"
+    RESOLUTION = "resolution"
+    HYPOTHESIS = "hypothesis"
+    VIEWER = "viewer"
+    RUNS = "runs"
+    NAME = "name"
+    QUERY = "query"
+    COST = "cost"
+    TRIALS = "trials"
+    AT = "at"
+
+
+class ViewName(StrEnum):
+    """
+    The views of the knowledge, by the name a request asks for.
+    """
+
+    HYPOTHESIS = "hypothesis"
+    """
+    The projection of the active hypothesis, phase first.
+    """
+
+    ONTOLOGY = "ontology"
+    """
+    The classes behind the active hypothesis.
+    """
+
+    DESIGNATOR = "designator"
+    """
+    The designator the active resolution made.
+    """
