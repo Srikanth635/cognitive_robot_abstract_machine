@@ -30,6 +30,7 @@ from semantic_digital_twin.world_description.connections import (
     ActiveConnection1DOF,
     Connection6DoF,
 )
+from semantic_digital_twin.world_description.world_entity import SemanticAnnotation
 
 if TYPE_CHECKING:
     from cramph.node import StatechartNode
@@ -483,24 +484,25 @@ class Bridge:
             PlanNodeKey.STATUS: LIFE_CYCLE_TO_STATUS[int(node.life_cycle_state)],
             PlanNodeKey.DERIVED: False,
         }
-        self._add_designator_metadata(entry, node)
+        self._add_designator_metadata(entry=entry, node=node)
         nodes.append(entry)
         order.append(node_id)
         for child in node.children:
             self._serialize_plan_node(child, node_id, nodes, order)
 
-    def _add_designator_metadata(
-        self, entry: Dict[str, Any], designator: Optional[Any]
-    ) -> None:
+    def _add_designator_metadata(self, *, entry: Dict[str, Any], node: Any) -> None:
         """
-        Add arm and target-object info from a node's designator, if any.
+        Add the arms a plan node moves, by name, and the published object it acts on, if
+        any.
         """
-        if designator is None:
-            return
-        arm = getattr(designator, "arm", None) or getattr(designator, "arms", None)
-        if arm is not None:
-            entry["arm"] = str(arm)
-        target = self._designator_target(designator)
+        node_fields = vars(node)
+        arms = node_fields.get("arm") or node_fields.get("arms")
+        if arms is not None:
+            entry["arm"] = ", ".join(
+                arm.name.name if isinstance(arm, SemanticAnnotation) else str(arm)
+                for arm in (arms if isinstance(arms, list) else [arms])
+            )
+        target = self._designator_target(node)
         if target:
             entry["target"] = target
 

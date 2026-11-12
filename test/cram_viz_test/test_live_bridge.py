@@ -14,6 +14,7 @@ import pytest
 from coraplex.plans.executors import KinematicallySimulatedPlanExecutor, PlanExecutor
 from coraplex.robot_plans.actions.core.navigation import NavigateAction
 from cramph.data_types import LifeCycleValues
+from semantic_digital_twin.world_description.world_entity import SemanticAnnotation
 from typing_extensions import Any, Dict, List
 
 from cram_viz.live import hooks
@@ -46,6 +47,20 @@ class PlanNodeMimic:
     obj: Any = None
     """
     The object the node acts on, if it acts on one.
+    """
+
+
+@dataclass(eq=False, kw_only=True)
+class ArmOfTheWorld(SemanticAnnotation):
+    """
+    An arm as a world annotates it, named after its class as an unnamed annotation is.
+    """
+
+
+@dataclass(eq=False, kw_only=True)
+class OtherArmOfTheWorld(SemanticAnnotation):
+    """
+    A second arm as a world annotates it.
     """
 
 
@@ -140,6 +155,24 @@ class TestPlanSnapshot:
         _, action, motion = published(small_plan.bridge)
         assert action["arm"] == small_plan.action.arm
         assert motion["target"] == "milk.stl"
+
+    def test_an_arm_of_the_world_is_published_by_its_name(
+        self, small_plan: SmallPlan
+    ) -> None:
+        arm = ArmOfTheWorld()
+        small_plan.action.arm = arm
+        small_plan.bridge.snapshot_plan()
+        _, action, _ = published(small_plan.bridge)
+        assert action["arm"] == arm.name.name
+
+    def test_several_arms_are_published_by_their_names(
+        self, small_plan: SmallPlan
+    ) -> None:
+        arms = [ArmOfTheWorld(), OtherArmOfTheWorld()]
+        small_plan.action.arm = arms
+        small_plan.bridge.snapshot_plan()
+        _, action, _ = published(small_plan.bridge)
+        assert action["arm"] == ", ".join(arm.name.name for arm in arms)
 
     def test_the_signature_stays_while_only_statuses_change(
         self, small_plan: SmallPlan
