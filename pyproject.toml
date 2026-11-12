@@ -27,7 +27,7 @@ dependencies = [
   "segmind>=26.10.0",
   "krrood_spatial_math>=26.10.0",
   "cram_viz",
-  "llm_reasoner",
+  "llm_reasoner>=26.10.0",
   "llm_reasoner_viz",
   "ipykernel>=7.2.0",
   "lark-parser>=0.12.0",
