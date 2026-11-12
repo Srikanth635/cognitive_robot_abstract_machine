@@ -29,6 +29,7 @@ dependencies = [
   "cram_viz",
   "llm_reasoner>=26.10.0",
   "llm_reasoner_viz",
+  "cramera",
   "ipykernel>=7.2.0",
   "lark-parser>=0.12.0",
   "tqdm"
@@ -101,7 +102,8 @@ members = [
   "domain_models/krrood_spatial_math",
   "cram_viz",
   "llm_reasoner",
-  "llm_reasoner_viz"
+  "llm_reasoner_viz",
+  "cramera"
 ]
 
 [tool.uv.sources]
@@ -120,6 +122,7 @@ krrood_spatial_math   = { workspace = true }
 cram_viz              = { workspace = true }
 llm_reasoner           = { workspace = true }
 llm_reasoner_viz       = { workspace = true }
+cramera                = { workspace = true }
 
 [tool.poetry]
 package-mode = false
@@ -136,6 +139,7 @@ robokudo = { path = "robokudo", develop = true }
 physics_simulators = { path = "physics_simulators", develop = true }
 experiments = { path = "experiments", develop = true }
 segmind = { path = "segmind", develop = true }
+cramera = { path = "cramera", develop = true }
 krrood_spatial_math = { path = "domain_models/krrood_spatial_math", develop = true }
 
 [tool.setuptools]
