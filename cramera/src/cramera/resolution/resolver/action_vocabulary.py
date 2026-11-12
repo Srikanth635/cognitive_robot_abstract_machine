@@ -9,7 +9,7 @@ import dataclasses
 from dataclasses import dataclass
 from enum import StrEnum
 
-from coraplex.robot_plans.actions.base import ActionDescription
+from coraplex.robot_plans.actions.base import Action
 from typing_extensions import Any, Dict, List
 
 from cramera.resolution.resolver.designators import QUERY_VOCABULARY
@@ -114,7 +114,7 @@ class ActionDesignatorVocabulary:
     An action designator and the parameters it takes.
     """
 
-    action: type[ActionDescription]
+    action: type[Action]
     """
     The action designator's class.
     """
@@ -125,9 +125,7 @@ class ActionDesignatorVocabulary:
         :return: The vocabulary of each action designator a designator's query reads.
         """
         return [
-            cls(action=item)
-            for item in QUERY_VOCABULARY
-            if issubclass(item, ActionDescription)
+            cls(action=item) for item in QUERY_VOCABULARY if issubclass(item, Action)
         ]
 
     def entries(self) -> List[VocabularyEntry]:

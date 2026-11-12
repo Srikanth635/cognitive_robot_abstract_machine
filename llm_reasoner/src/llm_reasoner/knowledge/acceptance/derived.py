@@ -240,7 +240,7 @@ class RangesHold(AcceptanceRule):
         return [
             violation
             for fragment in fragments
-            for wrapped in WrappedClass(type(fragment)).fields
+            for wrapped in WrappedClass(clazz=type(fragment)).fields
             for violation in self.field_violations(fragment, wrapped, membership)
         ]
 
@@ -255,7 +255,7 @@ class RangesHold(AcceptanceRule):
             field allows, or are concepts outside the class its property ranges over.
         """
         name = wrapped.field.name
-        term = PropertyTerm.of_field(type(fragment), name)
+        term = PropertyTerm.of_field(clazz=type(fragment), field_name=name)
         if term is None:
             return []
         value = attrgetter(name)(fragment)

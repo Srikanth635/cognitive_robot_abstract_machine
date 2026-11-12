@@ -8,43 +8,45 @@ import json
 
 import pytest
 
-from coraplex.plans.plan import Plan
-from coraplex.plans.plan_node import ActionNode, MotionNode, PlanNode
 from coraplex.robot_plans.actions.core.robot_body import (
     ParkArmsAction,
     SetGripperAction,
 )
-from giskardpy.motion_statechart.data_types import LifeCycleValues
+from cramph.composites import Sequence
+from cramph.data_types import LifeCycleValues
+from cramph.statechart import Statechart
 from krrood.entity_query_language.factories import inference
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
 from semantic_digital_twin.datastructures.definitions import GripperState
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle
-from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
 
 from cramera.live.bridge import Bridge
 from cramera.recording_fields import SceneField
 
-from .dataset.plan_metadata import AnnotationTargetMotion
+from .dataset.plan_statecharts import ActingOnAnAnnotation, MotionStep, plan_statechart
 
 # %% plan observers
 
 
-def test_every_plan_snapshot_is_handed_to_the_plan_observers() -> None:
+def test_every_plan_snapshot_is_handed_to_the_plan_observers(
+    plan_statechart: Statechart,
+) -> None:
     """
     An observer of the bridge's plan receives each snapshot the bridge takes, as taken.
+
+    :param plan_statechart: An empty statechart to build the plan in.
     """
-    plan = Plan()
-    node = PlanNode(status=LifeCycleValues.NOT_STARTED)
-    plan.add_node(node)
+    node = MotionStep(name="moving")
+    plan_statechart.add_node(node)
     bridge = Bridge()
     observed = []
     bridge.plan_observers.append(observed.append)
 
-    bridge.begin_plan(plan)
-    node.status = LifeCycleValues.RUNNING
+    bridge.begin_plan(statechart=plan_statechart)
+    plan_statechart.life_cycle_state[node] = LifeCycleValues.RUNNING
     bridge.snapshot_plan()
 
     assert [snapshot.nodes[0].status for snapshot in observed] == [
@@ -58,18 +60,21 @@ def test_every_plan_snapshot_is_handed_to_the_plan_observers() -> None:
 
 
 @pytest.mark.parametrize("status", list(LifeCycleValues))
-def test_plan_snapshot_keeps_the_native_lifecycle(status: LifeCycleValues) -> None:
+def test_plan_snapshot_keeps_the_native_lifecycle(
+    plan_statechart: Statechart, status: LifeCycleValues
+) -> None:
     """
     Keep native states in memory and their names in serialized snapshots.
 
+    :param plan_statechart: An empty statechart to build the plan in.
     :param status: The native lifecycle state to publish.
     """
-    plan = Plan()
-    node = PlanNode(status=status)
-    plan.add_node(node)
+    node = MotionStep(name="moving")
+    plan_statechart.add_node(node)
+    plan_statechart.life_cycle_state[node] = status
     bridge = Bridge()
 
-    bridge.begin_plan(plan)
+    bridge.begin_plan(statechart=plan_statechart)
 
     assert bridge.plan_state.nodes[0].status is status
     assert (
@@ -83,20 +88,24 @@ def test_plan_snapshot_keeps_the_native_lifecycle(status: LifeCycleValues) -> No
 
 @pytest.mark.parametrize("status", list(LifeCycleValues))
 def test_parent_lifecycle_is_independent_of_finished_children(
+    plan_statechart: Statechart,
     status: LifeCycleValues,
 ) -> None:
     """
     A parent's lifecycle remains its own when children have completed.
 
+    :param plan_statechart: An empty statechart to build the plan in.
     :param status: The parent's current lifecycle, including a reset.
     """
-    plan = Plan()
-    parent = PlanNode(status=LifeCycleValues.RUNNING)
-    plan.add_edge(parent, PlanNode(status=LifeCycleValues.SUCCEEDED))
+    child = MotionStep(name="moving")
+    parent = Sequence(nodes=[child])
+    plan_statechart.add_node(parent)
+    plan_statechart.life_cycle_state[parent] = LifeCycleValues.RUNNING
+    plan_statechart.life_cycle_state[child] = LifeCycleValues.SUCCEEDED
     bridge = Bridge()
-    bridge.begin_plan(plan)
+    bridge.begin_plan(statechart=plan_statechart)
 
-    parent.status = status
+    plan_statechart.life_cycle_state[parent] = status
     bridge.snapshot_plan()
 
     assert bridge.plan_state.nodes[0].status is status
@@ -108,25 +117,26 @@ def test_parent_lifecycle_is_independent_of_finished_children(
 
 @pytest.mark.parametrize("gripper_index", [0, 1])
 def test_designator_description_uses_native_parameter_verbalization(
-    pr2_world_copy: World,
+    plan_statechart: Statechart,
     gripper_index: int,
 ) -> None:
     """
-    Publish native wording for the selected grippers and their requested state.
+    Publish native wording for the configuration the selected gripper is moved to.
 
-    :param pr2_world_copy: The world containing the native robot annotations.
+    :param plan_statechart: An empty statechart performed by the PR2.
     :param gripper_index: The arm whose native end effector is described.
     """
-    [robot] = pr2_world_copy.get_semantic_annotations_by_type(PR2)
+    [robot] = plan_statechart.context.world.get_semantic_annotations_by_type(PR2)
     gripper = robot.all_arms[gripper_index].end_effector
-    action = SetGripperAction(gripper=gripper, motion=GripperState.CLOSE)
-    plan = Plan()
-    plan.add_node(ActionNode(designator=action))
+    action = SetGripperAction(
+        configuration=gripper.default_configuration(GripperState.CLOSE)
+    )
+    plan_statechart.add_node(action)
     bridge = Bridge()
 
-    bridge.begin_plan(plan)
+    bridge.begin_plan(statechart=plan_statechart)
 
-    [entry] = bridge.get_plan()["nodes"]
+    entry = bridge.get_plan()["nodes"][0]
     assert entry[SceneField.DESCRIPTION] == verbalize_expression(
         inference(type(action))(**action.designator_parameter)
     )
@@ -135,21 +145,20 @@ def test_designator_description_uses_native_parameter_verbalization(
 
 @pytest.mark.parametrize("arm_indices", [(0,), (1,), (0, 1)])
 def test_native_arm_selection_is_verbalized(
-    pr2_world_copy: World, arm_indices: tuple[int, ...]
+    plan_statechart: Statechart, arm_indices: tuple[int, ...]
 ) -> None:
     """
     Describe every native arm selection, including the left arm and both arms.
 
-    :param pr2_world_copy: The world containing the native robot annotations.
+    :param plan_statechart: An empty statechart performed by the PR2.
     :param arm_indices: The indices of the native arms selected for parking.
     """
-    plan = Plan()
-    [robot] = pr2_world_copy.get_semantic_annotations_by_type(PR2)
+    [robot] = plan_statechart.context.world.get_semantic_annotations_by_type(PR2)
     action = ParkArmsAction(arms=[robot.all_arms[index] for index in arm_indices])
-    plan.add_node(ActionNode(designator=action))
+    plan_statechart.add_node(action)
     bridge = Bridge()
 
-    bridge.begin_plan(plan)
+    bridge.begin_plan(statechart=plan_statechart)
 
     assert bridge.plan_state.nodes[0].description == verbalize_expression(
         inference(type(action))(**action.designator_parameter)
@@ -157,45 +166,42 @@ def test_native_arm_selection_is_verbalized(
 
 
 def test_gripper_state_enum_is_not_mistaken_for_a_target_body(
-    pr2_world_copy: World,
+    plan_statechart: Statechart,
 ) -> None:
     """
     An enum's name does not create an object reference with the same name.
 
-    :param pr2_world_copy: The world containing the native robot annotations.
+    :param plan_statechart: An empty statechart performed by the PR2.
     """
-    motion = GripperState.CLOSE
-    body = Body(name=PrefixedName(motion.name))
-    [robot] = pr2_world_copy.get_semantic_annotations_by_type(PR2)
-    plan = Plan()
-    plan.add_node(
-        ActionNode(
-            designator=SetGripperAction(
-                gripper=robot.all_arms[0].end_effector, motion=motion
-            )
-        )
+    state = GripperState.CLOSE
+    body = Body(name=PrefixedName(state.name))
+    [robot] = plan_statechart.context.world.get_semantic_annotations_by_type(PR2)
+    gripper = robot.all_arms[0].end_effector
+    plan_statechart.add_node(
+        SetGripperAction(configuration=gripper.default_configuration(state))
     )
     bridge = Bridge()
     bridge.publish_bodies({str(body.name): body})
 
-    bridge.begin_plan(plan)
+    bridge.begin_plan(statechart=plan_statechart)
 
     assert bridge.plan_state.nodes[0].target is None
 
 
-def test_native_annotation_resolves_its_published_body_name() -> None:
+def test_native_annotation_resolves_its_published_body_name(
+    plan_statechart: Statechart,
+) -> None:
     """
     A semantic annotation retains the target match through its native name.
+
+    :param plan_statechart: An empty statechart performed by the PR2.
     """
     body = Body(name=PrefixedName("handle", prefix="world"))
     annotation = Handle(root=body, name=body.name)
-    plan = Plan()
-    plan.add_node(
-        MotionNode(designator=AnnotationTargetMotion(target_annotation=annotation))
-    )
+    plan_statechart.add_node(ActingOnAnAnnotation(target_annotation=annotation))
     bridge = Bridge()
     bridge.publish_bodies({body.name.name: body})
 
-    bridge.begin_plan(plan)
+    bridge.begin_plan(statechart=plan_statechart)
 
     assert bridge.plan_state.nodes[0].target == body.name.name

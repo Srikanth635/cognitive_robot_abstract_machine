@@ -13,7 +13,7 @@ from datetime import datetime
 
 from typing_extensions import Optional
 
-from semantic_digital_twin.spatial_types import Point3, Pose
+from krrood_spatial_math.spatial_types import Point3, Pose
 
 
 @dataclass

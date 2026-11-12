@@ -120,7 +120,7 @@ def sample_record(directory: Path) -> HypothesisRecord:
     :return: The sample's record as stored in the directory.
     """
     return HypothesisRecord.from_json(
-        json.loads((directory / SAMPLE_RECORD / StoredFile.RECORD).read_text())
+        data=json.loads((directory / SAMPLE_RECORD / StoredFile.RECORD).read_text())
     )
 
 
@@ -135,7 +135,9 @@ def decomposed_task() -> URIRef:
     :return: The property naming the task a structure decomposes.
     """
     return URIRef(
-        PropertyTerm.of_field(core.ActionPhaseStructure, "decomposes_task").iri
+        PropertyTerm.of_field(
+            clazz=core.ActionPhaseStructure, field_name="decomposes_task"
+        ).iri
     )
 
 
@@ -312,7 +314,9 @@ class TestConceptValues:
         assert not migration.touches(once)
 
     def test_a_literal_takes_the_datatype_its_property_now_ranges_over(self):
-        term = PropertyTerm.of_field(flow_onset.PhysicsSimulationSetup, "run_count")
+        term = PropertyTerm.of_field(
+            clazz=flow_onset.PhysicsSimulationSetup, field_name="run_count"
+        )
         graph = Graph()
         graph.add((STRUCTURE, URIRef(term.iri), Literal(3.0)))
         migration = Migration(
@@ -333,7 +337,9 @@ class TestConceptValues:
 LIP_OF_SOURCE = PartOfFill(
     part=pouring.PouringLip.term.iri,
     whole=action_core.SourceSlot.term.iri,
-    property=PropertyTerm.of_field(action_core.PartSlot, "is_part_of_slot").iri,
+    property=PropertyTerm.of_field(
+        clazz=action_core.PartSlot, field_name="is_part_of_slot"
+    ).iri,
 )
 """
 A pouring lip linked to the source it is part of.
@@ -529,9 +535,11 @@ The property a condition of the microworld listed its roles with, in no order.
 CONDITION_ROLES_SPLIT = RoleListSplit(
     property=CONDITION_ON_ROLE,
     targets=(
-        PropertyTerm.of_field(action_core.SlotConditionType, "condition_on_slot").iri,
         PropertyTerm.of_field(
-            action_core.SlotConditionType, "condition_involves_slot"
+            clazz=action_core.SlotConditionType, field_name="condition_on_slot"
+        ).iri,
+        PropertyTerm.of_field(
+            clazz=action_core.SlotConditionType, field_name="condition_involves_slot"
         ).iri,
     ),
 )
@@ -550,7 +558,7 @@ The property a parameter of the microworld listed its roles with, in no order.
 PARAMETER_ROLES_SPLIT = RoleListSplit(
     property=PARAMETER_ON_ROLE,
     targets=tuple(
-        PropertyTerm.of_field(action_core.SlotQuantity, name).iri
+        PropertyTerm.of_field(clazz=action_core.SlotQuantity, field_name=name).iri
         for name in ("about_slot", "relative_to_slot", "quantity_involves_slot")
     ),
 )

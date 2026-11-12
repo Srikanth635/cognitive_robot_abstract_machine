@@ -13,7 +13,7 @@ krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 from semantic_digital_twin.datastructures.prefixed_name import (
     PrefixedName,
 )  # noqa: E402
-from semantic_digital_twin.spatial_types import Point3  # noqa: E402
+from krrood_spatial_math.spatial_types import Point3  # noqa: E402
 from semantic_digital_twin.world import World  # noqa: E402
 from semantic_digital_twin.world_description.world_entity import Body  # noqa: E402
 

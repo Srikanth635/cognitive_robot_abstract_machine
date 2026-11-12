@@ -4,9 +4,11 @@ Tests for watching an executing motion statechart.
 
 from .test_live_bridge import make_chart
 
-from giskardpy.motion_statechart.data_types import TransitionKind
-from giskardpy.motion_statechart.graph_node import Goal, Task
-from giskardpy.motion_statechart.motion_statechart import MotionStatechart
+from cramph.context import StatechartContext
+from cramph.data_types import TransitionKind
+from cramph.nodes_for_testing import ConstFalseNode, ConstTrueNode
+from cramph.statechart import Statechart
+from semantic_digital_twin.world import World
 
 from cramera.knowledge.recorded_statecharts import RecordedStatecharts
 from cramera.live.chart_observer import ChartObserver
@@ -105,7 +107,7 @@ def test_transition_kind_changes_the_chart_signature() -> None:
     """
     original = make_chart()
     changed = make_chart()
-    changed.rx_graph.edges[0][2].kind = TransitionKind.END
+    changed.rx_graph.edges[0][2].kind = TransitionKind.SUCCEED
 
     assert structure_of(original).signature != structure_of(changed).signature
 
@@ -135,12 +137,12 @@ def test_parent_changes_the_chart_signature() -> None:
 
 def test_node_type_changes_the_chart_signature() -> None:
     """
-    Replacing a named task with a goal changes how the graph renders it.
+    Replacing a named node with one of another kind changes how the graph renders it.
     """
-    original = MotionStatechart()
-    original.add_node(Task())
-    changed = MotionStatechart()
-    changed.add_node(Goal(name=original.nodes[0].name))
+    original = Statechart(context=StatechartContext(world=World()))
+    original.add_node(ConstTrueNode(name="reached"))
+    changed = Statechart(context=StatechartContext(world=World()))
+    changed.add_node(ConstFalseNode(name=original.nodes[0].name))
 
     assert structure_of(original).signature != structure_of(changed).signature
 
@@ -151,7 +153,7 @@ def test_recording_preserves_rewired_chart_structures() -> None:
     """
     original = make_chart()
     changed = make_chart()
-    changed.rx_graph.edges[0][2].kind = TransitionKind.END
+    changed.rx_graph.edges[0][2].kind = TransitionKind.SUCCEED
     observer = ChartObserver()
     snapshots = [observer.snapshot(original), observer.snapshot(changed)]
 

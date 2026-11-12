@@ -11,23 +11,25 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
-from coraplex.datastructures.dataclasses import Context
-from coraplex.execution_environment import kinematically_simulated_robot
-from coraplex.language import SequentialNode
-from coraplex.plans.factories import sequential
-from coraplex.robot_plans.actions.base import ActionDescription
+from coraplex.plans.context_extensions import RobotAccess, StatementGrounding
+from coraplex.plans.executors import KinematicallySimulatedPlanExecutor
+from coraplex.robot_plans.actions.base import Action
 from coraplex.robot_plans.actions.composite.tool_based import PouringAction
 from coraplex.robot_plans.actions.core.navigation import NavigateAction
 from coraplex.robot_plans.actions.core.pick_up import PickUpAction
 from coraplex.robot_plans.actions.core.robot_body import MoveTorsoAction, ParkArmsAction
+from cramph.composites import Sequence
+from cramph.context import StatechartContext
+from cramph.statechart import Statechart
+from cramph.visualization import WorldVisualization
 from semantic_digital_twin.datastructures.definitions import TorsoState
 from semantic_digital_twin.grasping.grasp_candidates import GraspCandidate
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.semantic_annotations.mixins import HasGraspCandidates
-from semantic_digital_twin.spatial_types import Pose
+from krrood_spatial_math.spatial_types import Pose
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing_extensions import TYPE_CHECKING, Any, Dict, List, Optional
 
 from cramera.resolution.designator_knowledge import resolved_field_type
 from cramera.resolution.neem import NeemRecorder, NoNeemRecorder
@@ -168,6 +170,12 @@ class PouringExecution:
     Keeps the plan performed as a NEEM; nothing is kept by default.
     """
 
+    visualization: Optional[WorldVisualization] = None
+    """
+    Shows the world and the plan while the plan is performed; nothing is shown by
+    default.
+    """
+
     @classmethod
     def for_resolution(
         cls,
@@ -226,17 +234,15 @@ class PouringExecution:
             }
         )
 
-    def plan(self) -> SequentialNode:
+    def plan(self) -> Sequence:
         """
         :return: The plan: park the arms, lower the torso, face the source container,
             pick it up with the resolved arm, face the target container, pour.
         """
         action = self.action()
-        return sequential(
-            [*self.steps_before_pour(action), action], context=self.context()
-        )
+        return Sequence(nodes=[*self.steps_before_pour(action), action])
 
-    def steps_before_pour(self, action: PouringAction) -> List[ActionDescription]:
+    def steps_before_pour(self, action: PouringAction) -> List[Action]:
         """
         :param action: The pouring the steps prepare.
         :return: Parking the arms, lowering the torso, facing the source container,
@@ -246,33 +252,67 @@ class PouringExecution:
         robot = self.robot
         standing = standing_pose(self.world, robot.root, action.source_container.root)
         return [
-            ParkArmsAction([robot.left_arm, robot.right_arm]),
-            MoveTorsoAction(REACHING_TORSO),
-            NavigateAction(standing),
-            PickUpAction(grasp_facing(action.source_container, standing), action.arm),
-            MoveTorsoAction(POURING_TORSO),
-            NavigateAction(facing_pose(standing, action.target_container, self.world)),
+            ParkArmsAction(arms=[robot.left_arm, robot.right_arm]),
+            MoveTorsoAction(torso_state=REACHING_TORSO),
+            NavigateAction(target_location=standing),
+            PickUpAction(
+                grasp=grasp_facing(action.source_container, standing), arm=action.arm
+            ),
+            MoveTorsoAction(torso_state=POURING_TORSO),
+            NavigateAction(
+                target_location=facing_pose(
+                    standing, action.target_container, self.world
+                )
+            ),
         ]
 
-    def context(self) -> Context:
+    def executor(self) -> KinematicallySimulatedPlanExecutor:
         """
-        :return: The context the plan is built and performed in.
+        :return: A new executor simulating the robot's plans in the world, shown by
+            :attr:`visualization` if there is one.
         """
-        return Context(world=self.world, robot=self.robot, evaluate_conditions=False)
+        return KinematicallySimulatedPlanExecutor(
+            StatechartContext.with_extensions(
+                self.world, [RobotAccess(self.robot), StatementGrounding()]
+            ),
+            extensions=[] if self.visualization is None else [self.visualization],
+        )
 
-    def perform(self, observe_plan: Optional[Callable[[SequentialNode], None]] = None) -> None:
+    def statechart_holding(
+        self, *, executor: KinematicallySimulatedPlanExecutor, plan: Action | Sequence
+    ) -> Statechart:
         """
-        Perform the plan in the simulation, and have the recorder keep the plan however
-        it ended.
+        :param executor: The executor the plan is built for.
+        :param plan: The plan to build.
+        :return: A statechart in the context of the executor holding the plan, which
+            builds the plan's steps.
+        """
+        statechart = Statechart(context=executor.context)
+        statechart.add_node(plan)
+        return statechart
 
-        :param observe_plan: Told the plan before it is performed, so that something can
-            follow it as it runs.
+    def perform_plan(self, *, plan: Action | Sequence) -> Statechart:
         """
-        root = self.plan()
-        if observe_plan is not None:
-            observe_plan(root)
+        Perform a plan in the simulation until it ends.
+
+        :param plan: The plan to perform.
+        :return: The statechart the plan was performed as.
+        """
+        executor = self.executor()
+        statechart = self.statechart_holding(executor=executor, plan=plan)
+        executor.compile(statechart)
+        executor.execute()
+        return statechart
+
+    def perform(self) -> None:
+        """
+        Perform the plan in the simulation, and have the recorder keep the statechart it
+        was performed as, however it ended.
+        """
+        executor = self.executor()
+        statechart = self.statechart_holding(executor=executor, plan=self.plan())
         try:
-            with kinematically_simulated_robot:
-                root.perform()
+            executor.compile(statechart)
+            executor.execute()
         finally:
-            self.recorder.record(root.plan)
+            self.recorder.record(statechart)

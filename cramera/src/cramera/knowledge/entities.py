@@ -11,7 +11,7 @@ from cramera.knowledge.entity import NamedEntity
 from typing_extensions import Optional
 
 from cramera.robot_parts import ArmSide
-from semantic_digital_twin.spatial_types import Point3
+from krrood_spatial_math.spatial_types import Point3
 
 from cramera.knowledge.enums import JointRegion
 

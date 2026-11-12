@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing_extensions import Any, Dict, List, Optional, Sequence
 
 from cramera.robot_parts import ArmSide
-from semantic_digital_twin.spatial_types import Point3
+from krrood_spatial_math.spatial_types import Point3
 
 from cramera.knowledge.architecture_entities import Package, PythonClass, SubPackage
 from cramera.knowledge.entities import (

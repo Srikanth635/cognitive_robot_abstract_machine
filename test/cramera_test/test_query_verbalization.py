@@ -69,7 +69,9 @@ class TestReadingAQueryBack:
 
         verbalization = QueryVerbalization.of_expression(expression)
 
-        assert verbalization.text == VerbalizationPipeline.plain().verbalize(expression)
+        assert verbalization.text == VerbalizationPipeline.plain().verbalize(
+            expression=expression
+        )
 
     def test_the_sentence_names_what_is_asked_about(self):
         verbalization = verbalize("an(entity(record).where(record.score > 1.0))")

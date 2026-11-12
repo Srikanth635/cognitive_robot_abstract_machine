@@ -106,7 +106,7 @@ class PublishedDocumentationResolver:
             return None
         return AutoAPIResolver(
             base_url="%s/%s" % (self.site.rstrip("/"), package)
-        ).resolve(reference)
+        ).resolve(reference=reference)
 
     @classmethod
     def of_environment(cls) -> PublishedDocumentationResolver:
@@ -283,14 +283,11 @@ class EscapedHtmlFormatter(HTMLFormatter):
     are whatever a viewer typed, so they arrive as text rather than as tags.
     """
 
-    def colorize(self, text: str, role: SemanticRole) -> str:
+    def colorize(self, *, text: str, role: SemanticRole) -> str:
         """
-        Colour one already-escaped span of display text.
-
-        :param text: Plain display text to escape and colour.
-        :param role: The semantic role deciding the colour.
+        Escape the display text before :meth:`HTMLFormatter.colorize` colours it.
         """
-        return super().colorize(html.escape(text), role)
+        return super().colorize(text=html.escape(text), role=role)
 
 
 @dataclass(frozen=True)
@@ -322,15 +319,15 @@ class QueryVerbalization:
             is a nicety, and failing to build one must not cost the caller its answer.
         """
         try:
-            fragment = EQLVerbalizer().build(expression)
+            fragment = EQLVerbalizer().build(expression=expression)
         except UnverbalizableExpressionError:
             return None
         return cls(
-            text=ParagraphRenderer().render(fragment),
+            text=ParagraphRenderer().render(fragment=fragment),
             html=ParagraphRenderer(
-                EscapedHtmlFormatter(),
+                formatter=EscapedHtmlFormatter(),
                 link_resolver=WordLinkResolver.of_environment(),
-            ).render(fragment),
+            ).render(fragment=fragment),
         )
 
     def to_payload(self) -> Dict[str, Any]:

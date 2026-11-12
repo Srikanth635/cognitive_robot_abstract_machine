@@ -12,7 +12,7 @@ import pytest
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
-from semantic_digital_twin.spatial_types import Point3  # noqa: E402
+from krrood_spatial_math.spatial_types import Point3  # noqa: E402
 from typing_extensions import Any, List  # noqa: E402
 
 from cramera.knowledge.presets import Preset  # noqa: E402

@@ -137,7 +137,7 @@ class RunEnvironment(SubclassJSONSerializer):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+    def _from_json(cls, *, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             scene=data[EnvironmentField.SCENE],
             bundle=Path(data[EnvironmentField.BUNDLE]),
@@ -210,7 +210,7 @@ class RunDirectory:
         :return: The environment the run started from.
         """
         return RunEnvironment.from_json(
-            json.loads((self.directory / RunFile.ENVIRONMENT).read_text())
+            data=json.loads((self.directory / RunFile.ENVIRONMENT).read_text())
         )
 
     def resolution(self) -> Any:

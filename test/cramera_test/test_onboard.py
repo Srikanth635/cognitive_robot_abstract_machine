@@ -9,7 +9,7 @@ import pytest
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.world_description.geometry import Box, Scale
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
-from semantic_digital_twin.spatial_types.spatial_types import (
+from krrood_spatial_math.spatial_types import (
     HomogeneousTransformationMatrix,
     Vector3,
 )
@@ -186,7 +186,7 @@ class TestSerializeUnclaimedBodies:
         """
         report = self.serialize(hand_built_world, tmp_path)
 
-        reparsed = URDFParser.from_file(report.urdf).parse()
+        reparsed = URDFParser.from_file(report.urdf).create_world()
 
         assert sorted(str(body.name).split("/")[-1] for body in reparsed.bodies) == (
             sorted(["table", "drawer", UrdfDocument.SYNTHESIZED_ROOT_LINK])

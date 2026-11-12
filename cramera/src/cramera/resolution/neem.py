@@ -24,7 +24,7 @@ from typing_extensions import TYPE_CHECKING, List
 from cramera.resolution.events import NeemKind, NeemNotRecorded, NeemRecorded
 
 if TYPE_CHECKING:
-    from coraplex.plans.plan import Plan
+    from cramph.statechart import Statechart
 
 logger = logging.getLogger(__spec__.name)
 """
@@ -51,29 +51,30 @@ class NeemStore(ABC):
     """
 
     @abstractmethod
-    def save(self, plan: Plan) -> int:
+    def save(self, statechart: Statechart) -> int:
         """
-        :param plan: A plan that was performed, however it ended.
-        :return: The identifier the store gave the plan.
+        :param statechart: The statechart a plan was performed as, however it ended.
+        :return: The identifier the store gave the statechart.
         """
 
 
 @dataclass
 class SqliteNeemStore(NeemStore):
     """
-    A SQLite database that holds every plan, saved through the ORM of coraplex.
+    A SQLite database that holds every performed plan's statechart, saved through the
+    ORM of coraplex and cramph.
 
     Its tables are many, and are created once, which takes about half a minute; a
     database that has them is opened at once.
     """
 
-    def save(self, plan: Plan) -> int:
+    def save(self, statechart: Statechart) -> int:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         engine = create_engine(f"sqlite:///{self.path.resolve()}")
         try:
             self.prepare(engine)
             with sessionmaker(engine)() as session:
-                neem = to_dao(plan)
+                neem = to_dao(statechart)
                 session.add(neem)
                 session.commit()
                 return neem.database_id
@@ -86,6 +87,7 @@ class SqliteNeemStore(NeemStore):
         the one that makes them.
         """
         from coraplex.orm.ormatic_interface import Base
+        from cramph.orm import ormatic_interface  # noqa: F401
 
         with FileLock(self.path.with_name(self.path.name + LOCK_SUFFIX)):
             Base.metadata.create_all(bind=engine)
@@ -100,9 +102,9 @@ class NeemRecorder(ABC):
     """
 
     @abstractmethod
-    def record(self, plan: Plan) -> None:
+    def record(self, statechart: Statechart) -> None:
         """
-        :param plan: The plan that was performed, however it ended.
+        :param statechart: The statechart a plan was performed as, however it ended.
         """
 
 
@@ -112,7 +114,7 @@ class NoNeemRecorder(NeemRecorder):
     Keeps nothing.
     """
 
-    def record(self, plan: Plan) -> None:
+    def record(self, statechart: Statechart) -> None:
         return None
 
 
@@ -146,10 +148,10 @@ class DatabaseNeemRecorder(NeemRecorder):
     Where what was kept, or could not be, is reported to; nowhere by default.
     """
 
-    def record(self, plan: Plan) -> None:
+    def record(self, statechart: Statechart) -> None:
         began = perf_counter()
         try:
-            database_id = self.store.save(plan)
+            database_id = self.store.save(statechart)
         except Exception as error:
             logger.exception(
                 "the NEEM of %s %s was not recorded", self.kind, self.episode

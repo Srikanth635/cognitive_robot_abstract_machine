@@ -11,7 +11,7 @@ import pytest
 from urdf_parser_py.urdf import URDF
 
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
-from semantic_digital_twin.spatial_types import Vector3
+from krrood_spatial_math.spatial_types import Vector3
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
     PrismaticConnection,

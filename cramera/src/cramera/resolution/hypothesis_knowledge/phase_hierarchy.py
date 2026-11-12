@@ -269,8 +269,9 @@ class PhaseHierarchyOverlay:
             self.remove_out_edges(
                 projection,
                 indices[id(phase.aims_for)],
-                lambda target, relation: relation.predicate
-                in SUBGOAL_REDUNDANT_PREDICATES,
+                lambda target, relation: (
+                    relation.predicate in SUBGOAL_REDUNDANT_PREDICATES
+                ),
             )
 
     def group_unreached(
@@ -367,7 +368,11 @@ class PhaseHierarchyOverlay:
         :return: The IRI of the ontology property a field of the owner states, or an
             empty string when the predicate is no such field.
         """
-        term = None if owner is None else PropertyTerm.of_field(type(owner), predicate)
+        term = (
+            None
+            if owner is None
+            else PropertyTerm.of_field(clazz=type(owner), field_name=predicate)
+        )
         if term is None:
             return ""
         return term.iri

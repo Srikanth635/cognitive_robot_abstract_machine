@@ -161,7 +161,7 @@ class TestClosedProperties:
         self, graph, root, owner, name, members
     ):
         assert graph.value(
-            URIRef(PropertyTerm.of_field(owner, name).iri), RDFS.range
+            URIRef(PropertyTerm.of_field(clazz=owner, field_name=name).iri), RDFS.range
         ) == URIRef(ActionPerspectiveFile.ACTION_CORE.namespace + "ChangeDirection")
 
     @pytest.mark.parametrize("root, owner, name, members", DIRECTED_FIELDS)
@@ -187,7 +187,7 @@ def stated(owner: type[DescriptionEntity], name: str, member: CHANGE) -> Graph:
     graph.add(
         (
             individual,
-            URIRef(PropertyTerm.of_field(owner, name).iri),
+            URIRef(PropertyTerm.of_field(clazz=owner, field_name=name).iri),
             URIRef(member.value),
         )
     )

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 import numpy
 from scipy.spatial.transform import Rotation
-from semantic_digital_twin.spatial_types import Point3, Pose
+from krrood_spatial_math.spatial_types import Point3, Pose
 from semantic_digital_twin.world_description.geometry import Scale
 from typing_extensions import (
     List,

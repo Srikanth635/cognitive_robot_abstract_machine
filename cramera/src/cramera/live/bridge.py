@@ -22,15 +22,15 @@ from typing_extensions import (
     Optional,
     TYPE_CHECKING,
 )
-from coraplex.plans.plan_node import DesignatorNode
-from giskardpy.motion_statechart.data_types import LifeCycleValues
+from coraplex.robot_plans.actions.base import Action
+from cramph.data_types import LifeCycleValues
 from krrood.entity_query_language.evaluable import Evaluable
 from krrood.entity_query_language.factories import inference
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
 
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.world import World
-from semantic_digital_twin.spatial_types import (
+from krrood_spatial_math.spatial_types import (
     HomogeneousTransformationMatrix,
 )
 from cramera.logging_setup import get_logger
@@ -69,10 +69,8 @@ from cramera.recording_fields import SceneField
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from coraplex.plans.designator import Designator
-    from coraplex.plans.plan import Plan
-    from coraplex.plans.plan_node import MotionNode, PlanNode
-    from giskardpy.motion_statechart.motion_statechart import MotionStatechart
+    from cramph.node import StatechartNode
+    from cramph.statechart import Statechart
     from semantic_digital_twin.world_description.world_entity import Body, Connection
 
     from cramera.live.recording import Recording
@@ -144,7 +142,7 @@ class PlanNodeEntry:
 
     kind: str
     """
-    The plan node's own class name.
+    The node's own class name.
     """
 
     group: PlanNodeGroup
@@ -154,7 +152,8 @@ class PlanNodeEntry:
 
     label: str
     """
-    Designator class name if this node describes an action, else :attr:`kind`.
+    The name the viewer shows the node under: its class name, which names the action
+    for an action.
     """
 
     status: LifeCycleValues
@@ -169,12 +168,12 @@ class PlanNodeEntry:
 
     description: Optional[str] = None
     """
-    Native verbalization of the designator and its parameters, if present.
+    Verbalization of the action and its parameters, if the node is an action.
     """
 
     target: Optional[str] = None
     """
-    Published object the node's designator refers to, if any.
+    Published object the node's action refers to, if any.
     """
 
     def to_payload(self) -> Dict[str, Any]:
@@ -517,19 +516,14 @@ class Bridge:
     Native mesh sources allowed through the ``/mesh`` endpoint, keyed by filename.
     """
 
-    _plan: Optional[Plan] = None
+    _plan: Optional[Statechart] = None
     """
-    The plan observed through its native execution callbacks.
+    The statechart of the plan being performed.
     """
 
     _chart_observer: ChartObserver = field(default_factory=ChartObserver)
     """
     Reads what the executing statechart looks like, remembering what it last saw.
-    """
-
-    _chart_title: str = ""
-    """
-    Name of the action whose motion group is executing.
     """
 
     _model_revision: int = 0
@@ -618,23 +612,13 @@ class Bridge:
         if self._query_attachment == attachment:
             self._query_attachment = None
 
-    def observe_motion_started(self, node: MotionNode) -> None:
+    def begin_plan(self, *, statechart: Statechart) -> None:
         """
-        Name the executing chart from its motion's parent action.
+        Record the statechart of the plan that started performing and publish its tree.
 
-        :param node: The node whose motion started.
+        :param statechart: The statechart the plan is performed as.
         """
-        action_node = node.parent_action_node
-        if action_node is not None:
-            self._chart_title = type(action_node.action).__name__
-
-    def begin_plan(self, plan: Plan) -> None:
-        """
-        Record the plan that started performing and publish its tree.
-
-        :param plan: The plan that started performing.
-        """
-        self._plan = plan
+        self._plan = statechart
         self.snapshot_plan()
 
     def observe_model_change(self) -> None:
@@ -1342,19 +1326,17 @@ class Bridge:
     # %% plan tree
     def snapshot_plan(self) -> None:
         """
-        Publish the current native lifecycle state of every plan node.
+        Publish the current life cycle of every node of the plan's statechart.
         """
-        plan = self._plan
-        if plan is None:
-            return
-        try:
-            root = plan.root
-        except Exception:
-            # the plan is mid-mutation and not a tree right now — next tick
+        statechart = self._plan
+        if statechart is None:
             return
         nodes: List[PlanNodeEntry] = []
         order: List[str] = []
-        self._serialize_plan_node(root, None, nodes, order)
+        for node in statechart.top_level_nodes:
+            self._serialize_plan_node(
+                node=node, parent_id=None, nodes=nodes, order=order
+            )
         snapshot = PlanSnapshot(signature="|".join(order), nodes=nodes)
         with self._lock:
             self.plan_state = snapshot
@@ -1363,7 +1345,8 @@ class Bridge:
 
     def _serialize_plan_node(
         self,
-        node: PlanNode,
+        *,
+        node: StatechartNode,
         parent_id: Optional[str],
         nodes: List[PlanNodeEntry],
         order: List[str],
@@ -1371,63 +1354,57 @@ class Bridge:
         """
         Serialize one plan node and its subtree.
 
-        :param node: The plan node to serialize.
-        :param parent_id: Id of the node's parent entry, or None for the root.
+        :param node: The node of the statechart to serialize.
+        :param parent_id: Id of the node's parent entry, or None for a top-level node.
         :param nodes: Output list every serialized entry is appended to.
         :param order: Output list every serialized node id is appended to, in
             traversal order, to build the tree's signature.
         """
         node_id = "plan_node_%d" % id(node)
-        designator = node.designator if isinstance(node, DesignatorNode) else None
         entry = PlanNodeEntry(
             id=node_id,
             parent=parent_id,
             kind=type(node).__name__,
-            group=PlanNodeGroup.of_plan_node_kind(type(node).__name__),
-            label=(
-                type(designator).__name__
-                if designator is not None
-                else type(node).__name__
-            ),
-            status=node.status,
+            group=PlanNodeGroup.from_statechart_node(node),
+            label=type(node).__name__,
+            status=node.life_cycle_state,
             derived=False,
         )
-        self._add_designator_metadata(entry, designator)
+        if isinstance(node, Action):
+            self._add_action_metadata(entry=entry, action=node)
         nodes.append(entry)
         order.append(node_id)
 
         for child in node.children:
-            self._serialize_plan_node(child, node_id, nodes, order)
+            self._serialize_plan_node(
+                node=child, parent_id=node_id, nodes=nodes, order=order
+            )
 
-    def _add_designator_metadata(
-        self, entry: PlanNodeEntry, designator: Designator | None
-    ) -> None:
+    def _add_action_metadata(self, *, entry: PlanNodeEntry, action: Action) -> None:
         """
-        Describe the designator's parameters and retain its published target identity.
+        Describe the action's parameters and retain its published target identity.
 
         :param entry: The serialized entry to fill in, mutated in place.
-        :param designator: The node's designator, or None.
+        :param action: The action the entry is of.
         """
-        if designator is None:
-            return
         entry.description = verbalize_expression(
-            inference(type(designator))(**designator.designator_parameter)
+            inference(type(action))(**action.designator_parameter)
         )
-        target = self._designator_target(designator)
+        target = self._action_target(action)
         if target:
             entry.target = target
 
-    def _designator_target(self, designator: Designator) -> Optional[str]:
+    def _action_target(self, action: Action) -> Optional[str]:
         """
-        Published key of the object a designator refers to, if any.
+        Published key of the object an action refers to, if any.
 
-        Matched by basename, because designators name world entities with their full
+        Matched by basename, because actions name world entities with their full
         prefixed name while some objects are published under a basename key.
 
-        :param designator: The designator to search for a world-entity reference.
+        :param action: The action to search for a world-entity reference.
         """
         keys_by_basename = {key.split("/")[-1]: key for key in self._bodies}
-        for value in designator.designator_parameter.values():
+        for value in action.designator_parameter.values():
             if not isinstance(value, WorldEntity):
                 continue
             basename = value.name.name
@@ -1460,15 +1437,16 @@ class Bridge:
             return self.plan_state.to_payload()
 
     # %% motion statechart
-    def observe_chart(self, chart: Optional[MotionStatechart]) -> None:
+    def observe_chart(self, chart: Optional[Statechart]) -> None:
         """
-        Publish the executing statechart's structure and node states.
+        Publish the executing statechart's structure and node states, titled with the
+        action running.
 
         Publish a fresh snapshot only when the chart changes.
 
-        :param chart: The motion statechart the executor is currently ticking, if any.
+        :param chart: The statechart the executor is currently ticking, if any.
         """
-        self._chart_observer.title = self._chart_title
+        self._chart_observer.title = self.running_step() or ""
         snapshot = self._chart_observer.change(chart)
         if snapshot is None:
             return

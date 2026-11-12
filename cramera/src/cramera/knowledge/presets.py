@@ -107,7 +107,7 @@ class Preset:
         annotations = get_type_hints_of_object(owner)
         collections = {
             attribute.public_name
-            for attribute in DataclassOnlyIntrospector().discover(owner)
+            for attribute in DataclassOnlyIntrospector().discover(owner_cls=owner)
             if get_origin(annotations.get(attribute.public_name)) is list
         }
         collections.update(

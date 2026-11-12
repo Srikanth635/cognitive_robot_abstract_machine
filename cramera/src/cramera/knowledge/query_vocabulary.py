@@ -338,7 +338,7 @@ class QueryVocabulary:
                 module=owner.__module__,
                 type_name=owner.__name__,
             )
-            for discovered in DataclassOnlyIntrospector().discover(owner)
+            for discovered in DataclassOnlyIntrospector().discover(owner_cls=owner)
         ]
 
     def _declared_members(

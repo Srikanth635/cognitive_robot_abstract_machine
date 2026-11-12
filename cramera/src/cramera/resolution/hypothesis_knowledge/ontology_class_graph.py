@@ -531,7 +531,9 @@ class OntologyClassGraphBuilder:
         for fragment in self.fragments:
             components = self.vocabulary.component_fields(type(fragment))
             for declared in fields(fragment):
-                property_term = PropertyTerm.of_field(type(fragment), declared.name)
+                property_term = PropertyTerm.of_field(
+                    clazz=type(fragment), field_name=declared.name
+                )
                 if property_term is None or is_inferred(type(fragment), declared.name):
                     continue
                 held: Any = attrgetter(declared.name)(fragment)

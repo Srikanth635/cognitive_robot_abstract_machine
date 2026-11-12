@@ -232,7 +232,7 @@ def resolved_field_type(owner: type, attribute_name: str) -> Any:
 
     ``typing.get_type_hints`` resolves every annotation reachable through
     ``owner.__mro__``, including base-class fields this module never reflects on
-    (``ActionDescription``/``Designator``'s ``world``, ``plan``, ...) -- some of
+    (those of :class:`~coraplex.robot_plans.actions.base.Action` and its statechart node bases) -- some of
     those are only importable under ``TYPE_CHECKING`` and raise ``NameError`` the
     moment anything forces them to resolve. Evaluating just this one field's
     annotation against its own declaring module avoids that entirely.

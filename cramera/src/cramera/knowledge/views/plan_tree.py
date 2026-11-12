@@ -135,7 +135,7 @@ class PlanViewPayload(GraphPanelPayload):
         view.add(
             node_id,
             cls._shorten_action_label(tree.get("label", "?")),
-            PlanNodeGroup.of_plan_node_kind(kind),
+            PlanNodeGroup.from_recorded_plan_node(tree),
             lines,
             tree_position=TreePosition(kind=kind, parent=parent),
         )

@@ -151,13 +151,15 @@ class TestTheTerm:
 # %% the conditions of the predictive manipulation microworld
 
 
-ON_SLOT = PropertyTerm.of_field(action_core.SlotConditionType, "condition_on_slot")
+ON_SLOT = PropertyTerm.of_field(
+    clazz=action_core.SlotConditionType, field_name="condition_on_slot"
+)
 """
 The property naming the slot a condition is on.
 """
 
 INVOLVES_SLOT = PropertyTerm.of_field(
-    action_core.SlotConditionType, "condition_involves_slot"
+    clazz=action_core.SlotConditionType, field_name="condition_involves_slot"
 )
 """
 The property naming the other slots a condition relates the first to.

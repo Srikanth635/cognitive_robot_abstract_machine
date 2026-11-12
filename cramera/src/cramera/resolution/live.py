@@ -11,7 +11,7 @@ import signal
 import subprocess
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from pathlib import Path
 
@@ -111,14 +111,11 @@ class ResolvedRun:
                 self.wait_for_start(run)
             steps = PlanStepReporter(sink=sink, run=run.name)
             nodes = PlanNodeReporter(sink=sink, run=run.name)
-            with PlanObservation(viewer.bridge, steps.observe), PlanObservation(
-                viewer.bridge, nodes.observe
+            with (
+                PlanObservation(viewer.bridge, steps.observe),
+                PlanObservation(viewer.bridge, nodes.observe),
             ):
-                execution.perform(
-                    observe_plan=lambda root: root.plan.node_callbacks.append(
-                        viewer.plan_callback(root.plan)
-                    )
-                )
+                replace(execution, visualization=viewer).perform()
 
     def wait_for_start(self, run: RunDirectory) -> None:
         """

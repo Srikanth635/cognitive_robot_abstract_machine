@@ -144,7 +144,9 @@ class TestOntologyProperties:
             relation.property_iri
             for _, _, relation in projection.graph.out_edges(group_index)
         }
-        assert properties == {PropertyTerm.of_field(type(phase), "involves_role").iri}
+        assert properties == {
+            PropertyTerm.of_field(clazz=type(phase), field_name="involves_role").iri
+        }
 
     def test_root_phase_group_links_keep_the_structures_property(
         self, projection, view
@@ -157,7 +159,9 @@ class TestOntologyProperties:
         assert {
             relation.property_iri
             for _, _, relation in projection.graph.out_edges(group_index)
-        } == {PropertyTerm.of_field(type(view.root), "defines_phase").iri}
+        } == {
+            PropertyTerm.of_field(clazz=type(view.root), field_name="defines_phase").iri
+        }
 
     def test_links_only_the_presentation_draws_name_no_property(self, projection):
         drawn = [

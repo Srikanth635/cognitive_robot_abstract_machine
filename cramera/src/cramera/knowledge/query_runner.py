@@ -29,7 +29,7 @@ from typing_extensions import (
 from krrood.entity_query_language import factories as eql_factories
 from krrood.entity_query_language.evaluable import Evaluable
 from krrood.entity_query_language.scope import eql_factory_namespace
-from semantic_digital_twin.spatial_types import Point3, Pose
+from krrood_spatial_math.spatial_types import Point3, Pose
 from semantic_digital_twin.world_description.world_entity import WorldEntity
 
 from cramera.body_geometry import NumericPose, pose_label, position_label

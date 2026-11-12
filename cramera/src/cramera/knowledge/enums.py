@@ -6,7 +6,11 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from typing_extensions import Optional, Tuple, Union
+from coraplex.robot_plans.actions.base import Action
+from cramph.node import StatechartNode
+from cramph.world_modification_nodes import MoveBranch
+from giskardpy.motion_statechart.graph_node import MotionStatechartNode
+from typing_extensions import Any, Dict, Optional, Tuple, Union
 
 
 # %% viewer entity identifiers
@@ -123,9 +127,10 @@ class PlanNodeGroup(LabelledGroup):
     @classmethod
     def of_plan_node_kind(cls, kind: Optional[str]) -> "PlanNodeGroup":
         """
-        The group a coraplex plan-node class belongs to.
+        The group a plan-node class of the plan trees coraplex had before its plans
+        became statecharts belongs to.
 
-        :param kind: The plan node's own class name, as recorded or observed live.
+        :param kind: The plan node's own class name, as recorded.
         """
         return {
             "ActionNode": cls.ACTION,
@@ -134,6 +139,36 @@ class PlanNodeGroup(LabelledGroup):
             "AttachNode": cls.ATTACHMENT,
             "DetachNode": cls.ATTACHMENT,
         }.get(kind or "", cls.OTHER)
+
+    @classmethod
+    def from_recorded_plan_node(cls, recorded: Dict[str, Any]) -> "PlanNodeGroup":
+        """
+        :param recorded: A plan node as a recording keeps it.
+        :return: The group the node was recorded in, or, for a recording that kept no
+            group, the group of its kind.
+        """
+        if "group" in recorded:
+            return cls(recorded["group"])
+        return cls.of_plan_node_kind(recorded.get("kind"))
+
+    @classmethod
+    def from_statechart_node(cls, node: StatechartNode) -> "PlanNodeGroup":
+        """
+        :param node: A node of the statechart a plan is performed as.
+        :return: The group of the node: an action, a motion (a node of a motion or a
+            composite of motions only), a change of the world's structure, or another.
+        """
+        if isinstance(node, Action):
+            return cls.ACTION
+        if isinstance(node, MoveBranch):
+            return cls.ATTACHMENT
+        if isinstance(node, MotionStatechartNode):
+            return cls.MOTION
+        if node.children and all(
+            cls.from_statechart_node(child) is cls.MOTION for child in node.children
+        ):
+            return cls.MOTION
+        return cls.OTHER
 
 
 ColourGroup = Union[NodeGroup, KinematicChainGroup, PlanNodeGroup]

@@ -23,7 +23,7 @@ from semantic_digital_twin.world_description.geometry import Box, Scale  # noqa:
 from semantic_digital_twin.world_description.shape_collection import (  # noqa: E402
     ShapeCollection,
 )
-from semantic_digital_twin.spatial_types import (  # noqa: E402
+from krrood_spatial_math.spatial_types import (  # noqa: E402
     HomogeneousTransformationMatrix,
 )
 from semantic_digital_twin.world import World  # noqa: E402

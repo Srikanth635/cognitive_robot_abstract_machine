@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
-from giskardpy.motion_statechart.data_types import LifeCycleValues
+from cramph.data_types import LifeCycleValues
 from llm_reasoner.observation.events import EventKey
 from llm_reasoner.observation.sinks import MemorySink
 from typing_extensions import Any
@@ -308,7 +308,12 @@ class ScriptedExecution:
     The world the viewer is started on.
     """
 
-    def perform(self, observe_plan: Any = None) -> None:
+    visualization: Any = None
+    """
+    The viewer the performance is shown in.
+    """
+
+    def perform(self) -> None:
         """
         Hand every snapshot to the observers, then finish or fail.
         """

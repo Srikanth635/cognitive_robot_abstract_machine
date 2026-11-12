@@ -146,7 +146,7 @@ class TestHeldSource:
             robot_yaw=0.25,
             joint_positions={"pr2/torso_lift_joint": 0.3},
         )
-        read = HeldSource.from_json(json.loads(json.dumps(held.to_json())))
+        read = HeldSource.from_json(data=json.loads(json.dumps(held.to_json())))
         assert np.array_equal(read.source_in_tool_frame, held.source_in_tool_frame)
         assert read.robot_yaw == held.robot_yaw
         assert read.joint_positions == held.joint_positions

@@ -81,7 +81,9 @@ class TestRolesAsSlots:
     @pytest.mark.parametrize("role, whole", PARTS)
     def test_a_part_is_a_part_of_its_participant(self, families, role, whole):
         is_part_of_slot = URIRef(
-            PropertyTerm.of_field(action_core.PartSlot, "is_part_of_slot").iri
+            PropertyTerm.of_field(
+                clazz=action_core.PartSlot, field_name="is_part_of_slot"
+            ).iri
         )
         assert any(
             isinstance(node, BNode)

@@ -25,7 +25,7 @@ class TestEntitiesAreSymbols:
     def test_a_new_entity_is_tracked_by_the_symbol_graph(self):
         robot = Robot(name="recorded_robot", arm_count=1)
 
-        instances = list(SymbolGraph().get_instances_of_type(Robot))
+        instances = list(SymbolGraph().get_instances_of_type(type_=Robot))
 
         assert instances == [robot]
         assert instances[0] is robot

@@ -33,7 +33,7 @@ from semantic_digital_twin.adapters.usd.stage import (
     UsdPhysxSchema,
 )
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
-from semantic_digital_twin.spatial_types.spatial_types import (
+from krrood_spatial_math.spatial_types import (
     HomogeneousTransformationMatrix,
     Vector3,
 )

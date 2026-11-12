@@ -104,7 +104,9 @@ def decomposed_task_iri() -> str:
     """
     :return: The IRI of the property naming the task a structure decomposes.
     """
-    return PropertyTerm.of_field(core.ActionPhaseStructure, "decomposes_task").iri
+    return PropertyTerm.of_field(
+        clazz=core.ActionPhaseStructure, field_name="decomposes_task"
+    ).iri
 
 
 # %% the told class hierarchy
@@ -159,7 +161,9 @@ class TestWritingConcepts:
 
     def test_a_literal_takes_its_propertys_range_datatype(self):
         setup = flow_onset.PhysicsSimulationSetup(run_count=3)
-        term = PropertyTerm.of_field(flow_onset.PhysicsSimulationSetup, "run_count")
+        term = PropertyTerm.of_field(
+            clazz=flow_onset.PhysicsSimulationSetup, field_name="run_count"
+        )
         ontology = Graph().parse(
             PhysicalMeasurementFile.FLOW_ONSET.path, format="turtle"
         )
@@ -234,7 +238,7 @@ class TestAnyConcept:
             for restriction in action_core.StateCondition.term.restrictions
             if restriction.property_iri
             == PropertyTerm.of_field(
-                action_core.StateCondition, "condition_has_state"
+                clazz=action_core.StateCondition, field_name="condition_has_state"
             ).iri
         ]
         assert ClosedWorldMembership().members(requirement, [condition]) == [condition]
@@ -354,7 +358,7 @@ def concept_fields() -> dict[str, PropertyTerm]:
         for generated in Vocabulary().classes
         for declared in fields(generated)
         if declared_value_types(generated)[declared.name] is ConceptReference
-        for term in [PropertyTerm.of_field(generated, declared.name)]
+        for term in [PropertyTerm.of_field(clazz=generated, field_name=declared.name)]
     }
 
 
@@ -406,7 +410,9 @@ class TestConceptPropertiesOfTheModules:
 
     def test_a_task_the_hypothesis_coins_is_a_kind_of_its_propertys_range(self):
         graph = written(decomposing(CategoryClass.DECANTING))
-        term = PropertyTerm.of_field(core.ActionPhaseStructure, "decomposes_task")
+        term = PropertyTerm.of_field(
+            clazz=core.ActionPhaseStructure, field_name="decomposes_task"
+        )
         assert term.linked_range
         assert (
             URIRef(CategoryClass.DECANTING),

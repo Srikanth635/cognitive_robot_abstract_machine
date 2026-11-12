@@ -1,18 +1,17 @@
 """
-Watching the motion statechart an executor is ticking.
+Watching the statechart an executor is ticking.
 
-A statechart exists only while giskardpy executes it: one is compiled per merged motion
-group and thrown away afterwards. What a viewer shows of it, and what a recording keeps
-of it, is therefore a snapshot per tick -- taken here, so the live bridge and the
-recording use the same observations.
+The life cycles and observations of a statechart change every tick. What a viewer shows
+of it, and what a recording keeps of it, is therefore a snapshot per tick -- taken here,
+so the live bridge and the recording use the same observations.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from giskardpy.motion_statechart.data_types import LifeCycleValues
-from giskardpy.motion_statechart.motion_statechart import MotionStatechart
+from cramph.data_types import LifeCycleValues
+from cramph.statechart import Statechart
 from typing_extensions import List, Optional, Tuple
 
 from cramera.live.chart_structure import (
@@ -38,7 +37,7 @@ class ChartObserver:
     What the run calls what the chart is executing, shown above it.
     """
 
-    _chart: Optional[MotionStatechart] = field(default=None, init=False)
+    _chart: Optional[Statechart] = field(default=None, init=False)
     """
     The chart last seen, to recognize a newly compiled one.
     """
@@ -55,7 +54,7 @@ class ChartObserver:
     Where its nodes stood when :meth:`change` last reported them.
     """
 
-    def snapshot(self, chart: Optional[MotionStatechart]) -> Optional[ChartSnapshot]:
+    def snapshot(self, chart: Optional[Statechart]) -> Optional[ChartSnapshot]:
         """
         What the chart looks like now, or None when nothing is executing.
 
@@ -93,7 +92,7 @@ class ChartObserver:
             edges=list(structure.edges),
         )
 
-    def change(self, chart: Optional[MotionStatechart]) -> Optional[ChartSnapshot]:
+    def change(self, chart: Optional[Statechart]) -> Optional[ChartSnapshot]:
         """
         The snapshot to send a viewer that already holds the last one: None while the
         chart stands where it was reported to stand.

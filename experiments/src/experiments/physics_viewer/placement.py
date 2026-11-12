@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import mujoco
-from semantic_digital_twin.spatial_types.spatial_types import Pose
+from krrood_spatial_math.spatial_types import Pose
 from typing_extensions import TYPE_CHECKING
 
 if TYPE_CHECKING:

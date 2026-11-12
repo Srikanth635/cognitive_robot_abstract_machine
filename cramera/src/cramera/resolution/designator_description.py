@@ -400,7 +400,8 @@ class DesignatorDescriber:
         names = [
             declared.name
             for declared in fields(fragment)
-            if PropertyTerm.of_field(type(fragment), declared.name) is not None
+            if PropertyTerm.of_field(clazz=type(fragment), field_name=declared.name)
+            is not None
             and not is_inferred(type(fragment), declared.name)
         ]
         leading = [name for name in LEADING_FIELDS if name in names]

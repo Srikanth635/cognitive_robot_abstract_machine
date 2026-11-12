@@ -4,36 +4,43 @@ Native state history publication and recording boundaries.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pytest
 
 from typing_extensions import TYPE_CHECKING
 
-from coraplex.plans.executables import MotionPlanHistory
-from coraplex.plans.plan import Plan
-from coraplex.plans.plan_node import MotionNode
-from coraplex.robot_plans.motions.base import BaseMotion
-from giskardpy.motion_statechart.data_types import LifeCycleValues
+from cramph.data_types import LifeCycleValues
+from cramph.statechart import Statechart
 
+from cramera.live import visualization as visualization_module
 from cramera.live.recording import Recording
 from cramera.live.visualization import (
+    BridgeStatechartObserver,
     LiveVisualization,
     WorldStateSync,
 )
 
-from .dataset.motion_execution import motion_execution
-from .test_live_visualization import world
+from .dataset.plan_statecharts import (
+    CompiledExecutor,
+    FollowedStatechart,
+    MotionStep,
+    PlanExecution,
+    plan_execution,
+    plan_statechart,
+)
+from .test_live_visualization import ServerRecorder, world
 
 if TYPE_CHECKING:
     from semantic_digital_twin.world import World
 
-    from .dataset.motion_execution import MotionExecution
 
 # %% history publication
 
 
-class TestMotionHistoryPublication:
+class TestStatechartHistoryPublication:
     """
-    History subscriptions publish motion changes for the plan's lifetime.
+    State history subscriptions publish statechart changes for the plan's lifetime.
     """
 
     @pytest.mark.parametrize(
@@ -45,134 +52,136 @@ class TestMotionHistoryPublication:
         ],
     )
     def test_native_history_owns_pause_completion_and_reset(
-        self, motion_execution: MotionExecution, outcome: LifeCycleValues
+        self, plan_execution: PlanExecution, outcome: LifeCycleValues
     ) -> None:
         """
-        Publish the native motion lifecycle throughout a complete attempt.
+        Publish the native life cycle throughout a complete attempt.
 
-        :param motion_execution: The plan, chart, and subscriber to exercise.
-        :param outcome: The terminal outcome recorded before resetting the motion.
+        :param plan_execution: The plan, its statechart and the observer to exercise.
+        :param outcome: The terminal outcome recorded before resetting the plan.
         """
-        motion_execution.plan.node_callbacks.append(motion_execution.callback)
-        MotionPlanHistory(
-            statechart=motion_execution.chart,
-            motion_mappings={motion_execution.motion: motion_execution.chart.nodes[0]},
-        )
         for state in (
             LifeCycleValues.RUNNING,
             LifeCycleValues.PAUSED,
             outcome,
             LifeCycleValues.NOT_STARTED,
         ):
-            motion_execution.record(state)
-            assert motion_execution.motion.status is state
-            assert [
-                node.status for node in motion_execution.bridge.plan_state.nodes
-            ] == [motion_execution.plan.root.status, state]
+            plan_execution.record(life_cycle=state)
+            assert plan_execution.motion.life_cycle_state is state
+            assert [node.status for node in plan_execution.bridge.plan_state.nodes] == [
+                plan_execution.root.life_cycle_state,
+                plan_execution.action.life_cycle_state,
+                state,
+            ]
 
-    def test_motion_start_publishes_the_bound_chart(
-        self, motion_execution: MotionExecution
+    def test_following_publishes_the_statechart(
+        self, plan_execution: PlanExecution
     ) -> None:
         """
-        The viewer sees the chart before the first controller update.
+        The viewer sees the statechart before the first tick.
         """
-        motion_execution.callback.on_start(motion_execution.motion)
-
-        assert [node.name for node in motion_execution.bridge.chart_state.nodes] == [
-            node.name for node in motion_execution.chart.nodes
+        assert [node.name for node in plan_execution.bridge.chart_state.nodes] == [
+            node.name for node in plan_execution.statechart.nodes
         ]
 
     def test_native_history_changes_publish_the_chart_and_plan(
-        self, motion_execution: MotionExecution
+        self, plan_execution: PlanExecution
     ) -> None:
         """
         A recorded native state change refreshes both execution views.
 
-        :param motion_execution: The plan, chart, and observing callback.
+        :param plan_execution: The plan, its statechart and the observer.
         """
-        motion_execution.callback.on_start(motion_execution.motion)
-        motion_execution.plan.root.status = LifeCycleValues.RUNNING
+        plan_execution.record(life_cycle=LifeCycleValues.RUNNING)
 
-        motion_execution.record(LifeCycleValues.RUNNING)
-
-        assert motion_execution.bridge.chart_state.nodes[0].life_cycle == (
+        assert plan_execution.bridge.chart_state.nodes[0].life_cycle == (
             LifeCycleValues.RUNNING.name
         )
-        assert motion_execution.bridge.plan_state.nodes[0].status == (
+        assert plan_execution.bridge.plan_state.nodes[0].status == (
             LifeCycleValues.RUNNING
         )
 
-    def test_merged_motions_subscribe_to_their_shared_history_once(
-        self, motion_execution: MotionExecution
+    def test_following_twice_subscribes_to_the_history_once(
+        self, plan_execution: PlanExecution
     ) -> None:
         """
-        A shared chart does not accumulate one subscription per motion.
+        A followed statechart does not accumulate one subscription per follow.
         """
-        sibling = MotionNode(designator=BaseMotion())
-        motion_execution.plan.add_edge(motion_execution.plan.root, sibling)
-        sibling.motion_statechart = motion_execution.chart
+        plan_execution.observer.follow()
 
-        motion_execution.callback.on_start(motion_execution.motion)
-        motion_execution.callback.on_start(sibling)
-
-        assert motion_execution.chart.history.observers == [motion_execution.callback]
+        assert plan_execution.statechart.state_history.observers == [
+            plan_execution.observer
+        ]
 
     def test_native_reset_clears_motion_and_parent_progress(
-        self, motion_execution: MotionExecution
+        self, plan_execution: PlanExecution
     ) -> None:
         """
-        A reset chart restores both plan entries to their unstarted state.
+        A reset statechart restores every plan entry to its unstarted state.
 
-        :param motion_execution: The plan, chart, and observing callback.
+        :param plan_execution: The plan, its statechart and the observer.
         """
-        motion_execution.plan.node_callbacks.append(motion_execution.callback)
-        MotionPlanHistory(
-            statechart=motion_execution.chart,
-            motion_mappings={motion_execution.motion: motion_execution.chart.nodes[0]},
-        )
-        motion_execution.record(LifeCycleValues.RUNNING)
-        motion_execution.record(LifeCycleValues.SUCCEEDED)
+        plan_execution.record(life_cycle=LifeCycleValues.RUNNING)
+        plan_execution.record(life_cycle=LifeCycleValues.SUCCEEDED)
 
-        motion_execution.record(LifeCycleValues.NOT_STARTED)
+        plan_execution.record(life_cycle=LifeCycleValues.NOT_STARTED)
 
-        assert [node.status for node in motion_execution.bridge.plan_state.nodes] == [
+        assert [node.status for node in plan_execution.bridge.plan_state.nodes] == [
+            LifeCycleValues.NOT_STARTED,
             LifeCycleValues.NOT_STARTED,
             LifeCycleValues.NOT_STARTED,
         ]
 
-    def test_root_completion_removes_history_subscriptions(
-        self, motion_execution: MotionExecution
+    def test_stopping_removes_history_subscriptions(
+        self, plan_execution: PlanExecution
     ) -> None:
         """
         Completed plans no longer alter the published state.
         """
-        motion_execution.callback.on_start(motion_execution.motion)
-        motion_execution.record(LifeCycleValues.RUNNING)
-        published = motion_execution.bridge.chart_state
-        assert motion_execution.chart.history.observers == [motion_execution.callback]
+        plan_execution.record(life_cycle=LifeCycleValues.RUNNING)
+        published = plan_execution.bridge.chart_state
+        history = plan_execution.statechart.state_history
+        assert history.observers == [plan_execution.observer]
 
-        motion_execution.callback.on_end(motion_execution.plan.root)
-        motion_execution.callback.on_end(motion_execution.plan.root)
-        motion_execution.record(LifeCycleValues.SUCCEEDED)
+        plan_execution.observer.stop()
+        plan_execution.observer.stop()
+        plan_execution.record(life_cycle=LifeCycleValues.SUCCEEDED)
 
-        assert motion_execution.chart.history.observers == []
-        assert motion_execution.bridge.chart_state == published
+        assert history.observers == []
+        assert plan_execution.bridge.chart_state == published
 
     def test_visualization_stop_removes_history_subscriptions(
-        self, world: World, motion_execution: MotionExecution
+        self,
+        world: World,
+        plan_execution: PlanExecution,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """
         Stopping a viewer also detaches histories of unfinished plans.
         """
-        visualization = LiveVisualization(world=world, bridge=motion_execution.bridge)
-        callback = visualization.plan_callback(motion_execution.plan)
-        callback.on_start(motion_execution.motion)
-        assert motion_execution.chart.history.observers == [callback]
+        monkeypatch.setattr(
+            visualization_module, "serve", lambda bridge, port: ServerRecorder()
+        )
+        monkeypatch.setattr(
+            visualization_module.RosMarkerListener,
+            "start_if_available",
+            lambda bridge: None,
+        )
+        monkeypatch.setattr(
+            visualization_module, "finalize_recording", lambda bridge, recording: None
+        )
+        plan_execution.observer.stop()
+        statechart = plan_execution.statechart
+        visualization = LiveVisualization(bridge=plan_execution.bridge).start(world)
+        visualization.after_compile(
+            CompiledExecutor(context=statechart.context, statechart=statechart)
+        )
+        assert len(statechart.state_history.observers) == 1
 
         visualization.stop()
         visualization.stop()
 
-        assert motion_execution.chart.history.observers == []
+        assert statechart.state_history.observers == []
 
 
 # %% recording alignment
@@ -184,21 +193,20 @@ class TestHistoryRecordingAlignment:
     """
 
     def test_next_history_change_does_not_overwrite_previous_world_frame(
-        self, world: World, motion_execution: MotionExecution
+        self, world: World, plan_execution: PlanExecution
     ) -> None:
         """
         History is published before the corresponding world frame is appended.
         """
-        bridge = motion_execution.bridge
+        bridge = plan_execution.bridge
         bridge.attach(world)
         bridge.recording = Recording()
         bridge.recording.start()
         world_sync = WorldStateSync(_world=world, bridge=bridge)
-        motion_execution.callback.on_start(motion_execution.motion)
-        motion_execution.record(LifeCycleValues.RUNNING)
+        plan_execution.record(life_cycle=LifeCycleValues.RUNNING)
         world_sync.on_state_change()
 
-        motion_execution.record(LifeCycleValues.SUCCEEDED)
+        plan_execution.record(life_cycle=LifeCycleValues.SUCCEEDED)
         world_sync.on_state_change()
 
         frames = bridge.recording.stop()
@@ -208,23 +216,21 @@ class TestHistoryRecordingAlignment:
         ]
 
     def test_plan_end_flushes_a_chart_change_without_another_world_update(
-        self, world: World, motion_execution: MotionExecution
+        self, world: World, plan_execution: PlanExecution
     ) -> None:
         """
         A final chart-only controller update completes the last captured pose.
         """
-        bridge = motion_execution.bridge
+        bridge = plan_execution.bridge
         bridge.attach(world)
         bridge.recording = Recording()
         bridge.recording.start()
         world_sync = WorldStateSync(_world=world, bridge=bridge)
-        motion_execution.callback.on_start(motion_execution.motion)
-        motion_execution.record(LifeCycleValues.RUNNING)
+        plan_execution.record(life_cycle=LifeCycleValues.RUNNING)
         world_sync.on_state_change()
 
-        motion_execution.record(LifeCycleValues.SUCCEEDED)
-        motion_execution.callback.on_end(motion_execution.motion)
-        motion_execution.callback.on_end(motion_execution.plan.root)
+        plan_execution.record(life_cycle=LifeCycleValues.SUCCEEDED)
+        plan_execution.observer.stop()
 
         frames = bridge.recording.stop()
         assert len(frames) == 1
@@ -232,30 +238,31 @@ class TestHistoryRecordingAlignment:
             frames[0].statechart.nodes[0].life_cycle == LifeCycleValues.SUCCEEDED.name
         )
 
-    def test_motion_root_flushes_the_native_final_chart_before_unsubscribing(
-        self, world: World, motion_execution: MotionExecution
+    def test_a_single_motion_plan_flushes_its_final_chart_before_unsubscribing(
+        self, world: World, plan_execution: PlanExecution
     ) -> None:
         """
-        A motion that is the plan root retains its terminal chart-only update.
+        A plan that is a single motion retains its terminal chart-only update.
         """
-        plan = Plan()
-        plan.add_node(motion_execution.motion)
-        motion_execution.callback.plan = plan
-        plan.node_callbacks.append(motion_execution.callback)
-        bridge = motion_execution.bridge
-        bridge.begin_plan(plan)
+        plan_execution.observer.stop()
+        bridge = plan_execution.bridge
+        statechart = Statechart(context=plan_execution.statechart.context)
+        statechart.add_node(MotionStep(name="moving"))
+        single_motion = FollowedStatechart(
+            statechart=statechart,
+            bridge=bridge,
+            observer=BridgeStatechartObserver(bridge=bridge, statechart=statechart),
+        )
+        single_motion.observer.follow()
         bridge.attach(world)
         bridge.recording = Recording()
         bridge.recording.start()
         world_sync = WorldStateSync(_world=world, bridge=bridge)
-        MotionPlanHistory(
-            statechart=motion_execution.chart,
-            motion_mappings={motion_execution.motion: motion_execution.chart.nodes[0]},
-        )
-        motion_execution.record(LifeCycleValues.RUNNING)
+        single_motion.record(life_cycle=LifeCycleValues.RUNNING)
         world_sync.on_state_change()
 
-        motion_execution.record(LifeCycleValues.SUCCEEDED)
+        single_motion.record(life_cycle=LifeCycleValues.SUCCEEDED)
+        single_motion.observer.stop()
 
         frames = bridge.recording.stop()
         assert len(frames) == 1
@@ -263,6 +270,6 @@ class TestHistoryRecordingAlignment:
             frames[0].statechart.nodes[0].life_cycle == LifeCycleValues.SUCCEEDED.name
         )
         assert not any(
-            observer is motion_execution.callback
-            for observer in motion_execution.chart.history.observers
+            observer is single_motion.observer
+            for observer in statechart.state_history.observers
         )

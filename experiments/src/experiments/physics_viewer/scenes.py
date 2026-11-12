@@ -31,7 +31,7 @@ from coraplex.testing import attach_tool
 from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.robots.robot_parts import AbstractRobot, Arm
 from semantic_digital_twin.robots.tracy import Tracy
-from semantic_digital_twin.spatial_types.spatial_types import (
+from krrood_spatial_math.spatial_types import (
     HomogeneousTransformationMatrix,
 )
 from semantic_digital_twin.specifications.robots import RobotSpecification
@@ -123,7 +123,7 @@ class UrdfMaterialColors:
     The URDF file, or the ROS path of one.
     """
 
-    def apply(self, world: World) -> None:
+    def apply(self, *, world: World) -> None:
         """
         Color the meshes of the bodies whose links the URDF gives a material.
 
@@ -140,7 +140,7 @@ class UrdfMaterialColors:
             for visual, shape in zip(link.visuals, body.visual):
                 rgba = self.rgba_of(visual.material, named)
                 if rgba is not None and isinstance(shape, Mesh):
-                    shape.color = Color(*rgba)
+                    shape.color = Color.from_list(rgba)
 
     @staticmethod
     def rgba_of(material, named: dict[str, list[float]]) -> list[float] | None:
@@ -291,7 +291,7 @@ class MjcfScene(SceneWorld):
     """
 
     def build(self) -> World:
-        return MJCFParser(str(self.file)).parse()
+        return MJCFParser(str(self.file)).create_world()
 
 
 @dataclass(frozen=True)
@@ -306,8 +306,8 @@ class UrdfScene(SceneWorld):
     """
 
     def build(self) -> World:
-        world = URDFParser.from_file(str(self.file)).parse()
-        UrdfMaterialColors(str(self.file)).apply(world)
+        world = URDFParser.from_file(str(self.file)).create_world()
+        UrdfMaterialColors(str(self.file)).apply(world=world)
         RestingFurniture().apply(world, world.bodies)
         return world
 
@@ -344,12 +344,12 @@ class RobotInScene(SceneWorld):
     def build(self) -> World:
         world = self.scene.build()
         robot = RobotSpecification(
-            self.robot,
-            world_T_odom=HomogeneousTransformationMatrix.from_xyz_rpy(
+            semantic_annotation_type=self.robot,
+            localization_pose=HomogeneousTransformationMatrix.from_xyz_rpy(
                 self.position.x, self.position.y, self.position.z
             ),
         ).spawn(world)
-        UrdfMaterialColors(self.robot.get_ros_file_path()).apply(world)
+        UrdfMaterialColors(self.robot.get_ros_file_path()).apply(world=world)
         for arm in robot.all_arms:
             arm.get_joint_state_by_type(StaticJointState.PARK).apply_to(world)
         return world
@@ -676,12 +676,12 @@ class ObjectColor(Enum):
     The colors of the objects whose meshes carry none, as the demos dye theirs.
     """
 
-    MILK = Color(0.75, 0.85, 1.0)
+    MILK = Color.from_rgba(red=0.75, green=0.85, blue=1.0)
     """
     A pale blue, for the milk carton.
     """
 
-    CEREAL = Color(0.95, 0.75, 0.2)
+    CEREAL = Color.from_rgba(red=0.95, green=0.75, blue=0.2)
     """
     A yellow, for the cereal box.
     """
@@ -787,7 +787,14 @@ class PhysicsScene(Enum):
                     elevation=-25.0,
                 ),
             ),
-            (CubeOnTheTable(edge=0.05, x=0.55, y=0.1, color=Color(0.8, 0.3, 0.1)),),
+            (
+                CubeOnTheTable(
+                    edge=0.05,
+                    x=0.55,
+                    y=0.1,
+                    color=Color.from_rgba(red=0.8, green=0.3, blue=0.1),
+                ),
+            ),
         )
     )
     """

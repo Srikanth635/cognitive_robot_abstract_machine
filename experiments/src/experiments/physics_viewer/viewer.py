@@ -10,8 +10,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 
-from coraplex.datastructures.dataclasses import Context
-from coraplex.execution_environment import PhysicallySimulatedRobot
+from coraplex.plans.context_extensions import RobotAccess, StatementGrounding
+from coraplex.plans.executors import PhysicallySimulatedPlanExecutor
+from cramph.context import StatechartContext
+from cramph.statechart import Statechart
 from semantic_digital_twin.adapters.multi_sim import MultiSim, SteppedSimulation
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.world import World
@@ -193,7 +195,9 @@ class SteppedSceneViewer(ABC):
         moved: tuple[tuple[MovedJoint, ...], tuple[MovedObject, ...]] = ((), ())
         try:
             if self.action is not None:
-                moved = self.perform(simulation, world, overlay)
+                moved = self.perform(
+                    simulation=simulation, world=world, overlay=overlay
+                )
             frames = self.step_until_over(simulation)
             self._finish_showing()
         finally:
@@ -231,6 +235,7 @@ class SteppedSceneViewer(ABC):
 
     def perform(
         self,
+        *,
         simulation: SteppedSimulation,
         world: World,
         overlay: ActionOverlay | None,
@@ -246,15 +251,20 @@ class SteppedSceneViewer(ABC):
         """
         [robot] = world.get_semantic_annotations_by_type(AbstractRobot)
         simulation.step_simulation(self.settling)
-        plan = self.action.value.build(
-            Context(world=world, robot=robot, evaluate_conditions=False)
+        executor = PhysicallySimulatedPlanExecutor(
+            StatechartContext.with_extensions(
+                world, [RobotAccess(robot), StatementGrounding()]
+            ),
+            simulation=simulation,
         )
+        statechart = Statechart(context=executor.context)
+        statechart.add_node(self.action.value.build(context=executor.context))
         if overlay is not None:
             overlay.show_started(self.action)
         before = self.joint_positions(world)
         objects_before = self.object_positions(world)
-        with PhysicallySimulatedRobot(simulation=simulation):
-            plan.perform()
+        executor.compile(statechart)
+        executor.execute()
         moved = self.joints_moved_since(before, world)
         moved_objects = self.objects_moved_since(objects_before, world)
         logger.info("%s: moved %d joints", self.action.name.lower(), len(moved))

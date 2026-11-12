@@ -21,8 +21,7 @@ from enum import StrEnum
 from pathlib import Path
 
 import numpy as np
-from coraplex.execution_environment import kinematically_simulated_robot
-from coraplex.plans.factories import sequential
+from cramph.composites import Sequence
 from krrood.adapters.json_serializer import SubclassJSONSerializer
 from llm_reasoner.clients.tools import Tool, ToolDefinition, ToolOutcome
 from llm_reasoner.resolver.outcomes import OutcomePrediction
@@ -31,7 +30,7 @@ from llm_reasoner.world.access import WorldAccess
 from scipy.spatial.transform import Rotation, Slerp
 from semantic_digital_twin.robots.robot_parts import AbstractRobot, Arm
 from semantic_digital_twin.spatial_computations.ik_solver import IKSolverException
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix, Pose
+from krrood_spatial_math.spatial_types import HomogeneousTransformationMatrix, Pose
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Dict, List, Mapping, Self
@@ -145,7 +144,7 @@ class HeldSource(SubclassJSONSerializer):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+    def _from_json(cls, *, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             source_in_tool_frame=np.array(data[HeldSourceKey.SOURCE_IN_TOOL_FRAME]),
             robot_yaw=float(data[HeldSourceKey.ROBOT_YAW]),
@@ -165,10 +164,7 @@ class HeldSource(SubclassJSONSerializer):
         """
         execution = PouringExecution(world=world, values=dict(values))
         action = execution.action()
-        with kinematically_simulated_robot:
-            sequential(
-                execution.steps_before_pour(action), context=execution.context()
-            ).perform()
+        execution.perform_plan(plan=Sequence(nodes=execution.steps_before_pour(action)))
         tool_frame = action.arm.end_effector.tool_frame
         return cls(
             source_in_tool_frame=world.compute_forward_kinematics_np(
@@ -382,7 +378,7 @@ class PourPredictor:
         held = self.holding.held(values)
         execution = PouringExecution(world=self.world, values=dict(values))
         action = execution.action()
-        sequential([action], context=execution.context())
+        execution.statechart_holding(executor=execution.executor(), plan=action)
         pre_pour_pose, pour_pose = action._pour_poses()
         PourReach(world=self.world, held=held, tolerances=self.approach).check(
             action.arm, pre_pour_pose, pour_pose

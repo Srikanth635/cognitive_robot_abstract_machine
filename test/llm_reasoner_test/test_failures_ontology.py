@@ -171,7 +171,9 @@ class TestActionFailure:
         assert issubclass(failures.Failure, action_core.ActionFailure)
 
     def test_a_failure_event_need_not_name_the_failure_it_signals(self):
-        signals = PropertyTerm.of_field(core.FailureEventType, "signals_failure").iri
+        signals = PropertyTerm.of_field(
+            clazz=core.FailureEventType, field_name="signals_failure"
+        ).iri
         assert [
             violation
             for violation in RestrictionsHold().violations([core.FailureEventType()])

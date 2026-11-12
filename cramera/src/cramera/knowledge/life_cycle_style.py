@@ -9,8 +9,8 @@ from enum import StrEnum
 
 from typing_extensions import Any
 
-from giskardpy.motion_statechart.data_types import LifeCycleValues
-from giskardpy.motion_statechart.plotters.styles import DRAWING_METRICS
+from cramph.data_types import LifeCycleValues
+from cramph.plotters.styles import DrawingMetrics
 
 
 # %% graph payload vocabulary
@@ -118,7 +118,7 @@ class LifeCycleStyle:
         return cls(
             label=state.name.lower().replace("_", " "),
             color=state.color.to_hex(),
-            width=DRAWING_METRICS.line_width * width_factor,
+            width=DrawingMetrics().line_width * width_factor,
             dashes=dashes,
             show_label=state is not LifeCycleValues.NOT_STARTED,
         )

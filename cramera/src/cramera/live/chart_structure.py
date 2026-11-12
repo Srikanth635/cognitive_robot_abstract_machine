@@ -12,7 +12,7 @@ import json
 from dataclasses import asdict, dataclass, field, replace
 from enum import StrEnum
 
-from giskardpy.motion_statechart.motion_statechart import MotionStatechart
+from cramph.statechart import Statechart
 from typing_extensions import Dict, List, Optional
 
 
@@ -114,7 +114,7 @@ class ChartSnapshot:
     edges: List[ChartEdgeEntry] = field(default_factory=list)
 
 
-def structure_of(chart: MotionStatechart) -> ChartStructure:
+def structure_of(chart: Statechart) -> ChartStructure:
     """
     Nodes and transition edges of a statechart.
 

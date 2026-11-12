@@ -23,7 +23,7 @@ from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.robots.pr2 import PR2, PR2Joint
 from semantic_digital_twin.semantic_annotations.mixins import HasGraspCandidates
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
-from semantic_digital_twin.spatial_types.spatial_types import (
+from krrood_spatial_math.spatial_types import (
     HomogeneousTransformationMatrix,
 )
 from semantic_digital_twin.world import World
@@ -71,7 +71,7 @@ def compiled(scene: PhysicsScene) -> mujoco.MjModel:
 class TestScenes:
     @pytest.mark.parametrize("scene", [PhysicsScene.CUBE, PhysicsScene.CUPS])
     def test_an_mjcf_scene_is_the_world_its_file_describes(self, scene):
-        described = MJCFParser(str(scene.value.file)).parse()
+        described = MJCFParser(str(scene.value.file)).create_world()
         assert len(scene.value.build().bodies) == len(described.bodies)
 
     def test_every_mjcf_file_of_the_scenes_exists(self):

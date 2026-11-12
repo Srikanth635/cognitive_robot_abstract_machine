@@ -9,7 +9,7 @@ from pathlib import Path
 
 from typing_extensions import Any, Dict, List, Optional
 
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from krrood_spatial_math.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world_description.geometry import Box, Mesh, Scale
 from semantic_digital_twin.world_description.shape_collection import ShapeCollection
 
@@ -198,7 +198,7 @@ def _object_entry(
     if (
         len(shapes) == 1
         and isinstance(shapes[0], Box)
-        and shapes[0].origin.equivalent(HomogeneousTransformationMatrix())
+        and shapes[0].origin.equivalent(other=HomogeneousTransformationMatrix())
     ):
         payload["box"] = rounded_scale(shapes[0].scale, POSE_PRECISION)
         return payload
@@ -230,7 +230,7 @@ def _write_object_mesh(
     if (
         len(shapes) == 1
         and isinstance(shapes[0], Mesh)
-        and shapes[0].origin.equivalent(HomogeneousTransformationMatrix())
+        and shapes[0].origin.equivalent(other=HomogeneousTransformationMatrix())
         and shapes[0].scale == Scale()
     ):
         source = shapes[0].local_file

@@ -11,7 +11,7 @@ krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
 from krrood.entity_query_language.evaluable import Evaluable  # noqa: E402
 from krrood.entity_query_language.factories import an, entity, variable  # noqa: E402
-from semantic_digital_twin.spatial_types import Point3, Pose  # noqa: E402
+from krrood_spatial_math.spatial_types import Point3, Pose  # noqa: E402
 from typing_extensions import Any, List  # noqa: E402
 
 from cramera.body_geometry import pose_label  # noqa: E402

@@ -41,7 +41,7 @@ from semantic_digital_twin.datastructures.camera_model import FieldOfViewCameraM
 from semantic_digital_twin.robots.robotiq_85_gripper import Robotiq85Gripper
 from semantic_digital_twin.robots.ur10e_arm import UR10eArm
 from semantic_digital_twin.datastructures.field_of_view import FieldOfView
-from krrood_spatial_math.spatial_types import Vector3
+from krrood_spatial_math.spatial_types import HomogeneousTransformationMatrix, Vector3
 from semantic_digital_twin.world_description.world_entity import (
     KinematicStructureEntity,
 )
@@ -403,7 +403,8 @@ class TracyRightArm(UR10eArm[TracyRightGripper]):
 @dataclass(eq=False)
 class TracyCamera(RobotCamera[FieldOfViewCameraModel]):
     """
-    Tracy's fixed camera rooted at its calibrated camera link.
+    The camera on the pole above Tracy's table, looking down along the x axis of its
+    calibrated ``camera_link``.
     """
 
     def setup_hardware_interfaces(self) -> None:
@@ -417,8 +418,11 @@ class TracyCamera(RobotCamera[FieldOfViewCameraModel]):
         cls, robot_root: KinematicStructureEntity
     ) -> Self:
         return cls(
-            root=robot_root._world.get_body_in_branch_by_name(
-                robot_root, "camera_link"
+            root=cls.create_optical_body(
+                robot_root._world.get_body_in_branch_by_name(robot_root, "camera_link"),
+                HomogeneousTransformationMatrix(
+                    data=[[0, 0, 1, 0], [-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 0, 1]]
+                ),
             ),
             camera_model=FieldOfViewCameraModel(
                 angular_extent=FieldOfView(horizontal_angle=1.047, vertical_angle=0.785)

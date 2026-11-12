@@ -18,7 +18,7 @@ from krrood.exceptions import DataclassException
 
 from coraplex.datastructures.enums import JointType
 from scipy.spatial.transform import Rotation
-from semantic_digital_twin.spatial_types.spatial_types import (
+from krrood_spatial_math.spatial_types import (
     HomogeneousTransformationMatrix,
 )
 from semantic_digital_twin.world import World

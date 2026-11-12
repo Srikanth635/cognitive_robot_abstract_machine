@@ -289,18 +289,22 @@ Each parameter class of the microworld that names its slots, with the classes of
 slot it is about, the slot it may be measured from and the slots it may involve.
 """
 
-ABOUT_SLOT = PropertyTerm.of_field(action_core.SlotQuantity, "about_slot")
+ABOUT_SLOT = PropertyTerm.of_field(
+    clazz=action_core.SlotQuantity, field_name="about_slot"
+)
 """
 The property naming the slot a quantity is about.
 """
 
-RELATIVE_TO_SLOT = PropertyTerm.of_field(action_core.SlotQuantity, "relative_to_slot")
+RELATIVE_TO_SLOT = PropertyTerm.of_field(
+    clazz=action_core.SlotQuantity, field_name="relative_to_slot"
+)
 """
 The property naming the slot a quantity is measured from.
 """
 
 INVOLVES_SLOT = PropertyTerm.of_field(
-    action_core.SlotQuantity, "quantity_involves_slot"
+    clazz=action_core.SlotQuantity, field_name="quantity_involves_slot"
 )
 """
 The property naming the other slots a quantity is between.

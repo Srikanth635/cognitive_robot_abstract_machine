@@ -346,7 +346,7 @@ class ListedMembers:
             fragments: the field stands for the property, and the class is the target
             class or specialises it.
         """
-        term = PropertyTerm.of_field(owner, name)
+        term = PropertyTerm.of_field(clazz=owner, field_name=name)
         return (
             term is not None
             and term.iri == self.property_iri

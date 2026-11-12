@@ -9,11 +9,12 @@ from abc import ABC, abstractmethod
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 
-from giskardpy.motion_statechart.data_types import LifeCycleValues
+from cramph.data_types import LifeCycleValues
 from llm_reasoner.observation.events import Event
 from llm_reasoner.observation.sinks import EventSink
 from typing_extensions import Any, Callable, Optional, Sequence
 
+from cramera.knowledge.enums import PlanNodeGroup
 from cramera.live.bridge import Bridge, PlanNodeEntry, PlanSnapshot
 from cramera.resolution.events import PlanNodeChanged, StepChanged
 
@@ -90,7 +91,8 @@ class PlanProgressReporter(ABC):
 @dataclass
 class PlanStepReporter(PlanProgressReporter):
     """
-    Reports the steps of a plan, the nodes right below its root, once they start.
+    Reports the steps of a plan, the actions right below a node at the top of its
+    statechart, once they start.
     """
 
     @property
@@ -99,7 +101,11 @@ class PlanStepReporter(PlanProgressReporter):
 
     def followed(self, nodes: Sequence[PlanNodeEntry]) -> list[PlanNodeEntry]:
         roots = {node.id for node in nodes if node.parent is None}
-        return [node for node in nodes if node.parent in roots]
+        return [
+            node
+            for node in nodes
+            if node.parent in roots and node.group is PlanNodeGroup.ACTION
+        ]
 
     def status_of(self, node: PlanNodeEntry, nodes: Sequence[PlanNodeEntry]) -> str:
         """

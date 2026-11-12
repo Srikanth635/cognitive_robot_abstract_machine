@@ -38,9 +38,7 @@ class ObjectPalette:
 
     colors: List[Color] = field(
         default_factory=lambda: [
-            # by name, not ``cls``: the factory runs after the class exists
-            ObjectPalette._color_from_hex(hex_value)
-            for hex_value in OBJECT_COLORS
+            Color.from_hex(hex_color=hex_value) for hex_value in OBJECT_COLORS
         ]
     )
     """
@@ -53,30 +51,4 @@ class ObjectPalette:
 
         :param index: Zero-based position in the scene's object sequence.
         """
-        return self.css_color(self.colors[index % len(self.colors)])
-
-    @staticmethod
-    def _color_from_hex(hex_value: str) -> Color:
-        """
-        Parse a ``#rrggbb`` string into a :class:`Color`.
-
-        :param hex_value: The colour, as a leading-``#`` hex triplet.
-        """
-        hex_value = hex_value.lstrip("#")
-        red, green, blue = (
-            int(hex_value[channel : channel + 2], 16) / 255 for channel in (0, 2, 4)
-        )
-        return Color(R=red, G=green, B=blue)
-
-    @staticmethod
-    def css_color(color: Color) -> str:
-        """
-        Render a :class:`Color` as the ``#rrggbb`` string the viewer uses directly.
-
-        :param color: The colour to render.
-        """
-        return "#%02x%02x%02x" % (
-            round(color.R * 255),
-            round(color.G * 255),
-            round(color.B * 255),
-        )
+        return self.colors[index % len(self.colors)].to_hex().lower()
