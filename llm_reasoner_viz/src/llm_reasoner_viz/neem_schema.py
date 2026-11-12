@@ -1,88 +1,59 @@
 """
-The names the viewer reads in the database the NEEMs are kept in.
+The names the viewer reads in the database the NEEMs are kept in, and in the statecharts
+kept there.
 
-The ORM of coraplex generates the tables, so the names are those of its classes.
+The ORM of cramph generates the tables, so the names are those of its classes; a
+statechart is kept as the JSON its classes write of themselves.
 """
 
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import IntEnum, StrEnum
+
+# %% the tables
+
+
+class Table(StrEnum):
+    """
+    The tables a NEEM database has, which the viewer reads.
+    """
+
+    STATECHART = "StatechartMappingDAO"
+    """
+    One row for each NEEM: the statechart the plan was performed as.
+    """
+
+    CONTEXT = "StatechartContextDAO"
+    """
+    What a statechart was performed in, such as how long a tick of it lasted.
+    """
+
+    TICK = "NodeStatesAtTickDAO"
+    """
+    The life cycle of every node of a statechart at a tick on which one of them changed.
+    """
+
+
+class WorldTable(StrEnum):
+    """
+    The tables of the things of a world, which say what kind of thing a step refers to.
+    """
+
+    ENTITY = "WorldEntityDAO"
+    """
+    The table every thing of a world extends, saying which kind each is.
+    """
+
+    ENTITY_WITH_ID = "WorldEntityWithIDDAO"
+    """
+    The identifier each thing of a world is known by.
+    """
+
 
 DAO_SUFFIX = "DAO"
 """
 What ends the name of every table, after the name of the class it keeps.
 """
-
-
-class Table(StrEnum):
-    """
-    The tables of the database the viewer reads.
-    """
-
-    PLAN = "PlanMappingDAO"
-    """
-    One row for each plan; its root is the first step of it.
-    """
-
-    NODE = "PlanNodeDAO"
-    """
-    One row for each node of a plan, whatever it is, with how it ended.
-    """
-
-    EDGE = "PlanEdgeDAO"
-    """
-    One row for each node that is below another.
-    """
-
-    ACTION_NODE = "ActionNodeDAO"
-    """
-    The nodes that perform an action.
-    """
-
-    EXECUTION_DATA = "ExecutionDataDAO"
-    """
-    What the execution of an action recorded, such as the state of the world before it.
-    """
-
-    ENTITY = "PlanEntityDAO"
-    """
-    The table every kind of node extends, saying which kind each is.
-    """
-
-    DESIGNATOR = "DesignatorDAO"
-    """
-    The table every action and motion extends, holding what the node was asked to do.
-    """
-
-    WORLD_ENTITY = "WorldEntityDAO"
-    """
-    The table every body and annotation of a world extends, naming it.
-    """
-
-    NAME = "PrefixedNameDAO"
-    """
-    The names of the things of a world.
-    """
-
-    SPATIAL = "SpatialTypeDAO"
-    """
-    The table points, orientations and poses extend, saying which frame they are in.
-    """
-
-    POSE = "PoseMappingDAO"
-    """
-    Where something is: a position and an orientation.
-    """
-
-    POINT = "Point3MappingDAO"
-    """
-    A position.
-    """
-
-    QUATERNION = "QuaternionMappingDAO"
-    """
-    An orientation.
-    """
 
 
 class Column(StrEnum):
@@ -95,19 +66,29 @@ class Column(StrEnum):
     What identifies a row, in every table.
     """
 
-    ROOT = "_root_id"
+    STRUCTURE = "structure"
     """
-    The node a plan begins with.
-    """
-
-    PARENT = "_parent_id"
-    """
-    The node above, in an edge.
+    The nodes of a statechart, as JSON.
     """
 
-    CHILD = "_child_id"
+    CONTEXT = "_context_id"
     """
-    The node below, in an edge.
+    What a statechart was performed in.
+    """
+
+    TICK_DURATION = "tick_duration"
+    """
+    How many seconds a tick lasted.
+    """
+
+    TICK_COUNT = "tick_count"
+    """
+    The tick the life cycles were taken at.
+    """
+
+    LIFE_CYCLES = "life_cycle_values"
+    """
+    The life cycle of each node, in the order of the nodes.
     """
 
     POLYMORPHIC_TYPE = "polymorphic_type"
@@ -115,62 +96,154 @@ class Column(StrEnum):
     In the table at the root of a family, the table of the class a row really is.
     """
 
+    ENTITY_ID = "id"
+    """
+    The identifier a thing of a world is known by.
+    """
+
+
+# %% the statechart as JSON
+
+
+class JsonKey(StrEnum):
+    """
+    The keys of the JSON a statechart is kept as.
+    """
+
+    TYPE = "__json_type__"
+    """
+    The class of an object, as its module and its name.
+    """
+
+    COLLECTION = "__collection_type__"
+    """
+    Marks a list of values.
+    """
+
+    ITEMS = "__items__"
+    """
+    The values of a list.
+    """
+
+    NODES = "nodes"
+    """
+    The nodes of the statechart, in the order of their indices.
+    """
+
+    CHILDREN = "children"
+    """
+    The indices of the nodes directly below each node, by the index of that node.
+    """
+
+    PARENT = "parent_node_index"
+    """
+    The index of the node a node is below; none for a node at the top.
+    """
+
+    NODE_ID = "node_id"
+    """
+    The identifier of a node.
+    """
+
     NAME = "name"
     """
-    What a thing of a world is called.
+    The name of a node, of a member of an enumeration, or what a world calls a thing.
     """
 
-    NAME_REFERENCE = "_name_id"
+    PLOT = "plot_specifications"
     """
-    The name of a thing of a world.
-    """
-
-    FRAME = "_reference_frame_id"
-    """
-    The body a position, an orientation or a pose is measured from.
+    How a node is drawn.
     """
 
-    POSITION = "_position_id"
+    ID = "id"
     """
-    The position of a pose.
-    """
-
-    ORIENTATION = "_orientation_id"
-    """
-    The orientation of a pose.
+    The identifier of a thing of a world.
     """
 
-    X = "x"
+    VALUE = "value"
     """
-    The first coordinate of a position, or part of an orientation.
-    """
-
-    Y = "y"
-    """
-    The second coordinate of a position, or part of an orientation.
+    The text of an identifier.
     """
 
-    Z = "z"
+    FRAME_NAME = "reference_frame_name"
     """
-    The third coordinate of a position, or part of an orientation.
-    """
-
-    W = "w"
-    """
-    The fourth part of an orientation.
+    The name of the body a pose is measured from.
     """
 
-    STATUS = "status"
+    POSITION = "position"
     """
-    How a node ended.
-    """
-
-    STARTED = "start_time"
-    """
-    When a node began.
+    The coordinates of a pose.
     """
 
-    ENDED = "end_time"
+    ROTATION = "rotation"
     """
-    When a node ended.
+    The orientation of a pose, as a quaternion.
     """
+
+    @property
+    def places_a_node(self) -> bool:
+        """
+        Whether the key of a node places it in the statechart rather than says what it
+        was asked to do.
+        """
+        return self in (
+            JsonKey.TYPE,
+            JsonKey.NAME,
+            JsonKey.PARENT,
+            JsonKey.NODE_ID,
+            JsonKey.PLOT,
+        )
+
+
+class StoredClass(StrEnum):
+    """
+    The classes whose objects the viewer reads as more than values.
+    """
+
+    WORLD_THING = (
+        "semantic_digital_twin.world_description.world_entity.ReferencedWorldEntity"
+    )
+    """
+    A thing of a world, by its identifier and its name.
+    """
+
+    POSE = "krrood_spatial_math.spatial_types.Pose"
+    """
+    Where something is and which way it faces.
+    """
+
+    IDENTIFIER = "uuid.UUID"
+    """
+    An identifier.
+    """
+
+
+class ModulePrefix(StrEnum):
+    """
+    What begins the modules of a kind of node.
+    """
+
+    ACTION = "coraplex.robot_plans.actions."
+    """
+    The modules of the actions, which tell an action from the other nodes.
+    """
+
+
+class LifeCycle(IntEnum):
+    """
+    Where a node is in its life cycle, as the statechart numbers it.
+    """
+
+    NOT_STARTED = 0
+    RUNNING = 1
+    PAUSED = 2
+    SUCCEEDED = 3
+    FAILED = 4
+    INTERRUPTED = 5
+
+    @property
+    def is_terminal(self) -> bool:
+        """
+        Whether a node in this state has ended.
+        """
+        return self >= LifeCycle.SUCCEEDED

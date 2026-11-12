@@ -735,6 +735,25 @@ Checked on the merged tree: `llm_reasoner_test`, `llm_reasoner_viz_test` and
 `cram_viz_test` (1849 passed, 2 skipped, 1 expected failure, as before), our experiments'
 tests, and upstream's `cramera_test` (1066 passed).
 
+## 2b. Moved onto the statechart coraplex (2026-11-12)
+
+Upstream replaced coraplex's plan tree (`Plan`, `PlanNode`, `GiskardExecutable`) with cramph
+statecharts run by a `PlanExecutor`, and made krrood keyword-only; `cramera` left the repository.
+`feature/llm_reasoner` was rebased onto that main and adapted:
+- cram_viz builds a `Sequence` of `Action`s, compiles it into a `Statechart` and runs it with a
+  `KinematicallySimulatedPlanExecutor`; a NEEM keeps that statechart. The live bridge publishes
+  each node's own life cycle instead of deriving statuses from motion groups.
+- `cram-classes.json` starts from `Action` and `SemanticAnnotation` and ignores the cramph node
+  bases; `cram-classes.ttl` was written again (421 to 430 classes: the motions are gone, the
+  actions of the new coraplex came in).
+- The NEEM browser reads statechart NEEMs: `StatechartMappingDAO.structure` (every node as JSON),
+  `NodeStatesAtTickDAO` (the life cycles on each tick one changed on) and the tick length of
+  `StatechartContextDAO`. Every step now has its own status, start and end (simulated seconds);
+  the plan is the first top-level node, and the monitors its executor adds are shown apart.
+  Things of the world are named from the JSON and typed from `WorldEntityDAO` where the database
+  keeps them. NEEMs of the old plan-tree layout are no longer read. Checked in a browser on a
+  real recording (51 nodes, 7 steps, the pour succeeding at 49.8 s).
+
 ## 3. Live testing
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's

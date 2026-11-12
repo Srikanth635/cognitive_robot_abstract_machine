@@ -1,0 +1,389 @@
+{
+  "tick_duration": 0.05,
+  "structure": {
+    "__json_type__": "cramph.statechart.Statechart",
+    "nodes": [
+      {
+        "__json_type__": "cramph.composites.Sequence",
+        "name": "Sequence",
+        "parent_node_index": null,
+        "plot_specifications": {
+          "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+          "visible": true,
+          "collapse_children": false,
+          "style": "filled",
+          "shape": "none",
+          "extra_border_styles": {
+            "__collection_type__": "builtins.list",
+            "__items__": []
+          }
+        },
+        "node_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+        "nodes": {
+          "__collection_type__": "builtins.list",
+          "__items__": [
+            {
+              "__json_type__": "coraplex.robot_plans.actions.core.robot_body.ParkArmsAction",
+              "name": "ParkArmsAction",
+              "parent_node_index": 0,
+              "plot_specifications": {
+                "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+                "visible": true,
+                "collapse_children": false,
+                "style": "filled",
+                "shape": "none",
+                "extra_border_styles": {
+                  "__collection_type__": "builtins.list",
+                  "__items__": []
+                }
+              },
+              "max_joint_velocity": null,
+              "arms": {
+                "__collection_type__": "builtins.list",
+                "__items__": [
+                  {
+                    "__json_type__": "semantic_digital_twin.world_description.world_entity.ReferencedWorldEntity",
+                    "id": {
+                      "__json_type__": "uuid.UUID",
+                      "value": "b2bbd520-a13d-4361-8a82-274e3492e78c"
+                    },
+                    "name": {
+                      "__json_type__": "semantic_digital_twin.datastructures.prefixed_name.PrefixedName",
+                      "name": "PR2LeftArm",
+                      "prefix": null
+                    }
+                  },
+                  {
+                    "__json_type__": "semantic_digital_twin.world_description.world_entity.ReferencedWorldEntity",
+                    "id": {
+                      "__json_type__": "uuid.UUID",
+                      "value": "6f2e3cff-dc05-408a-a374-9f56bede6816"
+                    },
+                    "name": {
+                      "__json_type__": "semantic_digital_twin.datastructures.prefixed_name.PrefixedName",
+                      "name": "PR2RightArm",
+                      "prefix": null
+                    }
+                  }
+                ]
+              },
+              "node_id": "baca3442-6ea4-4bbc-9258-66864989831b"
+            },
+            {
+              "__json_type__": "coraplex.robot_plans.actions.core.robot_body.MoveTorsoAction",
+              "name": "MoveTorsoAction",
+              "parent_node_index": 0,
+              "plot_specifications": {
+                "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+                "visible": true,
+                "collapse_children": false,
+                "style": "filled",
+                "shape": "none",
+                "extra_border_styles": {
+                  "__collection_type__": "builtins.list",
+                  "__items__": []
+                }
+              },
+              "torso_state": {
+                "__json_type__": "semantic_digital_twin.datastructures.definitions.TorsoState",
+                "name": "HIGH"
+              },
+              "node_id": "ca7f7217-0f66-4945-8b0f-f116ffdfcfd3"
+            },
+            {
+              "__json_type__": "coraplex.robot_plans.actions.core.navigation.NavigateAction",
+              "name": "NavigateAction",
+              "parent_node_index": 0,
+              "plot_specifications": {
+                "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+                "visible": true,
+                "collapse_children": false,
+                "style": "filled",
+                "shape": "none",
+                "extra_border_styles": {
+                  "__collection_type__": "builtins.list",
+                  "__items__": []
+                }
+              },
+              "target_location": {
+                "__json_type__": "krrood_spatial_math.spatial_types.Pose",
+                "reference_frame_id": {
+                  "__json_type__": "uuid.UUID",
+                  "value": "1dba170a-618f-4671-9faf-31fe7f76bb95"
+                },
+                "reference_frame_name": {
+                  "__json_type__": "semantic_digital_twin.datastructures.prefixed_name.PrefixedName",
+                  "name": "map",
+                  "prefix": null
+                },
+                "position": [
+                  0.5,
+                  -1.0,
+                  0.0,
+                  1.0
+                ],
+                "rotation": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0
+                ]
+              },
+              "node_id": "d3179687-70ee-466e-b40f-14d66d107bc8",
+              "goal": {
+                "__json_type__": "giskardpy.motion_statechart.monitors.overwrite_state_monitors.SetOdometry",
+                "name": "SetOdometry",
+                "parent_node_index": 3,
+                "plot_specifications": {
+                  "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+                  "visible": true,
+                  "collapse_children": false,
+                  "style": "filled",
+                  "shape": "none",
+                  "extra_border_styles": {
+                    "__collection_type__": "builtins.list",
+                    "__items__": []
+                  }
+                },
+                "base_pose_threshold": 0.01,
+                "node_id": "e4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "__json_type__": "coraplex.robot_plans.actions.core.robot_body.ParkArmsAction",
+        "name": "ParkArmsAction",
+        "parent_node_index": 0,
+        "plot_specifications": {
+          "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+          "visible": true,
+          "collapse_children": false,
+          "style": "filled",
+          "shape": "none",
+          "extra_border_styles": {
+            "__collection_type__": "builtins.list",
+            "__items__": []
+          }
+        },
+        "max_joint_velocity": null,
+        "arms": {
+          "__collection_type__": "builtins.list",
+          "__items__": [
+            {
+              "__json_type__": "semantic_digital_twin.world_description.world_entity.ReferencedWorldEntity",
+              "id": {
+                "__json_type__": "uuid.UUID",
+                "value": "b2bbd520-a13d-4361-8a82-274e3492e78c"
+              },
+              "name": {
+                "__json_type__": "semantic_digital_twin.datastructures.prefixed_name.PrefixedName",
+                "name": "PR2LeftArm",
+                "prefix": null
+              }
+            },
+            {
+              "__json_type__": "semantic_digital_twin.world_description.world_entity.ReferencedWorldEntity",
+              "id": {
+                "__json_type__": "uuid.UUID",
+                "value": "6f2e3cff-dc05-408a-a374-9f56bede6816"
+              },
+              "name": {
+                "__json_type__": "semantic_digital_twin.datastructures.prefixed_name.PrefixedName",
+                "name": "PR2RightArm",
+                "prefix": null
+              }
+            }
+          ]
+        },
+        "node_id": "baca3442-6ea4-4bbc-9258-66864989831b"
+      },
+      {
+        "__json_type__": "coraplex.robot_plans.actions.core.robot_body.MoveTorsoAction",
+        "name": "MoveTorsoAction",
+        "parent_node_index": 0,
+        "plot_specifications": {
+          "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+          "visible": true,
+          "collapse_children": false,
+          "style": "filled",
+          "shape": "none",
+          "extra_border_styles": {
+            "__collection_type__": "builtins.list",
+            "__items__": []
+          }
+        },
+        "torso_state": {
+          "__json_type__": "semantic_digital_twin.datastructures.definitions.TorsoState",
+          "name": "HIGH"
+        },
+        "node_id": "ca7f7217-0f66-4945-8b0f-f116ffdfcfd3"
+      },
+      {
+        "__json_type__": "coraplex.robot_plans.actions.core.navigation.NavigateAction",
+        "name": "NavigateAction",
+        "parent_node_index": 0,
+        "plot_specifications": {
+          "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+          "visible": true,
+          "collapse_children": false,
+          "style": "filled",
+          "shape": "none",
+          "extra_border_styles": {
+            "__collection_type__": "builtins.list",
+            "__items__": []
+          }
+        },
+        "target_location": {
+          "__json_type__": "krrood_spatial_math.spatial_types.Pose",
+          "reference_frame_id": {
+            "__json_type__": "uuid.UUID",
+            "value": "1dba170a-618f-4671-9faf-31fe7f76bb95"
+          },
+          "reference_frame_name": {
+            "__json_type__": "semantic_digital_twin.datastructures.prefixed_name.PrefixedName",
+            "name": "map",
+            "prefix": null
+          },
+          "position": [
+            0.5,
+            -1.0,
+            0.0,
+            1.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        },
+        "node_id": "d3179687-70ee-466e-b40f-14d66d107bc8",
+        "goal": {
+          "__json_type__": "giskardpy.motion_statechart.monitors.overwrite_state_monitors.SetOdometry",
+          "name": "SetOdometry",
+          "parent_node_index": 3,
+          "plot_specifications": {
+            "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+            "visible": true,
+            "collapse_children": false,
+            "style": "filled",
+            "shape": "none",
+            "extra_border_styles": {
+              "__collection_type__": "builtins.list",
+              "__items__": []
+            }
+          },
+          "base_pose_threshold": 0.01,
+          "node_id": "e4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8"
+        }
+      },
+      {
+        "__json_type__": "giskardpy.motion_statechart.monitors.overwrite_state_monitors.SetOdometry",
+        "name": "SetOdometry",
+        "parent_node_index": 3,
+        "plot_specifications": {
+          "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+          "visible": true,
+          "collapse_children": false,
+          "style": "filled",
+          "shape": "none",
+          "extra_border_styles": {
+            "__collection_type__": "builtins.list",
+            "__items__": []
+          }
+        },
+        "base_pose_threshold": 0.01,
+        "node_id": "e4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8"
+      },
+      {
+        "__json_type__": "giskardpy.motion_statechart.graph_node.EndMotion",
+        "name": "EndMotion",
+        "parent_node_index": null,
+        "plot_specifications": {
+          "__json_type__": "cramph.plotters.plot_specs.NodePlotSpec",
+          "visible": true,
+          "collapse_children": false,
+          "style": "filled",
+          "shape": "none",
+          "extra_border_styles": {
+            "__collection_type__": "builtins.list",
+            "__items__": []
+          }
+        },
+        "joint_convergence_threshold": 0.01,
+        "node_id": "f5a6b7c8-d9e0-4f1a-b2c3-d4e5f6a7b8c9"
+      }
+    ],
+    "conditions": [],
+    "children": {
+      "0": [
+        1,
+        2,
+        3
+      ],
+      "3": [
+        4
+      ]
+    },
+    "chosen_children": {}
+  },
+  "ticks": [
+    {
+      "tick": 0,
+      "life_cycles": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tick": 20,
+      "life_cycles": [
+        1,
+        3,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "tick": 21,
+      "life_cycles": [
+        1,
+        3,
+        3,
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "tick": 30,
+      "life_cycles": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        1
+      ]
+    },
+    {
+      "tick": 31,
+      "life_cycles": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ]
+    }
+  ]
+}

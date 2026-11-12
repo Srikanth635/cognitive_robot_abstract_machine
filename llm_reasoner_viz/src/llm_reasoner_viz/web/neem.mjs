@@ -1,8 +1,10 @@
-// What the page shows of one NEEM: the tree of the steps of its plan, and for each step what
-// it was asked to do and the things and places it refers to, in the blocks the inspector draws.
+// What the page shows of one NEEM: the tree of the nodes of the statechart its plan was
+// performed as, and for each step how it ended, what it was asked to do and the things and
+// places it refers to, in the blocks the inspector draws.
 
 import { factsBlock, jsonBlock } from './inspector.mjs';
-import { shortName } from './model.mjs';
+import { formatOffset } from './format.mjs';
+import { STATUS, shortName } from './model.mjs';
 
 const NEEMS_ADDRESS = '/api/neems/';
 const SIGNIFICANT_DIGITS = 6;
@@ -12,11 +14,17 @@ const WORD_BOUNDARY = /([a-z])([A-Z])/g;
 // How a value that was not set is said.
 export const NOT_SET = 'not set';
 
-// The kinds of step that the page names itself, the others being named for what they were
-// asked to do or for their kind.
-export const NODE_TYPE = Object.freeze({ SEQUENTIAL: 'SequentialNode', ACTION: 'ActionNode', CONDITION: 'ConditionNode' });
+// How a step stands on the page, by the status it ended in. A step not begun, paused, or
+// interrupted because the step above it ended stands nowhere.
+const STEP_STANDING = Object.freeze({
+  RUNNING: STATUS.RUNNING,
+  SUCCEEDED: STATUS.OK,
+  FAILED: STATUS.FAILED,
+});
 
-const PRE_CONDITION = 'pre_condition';
+// What is said of a step that never began, and of one that has not ended.
+export const NEVER_STARTED = 'never';
+export const NOT_ENDED = 'not yet';
 
 // What stands for a class or for a member of an enumeration in a value: the path of its module,
 // the name of the class, and for a member its name, such as ``coraplex.datastructures.enums.Arms.RIGHT``.
@@ -34,30 +42,43 @@ function plainName(type) {
   return type.replace(NODE_SUFFIX, '').replace(WORD_BOUNDARY, '$1 $2').toLowerCase();
 }
 
-function isCheckedBefore(node) {
-  const flag = node.parameters.find(function (parameter) { return parameter.name === PRE_CONDITION; });
-  return flag !== undefined && flag.value === true;
-}
-
-// What a step is called in the tree: what it was asked to do, else what kind of step it is.
+// What a step is called in the tree: the action it was asked to perform, else its class.
 export function nodeLabel(node) {
   if (node.designator !== null) return node.designator;
-  if (node.type === NODE_TYPE.SEQUENTIAL) return 'sequence';
-  if (node.type === NODE_TYPE.CONDITION) return isCheckedBefore(node) ? 'condition before' : 'condition after';
   return plainName(node.type);
 }
 
-// The rows of the tree, one for each step, in the order of the plan.
+// How a step stands on the page; null for one not begun or paused.
+export function standingOf(node) {
+  return STEP_STANDING[node.status] || null;
+}
+
+// Which steps are of the plan rather than of what its executor added to watch it: the first
+// root and every step below it.
+function inPlan(nodes) {
+  const found = new Map();
+  nodes.forEach(function (node) {
+    found.set(node.id, node.parent === null ? node.id === nodes[0].id : found.get(node.parent));
+  });
+  return found;
+}
+
+// The rows of the tree, one for each step, in the order of the plan; what the executor added to
+// watch the plan is set apart from it.
 export function planRows(nodes) {
+  const plan = inPlan(nodes);
   return nodes.map(function (node) {
-    return { id: node.id, depth: node.depth, label: nodeLabel(node), type: node.type, muted: node.type === NODE_TYPE.CONDITION };
+    return {
+      id: node.id, depth: node.depth, label: nodeLabel(node), type: node.type,
+      standing: standingOf(node), muted: !plan.get(node.id),
+    };
   });
 }
 
 // The step the view opens on: the first action, which says most of what was done; the root
 // of a plan that has none.
 export function firstStep(nodes) {
-  return nodes.find(function (node) { return node.type === NODE_TYPE.ACTION; }) || nodes[0];
+  return nodes.find(function (node) { return node.designator !== null; }) || nodes[0];
 }
 
 // The steps above a step, from the root, as links to follow upward.
@@ -112,8 +133,8 @@ function valueFacts(parameters) {
   return parameters.map(function (parameter) { return [parameter.name, displayValue(parameter.value)]; });
 }
 
-// The view of a step, as the inspector draws a span: its title, a few facts and blocks of
-// detail. A step has no status of its own, since the plan stores only its root as ended.
+// The view of a step, as the inspector draws a span: its title, how it stands, a few facts
+// and blocks of detail.
 export function describeNode(node) {
   const withValues = node.references.filter(function (reference) { return reference.parameters.length > 0; });
   const blocks = [
@@ -122,13 +143,17 @@ export function describeNode(node) {
       ? factsBlock('Things and places', node.references.map(function (reference) { return [reference.name, referenceText(reference)]; }))
       : null,
     ...withValues.map(function (reference) { return factsBlock('Values of ' + reference.name, valueFacts(reference.parameters)); }),
-    jsonBlock('Rows it is kept in', node.rows),
+    jsonBlock('As it is kept', node.stored),
   ].filter(function (block) { return block !== null; });
   return {
     title: node.designator !== null ? node.designator : nodeLabel(node),
-    status: '',
+    status: standingOf(node) || '',
     neem: null,
-    facts: [['step', '#' + node.id], ['type', node.type]],
+    facts: [
+      ['step', '#' + node.id], ['type', node.type], ['status', node.status],
+      ['started', node.started === null ? NEVER_STARTED : formatOffset(node.started)],
+      ['ended', node.ended === null ? NOT_ENDED : formatOffset(node.ended)],
+    ],
     blocks: blocks,
   };
 }

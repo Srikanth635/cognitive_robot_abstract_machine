@@ -148,8 +148,8 @@ fixed demo instead, independent of the designators.
 
 ### NEEMs of the simulations
 
-Every plan the simulation performs is kept as a NEEM, the executed plan saved through
-coraplex's ORM: each pour tried in the simulation while a resolution is made, and the
+Every plan the simulation performs is kept as a NEEM, the statechart the plan was performed
+as, saved through cramph's ORM: each pour tried in the simulation while a resolution is made, and the
 run Execute performs, whether the motion finished or failed. They all go into **one
 database**, `~/.cram_viz/neems.sqlite` (`CRAM_VIZ_NEEM_DATABASE` names another), and the
 run's `events.jsonl` says which plan is which (`NeemRecorded`: whether it is of a trial or of
@@ -162,11 +162,12 @@ which takes about 40 seconds once (a lock keeps two processes from making them t
 after that each NEEM takes 5 to 9 seconds to save, in the process of the trial or of
 Execute, and about a megabyte of disk. A resolution tries up to three pours, so it takes
 around twenty seconds longer than before. There is no switch to turn the recording off yet.
-To read a NEEM, the plan of the NEEM with identifier `N` is the row of the table
-`PlanMappingDAO` with `database_id = N`:
+To read a NEEM, the statechart of the NEEM with identifier `N` is the row of the table
+`StatechartMappingDAO` with `database_id = N`: its `structure` holds every node as JSON, and
+`NodeStatesAtTickDAO` the life cycle of each node on every tick on which one changed:
 
 ```bash
-sqlite3 ~/.cram_viz/neems.sqlite "select * from PlanMappingDAO where database_id = 1;"
+sqlite3 ~/.cram_viz/neems.sqlite "select structure from StatechartMappingDAO where database_id = 1;"
 ```
 
 On the Plan and Statechart tabs the node border is its execution status —

@@ -37,11 +37,15 @@ function textsOfValues(node) {
 }
 
 // A thing a step refers to as one text: what it is and, for an object that is only values, its values.
+// The things of a list are one text, in their order.
 function textsOfReferences(node) {
-  return new Map(node.references.map(function (reference) {
+  const texts = new Map();
+  node.references.forEach(function (reference) {
     const values = reference.parameters.map(function (parameter) { return parameter.name + '=' + displayValue(parameter.value); });
-    return [reference.name, referenceText(reference) + (values.length > 0 ? ' {' + values.join(', ') + '}' : '')];
-  }));
+    const text = referenceText(reference) + (values.length > 0 ? ' {' + values.join(', ') + '}' : '');
+    texts.set(reference.name, texts.has(reference.name) ? texts.get(reference.name) + ', ' + text : text);
+  });
+  return texts;
 }
 
 // The names in the one and then those only in the other.

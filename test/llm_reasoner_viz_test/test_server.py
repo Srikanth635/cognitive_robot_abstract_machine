@@ -273,7 +273,7 @@ class TestNeems:
     def test_a_plan_with_a_row_missing_is_refused_with_what_is_missing(
         self, neem_viewer
     ):
-        change_database(neem_viewer.database, Change.DESIGNATOR_DELETED)
+        change_database(neem_viewer.database, Change.CONTEXT_DELETED)
         assert (
             status_of(neem_viewer.url + "/api/neems/1")
             == HTTPStatus.INTERNAL_SERVER_ERROR

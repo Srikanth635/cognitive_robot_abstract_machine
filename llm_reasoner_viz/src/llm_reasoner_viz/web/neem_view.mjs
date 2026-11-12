@@ -124,7 +124,7 @@ export class NeemScreen {
       : new Date(neem.recordedAt * MILLISECONDS_PER_SECOND).toLocaleString(undefined, WHEN_FORMAT);
     const origin = [neem.origin === null ? 'unknown origin' : neem.origin,
       neem.run === null ? null : 'run ' + neem.run.slice(0, RUN_NAME_LENGTH), when].filter(Boolean).join(' · ');
-    this.header.replaceChildren(
+    this.header.replaceChildren(...[
       this.backButton(),
       el('h2', {}, 'NEEM ' + neem.title),
       neem.verdict === null ? null : el('span', { class: 'badge' + (neem.standing === null ? '' : ' status-' + neem.standing) }, neem.verdict),
@@ -132,7 +132,7 @@ export class NeemScreen {
       neem.run === null ? null : el('button', { type: 'button', class: 'neem-link',
         title: 'Go to the bar of the ' + neem.origin + ' in the run that saved this',
         onclick: () => this.actions.onOpenOrigin(neem) }, 'open the ' + neem.origin + ' in its run ›'),
-      this.chooser);
+      this.chooser].filter(Boolean));
     this.summary.textContent = [...neem.facts, 'plan ' + entry.status.toLowerCase()].join(' · ');
     this.compared.replaceChildren();
   }
@@ -153,7 +153,7 @@ export class NeemScreen {
         type: 'button', class: ['plan-row', row.muted ? 'muted' : null, row.id === this.chosenId ? 'on' : null, mark === null ? null : 'marked'].filter(Boolean).join(' '),
         style: 'padding-left: ' + (10 + row.depth * INDENT_PIXELS) + 'px', 'aria-current': row.id === this.chosenId ? 'true' : null,
         onclick: () => this.choose(row.id),
-      }, el('span', { class: 'plan-label' }, row.label),
+      }, el('span', { class: 'plan-label' }, row.standing === null ? null : el('span', { class: 'swatch status-' + row.standing }), row.label),
       mark === null ? null : el('span', { class: 'plan-mark ' + (mark === MARK.CHANGED ? 'changed' : 'only-here') }, MARK_TEXT[mark]),
       el('span', { class: 'plan-id' }, '#' + row.id));
     }));

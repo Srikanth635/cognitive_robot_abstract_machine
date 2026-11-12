@@ -1,6 +1,7 @@
 """
-Tests of reading the steps of a plan out of the NEEM database: the tree they form, what
-each was asked to do, and the things and places it refers to.
+Tests of reading the steps of a plan out of the NEEM database: the tree the nodes of its
+statechart form, how each ended, what each was asked to do, and the things and places it
+refers to.
 """
 
 from __future__ import annotations
@@ -19,23 +20,24 @@ from llm_reasoner_viz.neem_plan import (
     Pose,
     Position,
     Reference,
-    TableRow,
 )
-from llm_reasoner_viz.neem_schema import Table
+from llm_reasoner_viz.neem_schema import JsonKey, LifeCycle, Table
 from llm_reasoner_viz.neems import NeemDatabase, UnknownNeem
 
 from .neem_files import (
     PAGE_FIXTURES,
     PAGE_FIXTURES_DIRECTORY,
     Change,
+    KeptPlan,
     change_database,
     sent_by_the_server,
     write_neem_database,
 )
 
-POURING_TEMPLATE = "giskardpy.motion_statechart.goals.templates.Sequence"
-RIGHT_ARM = "coraplex.datastructures.enums.Arms.RIGHT"
-BOTH_ARMS = "coraplex.datastructures.enums.Arms.BOTH"
+TORSO_HIGH = "semantic_digital_twin.datastructures.definitions.TorsoState.HIGH"
+APPROACH_FROM_THE_FRONT = (
+    "semantic_digital_twin.datastructures.definitions.ApproachDirection.FRONT"
+)
 
 # %% helpers
 
@@ -59,20 +61,42 @@ def values_of(node: PlanNode) -> Dict[str, Any]:
     return {parameter.name: parameter.value for parameter in node.parameters}
 
 
+def reference_named(node: PlanNode, name: str) -> Reference:
+    return next(reference for reference in node.references if reference.name == name)
+
+
+def seconds_at(plan: KeptPlan, tick: int) -> float:
+    """
+    :return: When a tick of the plan was, in seconds after the plan began.
+    """
+    return tick * plan.recording["tick_duration"]
+
+
+def stored_node(plan: KeptPlan, identifier: int) -> Dict[str, Any]:
+    """
+    :return: A node of the plan's statechart, as the fixture keeps it.
+    """
+    return plan.recording["structure"]["nodes"][identifier]
+
+
 # %% the tree
 
 
 class TestTheTree:
     def test_the_steps_come_in_the_order_of_the_tree(self, database):
-        assert [node.identifier for node in database.nodes(1)] == [1, 2, 3, 4, 5]
+        assert [node.identifier for node in database.nodes(1)] == [0, 1, 2, 3, 4, 5, 6]
 
     def test_a_step_knows_the_one_above_it_and_how_deep_it_is(self, database):
         nodes = database.nodes(1)
-        assert [node.parent for node in nodes] == [None, 1, 1, 3, 3]
-        assert [node.depth for node in nodes] == [0, 1, 1, 2, 2]
+        assert [node.parent for node in nodes] == [None, 0, 1, 0, 3, None, None]
+        assert [node.depth for node in nodes] == [0, 1, 2, 1, 2, 0, 0]
 
-    def test_the_steps_below_a_step_keep_the_order_of_their_edges(self, database):
-        assert [node.identifier for node in database.nodes(2)] == [11, 12, 13, 14]
+    def test_the_plan_comes_before_what_its_executor_added_to_watch_it(self, database):
+        top = [node.type for node in database.nodes(1) if node.parent is None]
+        assert top == ["Sequence", "EndMotion", "StillProgressing"]
+
+    def test_the_steps_below_a_step_keep_the_order_of_the_statechart(self, database):
+        assert [node.identifier for node in database.nodes(2)] == [0, 1, 2, 3, 4, 5]
 
     def test_a_plan_the_database_does_not_hold_is_unknown(self, database):
         with pytest.raises(UnknownNeem) as unknown:
@@ -88,71 +112,81 @@ class TestTheTree:
 
 
 class TestWhatAStepIs:
-    def test_a_step_is_the_kind_of_node_it_is_stored_as(self, database):
+    def test_a_step_is_of_its_class(self, database):
         assert [node.type for node in database.nodes(1)] == [
-            "SequentialNode",
-            "ActionNode",
-            "ActionNode",
-            "ConditionNode",
-            "MotionNode",
+            "Sequence",
+            "PickUpAction",
+            "CartesianPose",
+            "PouringAction",
+            "JointPositionList",
+            "EndMotion",
+            "StillProgressing",
         ]
 
-    def test_an_action_or_a_motion_has_the_designator_it_was_asked_to_perform(
-        self, database
-    ):
+    def test_only_an_action_has_the_designator_it_was_asked_to_perform(self, database):
         assert [node.designator for node in database.nodes(1)] == [
             None,
-            "ParkArmsAction",
+            "PickUpAction",
+            None,
             "PouringAction",
             None,
-            "MoveToolCenterPointMotion",
+            None,
+            None,
         ]
 
-    def test_a_sequence_says_which_template_runs_it(self, database):
-        sequence = node_of(database.nodes(1), 1)
-        assert values_of(sequence) == {"motion_state_chart_template": POURING_TEMPLATE}
+    def test_a_step_has_the_status_it_ended_in(self, database):
+        nodes = database.nodes(1)
+        assert node_of(nodes, 1).status == LifeCycle.SUCCEEDED.name
+        assert node_of(nodes, 3).status == LifeCycle.FAILED.name
 
-    def test_a_condition_says_whether_it_is_checked_before(self, database):
-        condition = node_of(database.nodes(1), 4)
-        assert values_of(condition) == {"pre_condition": True}
-        assert condition.references == []
+    def test_a_step_has_when_it_started_and_ended(self, database):
+        pour = node_of(database.nodes(1), 3)
+        assert pour.started == seconds_at(KeptPlan.POUR, 40)
+        assert pour.ended == seconds_at(KeptPlan.POUR, 90)
+
+    def test_a_step_that_has_not_ended_has_no_end(self, database):
+        change_database(database.path, Change.PLAN_NOT_ENDED)
+        navigation = node_of(database.nodes(2), 3)
+        assert navigation.status == LifeCycle.RUNNING.name
+        assert navigation.started == seconds_at(KeptPlan.RUN, 21)
+        assert navigation.ended is None
 
 
 # %% what a step was asked to do
 
 
 class TestWhatAStepWasAskedToDo:
-    def test_the_values_of_an_action_are_those_of_every_table_it_extends(
-        self, database
-    ):
+    def test_the_values_of_an_action_are_its_fields_that_are_values(self, database):
         pour = node_of(database.nodes(1), 3)
         assert values_of(pour) == {
-            "position_threshold": None,
-            "orientation_threshold": None,
             "tilt_angle": 1.85,
-            "pour_side_offset": 0.0,
-            "pour_approach_offset": 0.0,
+            "pour_side": None,
             "pour_height": 0.13,
-            "arm": RIGHT_ARM,
-            "pour_side": RIGHT_ARM,
         }
 
-    def test_the_values_keep_the_order_of_the_tables(self, database):
-        pour = node_of(database.nodes(1), 3)
-        assert [parameter.name for parameter in pour.parameters][:4] == [
-            "position_threshold",
-            "orientation_threshold",
-            "tilt_angle",
-            "pour_side_offset",
+    def test_the_values_keep_the_order_of_the_fields(self, database):
+        pick_up = node_of(database.nodes(1), 1)
+        assert [parameter.name for parameter in pick_up.parameters] == [
+            "approach_clearance",
+            "grasp_closing_velocity",
+            "tolerate_grasp_stall",
         ]
 
     def test_a_flag_is_true_or_false(self, database):
-        navigation = node_of(database.nodes(2), 13)
-        assert values_of(navigation)["keep_joint_states"] is True
+        pick_up = node_of(database.nodes(1), 1)
+        assert values_of(pick_up)["tolerate_grasp_stall"] is False
 
-    def test_an_action_without_the_values_of_a_pour_has_only_its_own(self, database):
-        park = node_of(database.nodes(1), 2)
-        assert values_of(park) == {"max_joint_velocity": None, "arm": BOTH_ARMS}
+    def test_a_choice_from_an_enumeration_is_the_path_of_its_member(self, database):
+        torso = node_of(database.nodes(2), 2)
+        assert values_of(torso) == {"torso_state": TORSO_HIGH}
+
+    def test_what_places_a_step_in_the_statechart_is_no_value_of_it(self, database):
+        names = {
+            parameter.name
+            for node in database.nodes(1)
+            for parameter in node.parameters
+        }
+        assert not names & {key.value for key in JsonKey if key.places_a_node}
 
     def test_a_parameter_is_json(self):
         assert Parameter(name="tilt_angle", value=1.85).to_json() == {
@@ -165,122 +199,100 @@ class TestWhatAStepWasAskedToDo:
 
 
 class TestWhatAStepRefersTo:
-    def test_a_body_is_named_as_the_world_names_it(self, database):
+    def test_a_thing_of_the_world_is_named_and_of_the_class_the_database_keeps(
+        self, database
+    ):
         pour = node_of(database.nodes(1), 3)
-        bowl = next(
-            reference
-            for reference in pour.references
-            if reference.name == "target_container"
-        )
-        assert bowl == Reference(
+        bowl = stored_node(KeptPlan.POUR, 3)["target_container"]
+        assert reference_named(pour, "target_container") == Reference(
             name="target_container",
-            type="Body",
-            identifier=101,
-            label="bowl.stl",
+            type="Bowl",
+            identifier=bowl["id"]["value"],
+            label=bowl["name"]["name"],
             pose=None,
             parameters=[],
         )
 
-    def test_the_references_keep_the_order_of_the_columns(self, database):
+    def test_a_thing_the_database_does_not_keep_is_of_the_class_it_is_stored_as(
+        self, database
+    ):
+        motion = node_of(database.nodes(1), 2)
+        tool = reference_named(motion, "tip_link")
+        assert (tool.type, tool.label) == (
+            "ReferencedWorldEntity",
+            "r_gripper_tool_frame",
+        )
+
+    def test_the_references_keep_the_order_of_the_fields(self, database):
         pour = node_of(database.nodes(1), 3)
         assert [reference.name for reference in pour.references] == [
             "target_container",
             "source_container",
+            "arm",
         ]
 
-    def test_a_thing_is_of_the_class_its_row_says_it_really_is(self, database):
-        pour = node_of(database.nodes(1), 3)
-        source = pour.references[1]
-        assert (source.type, source.label) == ("PouringCup", "PouringCup")
+    def test_each_thing_of_a_list_is_a_reference(self, database):
+        park = node_of(database.nodes(2), 1)
+        assert [(reference.name, reference.label) for reference in park.references] == [
+            ("arms", "PR2LeftArm"),
+            ("arms", "PR2RightArm"),
+        ]
 
-    def test_a_pose_has_its_position_and_the_frame_it_is_measured_from(self, database):
-        motion = node_of(database.nodes(1), 5)
-        (target,) = motion.references
-        assert target == Reference(
-            name="target",
+    def test_a_pose_has_its_position_orientation_and_frame(self, database):
+        motion = node_of(database.nodes(1), 2)
+        assert reference_named(motion, "goal_pose") == Reference(
+            name="goal_pose",
             type="Pose",
-            identifier=300,
+            identifier=None,
             label=None,
             pose=Pose(
-                frame="map",
-                position=Position(x=1.5, y=2.25, z=0.0),
-                orientation=None,
+                frame="Static_MilkPitcher.stl",
+                position=Position(x=-0.168, y=0.0, z=0.0),
+                orientation=Orientation(x=0.0, y=0.0, z=0.0, w=1.0),
             ),
             parameters=[],
         )
 
-    def test_a_pose_has_its_orientation_when_it_has_one(self, database):
-        navigation = node_of(database.nodes(2), 13)
-        (target,) = navigation.references
-        assert target.pose == Pose(
-            frame="map",
-            position=Position(x=0.5, y=-1.0, z=0.0),
-            orientation=Orientation(x=0.0, y=0.0, z=0.0, w=1.0),
-        )
-
-    def test_a_reference_that_is_not_set_is_left_out(self, database):
+    def test_a_reference_that_is_not_set_is_a_value_that_is_not_set(self, database):
         change_database(database.path, Change.SOURCE_CONTAINER_UNSET)
-        pour = node_of(database.nodes(1), 3)
-        assert [reference.name for reference in pour.references] == ["target_container"]
-
-    def test_a_step_that_moves_a_body_refers_to_the_body_and_its_new_parent(
-        self, database
-    ):
-        change_database(database.path, Change.RE_ATTACH_STEP)
-        move = node_of(database.nodes(1), 6)
-        assert [(reference.name, reference.label) for reference in move.references] == [
-            ("body", "bowl.stl"),
-            ("new_parent", "map"),
-        ]
-
-    def test_what_the_execution_recorded_is_no_reference_of_the_step(self, database):
-        change_database(database.path, Change.EXECUTION_RECORDED)
         pour = node_of(database.nodes(1), 3)
         assert [reference.name for reference in pour.references] == [
             "target_container",
-            "source_container",
+            "arm",
         ]
+        assert values_of(pour)["source_container"] is None
 
-    def test_the_step_a_condition_belongs_to_is_no_reference_of_it(self, database):
-        condition = node_of(database.nodes(1), 4)
-        assert condition.references == []
+    def test_a_step_below_a_step_is_no_reference_of_it(self, database):
+        navigation = node_of(database.nodes(2), 3)
+        watching = node_of(database.nodes(1), 6)
+        assert [reference.name for reference in navigation.references] == [
+            "target_location"
+        ]
+        assert [reference.name for reference in watching.references] == ["timeout"]
 
     def test_an_object_that_is_only_values_carries_them(self, database):
-        change_database(database.path, Change.PICK_UP_ACTION)
-        pick_up = node_of(database.nodes(1), 3)
-        (grasp,) = pick_up.references
-        assert (grasp.name, grasp.type, grasp.label, grasp.pose) == (
-            "grasp_description",
-            "GraspDescription",
-            None,
-            None,
-        )
+        pick_up = node_of(database.nodes(1), 1)
+        grasp = reference_named(pick_up, "grasp")
+        assert (grasp.type, grasp.label, grasp.pose) == ("GraspCandidate", None, None)
         assert {parameter.name: parameter.value for parameter in grasp.parameters} == {
-            "rotate_gripper": False,
+            "approach_direction": APPROACH_FROM_THE_FRONT,
             "manipulation_offset": 0.1,
-            "approach_direction": "coraplex.datastructures.enums.ApproachDirection.FRONT",
-            "vertical_alignment": "coraplex.datastructures.enums.VerticalAlignment.NoAlignment",
         }
-
-    def test_a_thing_of_a_world_and_a_pose_carry_no_values_of_their_own(self, database):
-        pour = node_of(database.nodes(1), 3)
-        navigation = node_of(database.nodes(2), 13)
-        assert [reference.parameters for reference in pour.references] == [[], []]
-        assert navigation.references[0].parameters == []
 
     def test_a_reference_is_json(self, database):
         pour = node_of(database.nodes(1), 3)
-        assert pour.references[0].to_json() == {
+        bowl = reference_named(pour, "target_container")
+        assert bowl.to_json() == {
             "name": "target_container",
-            "type": "Body",
-            "identifier": 101,
-            "label": "bowl.stl",
+            "type": "Bowl",
+            "identifier": bowl.identifier,
+            "label": bowl.label,
             "pose": None,
             "parameters": [],
         }
 
     def test_a_pose_is_json(self, database):
-        navigation = node_of(database.nodes(2), 13)
+        navigation = node_of(database.nodes(2), 3)
         assert navigation.references[0].pose.to_json() == {
             "frame": "map",
             "position": {"x": 0.5, "y": -1.0, "z": 0.0},
@@ -288,80 +300,35 @@ class TestWhatAStepRefersTo:
         }
 
 
-# %% the rows a step is kept in
+# %% what a step keeps
 
 
-class TestTheRowsAStepIsKeptIn:
-    def test_a_step_lists_the_row_of_each_table_it_is_spread_over(self, database):
-        pour = node_of(database.nodes(1), 3)
-        assert [row.table for row in pour.rows] == [
-            Table.ENTITY,
-            Table.NODE,
-            "DesignatorNodeDAO",
-            Table.ACTION_NODE,
-            Table.DESIGNATOR,
-            "ActionDescriptionDAO",
-            "FullBodyControlledActionDAO",
-            "PouringActionDAO",
-        ]
-
-    def test_a_row_holds_the_values_of_all_the_columns_as_stored(self, database):
-        pour = node_of(database.nodes(1), 3)
-        row = next(row for row in pour.rows if row.table == "PouringActionDAO")
-        assert row.values["tilt_angle"] == 1.85
-        assert row.values["_target_container_id"] == 101
-
-    def test_a_column_of_bytes_is_left_out_of_the_row_and_the_parameters(
+class TestWhatAStepKeeps:
+    def test_a_step_keeps_its_fields_without_how_it_is_drawn_or_the_steps_below(
         self, database
     ):
-        change_database(database.path, Change.DESIGNATOR_WITH_BYTES)
-        scan = node_of(database.nodes(1), 3)
-        assert scan.rows[-1] == TableRow(
-            table="ScanActionDAO", values={"database_id": 11, "resolution": 2.5}
-        )
-        assert values_of(scan) == {"resolution": 2.5}
+        navigation = node_of(database.nodes(2), 3)
+        stored = stored_node(KeptPlan.RUN, 3)
+        assert navigation.stored == {
+            key: value
+            for key, value in stored.items()
+            if key not in (JsonKey.PLOT, "goal")
+        }
 
-    def test_a_condition_is_json_with_its_rows(self, database):
-        condition = node_of(database.nodes(1), 4)
-        assert condition.to_json() == {
+    def test_a_step_is_json(self, database):
+        motion = node_of(database.nodes(1), 4)
+        assert motion.to_json() == {
             "id": 4,
             "parent": 3,
             "depth": 2,
-            "type": "ConditionNode",
+            "type": "JointPositionList",
             "designator": None,
-            "parameters": [{"name": "pre_condition", "value": True}],
+            "status": LifeCycle.FAILED.name,
+            "started": motion.started,
+            "ended": motion.ended,
+            "parameters": [{"name": "threshold", "value": 0.01}],
             "references": [],
-            "rows": [
-                TableRow(
-                    table=Table.ENTITY,
-                    values={
-                        "database_id": 4,
-                        "polymorphic_type": "ConditionNodeDAO",
-                        "_plan_id": 1,
-                    },
-                ).to_json(),
-                TableRow(
-                    table=Table.NODE,
-                    values={
-                        "database_id": 4,
-                        "start_time": "2026-10-14 16:48:50.000000",
-                        "end_time": None,
-                        "status": (
-                            "giskardpy.motion_statechart.data_types."
-                            "LifeCycleValues.NOT_STARTED"
-                        ),
-                        "_reason_id": None,
-                    },
-                ).to_json(),
-                TableRow(
-                    table="ConditionNodeDAO",
-                    values={
-                        "database_id": 4,
-                        "pre_condition": True,
-                        "_action_node_id": 3,
-                    },
-                ).to_json(),
-            ],
+            "stored": motion.stored,
         }
 
 
@@ -369,14 +336,14 @@ class TestTheRowsAStepIsKeptIn:
 
 
 class TestADatabaseThatIsBroken:
-    def test_a_step_whose_designator_is_gone_is_reported_with_what_is_missing(
+    def test_a_plan_whose_context_is_gone_is_reported_with_what_is_missing(
         self, database
     ):
-        change_database(database.path, Change.DESIGNATOR_DELETED)
+        change_database(database.path, Change.CONTEXT_DELETED)
         with pytest.raises(MissingRow) as missing:
             database.nodes(1)
-        assert missing.value.table == Table.DESIGNATOR
-        assert missing.value.identifier == 11
+        assert missing.value.table == Table.CONTEXT
+        assert missing.value.identifier == 1
 
 
 # %% what the page is tested on

@@ -107,8 +107,8 @@ at what it points to.
 | `GET /api/config` | Where cram-viz is, for the page to link to |
 | `GET /api/runs` | The runs that have a log, newest first, each summed up: its query, scene, how resolving and performing went, how many events and model calls, tokens and cost |
 | `GET /api/runs/<run>/events` | The events of a run as one batch, with `next`, the offset to go on from; `?after=<offset>`, `?limit=<n>` |
-| `GET /api/neems` | The plans of the NEEM database, newest first, each with how its root ended, how long it lasted, how many nodes and steps it has, and where it came from (a trial or an execution of a run; none when no log names it); `?run=<run>` takes only those the run kept. `503` while the database is being written |
-| `GET /api/neems/<id>` | One NEEM: the entry above and `plan`, the steps of its plan in tree order, each with its `id`, `parent`, `depth`, `type` (`ActionNode`, `MotionNode`, `ConditionNode`, `SequentialNode`, ...), the `designator` it was asked to perform (`PouringAction`), its `parameters` (values as stored; a choice from an enumeration is the path of the member), its `references` (bodies by the name the world gives them, poses with their frame, position and orientation, and objects that are only values, such as how to grasp, with their values) and the table `rows` it is kept in. Only the root of a plan has a real status and time; the steps below it are stored as not started. `404` for a plan the database does not hold |
+| `GET /api/neems` | The plans of the NEEM database, newest first, each with how the node it was performed from ended, how long it lasted in the simulation, how many nodes and steps it has, and where it came from (a trial or an execution of a run; none when no log names it); `?run=<run>` takes only those the run kept. `503` while the database is being written |
+| `GET /api/neems/<id>` | One NEEM: the entry above and `plan`, the nodes of the statechart the plan was performed as in tree order, the plan first and the monitors its executor added after, each with its `id` (its index in the statechart), `parent`, `depth`, `type` (its class: `Sequence`, `PouringAction`, `CartesianPose`, ...), the `designator` it was asked to perform when it is an action, its `status` when the NEEM was kept, when it `started` and `ended` in seconds after the plan began, its `parameters` (values as stored; a choice from an enumeration is the path of the member), its `references` (things of the world by the name the world gives them, poses with their frame, position and orientation, and objects that are only values, such as how to grasp, with their values) and its fields as `stored`. `404` for a plan the database does not hold |
 | `GET /api/runs/<run>/stream` | The events as server-sent events, those written so far and then those written next; each frame's `id` is where its event ends in the log, so `?after=<offset>` or the `Last-Event-ID` header resumes a stream |
 
 ## Layout
@@ -118,10 +118,9 @@ src/llm_reasoner_viz/
     vocabulary.py   the names of the events and their fields the viewer reads
     paths.py        where the runs and the NEEM database are kept
     runs.py         EventLog, RunSummary, RunLibrary
-    neem_schema.py  the tables and columns of the NEEM database the viewer reads
+    neem_schema.py  the tables, columns and JSON keys of the NEEM database the viewer reads
     neems.py        NeemDatabase: the plans and the steps of a plan, read-only
-    neem_tables.py  TableSchema: how the tables extend one another, found from the foreign keys
-    neem_plan.py    PlanReader: the steps of a plan with their values and references
+    neem_plan.py    PlanReader: the statechart of a plan, its steps with how each went, their values and references
     neem_library.py NeemLibrary: the plans joined to the runs that kept them
     stream.py       EventStream: following a log as it grows
     server.py       the HTTP server and the console entry point

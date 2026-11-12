@@ -19,14 +19,16 @@ export const NEEM_FILTER = Object.freeze({
 
 // How the root of a plan ended; the steps below it are stored as not started whatever
 // happened, so the plan is only as told by its root.
-export const PLAN_STATUS = Object.freeze({ SUCCEEDED: 'SUCCEEDED', FAILED: 'FAILED' });
+export const PLAN_STATUS = Object.freeze({ RUNNING: 'RUNNING', SUCCEEDED: 'SUCCEEDED', FAILED: 'FAILED', INTERRUPTED: 'INTERRUPTED' });
 
 // How an execution ended, as the server says it.
 const EXECUTION_RESULT = Object.freeze({ FINISHED: 'finished', FAILED: 'failed' });
 
 const PLAN_STANDING = Object.freeze({
+  [PLAN_STATUS.RUNNING]: STATUS.RUNNING,
   [PLAN_STATUS.SUCCEEDED]: STATUS.OK,
   [PLAN_STATUS.FAILED]: STATUS.FAILED,
+  [PLAN_STATUS.INTERRUPTED]: STATUS.FAILED,
 });
 
 const EXECUTION_STANDING = Object.freeze({

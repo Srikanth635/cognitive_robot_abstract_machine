@@ -2,157 +2,142 @@
   "neem": {
     "neem": 2,
     "status": "SUCCEEDED",
-    "started": "2026-10-14T17:02:10",
-    "ended": "2026-10-14T17:02:30.250000",
-    "seconds": 20.25,
-    "nodes": 4,
+    "seconds": 1.5,
+    "nodes": 6,
     "steps": 3,
     "origin": null
   },
   "plan": [
     {
-      "id": 11,
+      "id": 0,
       "parent": null,
       "depth": 0,
-      "type": "SequentialNode",
+      "type": "Sequence",
       "designator": null,
-      "parameters": [
-        {
-          "name": "motion_state_chart_template",
-          "value": "giskardpy.motion_statechart.goals.templates.Sequence"
-        }
-      ],
+      "status": "SUCCEEDED",
+      "started": 0.0,
+      "ended": 1.5,
+      "parameters": [],
       "references": [],
-      "rows": [
-        {
-          "table": "PlanEntityDAO",
-          "values": {
-            "database_id": 11,
-            "polymorphic_type": "SequentialNodeDAO",
-            "_plan_id": 2
-          }
-        },
-        {
-          "table": "PlanNodeDAO",
-          "values": {
-            "database_id": 11,
-            "start_time": "2026-10-14 17:02:10.000000",
-            "end_time": "2026-10-14 17:02:30.250000",
-            "status": "giskardpy.motion_statechart.data_types.LifeCycleValues.SUCCEEDED",
-            "_reason_id": null
-          }
-        },
-        {
-          "table": "LanguageNodeDAO",
-          "values": {
-            "database_id": 11,
-            "motion_state_chart_template": "giskardpy.motion_statechart.goals.templates.Sequence"
-          }
-        },
-        {
-          "table": "ExecutesSequentiallyDAO",
-          "values": {
-            "database_id": 11
-          }
-        },
-        {
-          "table": "SequentialNodeDAO",
-          "values": {
-            "database_id": 11
-          }
-        }
-      ]
+      "stored": {
+        "__json_type__": "cramph.composites.Sequence",
+        "name": "Sequence",
+        "parent_node_index": null,
+        "node_id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+      }
     },
     {
-      "id": 12,
-      "parent": 11,
+      "id": 1,
+      "parent": 0,
       "depth": 1,
-      "type": "ActionNode",
+      "type": "ParkArmsAction",
       "designator": "ParkArmsAction",
+      "status": "SUCCEEDED",
+      "started": 0.0,
+      "ended": 1.0,
       "parameters": [
         {
           "name": "max_joint_velocity",
           "value": null
-        },
-        {
-          "name": "arm",
-          "value": "coraplex.datastructures.enums.Arms.BOTH"
-        }
-      ],
-      "references": [],
-      "rows": [
-        {
-          "table": "PlanEntityDAO",
-          "values": {
-            "database_id": 12,
-            "polymorphic_type": "ActionNodeDAO",
-            "_plan_id": 2
-          }
-        },
-        {
-          "table": "PlanNodeDAO",
-          "values": {
-            "database_id": 12,
-            "start_time": "2026-10-14 17:02:10.000000",
-            "end_time": null,
-            "status": "giskardpy.motion_statechart.data_types.LifeCycleValues.NOT_STARTED",
-            "_reason_id": null
-          }
-        },
-        {
-          "table": "DesignatorNodeDAO",
-          "values": {
-            "database_id": 12,
-            "_designator_id": 13
-          }
-        },
-        {
-          "table": "ActionNodeDAO",
-          "values": {
-            "database_id": 12,
-            "_execution_data_id": null
-          }
-        },
-        {
-          "table": "DesignatorDAO",
-          "values": {
-            "database_id": 13,
-            "polymorphic_type": "ParkArmsActionDAO"
-          }
-        },
-        {
-          "table": "ActionDescriptionDAO",
-          "values": {
-            "database_id": 13
-          }
-        },
-        {
-          "table": "ParkArmsActionDAO",
-          "values": {
-            "database_id": 13,
-            "max_joint_velocity": null,
-            "arm": "coraplex.datastructures.enums.Arms.BOTH"
-          }
-        }
-      ]
-    },
-    {
-      "id": 13,
-      "parent": 11,
-      "depth": 1,
-      "type": "ActionNode",
-      "designator": "NavigateAction",
-      "parameters": [
-        {
-          "name": "keep_joint_states",
-          "value": true
         }
       ],
       "references": [
         {
+          "name": "arms",
+          "type": "PR2LeftArm",
+          "identifier": "b2bbd520-a13d-4361-8a82-274e3492e78c",
+          "label": "PR2LeftArm",
+          "pose": null,
+          "parameters": []
+        },
+        {
+          "name": "arms",
+          "type": "PR2RightArm",
+          "identifier": "6f2e3cff-dc05-408a-a374-9f56bede6816",
+          "label": "PR2RightArm",
+          "pose": null,
+          "parameters": []
+        }
+      ],
+      "stored": {
+        "__json_type__": "coraplex.robot_plans.actions.core.robot_body.ParkArmsAction",
+        "name": "ParkArmsAction",
+        "parent_node_index": 0,
+        "max_joint_velocity": null,
+        "arms": {
+          "__collection_type__": "builtins.list",
+          "__items__": [
+            {
+              "__json_type__": "semantic_digital_twin.world_description.world_entity.ReferencedWorldEntity",
+              "id": {
+                "__json_type__": "uuid.UUID",
+                "value": "b2bbd520-a13d-4361-8a82-274e3492e78c"
+              },
+              "name": {
+                "__json_type__": "semantic_digital_twin.datastructures.prefixed_name.PrefixedName",
+                "name": "PR2LeftArm",
+                "prefix": null
+              }
+            },
+            {
+              "__json_type__": "semantic_digital_twin.world_description.world_entity.ReferencedWorldEntity",
+              "id": {
+                "__json_type__": "uuid.UUID",
+                "value": "6f2e3cff-dc05-408a-a374-9f56bede6816"
+              },
+              "name": {
+                "__json_type__": "semantic_digital_twin.datastructures.prefixed_name.PrefixedName",
+                "name": "PR2RightArm",
+                "prefix": null
+              }
+            }
+          ]
+        },
+        "node_id": "baca3442-6ea4-4bbc-9258-66864989831b"
+      }
+    },
+    {
+      "id": 2,
+      "parent": 0,
+      "depth": 1,
+      "type": "MoveTorsoAction",
+      "designator": "MoveTorsoAction",
+      "status": "SUCCEEDED",
+      "started": 1.0,
+      "ended": 1.05,
+      "parameters": [
+        {
+          "name": "torso_state",
+          "value": "semantic_digital_twin.datastructures.definitions.TorsoState.HIGH"
+        }
+      ],
+      "references": [],
+      "stored": {
+        "__json_type__": "coraplex.robot_plans.actions.core.robot_body.MoveTorsoAction",
+        "name": "MoveTorsoAction",
+        "parent_node_index": 0,
+        "torso_state": {
+          "__json_type__": "semantic_digital_twin.datastructures.definitions.TorsoState",
+          "name": "HIGH"
+        },
+        "node_id": "ca7f7217-0f66-4945-8b0f-f116ffdfcfd3"
+      }
+    },
+    {
+      "id": 3,
+      "parent": 0,
+      "depth": 1,
+      "type": "NavigateAction",
+      "designator": "NavigateAction",
+      "status": "SUCCEEDED",
+      "started": 1.05,
+      "ended": 1.5,
+      "parameters": [],
+      "references": [
+        {
           "name": "target_location",
           "type": "Pose",
-          "identifier": 310,
+          "identifier": null,
           "label": null,
           "pose": {
             "frame": "map",
@@ -171,189 +156,84 @@
           "parameters": []
         }
       ],
-      "rows": [
-        {
-          "table": "PlanEntityDAO",
-          "values": {
-            "database_id": 13,
-            "polymorphic_type": "ActionNodeDAO",
-            "_plan_id": 2
-          }
+      "stored": {
+        "__json_type__": "coraplex.robot_plans.actions.core.navigation.NavigateAction",
+        "name": "NavigateAction",
+        "parent_node_index": 0,
+        "target_location": {
+          "__json_type__": "krrood_spatial_math.spatial_types.Pose",
+          "reference_frame_id": {
+            "__json_type__": "uuid.UUID",
+            "value": "1dba170a-618f-4671-9faf-31fe7f76bb95"
+          },
+          "reference_frame_name": {
+            "__json_type__": "semantic_digital_twin.datastructures.prefixed_name.PrefixedName",
+            "name": "map",
+            "prefix": null
+          },
+          "position": [
+            0.5,
+            -1.0,
+            0.0,
+            1.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
         },
-        {
-          "table": "PlanNodeDAO",
-          "values": {
-            "database_id": 13,
-            "start_time": "2026-10-14 17:02:10.000000",
-            "end_time": null,
-            "status": "giskardpy.motion_statechart.data_types.LifeCycleValues.NOT_STARTED",
-            "_reason_id": null
-          }
-        },
-        {
-          "table": "DesignatorNodeDAO",
-          "values": {
-            "database_id": 13,
-            "_designator_id": 15
-          }
-        },
-        {
-          "table": "ActionNodeDAO",
-          "values": {
-            "database_id": 13,
-            "_execution_data_id": null
-          }
-        },
-        {
-          "table": "DesignatorDAO",
-          "values": {
-            "database_id": 15,
-            "polymorphic_type": "NavigateActionDAO"
-          }
-        },
-        {
-          "table": "ActionDescriptionDAO",
-          "values": {
-            "database_id": 15
-          }
-        },
-        {
-          "table": "NavigateActionDAO",
-          "values": {
-            "database_id": 15,
-            "keep_joint_states": true,
-            "_target_location_id": 310
-          }
-        }
-      ]
+        "node_id": "d3179687-70ee-466e-b40f-14d66d107bc8"
+      }
     },
     {
-      "id": 14,
-      "parent": 11,
-      "depth": 1,
-      "type": "ActionNode",
-      "designator": "PouringAction",
+      "id": 4,
+      "parent": 3,
+      "depth": 2,
+      "type": "SetOdometry",
+      "designator": null,
+      "status": "SUCCEEDED",
+      "started": 1.05,
+      "ended": 1.5,
       "parameters": [
         {
-          "name": "position_threshold",
-          "value": null
-        },
-        {
-          "name": "orientation_threshold",
-          "value": null
-        },
-        {
-          "name": "tilt_angle",
-          "value": 1.6
-        },
-        {
-          "name": "pour_side_offset",
-          "value": -0.188
-        },
-        {
-          "name": "pour_approach_offset",
-          "value": 0.0
-        },
-        {
-          "name": "pour_height",
-          "value": 0.13
-        },
-        {
-          "name": "arm",
-          "value": "coraplex.datastructures.enums.Arms.RIGHT"
-        },
-        {
-          "name": "pour_side",
-          "value": "coraplex.datastructures.enums.Arms.RIGHT"
+          "name": "base_pose_threshold",
+          "value": 0.01
         }
       ],
-      "references": [
+      "references": [],
+      "stored": {
+        "__json_type__": "giskardpy.motion_statechart.monitors.overwrite_state_monitors.SetOdometry",
+        "name": "SetOdometry",
+        "parent_node_index": 3,
+        "base_pose_threshold": 0.01,
+        "node_id": "e4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8"
+      }
+    },
+    {
+      "id": 5,
+      "parent": null,
+      "depth": 0,
+      "type": "EndMotion",
+      "designator": null,
+      "status": "SUCCEEDED",
+      "started": 1.5,
+      "ended": 1.55,
+      "parameters": [
         {
-          "name": "target_container",
-          "type": "Body",
-          "identifier": 101,
-          "label": "bowl.stl",
-          "pose": null,
-          "parameters": []
-        },
-        {
-          "name": "source_container",
-          "type": "PouringCup",
-          "identifier": 100,
-          "label": "PouringCup",
-          "pose": null,
-          "parameters": []
+          "name": "joint_convergence_threshold",
+          "value": 0.01
         }
       ],
-      "rows": [
-        {
-          "table": "PlanEntityDAO",
-          "values": {
-            "database_id": 14,
-            "polymorphic_type": "ActionNodeDAO",
-            "_plan_id": 2
-          }
-        },
-        {
-          "table": "PlanNodeDAO",
-          "values": {
-            "database_id": 14,
-            "start_time": "2026-10-14 17:02:10.000000",
-            "end_time": null,
-            "status": "giskardpy.motion_statechart.data_types.LifeCycleValues.NOT_STARTED",
-            "_reason_id": null
-          }
-        },
-        {
-          "table": "DesignatorNodeDAO",
-          "values": {
-            "database_id": 14,
-            "_designator_id": 14
-          }
-        },
-        {
-          "table": "ActionNodeDAO",
-          "values": {
-            "database_id": 14,
-            "_execution_data_id": null
-          }
-        },
-        {
-          "table": "DesignatorDAO",
-          "values": {
-            "database_id": 14,
-            "polymorphic_type": "PouringActionDAO"
-          }
-        },
-        {
-          "table": "ActionDescriptionDAO",
-          "values": {
-            "database_id": 14
-          }
-        },
-        {
-          "table": "FullBodyControlledActionDAO",
-          "values": {
-            "database_id": 14
-          }
-        },
-        {
-          "table": "PouringActionDAO",
-          "values": {
-            "database_id": 14,
-            "position_threshold": null,
-            "orientation_threshold": null,
-            "tilt_angle": 1.6,
-            "pour_side_offset": -0.188,
-            "pour_approach_offset": 0.0,
-            "pour_height": 0.13,
-            "arm": "coraplex.datastructures.enums.Arms.RIGHT",
-            "pour_side": "coraplex.datastructures.enums.Arms.RIGHT",
-            "_target_container_id": 101,
-            "_source_container_id": 100
-          }
-        }
-      ]
+      "references": [],
+      "stored": {
+        "__json_type__": "giskardpy.motion_statechart.graph_node.EndMotion",
+        "name": "EndMotion",
+        "parent_node_index": null,
+        "joint_convergence_threshold": 0.01,
+        "node_id": "f5a6b7c8-d9e0-4f1a-b2c3-d4e5f6a7b8c9"
+      }
     }
   ]
 }

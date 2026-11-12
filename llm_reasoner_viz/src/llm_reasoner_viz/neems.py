@@ -10,13 +10,12 @@ import re
 import sqlite3
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 
 from typing_extensions import Any, Dict, Iterator, List, Optional
 
-from llm_reasoner_viz.neem_plan import PlanNode, PlanReader
-from llm_reasoner_viz.neem_schema import Column, Table
+from llm_reasoner_viz.neem_plan import PlanNode, PlanReader, StoredStatechart
+from llm_reasoner_viz.neem_schema import Table
 
 # %% what can go wrong
 
@@ -79,35 +78,23 @@ class PlanSummary:
 
     status: str
     """
-    How the root of the plan ended, such as ``SUCCEEDED``.
-
-    The steps below the root are recorded as not started even in a plan that was
-    performed, so only the root says.
-    """
-
-    started: Optional[datetime]
-    """
-    When the plan began.
-    """
-
-    ended: Optional[datetime]
-    """
-    When the plan ended; none while it has not.
+    How the node the plan was performed from ended, such as ``SUCCEEDED``, or where it
+    was when the NEEM was kept.
     """
 
     seconds: Optional[float]
     """
-    How long the plan lasted; none while it has not ended.
+    How long the plan lasted in the simulation; none while it has not ended.
     """
 
     nodes: int
     """
-    How many nodes the plan has, the root included.
+    How many nodes the statechart of the plan has, those its executor added included.
     """
 
     steps: int
     """
-    How many actions are directly below the root.
+    How many actions are directly below the node the plan was performed from.
     """
 
     def to_json(self) -> Dict[str, Any]:
@@ -117,12 +104,31 @@ class PlanSummary:
         return {
             "neem": self.neem,
             "status": self.status,
-            "started": self.started and self.started.isoformat(),
-            "ended": self.ended and self.ended.isoformat(),
             "seconds": self.seconds,
             "nodes": self.nodes,
             "steps": self.steps,
         }
+
+    @classmethod
+    def from_statechart(cls, *, neem: int, statechart: StoredStatechart) -> PlanSummary:
+        """
+        :return: The summary of a plan, from how the node it was performed from went.
+        """
+        root = statechart.plan_root
+        started = statechart.started(index=root)
+        ended = statechart.ended(index=root)
+        return cls(
+            neem=neem,
+            status=statechart.final_state(index=root).name,
+            seconds=ended - started
+            if started is not None and ended is not None
+            else None,
+            nodes=len(statechart.nodes),
+            steps=sum(
+                statechart.is_action(index=child)
+                for child in statechart.children.get(root, [])
+            ),
+        )
 
 
 # %% reading
@@ -131,11 +137,6 @@ class PlanSummary:
 UNMISSED_COLUMN = re.compile(r"no such column: (\S+)")
 """
 How the database says that a column is not there.
-"""
-
-STATUS_SEPARATOR = "."
-"""
-What separates the name of a status from the module and the class that name it.
 """
 
 BUSY_CODES = (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED)
@@ -216,14 +217,13 @@ class NeemDatabase:
         if not self.exists:
             return []
         with self.connection() as connection:
-            rows = connection.execute(f"""
-                select plan.{Column.IDENTIFIER}, node.{Column.STATUS},
-                       node.{Column.STARTED}, node.{Column.ENDED}, plan.{Column.ROOT}
-                from "{Table.PLAN}" plan
-                join "{Table.NODE}" node on node.{Column.IDENTIFIER} = plan.{Column.ROOT}
-                order by plan.{Column.IDENTIFIER}
-                """).fetchall()
-            return [self.summary_of(connection, *row) for row in rows]
+            reader = PlanReader(connection=connection)
+            return [
+                PlanSummary.from_statechart(
+                    neem=neem, statechart=reader.statechart(neem=neem)
+                )
+                for neem in reader.neems()
+            ]
 
     def nodes(self, neem: int) -> List[PlanNode]:
         """
@@ -233,55 +233,8 @@ class NeemDatabase:
         if not self.exists:
             raise UnknownNeem(neem)
         with self.connection() as connection:
-            found = connection.execute(
-                f'select {Column.ROOT} from "{Table.PLAN}" where {Column.IDENTIFIER} = ?',
-                (neem,),
-            ).fetchone()
-            if found is None:
+            reader = PlanReader(connection=connection)
+            statechart = reader.statechart(neem=neem)
+            if statechart is None:
                 raise UnknownNeem(neem)
-            return PlanReader(connection=connection).nodes(found[0])
-
-    def summary_of(
-        self,
-        connection: sqlite3.Connection,
-        neem: int,
-        status: str,
-        started: Optional[str],
-        ended: Optional[str],
-        root: int,
-    ) -> PlanSummary:
-        """
-        :return: The summary of a plan, from how its root ended and a count of its nodes.
-        """
-        begun = datetime.fromisoformat(started) if started else None
-        finished = datetime.fromisoformat(ended) if ended else None
-        (nodes,) = connection.execute(
-            f"""
-            with recursive below(node) as (
-                select ?
-                union all
-                select edge.{Column.CHILD} from "{Table.EDGE}" edge
-                join below on edge.{Column.PARENT} = below.node
-            )
-            select count(*) from below
-            """,
-            (root,),
-        ).fetchone()
-        (steps,) = connection.execute(
-            f"""
-            select count(*) from "{Table.EDGE}" edge
-            join "{Table.ACTION_NODE}" action
-              on action.{Column.IDENTIFIER} = edge.{Column.CHILD}
-            where edge.{Column.PARENT} = ?
-            """,
-            (root,),
-        ).fetchone()
-        return PlanSummary(
-            neem=neem,
-            status=status.rsplit(STATUS_SEPARATOR, 1)[-1],
-            started=begun,
-            ended=finished,
-            seconds=(finished - begun).total_seconds() if begun and finished else None,
-            nodes=nodes,
-            steps=steps,
-        )
+            return reader.nodes(statechart=statechart)

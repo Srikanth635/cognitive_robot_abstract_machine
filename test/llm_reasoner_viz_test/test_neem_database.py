@@ -5,13 +5,12 @@ went, read without ever changing the database, and refused when it is not one.
 
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 
 import pytest
 
 from llm_reasoner_viz import paths
-from llm_reasoner_viz.neem_schema import Table
+from llm_reasoner_viz.neem_schema import LifeCycle, Table
 from llm_reasoner_viz.neems import (
     NeemDatabase,
     NeemDatabaseBusy,
@@ -19,7 +18,34 @@ from llm_reasoner_viz.neems import (
     UnknownNeemSchema,
 )
 
-from .neem_files import Change, being_written, change_database, write_neem_database
+from .neem_files import (
+    Change,
+    KeptPlan,
+    being_written,
+    change_database,
+    write_neem_database,
+)
+
+# %% helpers
+
+
+def tick_duration(plan: KeptPlan) -> float:
+    """
+    :return: How many seconds a tick of the plan lasted.
+    """
+    return plan.recording["tick_duration"]
+
+
+def ended_tick(plan: KeptPlan) -> int:
+    """
+    :return: The first tick the node the plan was performed from had ended on.
+    """
+    return next(
+        states["tick"]
+        for states in plan.recording["ticks"]
+        if LifeCycle(states["life_cycles"][0]).is_terminal
+    )
+
 
 # %% where the database is
 
@@ -65,21 +91,27 @@ class TestPlans:
     def test_every_plan_is_listed_in_the_order_of_its_identifiers(self, database):
         assert [plan.neem for plan in database.plans()] == [1, 2]
 
-    def test_a_plan_is_how_its_root_ended(self, database):
-        first, _ = database.plans()
-        assert first.status == "SUCCEEDED"
-        assert first.started == datetime(2026, 10, 14, 16, 48, 50)
-        assert first.ended == datetime(2026, 10, 14, 16, 48, 52, 500000)
-        assert first.seconds == 2.5
+    def test_a_plan_is_how_the_node_it_was_performed_from_ended(self, database):
+        first, second = database.plans()
+        assert first.status == LifeCycle.FAILED.name
+        assert second.status == LifeCycle.SUCCEEDED.name
 
-    def test_a_plan_whose_root_has_not_ended_has_no_duration(self, database):
-        change_database(database.path, Change.END_TIME_CLEARED)
+    def test_a_plan_lasts_until_the_node_it_was_performed_from_ended(self, database):
         first, _ = database.plans()
-        assert first.ended is None
-        assert first.seconds is None
+        assert first.seconds == ended_tick(KeptPlan.POUR) * tick_duration(KeptPlan.POUR)
 
-    def test_a_plan_counts_its_nodes_the_root_included(self, database):
-        assert [plan.nodes for plan in database.plans()] == [5, 4]
+    def test_a_plan_whose_root_has_not_ended_is_running_and_has_no_duration(
+        self, database
+    ):
+        change_database(database.path, Change.PLAN_NOT_ENDED)
+        _, second = database.plans()
+        assert second.status == LifeCycle.RUNNING.name
+        assert second.seconds is None
+
+    def test_a_plan_counts_every_node_of_its_statechart(self, database):
+        assert [plan.nodes for plan in database.plans()] == [
+            len(plan.recording["structure"]["nodes"]) for plan in KeptPlan
+        ]
 
     def test_a_plan_counts_the_actions_directly_below_its_root_as_its_steps(
         self, database
@@ -90,12 +122,10 @@ class TestPlans:
         first, _ = database.plans()
         assert first.to_json() == {
             "neem": 1,
-            "status": "SUCCEEDED",
-            "started": "2026-10-14T16:48:50",
-            "ended": "2026-10-14T16:48:52.500000",
-            "seconds": 2.5,
-            "nodes": 5,
-            "steps": 2,
+            "status": first.status,
+            "seconds": first.seconds,
+            "nodes": first.nodes,
+            "steps": first.steps,
         }
 
     def test_a_database_without_plans_lists_none(self, tmp_path):
@@ -128,4 +158,4 @@ class TestReadingSafely:
         change_database(path, Change.UNRELATED_TABLE)
         with pytest.raises(UnknownNeemSchema) as refused:
             NeemDatabase(path=path).plans()
-        assert refused.value.missing == Table.PLAN
+        assert refused.value.missing == Table.STATECHART
