@@ -16,7 +16,7 @@ from semantic_digital_twin.robots.robot_parts import AbstractRobot, AbstractRobo
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.adapters.mesh import STLParser
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Bowl, Milk
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from krrood_spatial_math.spatial_types import HomogeneousTransformationMatrix
 
 from cram_viz.resolution.scene_geometry import (
     COORDINATE_DIGITS,
@@ -53,7 +53,7 @@ def add_object(world, mesh: str, kind: type) -> None:
     Add the mesh to the world as an object of the kind.
     """
     world.merge_world_at_pose(
-        STLParser(str(OBJECT_MESHES / mesh)).parse(),
+        STLParser(str(OBJECT_MESHES / mesh)).create_world(),
         HomogeneousTransformationMatrix.from_xyz_rpy(
             0.0, 0.0, 0.0, reference_frame=world.root
         ),

@@ -109,7 +109,7 @@ class TestGraphWriter:
         graph = written(chained_structure())
         assert (
             URIRef(HYPOTHESIS_NAMESPACE + "tilt_to_regulate"),
-            URIRef(PropertyTerm.of_field(core.PhaseTransition, "from_phase").iri),
+            URIRef(PropertyTerm.of_field(clazz=core.PhaseTransition, field_name="from_phase").iri),
             URIRef(HYPOTHESIS_NAMESPACE + "tilt"),
         ) in graph
 
@@ -117,14 +117,14 @@ class TestGraphWriter:
         graph = written(chained_structure())
         assert (
             URIRef(HYPOTHESIS_NAMESPACE + "tilt"),
-            URIRef(PropertyTerm.of_field(core.ActionPhase, "has_coupling_regime").iri),
+            URIRef(PropertyTerm.of_field(clazz=core.ActionPhase, field_name="has_coupling_regime").iri),
             URIRef(core.CouplingRegime.COUPLED.value),
         ) in graph
 
     def test_inferred_super_property_is_not_written(self):
         graph = written(chained_structure())
         defines_component = URIRef(
-            PropertyTerm.of_field(core.ActionPhaseStructure, "defines_component").iri
+            PropertyTerm.of_field(clazz=core.ActionPhaseStructure, field_name="defines_component").iri
         )
         assert list(graph.triples((None, defines_component, None))) == []
 

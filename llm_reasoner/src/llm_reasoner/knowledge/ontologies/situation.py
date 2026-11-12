@@ -124,7 +124,7 @@ class SituationFeatures:
         """
         functional = {}
         for declared in fields(root_type):
-            term = PropertyTerm.of_field(root_type, declared.name)
+            term = PropertyTerm.of_field(clazz=root_type, field_name=declared.name)
             if term is not None and term.functional:
                 functional[term.iri] = declared.name
         return functional

@@ -389,7 +389,7 @@ class LanguageModelBackend(GenerativeBackend):
 
     # %% evaluation
 
-    def _evaluate(self, expression: Match[T]) -> Iterable[T]:
+    def _evaluate(self, *, expression: Match[T]) -> Iterable[T]:
         self.justifications = []
         self.opened_slots = []
         self._leave_withheld_open(expression)
@@ -1039,7 +1039,7 @@ class LanguageModelBackend(GenerativeBackend):
     @staticmethod
     def _construct(expression: Match[T], assignment: Dict[str, Any]) -> T:
         """
-        Write an assignment back into the match and build the instance.
+        Build the instance the match describes with the assignment's values.
 
         The instance is built by the factory the caller supplied, so this package never
         imports the types it constructs.
@@ -1048,10 +1048,12 @@ class LanguageModelBackend(GenerativeBackend):
         :param assignment: Values keyed by access path.
         :return: The constructed instance.
         """
-        for path, value in assignment.items():
-            expression._get_mapped_variable_by_name(path)._value_ = value
-        expression._update_kwargs_from_literal_values()
-        return expression.construct_instance()
+        return expression._construct_instance_from_bindings_(
+            bindings={
+                expression._find_assigned_variable_(access_path_name=path)._id_: value
+                for path, value in assignment.items()
+            }
+        )
 
     @staticmethod
     def _validate(expression: Match[T], instances: List[T]) -> List[T]:
@@ -1082,10 +1084,10 @@ class LanguageModelBackend(GenerativeBackend):
                     )
                 ],
             )
-        expression._variable_._update_domain_(meeting)
+        expression._variable_._update_domain_(domain=meeting)
         return list(
             entity(expression._variable_)
-            ._quantify_(expression._quantifier_type_)
+            ._quantify_(quantifier_type=expression._quantifier_type_)
             ._evaluate_natively_()
         )
 
@@ -1099,8 +1101,8 @@ class LanguageModelBackend(GenerativeBackend):
         :param conditions: Conditions bound through the match's variable.
         :return: The candidates meeting every one of the conditions.
         """
-        expression._variable_._update_domain_(instances)
-        query = entity(expression._variable_)._quantify_(An)
+        expression._variable_._update_domain_(domain=instances)
+        query = entity(expression._variable_)._quantify_(quantifier_type=An)
         if conditions:
             query = query.where(*conditions)
         return list(query._evaluate_natively_())

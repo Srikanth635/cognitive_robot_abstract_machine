@@ -136,7 +136,7 @@ class TestReadingASharedMember:
                 individual,
                 URIRef(
                     PropertyTerm.of_field(
-                        core.CorrectiveAction, "has_correction_direction"
+                        clazz=core.CorrectiveAction, field_name="has_correction_direction"
                     ).iri
                 ),
                 URIRef(action_core.ChangeDirection.INCREASES.value),

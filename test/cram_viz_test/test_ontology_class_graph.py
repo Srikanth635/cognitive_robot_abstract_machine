@@ -151,7 +151,7 @@ class TestLinks:
         } <= targets
 
     def test_structure_declares_its_phases_as_components(self, graph, view):
-        defines_phase = PropertyTerm.of_field(type(view.root), "defines_phase").iri
+        defines_phase = PropertyTerm.of_field(clazz=type(view.root), field_name="defines_phase").iri
         component = [
             edge
             for edge in edges(graph, OntologyEdgeKind.COMPONENT)
@@ -163,7 +163,7 @@ class TestLinks:
         }
 
     def test_relation_counts_the_links_the_hypothesis_states(self, graph, view):
-        involves_role = PropertyTerm.of_field(core.ActionPhase, "involves_role").iri
+        involves_role = PropertyTerm.of_field(clazz=core.ActionPhase, field_name="involves_role").iri
         lift = prehension.LiftPhase
         expected = Counter(
             type(role).term.iri
@@ -180,7 +180,7 @@ class TestLinks:
 
     def test_cited_concept_is_linked_by_the_property_citing_it(self, graph, view):
         realizes = PropertyTerm.of_field(
-            core.ActionPhase, "realizes_action_category"
+            clazz=core.ActionPhase, field_name="realizes_action_category"
         ).iri
         assert any(
             edge.property_iri == realizes

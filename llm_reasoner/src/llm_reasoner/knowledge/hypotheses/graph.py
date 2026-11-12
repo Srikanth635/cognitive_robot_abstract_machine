@@ -272,7 +272,7 @@ class HypothesisGraphProjector:
                         indices[id(fragment)],
                         name,
                         target_index,
-                        PropertyTerm.of_field(type(fragment), name).iri,
+                        PropertyTerm.of_field(clazz=type(fragment), field_name=name).iri,
                     )
         return HypothesisGraph(
             graph=graph,
@@ -311,7 +311,7 @@ class HypothesisGraphProjector:
         links: dict[str, list[int]] = {}
         for declared in fields(fragment):
             if PropertyTerm.of_field(
-                type(fragment), declared.name
+                clazz=type(fragment), field_name=declared.name
             ) is None or is_inferred(type(fragment), declared.name):
                 continue
             value: Any = attrgetter(declared.name)(fragment)
@@ -350,7 +350,7 @@ class HypothesisGraphProjector:
                     group_index,
                     name,
                     target_index,
-                    PropertyTerm.of_field(type(root.source), name).iri,
+                    PropertyTerm.of_field(clazz=type(root.source), field_name=name).iri,
                 )
 
     @staticmethod

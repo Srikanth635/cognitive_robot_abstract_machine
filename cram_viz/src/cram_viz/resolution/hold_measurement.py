@@ -87,7 +87,7 @@ class MeasuredHolding(Holding):
             )
             if finished.returncode != 0:
                 raise PickUpFailed(reason=finished.stderr.strip().splitlines()[-1])
-            return HeldSource.from_json(json.loads(held_file.read_text()))
+            return HeldSource.from_json(data=json.loads(held_file.read_text()))
 
 
 def main() -> None:

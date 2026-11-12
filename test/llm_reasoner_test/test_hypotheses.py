@@ -341,7 +341,7 @@ class TestHypothesisGraphProjector:
             == view.citation_of(fragment_named(view, "lift_to_tilt")).iri
         ]
         assert to_phase.property_iri == (
-            PropertyTerm.of_field(core.PhaseTransition, "to_phase").iri
+            PropertyTerm.of_field(clazz=core.PhaseTransition, field_name="to_phase").iri
         )
         (describes,) = [
             relation

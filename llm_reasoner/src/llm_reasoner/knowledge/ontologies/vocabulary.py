@@ -49,7 +49,7 @@ def declared_value_types(owner: type[DescriptionEntity]) -> dict[str, type]:
     """
     return {
         wrapped.field.name: wrapped.type_endpoint
-        for wrapped in WrappedClass(owner).fields
+        for wrapped in WrappedClass(clazz=owner).fields
     }
 
 
@@ -109,7 +109,7 @@ class Vocabulary:
             records, which is more specific than the field's annotation when the class
             is generated in a later module, or else the annotated type.
         """
-        term = PropertyTerm.of_field(owner, name)
+        term = PropertyTerm.of_field(clazz=owner, field_name=name)
         if term is None or not term.range:
             return annotated
         return self.definition_named(term.range)
@@ -143,7 +143,7 @@ class Vocabulary:
         """
         return {
             declared.name: self.definition_named(
-                PropertyTerm.of_field(structure_type, declared.name).range
+                PropertyTerm.of_field(clazz=structure_type, field_name=declared.name).range
             )
             for declared in fields(structure_type)
             for descriptor in [
@@ -189,7 +189,7 @@ class Vocabulary:
         """
         wrapped_fields = {
             wrapped.field.name: wrapped
-            for wrapped in WrappedClass(type(instance)).fields
+            for wrapped in WrappedClass(clazz=type(instance)).fields
         }
         for name, entailed in self.entailed_values(type(instance)).items():
             value = self.held_by_field(type(instance), name, entailed)
@@ -201,7 +201,7 @@ class Vocabulary:
             ):
                 continue
             stated = attrgetter(name)(instance)
-            if PropertyTerm.of_field(type(instance), name).functional:
+            if PropertyTerm.of_field(clazz=type(instance), field_name=name).functional:
                 if stated is None:
                     setattr(instance, name, value)
             elif value not in stated:
@@ -291,7 +291,7 @@ class Vocabulary:
         if not isinstance(entity, DescriptionEntity):
             return None
         for declared in fields(entity):
-            term = PropertyTerm.of_field(type(entity), declared.name)
+            term = PropertyTerm.of_field(clazz=type(entity), field_name=declared.name)
             if term is not None and term.iri == property_iri:
                 return term.functional
         return None

@@ -761,7 +761,7 @@ class KnowledgeQuestions:
         """
         stated: dict[str, Any] = {}
         for declared in fields(fragment):
-            if PropertyTerm.of_field(type(fragment), declared.name) is None or (
+            if PropertyTerm.of_field(clazz=type(fragment), field_name=declared.name) is None or (
                 is_inferred(type(fragment), declared.name)
             ):
                 continue

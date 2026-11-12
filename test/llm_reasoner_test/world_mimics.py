@@ -302,5 +302,5 @@ def body_moved_by_a_readable_joint(joint_position: List[float]) -> WorldBody:
         moves the joint.
     :return: A body whose position depends on a joint the world can read.
     """
-    joint = FloatVariable.create_with_resolver("lid_joint", lambda: joint_position[0])
+    joint = FloatVariable.create_with_resolver(name="lid_joint", resolver=lambda: joint_position[0])
     return WorldBody(name="lid", position=Vector([joint, 0.0, 0.0]))

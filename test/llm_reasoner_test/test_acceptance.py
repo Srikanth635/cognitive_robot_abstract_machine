@@ -50,7 +50,7 @@ def property_iri(cls: type[DescriptionEntity], field_name: str) -> str:
     """
     Return the IRI of the ontology property a generated field stands for.
     """
-    return PropertyTerm.of_field(cls, field_name).iri
+    return PropertyTerm.of_field(clazz=cls, field_name=field_name).iri
 
 
 def restriction_on(

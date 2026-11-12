@@ -32,7 +32,7 @@ from krrood.ormatic.utils import create_engine
 from semantic_digital_twin.datastructures.definitions import TorsoState
 from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Milk
-from semantic_digital_twin.spatial_types.spatial_types import Pose
+from krrood_spatial_math.spatial_types import Pose
 from sqlalchemy.orm import sessionmaker
 
 DEFAULT_DATABASE_PATH = Path("pickup_neem.sqlite")

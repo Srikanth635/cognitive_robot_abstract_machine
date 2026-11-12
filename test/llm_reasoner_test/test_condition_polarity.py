@@ -74,7 +74,7 @@ class TestTheTerm:
 
     @pytest.mark.parametrize("owner, field_name", POLARITY_FIELDS)
     def test_every_polarity_property_ranges_over_it(self, graphs, owner, field_name):
-        prop = URIRef(PropertyTerm.of_field(owner, field_name).iri)
+        prop = URIRef(PropertyTerm.of_field(clazz=owner, field_name=field_name).iri)
         ranges = {
             value_range
             for graph in graphs.values()
@@ -108,7 +108,7 @@ class TestThePredictiveManipulationCore:
         graph = graphs[PredictiveManipulationOntologyFile.CORE]
         prop = URIRef(
             PropertyTerm.of_field(
-                core.ConditionRequirement, "has_condition_polarity"
+                clazz=core.ConditionRequirement, field_name="has_condition_polarity"
             ).iri
         )
         named = {

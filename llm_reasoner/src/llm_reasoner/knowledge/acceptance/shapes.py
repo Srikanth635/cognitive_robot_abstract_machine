@@ -218,7 +218,7 @@ class ShapesHold(AcceptanceRule):
                 continue
             seen[id(fragment)] = fragment
             for declared in fields(fragment):
-                if PropertyTerm.of_field(type(fragment), declared.name) is None:
+                if PropertyTerm.of_field(clazz=type(fragment), field_name=declared.name) is None:
                     continue
                 value: Any = attrgetter(declared.name)(fragment)
                 queue.extend(

@@ -597,7 +597,7 @@ class TestHypothesisBackend:
         self,
     ):
         SymbolGraph.clear_instance()
-        SymbolGraph(_class_diagram=ClassDiagram([]))
+        SymbolGraph(_class_diagram=ClassDiagram(classes=[]))
         backend = backend_answering(GenerationCase.CHAINED_STRUCTURE)
         (structure,) = pouring_query().evaluate(backend=backend)
         assert isinstance(structure, core.ActionPhaseStructure)

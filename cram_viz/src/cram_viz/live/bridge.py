@@ -28,7 +28,7 @@ from pathlib import Path
 from typing_extensions import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from krrood_spatial_math.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world_description.connections import (
     ActiveConnection1DOF,
     Connection6DoF,

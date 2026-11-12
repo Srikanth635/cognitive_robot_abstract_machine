@@ -118,7 +118,7 @@ class HypothesisStore:
         location = self.directory / record_id
         return StoredHypothesis(
             record=HypothesisRecord.from_json(
-                json.loads((location / StoredFile.RECORD).read_text())
+                data=json.loads((location / StoredFile.RECORD).read_text())
             ),
             graph=Graph().parse(location / StoredFile.HYPOTHESIS, format="turtle"),
         )
@@ -175,7 +175,7 @@ class HypothesisStore:
         if not self.directory.is_dir():
             return []
         records = [
-            HypothesisRecord.from_json(json.loads(path.read_text()))
+            HypothesisRecord.from_json(data=json.loads(path.read_text()))
             for path in self.directory.glob(f"*/{StoredFile.RECORD}")
             if not path.parent.name.startswith(INCOMING_PREFIX)
         ]

@@ -92,7 +92,7 @@ class TestTheTerm:
 
     @pytest.mark.parametrize("owner, field_name", CONDITION_FIELDS)
     def test_every_condition_property_ranges_over_it(self, graph, owner, field_name):
-        prop = URIRef(PropertyTerm.of_field(owner, field_name).iri)
+        prop = URIRef(PropertyTerm.of_field(clazz=owner, field_name=field_name).iri)
         assert set(graph.objects(prop, RDFS.range)) == {
             URIRef(action_core.SlotCondition.term.iri)
         }

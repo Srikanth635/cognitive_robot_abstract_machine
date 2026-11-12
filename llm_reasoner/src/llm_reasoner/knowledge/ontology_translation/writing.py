@@ -281,7 +281,7 @@ class VocabularyWriter:
         module = self.reader.module_declaration(module_file)
         rendering = ModuleRendering(module)
         return self.generator.render(
-            TemplateName.VOCABULARY_MODULE.value,
+            template_name=TemplateName.VOCABULARY_MODULE.value,
             module=module,
             packages={
                 read.vocabulary_module_name: read.vocabulary_package

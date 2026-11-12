@@ -114,7 +114,7 @@ class SymbolGraphSource(WorldSource):
     def individuals_of(self, kind: type) -> List[Any]:
         return [
             individual
-            for individual in SymbolGraph().get_instances_of_type(kind)
+            for individual in SymbolGraph().get_instances_of_type(type_=kind)
             if individual is not None and not self.excludes(type(individual))
         ]
 

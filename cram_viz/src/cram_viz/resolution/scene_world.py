@@ -26,7 +26,7 @@ from semantic_digital_twin.adapters.package_resolver import (
 )
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from krrood_spatial_math.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import OmniDrive
 from typing_extensions import Any, Mapping, Optional, Sequence
@@ -163,7 +163,7 @@ class SceneWorldBuilder:
         objects = scene.get(SceneKey.OBJECTS) or []
         for entry in objects:
             world.merge_world_at_pose(
-                STLParser(str(bundle / entry[SceneKey.MESH])).parse(),
+                STLParser(str(bundle / entry[SceneKey.MESH])).create_world(),
                 self.spawn_pose(entry[SceneKey.SPAWN], world),
             )
         self.annotate(world, objects)
@@ -287,7 +287,7 @@ class SceneWorldBuilder:
                     PackageUriResolver(),
                 ]
             ),
-        ).parse()
+        ).create_world()
 
     @staticmethod
     def spawn_pose(

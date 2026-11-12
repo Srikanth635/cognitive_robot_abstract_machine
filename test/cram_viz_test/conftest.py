@@ -22,7 +22,7 @@ from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Bowl,
     PouringCup,
 )
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from krrood_spatial_math.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world import World
 
 SCENE = {
@@ -285,7 +285,7 @@ def pouring_kitchen_template(pr2_apartment_world) -> World:
     kitchen = json.loads(KITCHEN.read_text())
     for entry in kitchen["objects"]:
         world.merge_world_at_pose(
-            STLParser(str(OBJECT_MESHES / entry["mesh"])).parse(),
+            STLParser(str(OBJECT_MESHES / entry["mesh"])).create_world(),
             HomogeneousTransformationMatrix.from_xyz_rpy(
                 *entry["position"], reference_frame=world.root
             ),

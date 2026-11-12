@@ -150,7 +150,7 @@ def field_type(cls: type, name: str) -> Any:
     Return the resolved type of a generated class's field, as krrood reads it.
     """
     (wrapped,) = [
-        wrapped for wrapped in WrappedClass(cls).fields if wrapped.field.name == name
+        wrapped for wrapped in WrappedClass(clazz=cls).fields if wrapped.field.name == name
     ]
     return wrapped.resolved_type
 
@@ -265,7 +265,7 @@ class TestProperties:
     """
 
     def test_field_typed_by_an_earlier_superclass_records_its_range(self):
-        term = PropertyTerm.of_field(core.ActionPhaseStructure, "defines_gaze_fixation")
+        term = PropertyTerm.of_field(clazz=core.ActionPhaseStructure, field_name="defines_gaze_fixation")
         assert term.range == gaze.GazeFixation.term.iri
 
     def test_every_microworld_property_is_a_field(self, ontology):
@@ -279,7 +279,7 @@ class TestProperties:
             URIRef(term.iri)
             for cls in description_classes().values()
             for name in cls.__dataclass_fields__
-            for term in [PropertyTerm.of_field(cls, name)]
+            for term in [PropertyTerm.of_field(clazz=cls, field_name=name)]
             if term is not None
         }
         assert properties - member_properties(ontology) <= fields
@@ -325,7 +325,7 @@ class TestProperties:
             (cls.__name__, name)
             for cls in defined
             for name in vars(cls).get("__annotations__", {})
-            if PropertyTerm.of_field(cls, name) is not None
+            if PropertyTerm.of_field(clazz=cls, field_name=name) is not None
         }
         assert declared_on_defined == set()
 
@@ -399,7 +399,7 @@ class TestIndependenceFromTheSymbolGraph:
     @pytest.fixture(autouse=True)
     def symbol_graph_knowing_no_vocabulary(self):
         SymbolGraph.clear_instance()
-        SymbolGraph(_class_diagram=ClassDiagram([]))
+        SymbolGraph(_class_diagram=ClassDiagram(classes=[]))
 
     def test_a_structure_is_built_while_the_graph_knows_no_vocabulary_class(self):
         phase = core.ActionPhase()
@@ -414,4 +414,4 @@ class TestIndependenceFromTheSymbolGraph:
 
     def test_knowledge_is_not_part_of_the_symbol_graph(self):
         structure = core.ActionPhaseStructure(defines_phase=[core.ActionPhase()])
-        assert SymbolGraph().get_wrapped_instance(structure) is None
+        assert SymbolGraph().get_wrapped_instance(instance=structure) is None

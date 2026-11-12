@@ -105,7 +105,7 @@ class ComponentsDeclared(TypedRule[core.ActionPhaseStructure]):
         while frontier:
             current = frontier.pop()
             for declared in fields(current):
-                if PropertyTerm.of_field(type(current), declared.name) is None:
+                if PropertyTerm.of_field(clazz=type(current), field_name=declared.name) is None:
                     continue
                 value = attrgetter(declared.name)(current)
                 for linked in value if isinstance(value, list) else [value]:

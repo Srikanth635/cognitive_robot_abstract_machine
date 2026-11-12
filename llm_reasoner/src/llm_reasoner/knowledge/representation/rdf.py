@@ -160,7 +160,7 @@ class GraphWriter:
             if fragment.label:
                 graph.add((subject, RDFS.label, Literal(fragment.label)))
             for declared in fields(fragment):
-                term = PropertyTerm.of_field(type(fragment), declared.name)
+                term = PropertyTerm.of_field(clazz=type(fragment), field_name=declared.name)
                 if term is None or is_inferred(type(fragment), declared.name):
                     continue
                 value = attrgetter(declared.name)(fragment)
@@ -346,7 +346,7 @@ class GraphReader:
         fields_by_property = {
             term.iri: (declared.name, term.functional)
             for declared in fields(instance)
-            for term in [PropertyTerm.of_field(type(instance), declared.name)]
+            for term in [PropertyTerm.of_field(clazz=type(instance), field_name=declared.name)]
             if term is not None
         }
         values: dict[str, list[Any]] = {}

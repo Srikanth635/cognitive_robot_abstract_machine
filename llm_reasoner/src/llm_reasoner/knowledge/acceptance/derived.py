@@ -237,8 +237,8 @@ class RangesHold(AcceptanceRule):
         vocabulary = Vocabulary()
         violations: list[Violation] = []
         for fragment in fragments:
-            for wrapped in WrappedClass(type(fragment)).fields:
-                if PropertyTerm.of_field(type(fragment), wrapped.field.name) is None:
+            for wrapped in WrappedClass(clazz=type(fragment)).fields:
+                if PropertyTerm.of_field(clazz=type(fragment), field_name=wrapped.field.name) is None:
                     continue
                 value = attrgetter(wrapped.field.name)(fragment)
                 values = value if isinstance(value, list) else [value]

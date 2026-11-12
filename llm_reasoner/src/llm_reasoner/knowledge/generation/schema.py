@@ -362,9 +362,9 @@ def type_schema_for(
             docstrings.update(attribute_docstrings(owner))
     vocabulary = Vocabulary()
     fields = []
-    for wrapped in WrappedClass(python_type).fields:
+    for wrapped in WrappedClass(clazz=python_type).fields:
         name = wrapped.field.name
-        term = PropertyTerm.of_field(python_type, name)
+        term = PropertyTerm.of_field(clazz=python_type, field_name=name)
         if name != LABEL_FIELD and (
             term is None
             or is_inferred(python_type, name)

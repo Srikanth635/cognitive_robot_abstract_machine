@@ -210,7 +210,7 @@ class HypothesisRecord(SubclassJSONSerializer):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+    def _from_json(cls, *, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             record_id=data[RecordField.RECORD_ID],
             created_at=data[RecordField.CREATED_AT],

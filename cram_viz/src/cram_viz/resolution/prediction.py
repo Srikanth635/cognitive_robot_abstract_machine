@@ -31,7 +31,7 @@ from llm_reasoner.world.access import WorldAccess
 from scipy.spatial.transform import Rotation, Slerp
 from semantic_digital_twin.robots.robot_parts import AbstractRobot, Arm
 from semantic_digital_twin.spatial_computations.ik_solver import IKSolverException
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix, Pose
+from krrood_spatial_math.spatial_types import HomogeneousTransformationMatrix, Pose
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Dict, List, Mapping, Self
@@ -145,7 +145,7 @@ class HeldSource(SubclassJSONSerializer):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+    def _from_json(cls, *, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             source_in_tool_frame=np.array(data[HeldSourceKey.SOURCE_IN_TOOL_FRAME]),
             robot_yaw=float(data[HeldSourceKey.ROBOT_YAW]),

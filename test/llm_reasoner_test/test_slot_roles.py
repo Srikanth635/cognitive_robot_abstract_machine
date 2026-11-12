@@ -49,7 +49,7 @@ The designator whose fields the mapping kept as data maps to the frame.
 """
 
 IS_PART_OF_SLOT = URIRef(
-    PropertyTerm.of_field(action_core.PartSlot, "is_part_of_slot").iri
+    PropertyTerm.of_field(clazz=action_core.PartSlot, field_name="is_part_of_slot").iri
 )
 """
 The core's property relating a part slot to the slot of the participant it is part of.

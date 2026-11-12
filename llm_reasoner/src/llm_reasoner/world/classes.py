@@ -220,7 +220,7 @@ class DocumentedClass:
         """
         :return: Whether the field is part of what the class serialises.
         """
-        metadata = JSONMetadata.of_field(self.described, declared.name)
+        metadata = JSONMetadata.of_field(clazz=self.described, field_name=declared.name)
         return metadata is None or metadata.serialize
 
     @staticmethod
