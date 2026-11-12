@@ -1,0 +1,12 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX ar: <http://aicor.knowledge/ontologies/action-recipes.owl#>
+PREFIX co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#>
+SELECT DISTINCT ?root ?action ?relation ?condition ?expression ?language ?lexical WHERE {
+  ?record a ac:KnowledgeRecord ; ac:expressesDescription ?root .
+  ?root (ac:hasSubActionDescription|ar:hasStep/ar:stepAction)* ?action .
+  VALUES ?relation { ac:hasGoal ac:hasPrecondition ac:hasSuccessCriterion ac:hasFailureCriterion }
+  ?action ?relation ?condition .
+  OPTIONAL { ?condition co:hasExpression ?expression }
+  OPTIONAL { ?condition ac:expressionLanguage ?language }
+  OPTIONAL { ?condition ac:lexicalExpression ?lexical }
+}

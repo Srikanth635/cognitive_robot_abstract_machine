@@ -1,0 +1,10 @@
+# Bind ?record explicitly. These are requirements, not executed stage events.
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX ar: <http://aicor.knowledge/ontologies/action-recipes.owl#>
+SELECT ?recipe ?step ?index ?role ?action ?kind ?context
+WHERE {
+ ?record ac:expressesDescription ?recipe .
+ ?recipe ar:hasStep ?step .
+ ?step ar:positionIndex ?index ; ar:stepRole ?role ; ar:stepAction ?action ; ar:stepContext ?context .
+ ?action ac:hasActionKind ?kind .
+} ORDER BY ?index

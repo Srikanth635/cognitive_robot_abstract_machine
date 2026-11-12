@@ -1,0 +1,101 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix asp: <http://aicor.knowledge/ontologies/image-schemas.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/image-schemas.owl> a owl:Ontology ;
+    rdfs:label "Image schemas"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.9.0" .
+
+asp:container a owl:ObjectProperty ;
+    rdfs:label "Container"@en ;
+    rdfs:domain asp:ContainmentSchema ;
+    rdfs:range ac:EntitySpecification .
+
+asp:content a owl:ObjectProperty ;
+    rdfs:label "Content"@en ;
+    rdfs:domain asp:ContainmentSchema ;
+    rdfs:range ac:EntitySpecification .
+
+asp:firstContactEntity a owl:ObjectProperty ;
+    rdfs:label "First Contact Entity"@en ;
+    rdfs:domain asp:ContactSchema ;
+    rdfs:range ac:EntitySpecification .
+
+asp:goal a owl:ObjectProperty ;
+    rdfs:label "Goal"@en ;
+    rdfs:domain asp:SourcePathGoalSchema ;
+    rdfs:range ac:EntitySpecification .
+
+asp:hasPathElement a owl:ObjectProperty ;
+    rdfs:label "Has Path Element"@en ;
+    rdfs:domain asp:SourcePathGoalSchema ;
+    rdfs:range asp:PathElement .
+
+asp:location a owl:ObjectProperty ;
+    rdfs:label "Location"@en ;
+    rdfs:domain asp:PathElement ;
+    rdfs:range ac:EntitySpecification .
+
+asp:position a owl:DatatypeProperty ;
+    rdfs:label "Position"@en ;
+    rdfs:domain asp:PathElement ;
+    rdfs:range xsd:positiveInteger .
+
+asp:secondContactEntity a owl:ObjectProperty ;
+    rdfs:label "Second Contact Entity"@en ;
+    rdfs:domain asp:ContactSchema ;
+    rdfs:range ac:EntitySpecification .
+
+asp:source a owl:ObjectProperty ;
+    rdfs:label "Source"@en ;
+    rdfs:domain asp:SourcePathGoalSchema ;
+    rdfs:range ac:EntitySpecification .
+
+asp:supported a owl:ObjectProperty ;
+    rdfs:label "Supported"@en ;
+    rdfs:domain asp:SupportSchema ;
+    rdfs:range ac:EntitySpecification .
+
+asp:supporter a owl:ObjectProperty ;
+    rdfs:label "Supporter"@en ;
+    rdfs:domain asp:SupportSchema ;
+    rdfs:range ac:EntitySpecification .
+
+asp:theme a owl:ObjectProperty ;
+    rdfs:label "Theme"@en ;
+    rdfs:domain asp:SourcePathGoalSchema ;
+    rdfs:range ac:EntitySpecification .
+
+asp:ContactSchema a owl:Class ;
+    rdfs:label "Contact Schema"@en ;
+    rdfs:comment "Contact pattern without inferred force."@en ;
+    rdfs:subClassOf asp:ImageSchemaDescription .
+
+asp:ContainmentSchema a owl:Class ;
+    rdfs:label "Containment Schema"@en ;
+    rdfs:comment "Content/container pattern."@en ;
+    rdfs:subClassOf asp:ImageSchemaDescription .
+
+asp:SupportSchema a owl:Class ;
+    rdfs:label "Support Schema"@en ;
+    rdfs:comment "Support/supportee pattern without inferred physical stability."@en ;
+    rdfs:subClassOf asp:ImageSchemaDescription .
+
+asp:PathElement a owl:Class ;
+    rdfs:label "Path Element"@en ;
+    rdfs:comment "Ordered symbolic location specification, not a measured pose."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:ImageSchemaDescription a owl:Class ;
+    rdfs:label "Image Schema Description"@en ;
+    rdfs:comment "Relational schematic perspective; geometric truth is externally grounded."@en ;
+    rdfs:subClassOf ac:PerspectiveDescription .
+
+asp:SourcePathGoalSchema a owl:Class ;
+    rdfs:label "Source Path Goal Schema"@en ;
+    rdfs:comment "Theme moving from source through ordered path elements to goal."@en ;
+    rdfs:subClassOf asp:ImageSchemaDescription .
+

@@ -1,0 +1,11 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX mn: <http://aicor.knowledge/ontologies/mobility-navigation.owl#>
+PREFIX kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#>
+SELECT ?route ?segment ?index ?from ?to ?frame ?map ?version
+WHERE {
+ ?record ac:expressesDescription/mn:route ?route .
+ ?route mn:hasSegment ?segment; mn:routeFrame ?frame; mn:mapSnapshot ?snapshot .
+ ?segment mn:positionIndex ?index; mn:fromRegion ?from; mn:toRegion ?to .
+ ?snapshot kc:sourceIRI ?map; kc:sourceVersion ?version .
+}
+ORDER BY ?index

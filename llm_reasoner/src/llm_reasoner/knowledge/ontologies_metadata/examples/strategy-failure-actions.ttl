@@ -1,0 +1,413 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix cs: <http://aicor.knowledge/ontologies/capabilities-strategies.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/action-examples.owl#> .
+@prefix fd: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix ns2: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix ns3: <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#> .
+@prefix ns4: <http://aicor.knowledge/ontologies/phases-transitions.owl#> .
+@prefix ns5: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:graspCapabilityAssessment a cs:CapabilityAssessment ;
+    cs:assessesRequirement ex:graspManipulationCapability ;
+    cs:assessmentContext ex:graspModelScope ;
+    cs:assessmentOutcome cs:Undetermined .
+
+ex:graspRecordV6 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:graspActionV6 ;
+    ac:hasAnnotation ex:graspStrategyAnnotation ;
+    ac:hasClaim ex:graspControlClaim0,
+        ex:graspControlClaim1,
+        ex:graspControlClaim2,
+        ex:graspControlClaim3,
+        ex:graspPhysicalClaim0,
+        ex:graspPhysicalClaim1,
+        ex:graspPhysicalClaim2,
+        ex:graspPhysicalClaim3,
+        ex:graspRecordV2Claim0,
+        ex:graspRecordV2Claim1,
+        ex:graspRecordV2Claim2,
+        ex:graspRecordV2Claim3,
+        ex:graspStrategyClaim0,
+        ex:graspStrategyClaim1,
+        ex:graspStrategyClaim2,
+        ex:graspStrategyClaim3,
+        ex:graspTemporalClaim0,
+        ex:graspTemporalClaim1,
+        ex:graspTemporalClaim10,
+        ex:graspTemporalClaim2,
+        ex:graspTemporalClaim3,
+        ex:graspTemporalClaim4,
+        ex:graspTemporalClaim5,
+        ex:graspTemporalClaim6,
+        ex:graspTemporalClaim7,
+        ex:graspTemporalClaim8,
+        ex:graspTemporalClaim9 ;
+    ac:previousVersion ex:graspRecordV5 ;
+    ac:recordVersion "6" .
+
+ex:pourCapabilityAssessment a cs:CapabilityAssessment ;
+    cs:assessesRequirement ex:pourManipulationCapability ;
+    cs:assessmentContext ex:pourModelScope ;
+    cs:assessmentOutcome cs:Undetermined .
+
+ex:pourRecordV6 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:pourActionV6 ;
+    ac:hasAnnotation ex:pourStrategyAnnotation ;
+    ac:hasClaim ex:pourControlClaim0,
+        ex:pourControlClaim1,
+        ex:pourControlClaim2,
+        ex:pourControlClaim3,
+        ex:pourPhysicalClaim0,
+        ex:pourPhysicalClaim1,
+        ex:pourPhysicalClaim2,
+        ex:pourPhysicalClaim3,
+        ex:pourRecordV2Claim0,
+        ex:pourRecordV2Claim1,
+        ex:pourRecordV2Claim2,
+        ex:pourRecordV2Claim3,
+        ex:pourStrategyClaim0,
+        ex:pourStrategyClaim1,
+        ex:pourStrategyClaim2,
+        ex:pourStrategyClaim3,
+        ex:pourTemporalClaim0,
+        ex:pourTemporalClaim1,
+        ex:pourTemporalClaim10,
+        ex:pourTemporalClaim2,
+        ex:pourTemporalClaim3,
+        ex:pourTemporalClaim4,
+        ex:pourTemporalClaim5,
+        ex:pourTemporalClaim6,
+        ex:pourTemporalClaim7,
+        ex:pourTemporalClaim8,
+        ex:pourTemporalClaim9 ;
+    ac:previousVersion ex:pourRecordV5 ;
+    ac:recordVersion "6" .
+
+ex:graspFailureProfile a fd:FailureProfile ;
+    fd:hasFailure ex:graspFailureDescription ;
+    fd:hasHypothesis ex:graspDiagnosisHypothesis ;
+    fd:hasRecoveryOption ex:graspRecoveryOption .
+
+ex:graspPerformProcess a cs:ProcessModuleRequirement ;
+    cs:fulfillsRequirement ex:graspManipulationCapability ;
+    cs:interfaceKey "grasp.perform.abstract" .
+
+ex:graspReassessmentAction a ac:ActionDescription ;
+    ac:hasActionKind ex:StabilizeAndReassess .
+
+ex:graspRecoveryGoal a ac:ConditionSpecification ;
+    rdfs:label "Stable conditions for reassessing the task"@en .
+
+ex:graspRecoveryGuard a ac:ConditionSpecification ;
+    rdfs:label "Recovery can be attempted under externally checked conditions"@en .
+
+ex:graspRecoveryStep a cs:StrategyStep ;
+    cs:describesAction ex:graspReassessmentAction ;
+    cs:requiresProcess ex:graspVerifyProcess .
+
+ex:graspRetryBudget a ac:ParameterSpecification ;
+    ac:parameterKey "recovery-retry-budget" .
+
+ex:graspStrategyAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:graspActionV6 ;
+    ac:contributesClaim ex:graspStrategyClaim0,
+        ex:graspStrategyClaim1,
+        ex:graspStrategyClaim2,
+        ex:graspStrategyClaim3 ;
+    ac:producerIdentifier "curated-strategy-diagnosis-schema-example" .
+
+ex:graspStrategyStatement0 a ac:Statement ;
+    ac:statementObject ex:graspManipulationCapability ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/capabilities-strategies.owl#requiresCapability"^^xsd:anyURI ;
+    ac:statementSubject ex:graspCapabilityProfile .
+
+ex:graspStrategyStatement1 a ac:Statement ;
+    ac:statementObject ex:graspPerformStep ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/capabilities-strategies.owl#hasStep"^^xsd:anyURI ;
+    ac:statementSubject ex:graspExecutionStrategy .
+
+ex:graspStrategyStatement2 a ac:Statement ;
+    ac:statementObject ex:graspSuspectedCause ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/failure-diagnosis.owl#candidateCause"^^xsd:anyURI ;
+    ac:statementSubject ex:graspDiagnosisHypothesis .
+
+ex:graspStrategyStatement3 a ac:Statement ;
+    ac:statementObject ex:graspRecoveryStrategy ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/failure-diagnosis.owl#usesStrategy"^^xsd:anyURI ;
+    ac:statementSubject ex:graspRecoveryOption .
+
+ex:graspVerificationAction a ac:ActionDescription ;
+    ac:hasActionKind ex:VerifyOutcome .
+
+ex:pourFailureProfile a fd:FailureProfile ;
+    fd:hasFailure ex:pourFailureDescription ;
+    fd:hasHypothesis ex:pourDiagnosisHypothesis ;
+    fd:hasRecoveryOption ex:pourRecoveryOption .
+
+ex:pourPerformProcess a cs:ProcessModuleRequirement ;
+    cs:fulfillsRequirement ex:pourManipulationCapability ;
+    cs:interfaceKey "pour.perform.abstract" .
+
+ex:pourReassessmentAction a ac:ActionDescription ;
+    ac:hasActionKind ex:StabilizeAndReassess .
+
+ex:pourRecoveryGoal a ac:ConditionSpecification ;
+    rdfs:label "Stable conditions for reassessing the task"@en .
+
+ex:pourRecoveryGuard a ac:ConditionSpecification ;
+    rdfs:label "Recovery can be attempted under externally checked conditions"@en .
+
+ex:pourRecoveryStep a cs:StrategyStep ;
+    cs:describesAction ex:pourReassessmentAction ;
+    cs:requiresProcess ex:pourVerifyProcess .
+
+ex:pourRetryBudget a ac:ParameterSpecification ;
+    ac:parameterKey "recovery-retry-budget" .
+
+ex:pourStrategyAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:pourActionV6 ;
+    ac:contributesClaim ex:pourStrategyClaim0,
+        ex:pourStrategyClaim1,
+        ex:pourStrategyClaim2,
+        ex:pourStrategyClaim3 ;
+    ac:producerIdentifier "curated-strategy-diagnosis-schema-example" .
+
+ex:pourStrategyStatement0 a ac:Statement ;
+    ac:statementObject ex:pourManipulationCapability ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/capabilities-strategies.owl#requiresCapability"^^xsd:anyURI ;
+    ac:statementSubject ex:pourCapabilityProfile .
+
+ex:pourStrategyStatement1 a ac:Statement ;
+    ac:statementObject ex:pourPerformStep ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/capabilities-strategies.owl#hasStep"^^xsd:anyURI ;
+    ac:statementSubject ex:pourExecutionStrategy .
+
+ex:pourStrategyStatement2 a ac:Statement ;
+    ac:statementObject ex:pourSuspectedCause ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/failure-diagnosis.owl#candidateCause"^^xsd:anyURI ;
+    ac:statementSubject ex:pourDiagnosisHypothesis .
+
+ex:pourStrategyStatement3 a ac:Statement ;
+    ac:statementObject ex:pourRecoveryStrategy ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/failure-diagnosis.owl#usesStrategy"^^xsd:anyURI ;
+    ac:statementSubject ex:pourRecoveryOption .
+
+ex:pourVerificationAction a ac:ActionDescription ;
+    ac:hasActionKind ex:VerifyOutcome .
+
+ex:StabilizeAndReassess a ac:ActionKind .
+
+ex:VerifyOutcome a ac:ActionKind .
+
+ex:graspActionV6 a ac:ActionDescription ;
+    ac:hasActionKind ex:Grasping ;
+    ac:hasCausalModel ex:graspCausalModel ;
+    ac:hasControl ex:graspController ;
+    ac:hasFailureCriterion ex:graspControlFailure ;
+    ac:hasGoal ex:graspControlledGoal ;
+    ac:hasPhase ex:graspAbort,
+        ex:graspComplete,
+        ex:graspEstablish,
+        ex:graspPrepare,
+        ex:graspRecover,
+        ex:graspVerify ;
+    ac:hasPhysicalModel ex:graspDynamics,
+        ex:graspPhysicalModel ;
+    ac:hasPrecondition ex:graspPrecondition ;
+    ac:hasRecovery ex:graspRecoveryOption ;
+    ac:hasRoleSpecification ex:effectorRoleSpec,
+        ex:graspedRoleSpec ;
+    ac:hasSuccessCriterion ex:graspControlledSuccess ;
+    cs:hasCapabilityProfile ex:graspCapabilityProfile ;
+    cs:hasStrategy ex:graspExecutionStrategy ;
+    ns1:hasOutcome ex:graspOutcome ;
+    fd:hasFailureProfile ex:graspFailureProfile ;
+    ns3:hasObjectiveSet ex:graspObjectives ;
+    ns2:hasRelationPattern ex:controlledHoldPattern,
+        ex:graspContactPattern,
+        ex:graspablePattern ;
+    ns4:hasPhaseStructure ex:graspPhaseStructure ;
+    ns5:hasPhysicalProperty ex:graspProperty .
+
+ex:graspPerformStep a cs:StrategyStep ;
+    cs:describesAction ex:graspingV2 ;
+    cs:precedesStep ex:graspVerifyStep ;
+    cs:requiresProcess ex:graspPerformProcess .
+
+ex:graspRecoveryStrategy a cs:ExecutionStrategy ;
+    cs:hasStep ex:graspRecoveryStep .
+
+ex:graspStrategyClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspCapabilityProfile ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspStrategyStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspStrategyClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspExecutionStrategy ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspStrategyStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspStrategyClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspDiagnosisHypothesis ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspStrategyStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspStrategyClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspRecoveryOption ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspStrategyStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspSuspectedCause a ac:ConditionSpecification ;
+    rdfs:label "Contact support may be inadequate"@en .
+
+ex:graspVerificationCapability a ac:CapabilityRequirement ;
+    rdfs:label "Abstract outcome-verification capability"@en .
+
+ex:graspVerifyProcess a cs:ProcessModuleRequirement ;
+    cs:fulfillsRequirement ex:graspVerificationCapability ;
+    cs:interfaceKey "grasp.verify.abstract" .
+
+ex:graspVerifyStep a cs:StrategyStep ;
+    cs:describesAction ex:graspVerificationAction ;
+    cs:requiresProcess ex:graspVerifyProcess .
+
+ex:pourActionV6 a ac:ActionDescription ;
+    ac:hasActionKind ex:Pouring ;
+    ac:hasCausalModel ex:pourCausalModel ;
+    ac:hasControl ex:pourController ;
+    ac:hasFailureCriterion ex:pourSpillFailure ;
+    ac:hasGoal ex:pourAmountGoal ;
+    ac:hasParameter ex:deliveredAmount,
+        ex:spillAmount,
+        ex:spillTolerance,
+        ex:targetAmount ;
+    ac:hasPhase ex:pourAbort,
+        ex:pourComplete,
+        ex:pourPrepare,
+        ex:pourTransfer,
+        ex:pourVerify ;
+    ac:hasPhysicalModel ex:pourDynamics,
+        ex:pourPhysicalModel ;
+    ac:hasPrecondition ex:pourPrecondition ;
+    ac:hasRecovery ex:pourRecoveryOption ;
+    ac:hasRoleSpecification ex:destinationRoleSpec,
+        ex:sourceRoleSpec,
+        ex:substanceRoleSpec ;
+    ac:hasSuccessCriterion ex:pourAmountSuccess ;
+    cs:hasCapabilityProfile ex:pourCapabilityProfile ;
+    cs:hasStrategy ex:pourExecutionStrategy ;
+    ns1:hasOutcome ex:pourOutcome ;
+    fd:hasFailureProfile ex:pourFailureProfile ;
+    ns3:hasObjectiveSet ex:pourObjectives ;
+    ns2:hasRelationPattern ex:destinationAccessiblePattern,
+        ex:sourceContainmentPattern ;
+    ns4:hasPhaseStructure ex:pourPhaseStructure ;
+    ns5:hasPhysicalProperty ex:pourProperty .
+
+ex:pourPerformStep a cs:StrategyStep ;
+    cs:describesAction ex:pouringV2 ;
+    cs:precedesStep ex:pourVerifyStep ;
+    cs:requiresProcess ex:pourPerformProcess .
+
+ex:pourRecoveryStrategy a cs:ExecutionStrategy ;
+    cs:hasStep ex:pourRecoveryStep .
+
+ex:pourStrategyClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourCapabilityProfile ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourStrategyStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourStrategyClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourExecutionStrategy ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourStrategyStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourStrategyClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourDiagnosisHypothesis ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourStrategyStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourStrategyClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourRecoveryOption ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourStrategyStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourSuspectedCause a ac:ConditionSpecification ;
+    rdfs:label "Transfer regulation may be inadequate"@en .
+
+ex:pourVerificationCapability a ac:CapabilityRequirement ;
+    rdfs:label "Abstract outcome-verification capability"@en .
+
+ex:pourVerifyProcess a cs:ProcessModuleRequirement ;
+    cs:fulfillsRequirement ex:pourVerificationCapability ;
+    cs:interfaceKey "pour.verify.abstract" .
+
+ex:pourVerifyStep a cs:StrategyStep ;
+    cs:describesAction ex:pourVerificationAction ;
+    cs:requiresProcess ex:pourVerifyProcess .
+
+ex:graspCapabilityProfile a cs:CapabilityProfile ;
+    cs:requiresCapability ex:graspManipulationCapability,
+        ex:graspVerificationCapability .
+
+ex:graspDiagnosisHypothesis a fd:DiagnosticHypothesis ;
+    fd:candidateCause ex:graspSuspectedCause ;
+    fd:explainsFailure ex:graspFailureDescription .
+
+ex:graspExecutionStrategy a cs:ExecutionStrategy ;
+    cs:hasStep ex:graspPerformStep,
+        ex:graspVerifyStep .
+
+ex:graspFailureDescription a fd:FailureSpecification ;
+    fd:detectedBy ex:graspControlFailure ;
+    fd:failureKind fd:LossOfControl .
+
+ex:pourCapabilityProfile a cs:CapabilityProfile ;
+    cs:requiresCapability ex:pourManipulationCapability,
+        ex:pourVerificationCapability .
+
+ex:pourDiagnosisHypothesis a fd:DiagnosticHypothesis ;
+    fd:candidateCause ex:pourSuspectedCause ;
+    fd:explainsFailure ex:pourFailureDescription .
+
+ex:pourExecutionStrategy a cs:ExecutionStrategy ;
+    cs:hasStep ex:pourPerformStep,
+        ex:pourVerifyStep .
+
+ex:pourFailureDescription a fd:FailureSpecification ;
+    fd:detectedBy ex:pourSpillFailure ;
+    fd:failureKind fd:Spillage .
+
+ex:graspRecoveryOption a fd:RecoveryOption ;
+    fd:addressesFailure ex:graspFailureDescription ;
+    fd:guardedBy ex:graspRecoveryGuard ;
+    fd:requiresCapability ex:graspManipulationCapability ;
+    fd:restoresCondition ex:graspRecoveryGoal ;
+    fd:retryBudget ex:graspRetryBudget ;
+    fd:usesStrategy ex:graspRecoveryStrategy .
+
+ex:pourRecoveryOption a fd:RecoveryOption ;
+    fd:addressesFailure ex:pourFailureDescription ;
+    fd:guardedBy ex:pourRecoveryGuard ;
+    fd:requiresCapability ex:pourManipulationCapability ;
+    fd:restoresCondition ex:pourRecoveryGoal ;
+    fd:retryBudget ex:pourRetryBudget ;
+    fd:usesStrategy ex:pourRecoveryStrategy .
+
+ex:graspManipulationCapability a ac:CapabilityRequirement ;
+    rdfs:label "Abstract controlled-hold capability"@en .
+
+ex:pourManipulationCapability a ac:CapabilityRequirement ;
+    rdfs:label "Abstract material-transfer capability"@en .
+

@@ -20,12 +20,11 @@ from typing_extensions import Iterable, Optional, Sequence
 
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     OntologyModuleFile,
-    PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.knowledge.ontologies.linked import OntologyFiles
+from llm_reasoner.knowledge.vocabulary.linked import OntologyFiles
 
 # %% constants
 
@@ -135,21 +134,6 @@ class HermitCheck(ConsistencyCheck):
     """
     The heap size given to the Java process.
     """
-
-    @classmethod
-    def pinned(cls) -> HermitCheck:
-        """
-        :return: A check against the microworld and the pinned linked ontologies.
-        """
-        return cls(
-            background_files=[
-                *(
-                    module_file.path
-                    for module_file in PredictiveManipulationOntologyFile
-                ),
-                *OntologyFiles.pinned().paths,
-            ]
-        )
 
     def covering(self, module_files: Iterable[OntologyModuleFile]) -> HermitCheck:
         """

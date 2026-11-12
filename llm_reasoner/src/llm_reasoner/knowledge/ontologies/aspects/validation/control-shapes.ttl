@@ -1,0 +1,38 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix pm: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix ot: <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#> .
+@prefix dc: <http://aicor.knowledge/ontologies/dynamics-control.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+ot:SetShape a sh:NodeShape; sh:targetClass ot:ObjectiveSet;
+ sh:property [sh:path ot:hasTerm; sh:minCount 1; sh:class ot:ObjectiveTerm];
+ sh:property [sh:path ot:aggregationPolicy; sh:minCount 1; sh:maxCount 1; sh:in (ot:WeightedSum ot:Lexicographic ot:Pareto)];
+ sh:property [sh:path ot:hardConstraint; sh:class ac:ConstraintSpecification].
+ot:TermShape a sh:NodeShape; sh:targetClass ot:ObjectiveTerm;
+ sh:property [sh:path ot:metricParameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path ot:direction; sh:minCount 1; sh:maxCount 1; sh:in (ot:Minimize ot:Maximize)];
+ sh:property [sh:path ot:rank; sh:maxCount 1; sh:datatype xsd:nonNegativeInteger];
+ sh:property [sh:path ot:weightParameter; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path ot:normalizedBy; sh:maxCount 1; sh:class ot:NormalizationSpecification].
+ot:NormalizationShape a sh:NodeShape; sh:targetClass ot:NormalizationSpecification;
+ sh:property [sh:path ot:scaleParameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification].
+dc:ModelShape a sh:NodeShape; sh:targetClass dc:DynamicalModelSpecification;
+ sh:property [sh:path dc:hasAssignment; sh:minCount 1; sh:class dc:VariableAssignment].
+dc:AssignmentShape a sh:NodeShape; sh:targetClass dc:VariableAssignment;
+ sh:property [sh:path dc:variable; sh:minCount 1; sh:maxCount 1; sh:class pm:ModelVariable];
+ sh:property [sh:path dc:role; sh:minCount 1; sh:maxCount 1; sh:in (dc:State dc:Input dc:Output dc:Disturbance)];
+ sh:property [sh:path dc:position; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:positiveInteger];
+ sh:property [sh:path dc:dimension; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:positiveInteger].
+dc:ControllerShape a sh:NodeShape; sh:targetClass dc:ControllerSpecification;
+ sh:property [sh:path dc:controlsModel; sh:minCount 1; sh:maxCount 1; sh:class dc:DynamicalModelSpecification];
+ sh:property [sh:path dc:controllerKind; sh:minCount 1; sh:maxCount 1; sh:class dc:ControllerKind];
+ sh:property [sh:path dc:samplingPeriod; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path dc:objectiveSet; sh:minCount 1; sh:maxCount 1; sh:class ot:ObjectiveSet].
+dc:AdaptationShape a sh:NodeShape; sh:targetClass dc:AdaptationSpecification;
+ sh:property [sh:path dc:updatesParameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path dc:validWhen; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification].
+
+ot:HardConditionShape a sh:NodeShape;
+ sh:targetObjectsOf ot:hardConstraint, dc:stateConstraint, dc:inputConstraint;
+ sh:property [sh:path co:hasExpression; sh:minCount 1; sh:maxCount 1; sh:class co:BooleanExpression].

@@ -19,7 +19,7 @@ from llm_reasoner.knowledge.generation.prompts import (
     structure_rule_entry,
 )
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
-from llm_reasoner.knowledge.ontologies import ActionPerspectiveFile
+from llm_reasoner.knowledge.vocabulary.ontology_modules import ActionPerspectiveFile
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     action_frame,

@@ -1,0 +1,41 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix cs: <http://aicor.knowledge/ontologies/capabilities-strategies.owl#> .
+@prefix fd: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+cs:ProfileShape a sh:NodeShape; sh:targetClass cs:CapabilityProfile; sh:property [sh:path cs:requiresCapability; sh:minCount 1; sh:class ac:CapabilityRequirement].
+cs:StrategyShape a sh:NodeShape; sh:targetClass cs:ExecutionStrategy; sh:property [sh:path cs:hasStep; sh:minCount 1; sh:class cs:StrategyStep].
+cs:StepShape a sh:NodeShape; sh:targetClass cs:StrategyStep;
+ sh:property [sh:path cs:describesAction; sh:minCount 1; sh:maxCount 1; sh:class ac:ActionDescription];
+ sh:property [sh:path cs:requiresProcess; sh:minCount 1; sh:class cs:ProcessModuleRequirement];
+ sh:property [sh:path cs:precedesStep; sh:class cs:StrategyStep].
+cs:ProcessShape a sh:NodeShape; sh:targetClass cs:ProcessModuleRequirement;
+ sh:property [sh:path cs:interfaceKey; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path cs:fulfillsRequirement; sh:minCount 1; sh:class ac:CapabilityRequirement];
+ sh:property [sh:path cs:inputParameter; sh:class ac:ParameterSpecification];
+ sh:property [sh:path cs:outputParameter; sh:class ac:ParameterSpecification].
+cs:AssessmentShape a sh:NodeShape; sh:targetClass cs:CapabilityAssessment;
+ sh:property [sh:path cs:assessesRequirement; sh:minCount 1; sh:maxCount 1; sh:class ac:CapabilityRequirement];
+ sh:property [sh:path cs:assessmentContext; sh:minCount 1; sh:class ac:ApplicabilitySpecification];
+ sh:property [sh:path cs:assessmentOutcome; sh:minCount 1; sh:maxCount 1; sh:in (cs:Met cs:Unmet cs:Undetermined)];
+ sh:property [sh:path cs:assessmentEvidence; sh:class ac:EvidenceRecord];
+ sh:or ([sh:property [sh:path cs:assessmentOutcome; sh:hasValue cs:Undetermined]] [sh:property [sh:path cs:assessmentEvidence; sh:minCount 1]]).
+fd:ProfileShape a sh:NodeShape; sh:targetClass fd:FailureProfile;
+ sh:property [sh:path fd:hasFailure; sh:minCount 1; sh:class fd:FailureSpecification];
+ sh:property [sh:path fd:hasHypothesis; sh:class fd:DiagnosticHypothesis];
+ sh:property [sh:path fd:hasRecoveryOption; sh:class fd:RecoveryOption].
+fd:FailureShape a sh:NodeShape; sh:targetClass fd:FailureSpecification;
+ sh:property [sh:path fd:failureKind; sh:minCount 1; sh:maxCount 1; sh:class fd:FailureKind];
+ sh:property [sh:path fd:detectedBy; sh:minCount 1; sh:class ac:FailureCriterion].
+fd:HypothesisShape a sh:NodeShape; sh:targetClass fd:DiagnosticHypothesis;
+ sh:property [sh:path fd:explainsFailure; sh:minCount 1; sh:class fd:FailureSpecification];
+ sh:property [sh:path fd:candidateCause; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path fd:supportingEvidence; sh:class ac:EvidenceRecord];
+ sh:property [sh:path fd:refutingEvidence; sh:class ac:EvidenceRecord].
+fd:RecoveryShape a sh:NodeShape; sh:targetClass fd:RecoveryOption;
+ sh:property [sh:path fd:addressesFailure; sh:minCount 1; sh:class fd:FailureSpecification];
+ sh:property [sh:path fd:guardedBy; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path fd:restoresCondition; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path fd:requiresCapability; sh:minCount 1; sh:class ac:CapabilityRequirement];
+ sh:property [sh:path fd:usesStrategy; sh:maxCount 1; sh:class cs:ExecutionStrategy];
+ sh:property [sh:path fd:retryBudget; sh:maxCount 1; sh:class ac:ParameterSpecification].

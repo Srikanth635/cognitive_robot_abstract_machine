@@ -1,0 +1,48 @@
+{
+  "release": "0.13.0",
+  "registered_ontologies": 30,
+  "new_domain": "robot-motion",
+  "domain_modules": 1,
+  "motion_families": [
+    "Configuration motion",
+    "Cartesian positioning",
+    "Path following"
+  ],
+  "synthetic_profiles": [
+    "Joint repositioning",
+    "Stowing",
+    "Gripper configuration change",
+    "Gripper aperture change",
+    "Cartesian positioning",
+    "Pose path following"
+  ],
+  "validation": {
+    "robot_motion_checks_passed": 58,
+    "scoped_query_cases": 6,
+    "import_checks_passed": 40,
+    "historical_competency_assertions_passed": 93,
+    "context_assertions_passed": 26,
+    "new_domain_classification": "passed; no unsatisfiable named classes",
+    "combined_assembly_classification": "passed; no unsatisfiable named classes",
+    "generic_examples_consistency": "passed",
+    "optional_aicor_integration": "blocked by HermiT DisjointClasses(SceneNode) normalization error; unresolved"
+  },
+  "preservation": {
+    "prior_ontology_and_example_files_byte_identical": 56,
+    "generic_aspect_assembly_unchanged": true
+  },
+  "limitations": [
+    "Synthetic proposed profiles; no empirical acceptance",
+    "Supplied completion metrics only; no FK/IK, planning or controller",
+    "Orientation-aware populated profiles and quaternion checks remain future work",
+    "Optional AICOR compatibility remains unverified for this release",
+    "No CoraPlex adapter or working projection added"
+  ],
+  "reports": [
+    "robot-motion-validation.json",
+    "robot-motion-query-validation.json",
+    "robot-motion-reasoning.json",
+    "robot-motion-preservation.json",
+    "import-validation.json"
+  ]
+}

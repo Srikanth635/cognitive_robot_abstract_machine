@@ -1,0 +1,45 @@
+{
+  "release": "0.19.0",
+  "completed": "2026-11-12",
+  "registered_ontologies": 38,
+  "primitive_domains": 7,
+  "composition_modules": 1,
+  "new_composition": "transport-carrying",
+  "fixtures": [
+    "Destination carrying",
+    "Route carrying",
+    "Orientation-constrained destination carrying",
+    "Orientation-constrained route carrying"
+  ],
+  "validation": {
+    "composition_checks": 159,
+    "scoped_query_cases": 14,
+    "object_manipulation_regressions": 102,
+    "mobility_navigation_regressions": 104,
+    "import_catalog_checks": 59,
+    "historical_competency_assertions": 93,
+    "composition_and_combined_classification": "passed, no unsatisfiable named classes",
+    "generic_examples_and_demo_consistency": "passed",
+    "optional_aicor_consistency": "blocked",
+    "consistency_java_heap_mb": 6144,
+    "example_builder_semantic_reproduction": "passed"
+  },
+  "preservation": {
+    "baseline": "0.18.0",
+    "priorRdfFiles": 78,
+    "byteIdentical": 77,
+    "changed": [
+      "integrations/all-action-knowledge.ttl"
+    ],
+    "missing": []
+  },
+  "initial_resource_limit": "The initial 2048 MB combined example consistency run exhausted Java heap; its report is retained. The 6144 MB repeat passed.",
+  "limitations": [
+    "Synthetic Proposed descriptions only; no world bindings, physical parameter defaults or accepted observations",
+    "Grasped/borne single-carrier technique; pickup, placement, release, supported/cart/pushed/dragged techniques are separate",
+    "Coextensive interval metadata scopes supplied evidence but does not prove coverage, freshness or measurement correctness",
+    "Loaded envelope, load support, coordinate errors and maximum angular deviation are externally assessed; no geometry or physical solver",
+    "No execution scheduler, control synthesis, working projection or CoraPlex integration",
+    "Optional AICOR integration remains blocked by the pre-existing SceneNode normalization issue; full AICOR satisfiability unverified"
+  ]
+}

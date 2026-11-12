@@ -1,0 +1,167 @@
+{
+  "release": "0.11.0",
+  "checks": [
+    {
+      "case": "valid-contextual-fixture",
+      "passed": true
+    },
+    {
+      "case": "two-source-assessments-in-context-A",
+      "passed": true
+    },
+    {
+      "case": "context-B-isolated",
+      "passed": true
+    },
+    {
+      "case": "alternative-values-visible",
+      "passed": true
+    },
+    {
+      "case": "no-conflict-in-other-context",
+      "passed": true
+    },
+    {
+      "case": "fresh-observation-reported",
+      "passed": true
+    },
+    {
+      "case": "stale-observation-reported",
+      "passed": true
+    },
+    {
+      "case": "no-automatic-acceptance",
+      "passed": true
+    },
+    {
+      "case": "base-claim-status-preserved",
+      "passed": true
+    },
+    {
+      "case": "value-not-materialized",
+      "passed": true
+    },
+    {
+      "case": "end-exclusive",
+      "passed": true
+    },
+    {
+      "case": "not-yet-valid",
+      "passed": true
+    },
+    {
+      "case": "digest-valid",
+      "passed": true
+    },
+    {
+      "case": "digest-detects-mutated-bytes",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-record",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-context",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-source-version",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-selector",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-observed-time",
+      "passed": true
+    },
+    {
+      "case": "reject-supported-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-claim",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-description",
+      "passed": true
+    },
+    {
+      "case": "reject-reversed-interval",
+      "passed": true
+    },
+    {
+      "case": "reject-bad-digest",
+      "passed": true
+    },
+    {
+      "case": "reject-naive-time",
+      "passed": true
+    },
+    {
+      "case": "future-observation-not-fresh",
+      "passed": true
+    }
+  ],
+  "answers": {
+    "contextA": {
+      "record": "http://aicor.knowledge/ontologies/context-review-examples.owl#record",
+      "context": "http://aicor.knowledge/ontologies/context-review-examples.owl#contextA",
+      "assessments": [
+        {
+          "assessment": "http://aicor.knowledge/ontologies/context-review-examples.owl#alternativeAssessment",
+          "claim": "http://aicor.knowledge/ontologies/context-review-examples.owl#alternativeClaim",
+          "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+          "value": "\"0.4\"^^<http://www.w3.org/2001/XMLSchema#decimal>",
+          "evidenceFreshness": [
+            "stale"
+          ],
+          "accepted": false
+        },
+        {
+          "assessment": "http://aicor.knowledge/ontologies/context-review-examples.owl#firstAssessment",
+          "claim": "http://aicor.knowledge/ontologies/context-review-examples.owl#firstClaim",
+          "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Supported",
+          "value": "\"0.3\"^^<http://www.w3.org/2001/XMLSchema#decimal>",
+          "evidenceFreshness": [
+            "fresh"
+          ],
+          "accepted": false
+        }
+      ],
+      "potentialAlternativeValues": [
+        {
+          "subject": "http://aicor.knowledge/ontologies/context-review-examples.owl#targetAmount",
+          "predicate": "http://aicor.knowledge/ontologies/action-description-core.owl#numericValue",
+          "assessments": [
+            "http://aicor.knowledge/ontologies/context-review-examples.owl#alternativeAssessment",
+            "http://aicor.knowledge/ontologies/context-review-examples.owl#firstAssessment"
+          ]
+        }
+      ],
+      "conflictResolutionPerformed": false
+    },
+    "contextB": {
+      "record": "http://aicor.knowledge/ontologies/context-review-examples.owl#record",
+      "context": "http://aicor.knowledge/ontologies/context-review-examples.owl#contextB",
+      "assessments": [
+        {
+          "assessment": "http://aicor.knowledge/ontologies/context-review-examples.owl#otherInstanceAssessment",
+          "claim": "http://aicor.knowledge/ontologies/context-review-examples.owl#otherInstanceClaim",
+          "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Supported",
+          "value": "\"0.8\"^^<http://www.w3.org/2001/XMLSchema#decimal>",
+          "evidenceFreshness": [
+            "fresh"
+          ],
+          "accepted": false
+        }
+      ],
+      "potentialAlternativeValues": [],
+      "conflictResolutionPerformed": false
+    }
+  },
+  "limitation": "Potential alternatives are not contradictions unless the predicate is single valued in the domain; no automatic truth acceptance."
+}

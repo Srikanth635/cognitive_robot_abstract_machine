@@ -21,12 +21,12 @@ from llm_reasoner.knowledge.acceptance.derived import (
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceRule, Severity
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, StructureShapes
 from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
-from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.vocabulary.ontology_modules import PredictiveManipulationOntologyFile
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     pouring_frame,
 )
-from llm_reasoner.knowledge.ontologies.situation import SituationFeatures
+from llm_reasoner.knowledge.vocabulary.situation import SituationFeatures
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
@@ -34,7 +34,7 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.vocabulary.terms import (
     ClassExpression,
     ComplementOf,
     ConceptReference,

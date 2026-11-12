@@ -1,0 +1,18 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/specialized-tool-interactions.owl#InsertionDescriptionShape> a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/specialized-tool-interactions.owl#depthError> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/specialized-tool-interactions.owl#depthTolerance> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/specialized-tool-interactions.owl#targetDepth> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/specialized-tool-interactions.owl#InsertionDescription> .
+

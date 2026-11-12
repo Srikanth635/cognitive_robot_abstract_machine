@@ -18,8 +18,8 @@ from rdflib import OWL, RDF, RDFS, BNode, Graph, URIRef
 from rdflib.collection import Collection
 
 from llm_reasoner.knowledge.admission.report import OntologyMerge
-from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE, DUL_NAMESPACE
-from llm_reasoner.knowledge.ontologies.linked import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import CRAM_AICOR_NAMESPACE, DUL_NAMESPACE
+from llm_reasoner.knowledge.vocabulary.linked import (
     AlignmentFile,
     LinkedClassHierarchy,
     LinkedOntologyFile,

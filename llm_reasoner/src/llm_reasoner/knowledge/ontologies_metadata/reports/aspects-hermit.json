@@ -1,0 +1,6 @@
+{
+  "consistent": true,
+  "unsatisfiable_classes": [],
+  "scope": "TBox and controlled vocabulary: participants-relations + conditions-outcomes + core + DUL; excludes AICOR and action examples",
+  "elapsed_seconds": 2.63
+}

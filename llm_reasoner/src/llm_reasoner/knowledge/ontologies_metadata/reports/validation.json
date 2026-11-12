@@ -1,0 +1,107 @@
+{
+  "inputs": {
+    "aicor": {
+      "triples": 7940,
+      "NamedClass": 709,
+      "Class": 760,
+      "ObjectProperty": 578,
+      "DatatypeProperty": 84,
+      "AnnotationProperty": 0,
+      "NamedIndividual": 4,
+      "Restriction": 855
+    },
+    "cram_aicor": {
+      "triples": 11596,
+      "NamedClass": 1017,
+      "Class": 1069,
+      "ObjectProperty": 811,
+      "DatatypeProperty": 155,
+      "AnnotationProperty": 0,
+      "NamedIndividual": 4,
+      "Restriction": 1341
+    },
+    "dul": {
+      "triples": 1751,
+      "NamedClass": 76,
+      "Class": 85,
+      "ObjectProperty": 107,
+      "DatatypeProperty": 5,
+      "AnnotationProperty": 3,
+      "NamedIndividual": 0,
+      "Restriction": 66
+    }
+  },
+  "normalized": {
+    "aicor": {
+      "triples": 7653,
+      "NamedClass": 709,
+      "Class": 760,
+      "ObjectProperty": 578,
+      "DatatypeProperty": 84,
+      "AnnotationProperty": 0,
+      "NamedIndividual": 4,
+      "Restriction": 818
+    },
+    "cram_aicor": {
+      "triples": 11188,
+      "NamedClass": 1017,
+      "Class": 1069,
+      "ObjectProperty": 811,
+      "DatatypeProperty": 155,
+      "AnnotationProperty": 0,
+      "NamedIndividual": 4,
+      "Restriction": 1264
+    }
+  },
+  "aicor_structurally_contained_in_cram": true,
+  "shared_named_subjects": 1376,
+  "aicor_only_named_subjects": 0,
+  "cram_only_named_subjects": 612,
+  "changed_shared_subjects": 18,
+  "candidate": {
+    "triples": 11139,
+    "NamedClass": 1003,
+    "Class": 1055,
+    "ObjectProperty": 811,
+    "DatatypeProperty": 155,
+    "AnnotationProperty": 0,
+    "NamedIndividual": 4,
+    "Restriction": 1264
+  },
+  "dul_placeholder_replacements": 14,
+  "removed_parent_edges": [
+    {
+      "subject": "ComputationalMedium",
+      "parent": "dul:InformationObject",
+      "reason": "Description descendants conflict with InformationObject."
+    },
+    {
+      "subject": "ComputationalProcess",
+      "parent": "dul:Process",
+      "reason": "Description descendants conflict with Event through Process."
+    },
+    {
+      "subject": "ReifiedTemporalEntity",
+      "parent": "dul:InformationObject",
+      "reason": "EventType is also a Description."
+    },
+    {
+      "subject": "ExecutiveCapability",
+      "parent": "dul:Quality",
+      "reason": "Description descendants conflict with Quality."
+    },
+    {
+      "subject": "TaskStatus",
+      "parent": "dul:InformationObject",
+      "reason": "TaskStatus inherits Description through FluentType."
+    }
+  ],
+  "named_hierarchy_conflicts_before": 175,
+  "named_hierarchy_conflicts_after": 0,
+  "scope": "Named-parent disjointness screening is NOT complete OWL consistency checking.",
+  "source_sha256": {
+    "DUL.owl": "6b0945b794d44e7cd7020e3dc4612e6cf7566045fd49ec21aa52a247a2eed7d9",
+    "sources/aicor-ontology.ttl": "e2037ab1585ecfac88d57eec8414f475f56fd222a45056f499d9465a23ac3e3c",
+    "sources/cram-aicor-ontology.ttl": "a33fb7af8c28792825542b1c663f233102e19ae076bbf747fdd16e4297ef0cda"
+  }
+}

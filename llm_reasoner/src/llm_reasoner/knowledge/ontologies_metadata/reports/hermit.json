@@ -1,0 +1,7 @@
+{
+  "status": "timeout",
+  "limit_seconds": 90,
+  "consistent": null,
+  "elapsed_seconds": 90.01,
+  "scope": "Offline candidate plus supplied DUL; no SWRL, simulation or code-alignment validation."
+}

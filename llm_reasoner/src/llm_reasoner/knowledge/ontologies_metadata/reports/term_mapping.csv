@@ -1,0 +1,15 @@
+old_iri,new_iri,decision
+http://aicor.knowledge/l2-ontology.owl#dul_Action,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Action,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Agent,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Agent,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Concept,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Concept,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Description,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Entity,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Entity,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Event,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_InformationObject,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_PhysicalAgent,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#PhysicalAgent,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_PhysicalObject,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#PhysicalObject,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Process,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Process,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Quality,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Quality,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Region,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Relation,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Relation,Replace explicit DUL placeholder with imported DUL class
+http://aicor.knowledge/l2-ontology.owl#dul_Situation,http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Situation,Replace explicit DUL placeholder with imported DUL class

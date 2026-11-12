@@ -1,7 +1,0 @@
-{
-  "renames": [],
-  "module_versions": [
-    {"module": "core.ttl", "old": "0.6.0", "new": "0.6.1"},
-    {"module": "gaze.ttl", "old": "0.2.1", "new": "0.2.2"}
-  ]
-}

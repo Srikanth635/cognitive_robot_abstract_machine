@@ -16,7 +16,7 @@ from krrood.entity_query_language.factories import the
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
-from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
+from llm_reasoner.knowledge.vocabulary.ontology_modules import CRAM_AICOR_NAMESPACE
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     pouring_frame,
@@ -32,7 +32,7 @@ from llm_reasoner.knowledge.ontologies.frame_fields import (
     UnknownFrameTerm,
     frame_part_from_json,
 )
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference
+from llm_reasoner.knowledge.vocabulary.terms import ConceptReference
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 from .test_observed_components import RECORD, KnowledgeServingOneRecord

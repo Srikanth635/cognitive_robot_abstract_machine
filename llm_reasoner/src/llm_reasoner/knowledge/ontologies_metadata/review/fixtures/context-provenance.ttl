@@ -1,0 +1,118 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/context-review-examples.owl#> .
+@prefix kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:alternativeAssessment a kc:ClaimAssessment ;
+    kc:assessedAt "2026-11-11T10:00:00+00:00"^^xsd:dateTime ;
+    kc:assessedStatus ac:Proposed ;
+    kc:assessesClaim ex:alternativeClaim ;
+    kc:inContext ex:contextA ;
+    kc:inRecord ex:record ;
+    kc:usesEvidence ex:alternativeEvidence ;
+    kc:validFrom "2026-11-11T10:00:00+00:00"^^xsd:dateTime ;
+    kc:validUntil "2026-11-11T11:00:00+00:00"^^xsd:dateTime .
+
+ex:firstAssessment a kc:ClaimAssessment ;
+    kc:assessedAt "2026-11-11T10:00:00+00:00"^^xsd:dateTime ;
+    kc:assessedStatus ac:Supported ;
+    kc:assessesClaim ex:firstClaim ;
+    kc:inContext ex:contextA ;
+    kc:inRecord ex:record ;
+    kc:usesEvidence ex:firstEvidence ;
+    kc:validFrom "2026-11-11T10:00:00+00:00"^^xsd:dateTime ;
+    kc:validUntil "2026-11-11T11:00:00+00:00"^^xsd:dateTime .
+
+ex:otherInstanceAssessment a kc:ClaimAssessment ;
+    kc:assessedAt "2026-11-11T10:00:00+00:00"^^xsd:dateTime ;
+    kc:assessedStatus ac:Supported ;
+    kc:assessesClaim ex:otherInstanceClaim ;
+    kc:inContext ex:contextB ;
+    kc:inRecord ex:record ;
+    kc:usesEvidence ex:otherInstanceEvidence ;
+    kc:validFrom "2026-11-11T10:00:00+00:00"^^xsd:dateTime ;
+    kc:validUntil "2026-11-11T11:00:00+00:00"^^xsd:dateTime .
+
+ex:snapshot a kc:RecordSnapshot ;
+    kc:serializationProfile "test exact UTF-8 bytes v1"^^xsd:string ;
+    kc:sha256 "fe9eba6613211c1f3007c0e2e65457d360bad1d7e7c23d86d3dde8456970906f"^^xsd:string ;
+    kc:snapshotOf ex:record .
+
+ex:GenericAction a ac:ActionKind .
+
+ex:alternativeEvidence a kc:ObservationEvidence ;
+    ac:evidenceKind ac:CuratedExample ;
+    ac:evidenceText "Synthetic observation fixture; no sensor acquisition."^^xsd:string ;
+    kc:observedAt "2026-11-11T09:00:00+00:00"^^xsd:dateTime ;
+    kc:sourceSnapshot ex:source .
+
+ex:alternativeStatement a ac:Statement ;
+    ac:statementLiteral 0.4 ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#numericValue"^^xsd:anyURI ;
+    ac:statementSubject ex:targetAmount .
+
+ex:contextB a kc:KnowledgeContext ;
+    kc:contextKey "contextB"^^xsd:string ;
+    kc:scopedDescription ex:action .
+
+ex:firstEvidence a kc:ObservationEvidence ;
+    ac:evidenceKind ac:CuratedExample ;
+    ac:evidenceText "Synthetic observation fixture; no sensor acquisition."^^xsd:string ;
+    kc:observedAt "2026-11-11T10:00:00+00:00"^^xsd:dateTime ;
+    kc:sourceSnapshot ex:source .
+
+ex:firstStatement a ac:Statement ;
+    ac:statementLiteral 0.3 ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#numericValue"^^xsd:anyURI ;
+    ac:statementSubject ex:targetAmount .
+
+ex:otherInstanceEvidence a kc:ObservationEvidence ;
+    ac:evidenceKind ac:CuratedExample ;
+    ac:evidenceText "Synthetic observation fixture; no sensor acquisition."^^xsd:string ;
+    kc:observedAt "2026-11-11T10:00:00+00:00"^^xsd:dateTime ;
+    kc:sourceSnapshot ex:source .
+
+ex:otherInstanceStatement a ac:Statement ;
+    ac:statementLiteral 0.8 ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#numericValue"^^xsd:anyURI ;
+    ac:statementSubject ex:targetAmount .
+
+ex:alternativeClaim a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:targetAmount ;
+    ac:hasStatement ex:alternativeStatement ;
+    ac:hasStatus ac:Proposed .
+
+ex:contextA a kc:KnowledgeContext ;
+    kc:contextKey "contextA"^^xsd:string ;
+    kc:scopedDescription ex:action .
+
+ex:firstClaim a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:targetAmount ;
+    ac:hasStatement ex:firstStatement ;
+    ac:hasStatus ac:Proposed .
+
+ex:otherInstanceClaim a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:targetAmount ;
+    ac:hasStatement ex:otherInstanceStatement ;
+    ac:hasStatus ac:Proposed .
+
+ex:action a ac:ActionDescription ;
+    ac:hasActionKind ex:GenericAction ;
+    ac:hasParameter ex:targetAmount .
+
+ex:source a kc:SourceSnapshot ;
+    kc:exactExcerpt "Synthetic targets: 0.3, 0.4, 0.8"^^xsd:string ;
+    kc:selector "example rows 1-3"^^xsd:string ;
+    kc:sourceIRI "urn:test:synthetic-source"^^xsd:anyURI ;
+    kc:sourceVersion "fixture-v1"^^xsd:string .
+
+ex:record a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:action ;
+    ac:hasClaim ex:alternativeClaim,
+        ex:firstClaim,
+        ex:otherInstanceClaim ;
+    ac:recordVersion "1"^^xsd:string .
+
+ex:targetAmount a ac:ParameterSpecification ;
+    ac:parameterKey "target-amount"^^xsd:string .
+

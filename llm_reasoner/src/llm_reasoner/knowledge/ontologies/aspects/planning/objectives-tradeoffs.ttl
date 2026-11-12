@@ -1,0 +1,118 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix ot: <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/objectives-tradeoffs.owl> a owl:Ontology ;
+    rdfs:label "Objectives and trade-offs"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.6.0" .
+
+ot:Lexicographic a ot:AggregationPolicy,
+        owl:NamedIndividual ;
+    rdfs:label "Lexicographic"@en .
+
+ot:Maximize a ot:OptimizationDirection,
+        owl:NamedIndividual ;
+    rdfs:label "Maximize"@en .
+
+ot:Minimize a ot:OptimizationDirection,
+        owl:NamedIndividual ;
+    rdfs:label "Minimize"@en .
+
+ot:Pareto a ot:AggregationPolicy,
+        owl:NamedIndividual ;
+    rdfs:label "Pareto"@en .
+
+ot:WeightedSum a ot:AggregationPolicy,
+        owl:NamedIndividual ;
+    rdfs:label "Weighted Sum"@en .
+
+ot:aggregationPolicy a owl:ObjectProperty ;
+    rdfs:label "Aggregation Policy"@en ;
+    rdfs:comment "Weighted sum, lexicographic or Pareto policy."@en ;
+    rdfs:domain ot:ObjectiveSet ;
+    rdfs:range ot:AggregationPolicy .
+
+ot:direction a owl:ObjectProperty ;
+    rdfs:label "Direction"@en ;
+    rdfs:comment "Optimization direction."@en ;
+    rdfs:domain ot:ObjectiveTerm ;
+    rdfs:range ot:OptimizationDirection .
+
+ot:hardConstraint a owl:ObjectProperty ;
+    rdfs:label "Hard Constraint"@en ;
+    rdfs:comment "A condition that cannot be traded off as a soft objective."@en ;
+    rdfs:domain ot:ObjectiveSet ;
+    rdfs:range ac:ConstraintSpecification .
+
+ot:hasObjectiveSet a owl:ObjectProperty ;
+    rdfs:label "Has Objective Set"@en ;
+    rdfs:comment "Objective configuration for this action."@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ot:ObjectiveSet ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ot:hasTerm a owl:ObjectProperty ;
+    rdfs:label "Has Term"@en ;
+    rdfs:comment "Terms in this set."@en ;
+    rdfs:domain ot:ObjectiveSet ;
+    rdfs:range ot:ObjectiveTerm .
+
+ot:metricParameter a owl:ObjectProperty ;
+    rdfs:label "Metric Parameter"@en ;
+    rdfs:comment "Metric whose value is optimized."@en ;
+    rdfs:domain ot:ObjectiveTerm ;
+    rdfs:range ac:ParameterSpecification .
+
+ot:normalizedBy a owl:ObjectProperty ;
+    rdfs:label "Normalized By"@en ;
+    rdfs:comment "Normalization required for weighted sums."@en ;
+    rdfs:domain ot:ObjectiveTerm ;
+    rdfs:range ot:NormalizationSpecification .
+
+ot:rank a owl:DatatypeProperty ;
+    rdfs:label "Rank"@en ;
+    rdfs:comment "Lexicographic rank; smaller values take precedence."@en ;
+    rdfs:domain ot:ObjectiveTerm ;
+    rdfs:range xsd:nonNegativeInteger .
+
+ot:scaleParameter a owl:ObjectProperty ;
+    rdfs:label "Scale Parameter"@en ;
+    rdfs:comment "Positive reference scale; can remain unspecified."@en ;
+    rdfs:domain ot:NormalizationSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+ot:weightParameter a owl:ObjectProperty ;
+    rdfs:label "Weight Parameter"@en ;
+    rdfs:comment "Optional explicit dimensionless weight; no default is inferred."@en ;
+    rdfs:domain ot:ObjectiveTerm ;
+    rdfs:range ac:ParameterSpecification .
+
+ot:NormalizationSpecification a owl:Class ;
+    rdfs:label "Normalization Specification"@en ;
+    rdfs:comment "Declared scale for rendering a metric dimensionless; unknown scales remain unresolved."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ot:OptimizationDirection a owl:Class ;
+    rdfs:label "Optimization Direction"@en ;
+    rdfs:comment "Minimization or maximization of a metric."@en ;
+    rdfs:subClassOf dul:Concept .
+
+ot:AggregationPolicy a owl:Class ;
+    rdfs:label "Aggregation Policy"@en ;
+    rdfs:comment "Interpretation of multiple objectives; no optimizer is implemented."@en ;
+    rdfs:subClassOf dul:Concept .
+
+ot:ObjectiveSet a owl:Class ;
+    rdfs:label "Objective Set"@en ;
+    rdfs:comment "Objective terms and declared aggregation policy, separately from hard constraints."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ot:ObjectiveTerm a owl:Class ;
+    rdfs:label "Objective Term"@en ;
+    rdfs:comment "Preference over a metric parameter with explicit optimization direction."@en ;
+    rdfs:subClassOf ac:ObjectiveSpecification .
+

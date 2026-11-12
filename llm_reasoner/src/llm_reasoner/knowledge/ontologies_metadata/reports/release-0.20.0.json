@@ -1,0 +1,56 @@
+{
+  "release": "0.20.0",
+  "completed": "2026-11-12",
+  "registered_ontologies": 40,
+  "primitive_domains": 7,
+  "composition_modules": 2,
+  "refinement_modules": 1,
+  "new_modules": [
+    "compositions/action-recipes.ttl",
+    "refinements/specialized-tool-interactions.ttl"
+  ],
+  "new_recipe_fixtures": [
+    "Pickup-carry-place",
+    "Route/orientation-constrained pickup-carry-place",
+    "Acquire-cut-withdraw-return tool",
+    "Acquire-wipe-withdraw-return tool"
+  ],
+  "specialized_profiles": [
+    "Specified-separation cutting",
+    "Specified-effect wiping with qualified sweep coverage",
+    "Maintained-contact pressing",
+    "Aligned insertion-to-seat with depth error criterion"
+  ],
+  "validation": {
+    "new_contract_checks": 149,
+    "scoped_query_cases": 23,
+    "transport_regressions": 159,
+    "tool_transfer_regressions": 81,
+    "import_catalog_checks": 62,
+    "historical_competency_assertions": 93,
+    "refinement_recipe_and_combined_classification": "Three closures passed; no unsatisfiable named classes",
+    "generic_examples_and_demo_consistency": "passed",
+    "optional_aicor_consistency": "blocked: timeout at 180 seconds",
+    "java_consistency_heap_mb": 7168,
+    "example_builder_semantic_reproduction": "Both builders passed graph-equality comparison"
+  },
+  "preservation": {
+    "baseline": "0.19.0",
+    "priorRdfFiles": 81,
+    "byteIdentical": 80,
+    "changed": [
+      "integrations/all-action-knowledge.ttl"
+    ],
+    "missing": []
+  },
+  "runtime_change": "The previous transport record API delegates to assess_description for nested common-record inspection; its 159 regressions passed.",
+  "reasoning_boundary": "Optional AICOR consistency timed out rather than reproducing the historical SceneNode error. Timeout reporting was added afterward; the report explicitly identifies the observed run and does not claim a second optional attempt. Full AICOR class satisfiability remains unverified.",
+  "limitations": [
+    "Synthetic Proposed templates; no physical defaults, acquired observations or accepted world beliefs",
+    "Bounded total-order recipes with explicit scoped handoffs; no scheduling, execution, retries, recovery or provider matching",
+    "Handoff/window metadata qualifies supplied evidence, not coverage, calibration, freshness or physical feasibility",
+    "Tool profiles are bounded techniques, not exhaustive material/physics models, cleaning guarantees or verified CoraPlex executors",
+    "Intermediate effects are qualified at their own stage; persistence through later stages is not inferred",
+    "No new working projections or robot/world adapters"
+  ]
+}

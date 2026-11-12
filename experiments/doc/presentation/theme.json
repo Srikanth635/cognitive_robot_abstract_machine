@@ -1,0 +1,61 @@
+{
+  "name": "CRAM llm_reasoner",
+  "reference": "Action_Centric_KR.pptx (institute deck, 2026-08): white slides, navy titles with a pale bar, cards with coloured borders and tinted fills, University of Bremen and AICOR marks in the footer",
+  "canvas": {"width_inches": 13.333, "height_inches": 7.5, "margin_inches": 0.5},
+  "fonts": {
+    "heading": "Calibri Light",
+    "body": "Calibri",
+    "mono": "Courier New"
+  },
+  "type_scale_points": {
+    "deck_title": 36, "deck_subtitle": 26, "slide_title": 27, "slide_subtitle": 13.5,
+    "body": 11.5, "small": 14, "caption": 10.5, "big_number": 48
+  },
+  "colours": {
+    "background": "FFFFFF",
+    "ink": "2B3440",
+    "muted": "6B7787",
+    "line": "9AA9BC",
+    "line_light": "D3DCE7",
+    "navy": "012060",
+    "blue": "2E5FA3",
+    "teal": "0E7C86",
+    "gold": "A9741F",
+    "red": "DA0831",
+    "purple": "6B4FA8",
+    "title_bar": "C2DAE4",
+    "title_band": "C2DAE4",
+    "band_lead": "8FB6E8"
+  },
+  "tints": {
+    "grey": "F5F7FA",
+    "blue": "E9F0FA",
+    "teal": "E3F1F2",
+    "gold": "FAF3E5",
+    "red": "FCEBEF",
+    "purple": "F1EDF9"
+  },
+  "components": {
+    "resolver": "012060",
+    "language_model": "6B4FA8",
+    "world_injector": "0E7C86",
+    "knowledge": "2E5FA3",
+    "simulation": "A9741F"
+  },
+  "outcomes": {"success": "0E7C86", "failure": "DA0831", "warning": "A9741F"},
+  "evidence_grades": {
+    "measured": "0E7C86",
+    "derived": "2E5FA3",
+    "sourced": "6B4FA8",
+    "defined": "6B7787",
+    "generated": "A9741F"
+  },
+  "logos": {
+    "university_of_bremen": {"path": "assets/logos/university_of_bremen.png", "x": 0.52, "y": 6.97, "w": 0.93, "h": 0.36},
+    "aicor": {"path": "assets/logos/aicor.png", "x": 11.58, "y": 6.99, "w": 1.22, "h": 0.33}
+  },
+  "sources": {
+    "colours_and_layout": "the reference deck's slide shapes (title 27 pt Calibri Light bold navy at 0.72,0.30; subtitle 13.5 pt grey; bar 0.08 x 0.85 at 0.50,0.31; title band 1.93 to 4.64)",
+    "evidence_grades": "llm_reasoner/doc/competency_questions.md section 3"
+  }
+}

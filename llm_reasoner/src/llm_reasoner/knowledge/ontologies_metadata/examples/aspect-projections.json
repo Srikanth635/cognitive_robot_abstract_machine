@@ -1,0 +1,392 @@
+[
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV2",
+    "version": "2",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#pouringV2",
+    "kind": "http://aicor.knowledge/ontologies/action-examples.owl#Pouring",
+    "roles": [
+      {
+        "role": "http://aicor.knowledge/ontologies/action-examples.owl#destinationRole",
+        "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#receivingContainer"
+      },
+      {
+        "role": "http://aicor.knowledge/ontologies/action-examples.owl#sourceRole",
+        "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#sourceContainer"
+      },
+      {
+        "role": "http://aicor.knowledge/ontologies/action-examples.owl#substanceRole",
+        "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#transferableSubstance"
+      }
+    ],
+    "conditions": [
+      {
+        "relationship": "hasPrecondition",
+        "condition": "http://aicor.knowledge/ontologies/action-examples.owl#pourPrecondition",
+        "expression": {
+          "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourPreExpression",
+          "type": "Conjunction",
+          "operands": [
+            {
+              "id": "http://aicor.knowledge/ontologies/action-examples.owl#destinationPreAtom",
+              "type": "AtomicCondition",
+              "scope": "PreState",
+              "predicate": "http://aicor.knowledge/ontologies/participants-relations.owl#Accessible",
+              "arguments": [
+                {
+                  "position": 1,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#AccessibleArgument1",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#receivingContainer"
+                }
+              ]
+            },
+            {
+              "id": "http://aicor.knowledge/ontologies/action-examples.owl#sourcePreAtom",
+              "type": "AtomicCondition",
+              "scope": "PreState",
+              "predicate": "http://aicor.knowledge/ontologies/participants-relations.owl#ContainedIn",
+              "arguments": [
+                {
+                  "position": 1,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#ContainedInArgument1",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#transferableSubstance"
+                },
+                {
+                  "position": 2,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#ContainedInArgument2",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#sourceContainer"
+                }
+              ]
+            }
+          ]
+        },
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV2Claim0",
+            "status": "Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ]
+      },
+      {
+        "relationship": "hasGoal",
+        "condition": "http://aicor.knowledge/ontologies/action-examples.owl#pourAmountGoal",
+        "expression": {
+          "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourAmountExpression",
+          "type": "Comparison",
+          "operator": "GreaterOrEqual",
+          "left": {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#deliveredAmountPost",
+            "type": "ParameterReference",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#deliveredAmount",
+            "scope": "PostState",
+            "value": null
+          },
+          "right": {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#targetAmountContext",
+            "type": "ParameterReference",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#targetAmount",
+            "scope": "TaskContext",
+            "value": null
+          }
+        },
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV2Claim1",
+            "status": "Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ]
+      },
+      {
+        "relationship": "hasSuccessCriterion",
+        "condition": "http://aicor.knowledge/ontologies/action-examples.owl#pourAmountSuccess",
+        "expression": {
+          "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourSuccessExpression",
+          "type": "Conjunction",
+          "operands": [
+            {
+              "id": "http://aicor.knowledge/ontologies/action-examples.owl#acceptableSpillageExpression",
+              "type": "Negation",
+              "operands": [
+                {
+                  "id": "http://aicor.knowledge/ontologies/action-examples.owl#spillFailureExpression",
+                  "type": "Comparison",
+                  "operator": "GreaterThan",
+                  "left": {
+                    "id": "http://aicor.knowledge/ontologies/action-examples.owl#spillPost",
+                    "type": "ParameterReference",
+                    "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillAmount",
+                    "scope": "PostState",
+                    "value": null
+                  },
+                  "right": {
+                    "id": "http://aicor.knowledge/ontologies/action-examples.owl#toleranceContext",
+                    "type": "ParameterReference",
+                    "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillTolerance",
+                    "scope": "TaskContext",
+                    "value": null
+                  }
+                }
+              ]
+            },
+            {
+              "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourAmountExpression",
+              "type": "Comparison",
+              "operator": "GreaterOrEqual",
+              "left": {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#deliveredAmountPost",
+                "type": "ParameterReference",
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#deliveredAmount",
+                "scope": "PostState",
+                "value": null
+              },
+              "right": {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#targetAmountContext",
+                "type": "ParameterReference",
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#targetAmount",
+                "scope": "TaskContext",
+                "value": null
+              }
+            }
+          ]
+        },
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV2Claim2",
+            "status": "Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ]
+      },
+      {
+        "relationship": "hasFailureCriterion",
+        "condition": "http://aicor.knowledge/ontologies/action-examples.owl#pourSpillFailure",
+        "expression": {
+          "id": "http://aicor.knowledge/ontologies/action-examples.owl#spillFailureExpression",
+          "type": "Comparison",
+          "operator": "GreaterThan",
+          "left": {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#spillPost",
+            "type": "ParameterReference",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillAmount",
+            "scope": "PostState",
+            "value": null
+          },
+          "right": {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#toleranceContext",
+            "type": "ParameterReference",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillTolerance",
+            "scope": "TaskContext",
+            "value": null
+          }
+        },
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV2Claim3",
+            "status": "Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV2",
+    "version": "2",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#graspingV2",
+    "kind": "http://aicor.knowledge/ontologies/action-examples.owl#Grasping",
+    "roles": [
+      {
+        "role": "http://aicor.knowledge/ontologies/action-examples.owl#effectorRole",
+        "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#gripperSpecification"
+      },
+      {
+        "role": "http://aicor.knowledge/ontologies/action-examples.owl#graspedRole",
+        "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#graspableObject"
+      }
+    ],
+    "conditions": [
+      {
+        "relationship": "hasPrecondition",
+        "condition": "http://aicor.knowledge/ontologies/action-examples.owl#graspPrecondition",
+        "expression": {
+          "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspablePre",
+          "type": "AtomicCondition",
+          "scope": "PreState",
+          "predicate": "http://aicor.knowledge/ontologies/participants-relations.owl#Graspable",
+          "arguments": [
+            {
+              "position": 1,
+              "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#GraspableArgument1",
+              "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#graspableObject"
+            }
+          ]
+        },
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV2Claim0",
+            "status": "Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ]
+      },
+      {
+        "relationship": "hasGoal",
+        "condition": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlledGoal",
+        "expression": {
+          "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspSuccessExpression",
+          "type": "Conjunction",
+          "operands": [
+            {
+              "id": "http://aicor.knowledge/ontologies/action-examples.owl#contactPost",
+              "type": "AtomicCondition",
+              "scope": "PostState",
+              "predicate": "http://aicor.knowledge/ontologies/participants-relations.owl#InContactWith",
+              "arguments": [
+                {
+                  "position": 1,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#InContactWithArgument1",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#gripperSpecification"
+                },
+                {
+                  "position": 2,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#InContactWithArgument2",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#graspableObject"
+                }
+              ]
+            },
+            {
+              "id": "http://aicor.knowledge/ontologies/action-examples.owl#controlPost",
+              "type": "AtomicCondition",
+              "scope": "PostState",
+              "predicate": "http://aicor.knowledge/ontologies/participants-relations.owl#Controls",
+              "arguments": [
+                {
+                  "position": 1,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#ControlsArgument1",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#gripperSpecification"
+                },
+                {
+                  "position": 2,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#ControlsArgument2",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#graspableObject"
+                }
+              ]
+            }
+          ]
+        },
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV2Claim1",
+            "status": "Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ]
+      },
+      {
+        "relationship": "hasSuccessCriterion",
+        "condition": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlledSuccess",
+        "expression": {
+          "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspSuccessExpression",
+          "type": "Conjunction",
+          "operands": [
+            {
+              "id": "http://aicor.knowledge/ontologies/action-examples.owl#contactPost",
+              "type": "AtomicCondition",
+              "scope": "PostState",
+              "predicate": "http://aicor.knowledge/ontologies/participants-relations.owl#InContactWith",
+              "arguments": [
+                {
+                  "position": 1,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#InContactWithArgument1",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#gripperSpecification"
+                },
+                {
+                  "position": 2,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#InContactWithArgument2",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#graspableObject"
+                }
+              ]
+            },
+            {
+              "id": "http://aicor.knowledge/ontologies/action-examples.owl#controlPost",
+              "type": "AtomicCondition",
+              "scope": "PostState",
+              "predicate": "http://aicor.knowledge/ontologies/participants-relations.owl#Controls",
+              "arguments": [
+                {
+                  "position": 1,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#ControlsArgument1",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#gripperSpecification"
+                },
+                {
+                  "position": 2,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#ControlsArgument2",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#graspableObject"
+                }
+              ]
+            }
+          ]
+        },
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV2Claim2",
+            "status": "Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ]
+      },
+      {
+        "relationship": "hasFailureCriterion",
+        "condition": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlFailure",
+        "expression": {
+          "id": "http://aicor.knowledge/ontologies/action-examples.owl#lostControlExpression",
+          "type": "Negation",
+          "operands": [
+            {
+              "id": "http://aicor.knowledge/ontologies/action-examples.owl#controlPost",
+              "type": "AtomicCondition",
+              "scope": "PostState",
+              "predicate": "http://aicor.knowledge/ontologies/participants-relations.owl#Controls",
+              "arguments": [
+                {
+                  "position": 1,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#ControlsArgument1",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#gripperSpecification"
+                },
+                {
+                  "position": 2,
+                  "argument": "http://aicor.knowledge/ontologies/participants-relations.owl#ControlsArgument2",
+                  "entitySpecification": "http://aicor.knowledge/ontologies/action-examples.owl#graspableObject"
+                }
+              ]
+            }
+          ]
+        },
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV2Claim3",
+            "status": "Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

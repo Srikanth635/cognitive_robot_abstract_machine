@@ -17,7 +17,7 @@ from functools import cached_property
 
 from typing_extensions import Any, Mapping, Optional
 
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
 from llm_reasoner.knowledge.generation.schema import (
     AnswerKey,
     FieldKind,
@@ -28,13 +28,9 @@ from llm_reasoner.knowledge.representation.hypothesis import (
     DecodedHypothesis,
     GivenFragments,
 )
-from llm_reasoner.knowledge.ontologies import (
-    CRAM_AICOR_NAMESPACE,
-    DUL_NAMESPACE,
-    HYPOTHESIS_CONCEPT_NAMESPACE,
-)
-from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity
+from llm_reasoner.knowledge.vocabulary.ontology_modules import HYPOTHESIS_CONCEPT_NAMESPACE
+from llm_reasoner.knowledge.vocabulary.linked import LinkedOntologyTerms
+from llm_reasoner.knowledge.vocabulary.terms import ConceptReference, DescriptionEntity
 
 JSON_OBJECT = re.compile(r"\{.*}", re.DOTALL)
 """
@@ -42,8 +38,6 @@ Locates the JSON object inside a response that may carry surrounding text.
 """
 
 CONCEPT_PREFIXES: Mapping[str, str] = {
-    "aicor": CRAM_AICOR_NAMESPACE,
-    "dul": DUL_NAMESPACE,
     "hypothesis": HYPOTHESIS_CONCEPT_NAMESPACE,
 }
 """
@@ -104,16 +98,13 @@ class FragmentDecoder:
 
     vocabulary: Vocabulary = field(default_factory=Vocabulary)
     """
-    The generated vocabulary, read for the components a structure declares and the
-    values classes entail.
+    The generated vocabulary, read for the values classes entail.
     """
 
-    linked_terms: LinkedOntologyTerms = field(
-        default_factory=LinkedOntologyTerms.pinned
-    )
+    linked_terms: LinkedOntologyTerms = field(default_factory=LinkedOntologyTerms)
     """
-    The classes CRAM-AICOR and DUL declare, which a concept named in their namespaces
-    must be among.
+    The classes the linked ontologies declare, which a concept named in their
+    namespaces must be among; no linked ontology by default.
     """
 
     given: GivenFragments = field(default_factory=GivenFragments)
@@ -125,9 +116,8 @@ class FragmentDecoder:
     @cached_property
     def given_types(self) -> set[type]:
         """
-        The types the hypotheses of the given fragments state, such as the slots of a
-        core frame; a type of their modules that none of them states, such as a
-        condition the core declares for its perspectives, an answer may state itself.
+        The types the hypotheses of the given fragments state; a type of their modules
+        that none of them states an answer may state itself.
         """
         return {
             type_schema.python_type
@@ -164,7 +154,6 @@ class FragmentDecoder:
             return DecodingResult(problems=problems)
         for instance in instances.values():
             self.vocabulary.fill_entailed_values(instance)
-        self.declare_components(roots[0], list(instances.values()))
         hypothesis = DecodedHypothesis(
             root=roots[0],
             fragments=list(instances.values()),
@@ -345,10 +334,6 @@ class FragmentDecoder:
             if name in (AnswerKey.IDENTIFIER, AnswerKey.TYPE):
                 continue
             field_schema = type_schema.field_named(name)
-            if field_schema is None and name in self.vocabulary.component_fields(
-                type(instance)
-            ):
-                continue
             if field_schema is None:
                 problems.append(
                     f"fragment '{identifier}' of type {type_schema.name} has no field "
@@ -372,37 +357,6 @@ class FragmentDecoder:
                 continue
             setattr(instance, name, converted if field_schema.many else converted[0])
         return problems
-
-    def declare_components(
-        self, root: DescriptionEntity, fragments: list[DescriptionEntity]
-    ) -> None:
-        """
-        Declare every fragment of the answer as a component of the root, through the
-        most specific of the root's component fields accepting it; a fragment no
-        component field accepts, such as a magnitude range, is a value and stays
-        undeclared.
-        """
-        component_fields = self.vocabulary.component_fields(type(root))
-        declared: dict[str, list[DescriptionEntity]] = {
-            name: [] for name in component_fields
-        }
-        for fragment in fragments:
-            if fragment is root:
-                continue
-            accepting = {
-                name: component_type
-                for name, component_type in component_fields.items()
-                if isinstance(fragment, component_type)
-            }
-            for name, component_type in accepting.items():
-                if not any(
-                    other is not component_type and issubclass(other, component_type)
-                    for other in accepting.values()
-                ):
-                    declared[name].append(fragment)
-        for name, components in declared.items():
-            if components:
-                setattr(root, name, components)
 
     def value(
         self,
@@ -460,8 +414,8 @@ class FragmentDecoder:
     def concept(self, written: Any) -> Any:
         """
         :return: The concept reference a prefixed name or IRI stands for, or the
-            problem; a concept in the namespace of CRAM-AICOR or DUL must be a class
-            they declare.
+            problem; a concept in the namespace of a linked ontology must be a class it
+            declares.
         """
         if isinstance(written, str) and written.startswith(("http://", "https://")):
             iri = written
@@ -471,8 +425,8 @@ class FragmentDecoder:
             )
             if prefix not in CONCEPT_PREFIXES or not local:
                 return Problem(
-                    f"{written!r} is not a prefixed term such as aicor:Pouring or an "
-                    "IRI"
+                    f"{written!r} is not a prefixed term such as hypothesis:<Name> or "
+                    "an IRI"
                 )
             iri = CONCEPT_PREFIXES[prefix] + local
         if self.linked_terms.concerns(iri) and not self.linked_terms.declares(iri):
@@ -480,7 +434,7 @@ class FragmentDecoder:
                 prefixed_name(term) for term in self.linked_terms.closest(iri)
             )
             return Problem(
-                f"{written!r} is not a class CRAM-AICOR or DUL declares"
+                f"{written!r} is not a class a linked ontology declares"
                 + (f"; the closest they declare: {closest}" if closest else "")
                 + "; write hypothesis:<Name> for a concept they lack"
             )

@@ -1,0 +1,15 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/causal-physical-bridge.owl> a owl:Ontology ;
+    rdfs:label "Causal physical bridge"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/causal-mechanisms.owl>,
+        <http://aicor.knowledge/ontologies/physical-models.owl> ;
+    owl:versionInfo "0.6.0" .
+
+<http://aicor.knowledge/ontologies/physical-models.owl#realizesMechanism> a owl:ObjectProperty ;
+    rdfs:label "Realizes Mechanism"@en ;
+    rdfs:comment "Model intended to represent this mechanism; not a proof."@en ;
+    rdfs:domain <http://aicor.knowledge/ontologies/physical-models.owl#PhysicalModelSpecification> ;
+    rdfs:range <http://aicor.knowledge/ontologies/causal-mechanisms.owl#MechanismSpecification> .
+

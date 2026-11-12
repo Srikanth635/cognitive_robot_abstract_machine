@@ -1,0 +1,90 @@
+[
+  {
+    "case": "valid-combined-aspect-knowledge",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-agonist",
+    "passed": true
+  },
+  {
+    "case": "reject-collapsed-force-roles",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-force-scope",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-source-path-goal",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-contact-participant",
+    "passed": true
+  },
+  {
+    "case": "reject-cyclic-material",
+    "passed": true
+  },
+  {
+    "case": "reject-cyclic-opening",
+    "passed": true
+  },
+  {
+    "case": "reject-unversioned-asset",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-material-state",
+    "passed": true
+  },
+  {
+    "case": "reject-affordance-without-context",
+    "passed": true
+  },
+  {
+    "case": "reject-affordance-without-capability",
+    "passed": true
+  },
+  {
+    "case": "reject-boundary-without-condition",
+    "passed": true
+  },
+  {
+    "case": "reject-identical-boundary-phases",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-boundary-phase",
+    "passed": true
+  },
+  {
+    "case": "reject-expectation-without-modality",
+    "passed": true
+  },
+  {
+    "case": "reject-controlpoint-without-observation-capability",
+    "passed": true
+  },
+  {
+    "case": "reject-mismatch-without-criterion",
+    "passed": true
+  },
+  {
+    "case": "qualitative-strength-remains-unknown",
+    "passed": true
+  },
+  {
+    "case": "no-observation-asserted-by-expectation",
+    "passed": true
+  },
+  {
+    "case": "new-claims-proposed",
+    "passed": true
+  },
+  {
+    "case": "shared-entity-not-mutated-with-material-links",
+    "passed": true
+  }
+]

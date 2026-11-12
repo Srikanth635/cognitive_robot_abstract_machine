@@ -1,0 +1,157 @@
+{
+  "release": "0.12.0",
+  "checks": [
+    {
+      "case": "all-example-shapes",
+      "passed": true
+    },
+    {
+      "case": "expression-integrity",
+      "passed": true
+    },
+    {
+      "case": "monitor-guard-dependencies-updated",
+      "passed": true
+    },
+    {
+      "case": "transfer-and-diagnostic-link-integrity",
+      "passed": true
+    },
+    {
+      "case": "wrong-bound-destination-rejected",
+      "passed": true
+    },
+    {
+      "case": "unreferenced-contract-quantity-rejected",
+      "passed": true
+    },
+    {
+      "case": "collapsed-source-destination-rejected",
+      "passed": true
+    },
+    {
+      "case": "foreign-substance-rejected",
+      "passed": true
+    },
+    {
+      "case": "destination-unknown-prevents-success",
+      "passed": true
+    },
+    {
+      "case": "intended-destination-success",
+      "passed": true
+    },
+    {
+      "case": "wrong-destination-fails",
+      "passed": true
+    },
+    {
+      "case": "other-container-does-not-substitute",
+      "passed": true
+    },
+    {
+      "case": "excess-spill-fails",
+      "passed": true
+    },
+    {
+      "case": "insufficient-transfer-fails",
+      "passed": true
+    },
+    {
+      "case": "partial-pour-does-not-require-empty-source",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-destination",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-quantity-referent",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-diagnostic-cause",
+      "passed": true
+    },
+    {
+      "case": "reject-mismatched-causal-antecedent",
+      "passed": true
+    },
+    {
+      "case": "unpopulated-accounting-remains-unknown",
+      "passed": true
+    },
+    {
+      "case": "balanced-accounting",
+      "passed": true
+    },
+    {
+      "case": "unbalanced-accounting-detected",
+      "passed": true
+    },
+    {
+      "case": "dimension-mismatch-detected",
+      "passed": true
+    },
+    {
+      "case": "conversion-never-assumed",
+      "passed": true
+    },
+    {
+      "case": "missing-dynamics-reported",
+      "passed": true
+    },
+    {
+      "case": "unknown-control-units-reported",
+      "passed": true
+    },
+    {
+      "case": "controller-not-synthesized",
+      "passed": true
+    },
+    {
+      "case": "wrong-controller-time-dimension-rejected",
+      "passed": true
+    },
+    {
+      "case": "revision-substantive-claims-covered",
+      "passed": true
+    },
+    {
+      "case": "revision-claims-stay-proposed",
+      "passed": true
+    },
+    {
+      "case": "old-success-unchanged",
+      "passed": true
+    }
+  ],
+  "accounting": {
+    "dimensionCheck": "compatible",
+    "unitCheck": "identical",
+    "residual": "0.000",
+    "satisfied": true,
+    "physicalValidityAssessed": false
+  },
+  "control": {
+    "controller": "http://aicor.knowledge/ontologies/action-examples.owl#pourControllerV8",
+    "model": "http://aicor.knowledge/ontologies/action-examples.owl#pourDynamicsV8",
+    "vectorDimensions": {
+      "Input": 1,
+      "Output": 1,
+      "State": 1
+    },
+    "unresolved": [
+      "output equation",
+      "quantity contract: http://aicor.knowledge/ontologies/action-examples.owl#pourCommandV8",
+      "state evolution equation",
+      "time dimension/unit contract: http://aicor.knowledge/ontologies/action-examples.owl#pourSamplingPeriodV8",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#pourSamplingPeriodV8"
+    ],
+    "executionReadinessAssessed": false,
+    "contractErrors": [],
+    "controllerSynthesized": false,
+    "physicalValidityAssessed": false
+  },
+  "limitation": "Synthetic contract checks only; no physics solver, system identification, control synthesis or execution."
+}

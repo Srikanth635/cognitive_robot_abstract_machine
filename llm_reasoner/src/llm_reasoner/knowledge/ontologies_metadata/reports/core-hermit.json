@@ -1,0 +1,6 @@
+{
+  "consistent": true,
+  "unsatisfiable_classes": [],
+  "scope": "TBox: action-description-core + supplied DUL; excludes AICOR bridge and examples",
+  "elapsed_seconds": 2.4
+}

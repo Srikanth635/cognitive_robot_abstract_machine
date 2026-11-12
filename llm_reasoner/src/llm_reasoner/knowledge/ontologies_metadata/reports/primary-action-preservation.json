@@ -1,0 +1,33 @@
+{
+  "baseline": "0.21.0",
+  "prior_rdf_files": 87,
+  "byte_identical": 81,
+  "changed": [
+    "gpt_cram_ontologies/domains/material-transfer.ttl",
+    "gpt_cram_ontologies/domains/mobility-navigation-shapes.ttl",
+    "gpt_cram_ontologies/domains/mobility-navigation.ttl",
+    "gpt_cram_ontologies/domains/object-manipulation-shapes.ttl",
+    "gpt_cram_ontologies/domains/object-manipulation.ttl",
+    "gpt_cram_ontologies/domains/tool-transfer-shapes.ttl"
+  ],
+  "missing": [],
+  "ontology_delta": [
+    {
+      "file": "gpt_cram_ontologies/domains/material-transfer.ttl",
+      "removed_nonversion_triples": 0,
+      "added_nonversion_triples": 13
+    },
+    {
+      "file": "gpt_cram_ontologies/domains/mobility-navigation.ttl",
+      "removed_nonversion_triples": 0,
+      "added_nonversion_triples": 41
+    },
+    {
+      "file": "gpt_cram_ontologies/domains/object-manipulation.ttl",
+      "removed_nonversion_triples": 0,
+      "added_nonversion_triples": 26
+    }
+  ],
+  "registry_byte_identical": true,
+  "examples_and_demo_byte_identical": true
+}

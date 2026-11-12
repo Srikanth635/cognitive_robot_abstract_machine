@@ -1,0 +1,303 @@
+[
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 3.44
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.68
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/phases-transitions.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 3.05
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/dynamics-control.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.67
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.23
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.42
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/physical-models.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.34
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/participants-relations.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.28
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.54
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.5
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/all-action-aspects.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/all-action-aspects.owl",
+      "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://aicor.knowledge/ontologies/force-dynamics.owl",
+      "http://aicor.knowledge/ontologies/frame-perspective.owl",
+      "http://aicor.knowledge/ontologies/image-schemas.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+      "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 5.17
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.63
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.16
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.2
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.5
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/frame-perspective.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/frame-perspective.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.21
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/force-dynamics.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/force-dynamics.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.21
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/image-schemas.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/image-schemas.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.1
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.53
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.22
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.46
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/model-contracts.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.59
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "seconds": 2.39
+  }
+]

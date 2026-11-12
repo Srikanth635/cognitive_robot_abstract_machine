@@ -4,7 +4,7 @@ files, its links to the CRAM-AICOR and DUL ontologies, and what an OWL reasoner
 concludes from it.
 
 Tests that need CRAM-AICOR or DUL read the pinned copies
-(:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`). Tests that reason
+(:class:`~llm_reasoner.knowledge.vocabulary.linked.LinkedOntologyFile`). Tests that reason
 need ``owlready2`` and a Java runtime for HermiT; each run classifies both
 external ontologies with the microworld and takes minutes, so they are marked slow.
 """
@@ -20,8 +20,8 @@ import pytest
 from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, Namespace, URIRef
 from typing_extensions import Any, Callable
 
-from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyFile
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.linked import LinkedOntologyFile
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     ActionPerspectiveFile,
     CRAM_AICOR_NAMESPACE,
     CRAM_AICOR_ONTOLOGY_IRI,

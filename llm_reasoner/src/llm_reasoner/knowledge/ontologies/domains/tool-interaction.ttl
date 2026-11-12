@@ -1,0 +1,196 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dom: <http://aicor.knowledge/ontologies/tool-interaction.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/tool-interaction.owl> a owl:Ontology ;
+    rdfs:label "Tool interaction"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/knowledge-context.owl>,
+        <http://aicor.knowledge/ontologies/monitoring-requirements.owl>,
+        <http://aicor.knowledge/ontologies/robot-motion.owl> ;
+    owl:versionInfo "0.17.0" .
+
+dom:DisengagingTool a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Disengaging tool"@en .
+
+dom:EffectObserved a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Effect observed"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition dom:EffectObservedArgument1,
+        dom:EffectObservedArgument2 ;
+    rdfs:comment "Externally assessed, context-qualified EffectObserved condition; no physical guarantee inferred."@en .
+
+dom:EngagingTool a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Engaging tool"@en .
+
+dom:PositioningTool a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Positioning tool"@en .
+
+dom:ToolAligned a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Tool aligned"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition dom:ToolAlignedArgument1,
+        dom:ToolAlignedArgument2 ;
+    rdfs:comment "Externally assessed, context-qualified ToolAligned condition; no physical guarantee inferred."@en .
+
+dom:ToolClear a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Tool clear"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition dom:ToolClearArgument1,
+        dom:ToolClearArgument2 ;
+    rdfs:comment "Externally assessed, context-qualified ToolClear condition; no physical guarantee inferred."@en .
+
+dom:ToolDisengagementDescription a owl:Class ;
+    rdfs:label "Tool disengagement description"@en ;
+    rdfs:comment "Separate and clear a tool from its target; completion does not establish task effect."@en ;
+    rdfs:subClassOf dom:ToolInteractionDescription .
+
+dom:ToolEngagementDescription a owl:Class ;
+    rdfs:label "Tool engagement description"@en ;
+    rdfs:comment "Establish a held tool contact under a declared contact policy."@en ;
+    rdfs:subClassOf dom:ToolInteractionDescription .
+
+dom:ToolFault a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Tool fault"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition dom:ToolFaultArgument1,
+        dom:ToolFaultArgument2 ;
+    rdfs:comment "Externally assessed, context-qualified ToolFault condition; no physical guarantee inferred."@en .
+
+dom:ToolFunctional a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Tool functional"@en ;
+    ns1:arity "1"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition dom:ToolFunctionalArgument1 ;
+    rdfs:comment "Externally assessed, context-qualified ToolFunctional condition; no physical guarantee inferred."@en .
+
+dom:ToolHeld a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Tool held"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition dom:ToolHeldArgument1,
+        dom:ToolHeldArgument2 ;
+    rdfs:comment "Externally assessed, context-qualified ToolHeld condition; no physical guarantee inferred."@en .
+
+dom:ToolPositioningDescription a owl:Class ;
+    rdfs:label "Tool positioning description"@en ;
+    rdfs:comment "Align a tool working part to its target; no contact or effect implied."@en ;
+    rdfs:subClassOf dom:ToolInteractionDescription .
+
+dom:ToolUseDescription a owl:Class ;
+    rdfs:label "Tool use description"@en ;
+    rdfs:comment "Maintain tool availability/control and establish an explicitly observed intended effect."@en ;
+    rdfs:subClassOf dom:ToolInteractionDescription .
+
+dom:UsingTool a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Using tool"@en .
+
+dom:contactPolicy a owl:DatatypeProperty ;
+    rdfs:label "Contact policy"@en ;
+    rdfs:domain dom:ToolInteractionDescription ;
+    rdfs:range xsd:string .
+
+dom:evaluationContext a owl:ObjectProperty ;
+    rdfs:label "Evaluation context"@en ;
+    rdfs:domain dom:ToolInteractionDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> .
+
+dom:forceLimit a owl:ObjectProperty ;
+    rdfs:label "Force limit"@en ;
+    rdfs:domain dom:ToolInteractionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+dom:intendedEffect a owl:ObjectProperty ;
+    rdfs:label "Intended effect"@en ;
+    rdfs:domain dom:ToolInteractionDescription ;
+    rdfs:range ac:EntitySpecification .
+
+dom:operator a owl:ObjectProperty ;
+    rdfs:label "Operator"@en ;
+    rdfs:domain dom:ToolInteractionDescription ;
+    rdfs:range ac:EntitySpecification .
+
+dom:referenceFrame a owl:ObjectProperty ;
+    rdfs:label "Reference frame"@en ;
+    rdfs:domain dom:ToolInteractionDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+dom:target a owl:ObjectProperty ;
+    rdfs:label "Target"@en ;
+    rdfs:domain dom:ToolInteractionDescription ;
+    rdfs:range ac:EntitySpecification .
+
+dom:tool a owl:ObjectProperty ;
+    rdfs:label "Tool"@en ;
+    rdfs:domain dom:ToolInteractionDescription ;
+    rdfs:range ac:EntitySpecification .
+
+dom:workingPart a owl:ObjectProperty ;
+    rdfs:label "Working part"@en ;
+    rdfs:domain dom:ToolInteractionDescription ;
+    rdfs:range ac:EntitySpecification .
+
+dom:workingPartOf a owl:ObjectProperty ;
+    rdfs:label "Working part of"@en ;
+    rdfs:domain ac:EntitySpecification ;
+    rdfs:range ac:EntitySpecification .
+
+dom:EffectObservedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+dom:EffectObservedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "intended effect"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+dom:ToolAlignedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "working part"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+dom:ToolAlignedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+dom:ToolClearArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "tool"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+dom:ToolClearArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+dom:ToolFaultArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "operator"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+dom:ToolFaultArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "tool"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+dom:ToolFunctionalArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "tool"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+dom:ToolHeldArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "operator"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+dom:ToolHeldArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "tool"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+dom:ToolInteractionDescription a owl:Class ;
+    rdfs:label "Tool interaction description"@en ;
+    rdfs:comment "Intended functional interaction through a tool; no robot, tool body or physical effect is asserted."@en ;
+    rdfs:subClassOf ac:ActionDescription .
+

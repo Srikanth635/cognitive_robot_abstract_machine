@@ -1,0 +1,118 @@
+CONTINUATION UPDATE: ORDERED RECIPES AND SPECIALIZED TOOL INTERACTIONS
+Release 0.20.0; completed 2026-11-12.
+
+The user requested action recipes and specialized tool interactions. This
+increment adds two ontology documents: compositions/action-recipes.ttl and
+refinements/specialized-tool-interactions.ttl. There are now seven primitive
+domains, two composition modules and one refinement module, with 40 registered
+ontology documents in total. The generic aspect assembly is unchanged.
+
+Read compositions/ACTION_RECIPES.md and
+refinements/SPECIALIZED_TOOL_INTERACTIONS.md, then the corresponding inspectors,
+fixtures, shapes and reports/release-0.20.0.json. Earlier handoff files retain
+their dated scope. This work is standalone and not established as pushed or
+migrated into the GitHub llm_reasoner package.
+
+Tool refinements:
+  - Cutting to a specified separation outcome.
+  - Wiping to a specified surface effect with qualified sweep coverage.
+  - Maintained-contact pressing to a specified actuation outcome.
+  - Aligned insertion-to-seat with an explicit depth-error/tolerance criterion.
+
+These specialize generic ToolUseDescription and retain operator/tool/working
+part/target/effect identities, context, generic conditions and evidence boundaries.
+Contact or generic EffectObserved does not replace the specific outcome.
+Wiping requires its own nonzero timezone-qualified interval to use aggregate
+coverage. Pressing is the maintained-contact variant; a momentary/released
+button needs another temporal profile. Insertion's depth metric references an
+explicit target and frame, uses canonical metres and remains unspecified in the
+examples. No force, hardness, friction, sterility, material model or safe limit
+is invented. These are semantic profiles, not verified CoraPlex executors.
+
+Initial ordered recipes:
+  - Pickup, carry, place (ordinary destination carrying).
+  - Pickup, route/orientation-constrained carry, place.
+  - Acquire, position, engage, cut, withdraw, supported return of a tool.
+  - Acquire, position, engage, wipe, withdraw, supported return of a tool.
+
+RecipeStep is an owned indexed occurrence, with its own action description and
+context. Stage roles/indices must match the bounded recipe family. Participant,
+support, destination, tool, target and effect identities are checked across
+stages. Tool stages use a common declared frame. Return is to the declared
+original support; the initial support is an explicit recipe prerequisite.
+
+RecipeSuccessContract references every stage prerequisite/success, every
+handoff and the final stage. The root uses ordered-recipe-contract-v1 lexical
+conditions with machine-readable contract properties. Do not flatten historical
+PostState facts: pickup-held and placement-released are different stage contexts.
+The inspector does not parse or execute arbitrary lexical text.
+
+Each supplied stage dictionary must explicitly identify its context. Stage
+windows are sequential, nonoverlapping, timezone-qualified and inside the
+parent interval. A full recipe begins at the first boundary and ends at the
+last. Only an ordered prefix is accepted; missing earlier history cannot be
+replaced by a later favorable outcome. A missing stage/window remains unknown.
+
+Exactly one handoff joins each adjacent pair. Handoff input identifies the
+parent context, from/to stages, exact previous-end/next-start bounds and facts.
+ControlContinuity must be supplied, with LoadSupportContinuity additionally
+required for pick/carry/place. Gaps are not silently assumed safe. Shared
+zero-width boundaries are allowed but still require explicit continuity evidence.
+A previous stage's success is not promoted into the next stage's preconditions.
+Generic ToolHeld and manipulation Holds remain distinct predicates.
+
+Nested carry assessment preserves holding/mobility coextensive subwindows;
+nested wiping preserves its own coverage window. The previous transport record
+API now delegates to an assess_description helper so the recipe can inspect
+the selected child description within its common record without manufacturing
+an independently mutable child store. All 159 transport regressions passed.
+
+Recipe conforming-success requires local prerequisites, every stage prerequisite
+and outcome, all handoffs and full ordered interval qualification. Explicit
+stage/recipe faults are reported independently; missing history is not a fault
+event. Success/fault coexistence remains visible. Intermediate tool effects
+are verified at their stage, not guaranteed to persist through later return.
+Final placement/return is the final stage's qualified outcome.
+
+No stage is selected or executed, no controller is run, no belief is accepted,
+and no robot/world is bound. This is not an execution scheduler, full temporal
+planner or terminating plan formalism. Retries, branches, recovery, process
+provider matching, resource locking, physical feasibility and source/evidence
+acceptance remain future contracts. Working projections remain deferred.
+
+Four refined-tool records and four recipe records are synthetic Proposed
+snapshots with exact statement coverage for reachable descriptive links. They
+contain no numeric physical defaults or acquired observations. New authoring
+helpers clone descriptions and create snapshots; the two builders regenerate
+only the new fixtures and preserve the original domain/transport examples.
+
+Current validation:
+  149 new structural/semantic/negative checks passed.
+  23 scoped query cases passed.
+  159 transport and 81 tool/material-transfer regressions passed.
+  62 import/catalog checks and 93 historical competency assertions passed.
+  Three closures classified: tool refinements, action recipes, combined assembly;
+    no unsatisfiable named classes were reported.
+  Combined generic examples/demo consistency passed with a 7168 MB Java heap.
+
+The optional combined AICOR consistency attempt timed out at 180 seconds.
+It is unverified, not passed or logically refuted. The earlier SceneNode
+normalization issue remains unresolved, but this run did not reproduce that
+exception. Timeout handling was added to the reasoning script after observing
+the timeout; the report explicitly records that provenance and no expensive
+second optional run was claimed. Full AICOR class satisfiability is unverified.
+
+Preservation against 0.19.0: 80 of 81 prior RDF files are byte-identical. Only
+the combined knowledge assembly changes imports/version. Existing domains,
+generic aspects, prior records, DUL/AICOR inputs and the pouring demo remain
+unchanged. The transport Python API delegation, new helper modules, registry,
+catalogs and documentation are additional changes, accurately separate from
+the RDF preservation count.
+
+Further useful work: source-backed technique knowledge; explicit transient
+press/release, gravity-upright/free-yaw and force/compliance variants; open-access-
+manipulate-close and fetch/deliver recipes; recovery/timeouts and evidence
+coverage contracts. Audit actual current CoraPlex actions before claiming
+exhaustive executable coverage or designing an adapter. The representation
+should remain DUL-based, world independent, reusable, evidence qualified and
+centered on common records with shared identities and separate contexts.

@@ -34,7 +34,7 @@ from llm_reasoner.knowledge.generation.schema import (
     TypeSchema,
 )
 from llm_reasoner.knowledge.generation.wire import prefixed_name
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity
+from llm_reasoner.knowledge.vocabulary.terms import ConceptReference, DescriptionEntity
 from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
 from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.prompt_structure import (
@@ -213,7 +213,7 @@ class StructureRuleKey(StrEnum):
     RULE = "rule"
 
 
-CONCEPT_FORMS = "aicor:<Name> | dul:<Name> | hypothesis:<Name>"
+CONCEPT_FORMS = "<prefix>:<Name> | hypothesis:<Name>"
 """
 The forms a concept field's value takes.
 """
@@ -228,8 +228,7 @@ def generation_rules(root: str) -> List[PromptRule]:
         PromptRule(
             GenerationRuleName.ROOT,
             f"produce exactly one fragment of type {root}, with the fragments that "
-            f"make it up; every fragment you write is part of the {root}, so it does "
-            "not list them.",
+            "make it up.",
         ),
         PromptRule(
             GenerationRuleName.ANSWER_FORMAT,
@@ -262,8 +261,7 @@ def generation_rules(root: str) -> List[PromptRule]:
             GenerationRuleName.DEFINED_TYPE,
             f'a type with "{TypeKey.DEFINED}" is met by its fields: a fragment of '
             "another type that states what the definition requires belongs to it as "
-            "well, so an estimate whose physical dimension is a force rate is also a "
-            "force rate parameter.",
+            "well.",
         ),
         PromptRule(
             GenerationRuleName.ENUMERATIONS,
@@ -271,10 +269,9 @@ def generation_rules(root: str) -> List[PromptRule]:
         ),
         PromptRule(
             GenerationRuleName.CONCEPTS,
-            f'a field taking a "{TakesKey.CONCEPT}" takes a prefixed term: '
-            "aicor:<Name> or dul:<Name> for a term CRAM-AICOR or DUL declares, such as "
-            "aicor:Pouring, and hypothesis:<Name> for a concept they lack, such as a "
-            "category of grasp; never invent an aicor: or dul: term.",
+            f'a field taking a "{TakesKey.CONCEPT}" takes a prefixed term: one a '
+            "linked ontology declares, or hypothesis:<Name> for a concept they lack, "
+            "such as a category of grasp; never invent a term of a linked ontology.",
         ),
         PromptRule(
             GenerationRuleName.ABSENT_FIELDS,
@@ -460,6 +457,11 @@ class GenerationPrompt:
     Builds the prompts of one generation.
     """
 
+    brief: GenerationBrief
+    """
+    What the model is asked to describe, and the rules about what its answer describes.
+    """
+
     shapes: StructureShapes = field(default_factory=StructureShapes.shipped)
     """
     The structural rules stated to the model beside the types they constrain.
@@ -472,10 +474,9 @@ class GenerationPrompt:
             stays the same for every attempt and every instruction and can be cached.
         """
         root = schema.root.__name__
-        brief = GenerationBrief.for_root(schema.root)
         return render_blocks(
             [
-                PromptBlock(section=GenerationSection.ROLE, body=brief.role),
+                PromptBlock(section=GenerationSection.ROLE, body=self.brief.role),
                 PromptBlock(
                     section=GenerationSection.INPUTS,
                     body="\n".join(
@@ -487,7 +488,7 @@ class GenerationPrompt:
                     section=GenerationSection.RULES,
                     body="\n".join(
                         rule.render()
-                        for rule in (*brief.rules, *generation_rules(root))
+                        for rule in (*self.brief.rules, *generation_rules(root))
                     ),
                 ),
                 PromptBlock(

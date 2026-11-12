@@ -1,0 +1,98 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/action-recipes.owl#HandoffRequirementShape> a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeStep> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#fromStep> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeStep> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#toStep> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#handoffCondition> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/action-recipes.owl#HandoffRequirement> .
+
+<http://aicor.knowledge/ontologies/action-recipes.owl#RecipeDescriptionShape> a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#payload> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#destinationSupport> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeStep> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#hasStep> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#sourceSupport> ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#evaluationContext> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#localPrecondition> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeSuccessContract> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#localFailure> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#HandoffRequirement> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#hasHandoff> ],
+        [ sh:class <http://aicor.knowledge/ontologies/object-manipulation.owl#TargetRegionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#placementRegion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#operator> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeDescription> .
+
+<http://aicor.knowledge/ontologies/action-recipes.owl#RecipeStepShape> a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeStageRole> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#stepRole> ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#stepContext> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ActionDescription> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#stepAction> ],
+        [ sh:datatype xsd:positiveInteger ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#positionIndex> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeStep> .
+
+<http://aicor.knowledge/ontologies/action-recipes.owl#RecipeSuccessContractShape> a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeStep> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#requiresStepSuccess> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#HandoffRequirement> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#requiresHandoff> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeStep> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#finalStep> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeStep> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-recipes.owl#requiresStepPrecondition> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/action-recipes.owl#RecipeSuccessContract> .
+

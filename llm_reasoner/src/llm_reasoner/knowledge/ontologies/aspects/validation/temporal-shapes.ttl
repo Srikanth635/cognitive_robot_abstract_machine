@@ -1,0 +1,44 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix pr: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix pt: <http://aicor.knowledge/ontologies/phases-transitions.owl#> .
+@prefix mr: <http://aicor.knowledge/ontologies/monitoring-requirements.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+pt:StructureShape a sh:NodeShape; sh:targetClass pt:PhaseStructure;
+ sh:property [sh:path pt:hasMemberPhase; sh:minCount 1; sh:class ac:PhaseSpecification];
+ sh:property [sh:path pt:initialPhase; sh:minCount 1; sh:maxCount 1; sh:class ac:PhaseSpecification];
+ sh:property [sh:path pt:hasTransition; sh:class pt:PhaseTransition].
+pt:TransitionShape a sh:NodeShape; sh:targetClass pt:PhaseTransition;
+ sh:xone ([sh:class pt:OrdinaryTransition] [sh:class pt:FailureTransition] [sh:class pt:RecoveryTransition]);
+ sh:property [sh:path pt:fromPhase; sh:minCount 1; sh:maxCount 1; sh:class ac:PhaseSpecification];
+ sh:property [sh:path pt:toPhase; sh:minCount 1; sh:maxCount 1; sh:class ac:PhaseSpecification];
+ sh:property [sh:path pt:guardCondition; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification].
+pt:PhaseShape a sh:NodeShape; sh:targetClass ac:PhaseSpecification;
+ sh:property [sh:path pt:entryCondition; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path pt:exitCondition; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path pt:invariantCondition; sh:class ac:ConditionSpecification];
+ sh:property [sh:path pt:expectedOutcome; sh:class co:OutcomeSpecification].
+pt:ConditionReferenceShape a sh:NodeShape;
+ sh:targetObjectsOf pt:guardCondition, pt:entryCondition, pt:exitCondition, pt:invariantCondition, mr:monitorsCondition;
+ sh:property [sh:path co:hasExpression; sh:minCount 1; sh:maxCount 1; sh:class co:BooleanExpression].
+mr:MonitorShape a sh:NodeShape; sh:targetClass mr:MonitoringRequirement;
+ sh:property [sh:path mr:monitorsCondition; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path mr:atPoint; sh:minCount 1; sh:maxCount 1; sh:in (mr:PhaseEntry mr:DuringPhase mr:PhaseExit mr:TransitionCheck)];
+ sh:property [sh:path mr:requiresObservation; sh:class mr:ObservationRequirement];
+ sh:property [sh:path mr:whenTrue; sh:minCount 1; sh:maxCount 1; sh:class mr:MonitoringResponse];
+ sh:property [sh:path mr:whenFalse; sh:minCount 1; sh:maxCount 1; sh:class mr:MonitoringResponse];
+ sh:property [sh:path mr:whenUnknown; sh:minCount 1; sh:maxCount 1; sh:in (mr:RequestEvidence mr:RequestSuspension mr:ReportUnknown)].
+mr:ObservationShape a sh:NodeShape; sh:targetClass mr:ObservationRequirement;
+ sh:xone ([sh:class mr:RelationObservation] [sh:class mr:QuantityObservation]);
+ sh:property [sh:path mr:inScope; sh:minCount 1; sh:maxCount 1; sh:in (co:PreState co:PostState co:CurrentState co:TaskContext)];
+ sh:property [sh:path mr:requiresCapability; sh:class ac:CapabilityRequirement].
+mr:RelationObservationShape a sh:NodeShape; sh:targetClass mr:RelationObservation;
+ sh:property [sh:path mr:observesPattern; sh:minCount 1; sh:maxCount 1; sh:class pr:RelationPattern];
+ sh:property [sh:path mr:observesParameter; sh:maxCount 0].
+mr:QuantityObservationShape a sh:NodeShape; sh:targetClass mr:QuantityObservation;
+ sh:property [sh:path mr:observesParameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path mr:observesPattern; sh:maxCount 0].
+
+pt:SuccessfulTerminalShape a sh:NodeShape; sh:targetClass pt:SuccessfulTerminalPhase;
+ sh:not [sh:class pt:FailedTerminalPhase].

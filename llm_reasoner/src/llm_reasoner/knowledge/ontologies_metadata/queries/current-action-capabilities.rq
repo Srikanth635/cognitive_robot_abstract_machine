@@ -1,0 +1,27 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX ar: <http://aicor.knowledge/ontologies/action-recipes.owl#>
+PREFIX cs: <http://aicor.knowledge/ontologies/capabilities-strategies.owl#>
+PREFIX kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?root ?action ?context ?owner ?relation ?requirement WHERE {
+  ?record a ac:KnowledgeRecord ; ac:expressesDescription ?root .
+  ?root (ac:hasSubActionDescription|ar:hasStep/ar:stepAction)* ?action .
+  OPTIONAL { ?action ar:evaluationContext ?context }
+  VALUES ?relation {
+    ac:requiresCapability ac:hasCapabilityRequirement cs:requiresCapability
+    <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#requiresCapability>
+    <http://aicor.knowledge/ontologies/monitoring-requirements.owl#requiresCapability>
+    <http://aicor.knowledge/ontologies/sensorimotor-events.owl#observationRequirement>
+    <http://aicor.knowledge/ontologies/sensorimotor-events.owl#requiresCapability>
+    <http://aicor.knowledge/ontologies/failure-diagnosis.owl#requiresCapability>
+  }
+  ?action cs:hasCapabilityProfile? ?owner .
+  ?owner (ac:requiresCapability|ac:hasCapabilityRequirement|cs:requiresCapability|
+    <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#requiresCapability>|
+    <http://aicor.knowledge/ontologies/monitoring-requirements.owl#requiresCapability>|
+    <http://aicor.knowledge/ontologies/sensorimotor-events.owl#observationRequirement>|
+    <http://aicor.knowledge/ontologies/sensorimotor-events.owl#requiresCapability>|
+    <http://aicor.knowledge/ontologies/failure-diagnosis.owl#requiresCapability>) ?requirement .
+  ?owner ?relation ?requirement .
+}
+

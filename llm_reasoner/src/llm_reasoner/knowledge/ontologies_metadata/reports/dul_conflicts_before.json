@@ -1,0 +1,1227 @@
+[
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#AccumulatedState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ActionDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ActionEventType",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ActionExecutive",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ActionPlanning",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Quality"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ActionTokenDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Active",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ActiveStatus",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ActivityUnderstanding",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ActualCourse",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Affordance",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ArrangementTemplate",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#AttributiveDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#BeginTask",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#BehaviorCritic",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#BehaviorFlaw",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Quality"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Bug",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CRAMArchitecture",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CRAMControlProgram",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CRAMDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CRAMStructuredReactiveController",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ClosedContainerState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CoReference",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ConcurrentProcessInterference",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ConfigurationChange",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ConnectingAction",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ContainedState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ContainerClosureState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Contextualization",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ContextualizationStep",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ContinuousFlow",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ControlStructure",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CourseOfAction",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CrackEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CrackedContainerState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Created",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CreatedStatus",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CriticizeReviseCycle",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Cutting",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CuttingPhase",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#CuttingTemplate",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#DeliberationScheduling",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#DesignatorConstraintSet",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#DesignatorParameter",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#DiscreteMode",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Divergence",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#DivergentDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Diverges",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Dividing",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#EffluxOnsetEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Enabled",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#EndTask",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#EntityDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#EpisodicSimulation",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Quality"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Evaporated",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#EvaporatedStatus",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#EventType",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ExecutedActionDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ExecutionScenario",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Situation"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#FailPrimitive",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Failed",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#FailedStatus",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Fails",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Finished",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#FlowingState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Fluent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#FluentType",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ForceDynamicEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ForceDynamicEventType",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ForceDynamicState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ForceDynamicTemplate",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#FractureEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#GeneralizedActionPlan",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#GeneralizedSuccessModel",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#GenerativeModel",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#GenerativePerception",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#GoalSetting",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Quality"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#GraspEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#GraspedState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Grasping",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#GroundedDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#HeldIntactEgg",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#InformationProcessingEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#IntactContainerState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Intention",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#InteractionAction",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#KnowledgeExecutive",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#LearningLoop",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Lifting",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#LocationDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#MaintenanceAction",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ManipulationActionCategory",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ManipulationPhase",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#MentalSimulation",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#MetaReasoningExecutive",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ModelLearning",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Monitor",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Monitoring",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Quality"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#MotionDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#MotionPhase",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#MotionPlan",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#MotionStatechart",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#MotionTask",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#NarrativeUnderstanding",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#NonterminalStatus",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ObjectDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ObjectDisplacement",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ObjectTransformation",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ObjectTyping",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ObservationEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#OpenContainerState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#OpenUpEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#OutcomePrediction",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Quality"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PEAM",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Par",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PerceptionExecutive",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PerceptionMethod",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PerformTask",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PlacementPipeline",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Plan",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PlanExecutive",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PlanFailure",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PlanInterpretationEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PlanInterpreter",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PlanLearning",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PlanManagement",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PlanTransformation",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Policy",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Pouring",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PouringPhase",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PouringTemplate",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PreparationMethod",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PrimitiveAction",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ProbabilisticHybridActionModel",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Projection",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Prospection",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Quality"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#PurposeConstrainedCategory",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Reaching",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Realizes",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#RealizingDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ReferenceOutcome",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ReferentialDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ReferentialPersistence",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#RelationalRepresentation",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#RequestDesignator",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ResolveEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#RuntimePlanning",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Object"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#RuptureEventType",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#SeparatedState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Seq",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Slicing",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#SlipEventType",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#SpreadArrestEvent",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#StateEstimate",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#StatisticalRelationalModel",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#StressedState",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Stroking",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#StructuredReactivePlan",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#SubstanceManipulation",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#SucceededStatus",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#SurfaceTreatment",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Task",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#TaskNetwork",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#TaskStatus",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#TerminalStatus",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#ThermalSetArrest",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Tilting",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Transferring",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Transporting",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#TryAll",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#TryInOrder",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Whenever",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#Wiping",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#WithPolicy",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  },
+  {
+    "class": "http://aicor.knowledge/l2-ontology.owl#YieldEquilibriumArrest",
+    "disjoint_ancestors": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject"
+    ]
+  }
+]

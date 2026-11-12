@@ -17,7 +17,7 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
 )
 from llm_reasoner.knowledge.ontologies.described_actions import DescribedActions
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
-from llm_reasoner.knowledge.ontologies.situation import SituationFeatures
+from llm_reasoner.knowledge.vocabulary.situation import SituationFeatures
 
 POURING_ACTION = "coraplex.robot_plans.actions.composite.tool_based.PouringAction"
 """

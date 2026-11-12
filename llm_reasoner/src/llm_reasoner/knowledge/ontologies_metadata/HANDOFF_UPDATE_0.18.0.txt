@@ -1,0 +1,87 @@
+CONTINUATION UPDATE: ARTICULATED MECHANISMS
+Release 0.18.0; extends the cumulative standalone 0.17.0 ontology package.
+
+Read this with START_HERE.md, ARCHITECTURE.md, the ontology registry,
+domains/ARTICULATED_MECHANISMS.md and reports/release-0.18.0.json. The detailed
+CRAM_ACTION_KNOWLEDGE_HANDOFF.txt supplied previously remains a dated 0.17.0
+baseline; this increment does not silently replace that separate document.
+
+The user approved developing articulated mechanisms next. The generic core,
+world independence, common record/shared identity architecture, DUL foundation,
+claim/evidence distinctions and deferred working projections are unchanged.
+
+Seven reusable domains and 37 registered ontology documents now exist. New:
+  domains/articulated-mechanisms.ttl
+  domains/articulated-mechanisms-shapes.ttl
+  examples/articulated-mechanism-profiles.ttl
+  domains/ARTICULATED_MECHANISMS.md
+  tools/articulated_mechanisms.py
+  tools/build_articulated_profiles.py
+  tools/validate_articulated_mechanisms.py
+  tools/validate_articulated_queries.py
+  tools/reason_articulated_mechanisms.py
+  queries/articulated-targets.rq
+  queries/articulated-guards.rq
+
+Eight synthetic records exercise five concrete action profiles: configuration
+change, opening and closing with both revolute and prismatic joints, plus latch
+release and latch securing. They describe assembly/fixed/moving parts, joint
+coordinate, frame/axis/origin, limits, target/tolerance, handles and latches.
+Opening direction is explicit; open/closed coordinates need not be hard limits.
+Signed targets are valid. Error metrics bind the exact coordinate and target.
+
+Latch release is required only under an explicit per-motion boolean policy.
+Latch presence alone does not force release for closing. Closing does not imply
+latching, locking or clearance for robot release. Latch release does not imply
+opening. Securing requires explicit closed and secured evidence in this profile.
+This is not a lock authorization or security-rating model.
+
+Configuration phases separate Prepare, Engage, Move, Verify, Complete and Abort.
+Latch profiles use Prepare, Operate, Verify, Complete and Abort. Guards and
+monitors have explicit scopes/dependencies, with required current engagement,
+path clearance and policy-dependent latch release before/during movement.
+Bypass paths, wrong bindings and omitted completion/fault requirements are
+rejected by the bounded profile. No transition or monitor response is executed.
+
+The domain imports object manipulation, monitoring and context, reusing motion
+and phase/condition structures transitively. Optional engagement-description
+links check the same operator and handle/moving-part target. They are not a
+completed grasp recipe. No concrete engagement child record is fabricated.
+
+The conjunction/negation/quantity signature helper was factored from the earlier
+tool_material_transfer.py into condition_signatures.py. Its previous import name
+is re-exported for compatibility, and tool/transfer regressions were rerun. This
+keeps the new domain's runtime independent of a tool-domain parser owner.
+
+Every reachable substantive descriptive link in each new record has an exact
+Proposed claim with explicit synthetic evidence. Numeric physical parameters
+remain unspecified; temporary numbers appear only in tests. There are no live
+world bindings, measurements, accepted observations or physical safety defaults.
+The builder regenerates the new example file only, preserving ontology schemas,
+original inputs, older examples, catalogs and the registry.
+
+This first profile is bounded to one independent, finite-range revolute or
+prismatic coordinate and at most one latch. Unknown limits/axis values are
+descriptive unknowns, not valid calibrated mechanism models. It supplies no
+kinematic/contact/force solver, coordinate-zero calibration, controller, evidence
+acceptance, timeouts or execution adapter. Multiple coordinates/latches,
+continuous joints, compliance, resistance, recovery and detailed door/drawer/lid
+techniques need explicit future profiles and sourced knowledge.
+
+Current validation is indexed in reports/release-0.18.0.json. Do not substitute
+older report counts or interpret passing synthetic checks as robot competence.
+The standalone domain and combined generic assembly classify successfully; the
+optional AICOR check remains blocked by the earlier SceneNode normalization
+issue. No original DUL/AICOR axiom was edited to bypass it.
+
+Preservation against 0.17.0: 74 of 75 prior RDF files are byte-identical; only
+integrations/all-action-knowledge.ttl changes imports/version. Existing generic
+aspect assembly, prior domains and the fictional comprehensive pouring example
+remain unchanged. Registry/catalog/documentation and the shared Python helper
+also change. This work is not established as committed or integrated into the
+GitHub llm_reasoner package.
+
+Next development candidates remain current CoraPlex coverage auditing, sourced
+mechanism-specific knowledge and explicit composite recipes such as carrying,
+pick-and-place and open-access-manipulate-close. Do not start a projection or
+execution subsystem merely because a mechanism profile has phases.

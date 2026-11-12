@@ -5,7 +5,7 @@ decided, and what is proposed next. Read it with [`architecture.md`](architectur
 which describes how the package is built. Update both in the same change whenever the
 work moves on.
 
-Last updated: 2026-10-27; code on the branch `feature/physics_backed_knowledge`, which combines `feature/llm_reasoner` with `physics_test` (Isaac Sim) and carries `origin/main` of 2026-10-22.
+Last updated: 2026-11-12; code on the local branch `feature/knowledge_component_redesign`, made from `feature/physics_backed_knowledge` at d3bbca19cb, where the knowledge component is being rebuilt on new ontologies (see *Knowledge component redesign* below).
 
 ## 1. State at a glance
 
@@ -15,7 +15,7 @@ Last updated: 2026-10-27; code on the branch `feature/physics_backed_knowledge`,
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
 | Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cramera, the visualiser since 2026-10-27, logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
-| Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model, which reads the hypothesis through three knowledge tools and cites its fragments as grounds (R1–R7 and I1–I5, verified live). Two vocabulary families: the Flanagan predictive-control modules and the action perspectives (action core and action frame, phases 0–4 of `knowledge_perspectives.md`, offered opt-in). A pour's predicted end and the flow-onset tilt are checked on the resolver side (`pour_prediction.md`) |
+| Knowledge component | Being rebuilt on new ontologies since 2026-11-12: the old ontologies and the code tied to them are removed, the generic machinery kept (§2, *Knowledge component redesign*). Before that: built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model, which reads the hypothesis through three knowledge tools and cites its fragments as grounds (R1–R7 and I1–I5, verified live). Two vocabulary families: the Flanagan predictive-control modules and the action perspectives (action core and action frame, phases 0–4 of `knowledge_perspectives.md`, offered opt-in). A pour's predicted end and the flow-onset tilt are checked on the resolver side (`pour_prediction.md`) |
 | Offline tests | `python -m pytest test/llm_reasoner_test -m "not slow"`: 1350 passed, 41 deselected as slow, which pass on their own (2026-10-26) |
 
 ## 2. Completed
@@ -1201,6 +1201,67 @@ with `gpt-5.4-mini` for both failed to generate its knowledge, the user had it t
 again, to be added later: cramera asks Claude Sonnet 5.5 only, and `OpenAIClient` makes
 plain and structured completions only, as before. That run showed a weakness of the
 repair loop that does not depend on the model (§7).
+
+### Knowledge component redesign (2026-11-12, in progress)
+
+Every ontology of the knowledge component is being replaced, and the component rebuilt
+on the new ontology set (`gpt_cram_ontologies_primary_actions` 0.22.0, with the
+self-contained pouring bundle 0.23.0). The first step removed the old ontologies and the
+code tied to them, keeping the generic machinery:
+
+- Removed: the action perspectives, the predictive manipulation microworld, the physical
+  measurements, the CRAM code ontology, the pinned CRAM-AICOR and DUL copies and the DUL
+  alignment, with their generated vocabulary, descriptions, proposals and shapes;
+  `described_actions`, `perspective_roots`, `frame_fields`, `object_kinds`;
+  `acceptance/core.py` (`ComponentsDeclared`), `admission/report.py`,
+  `storage/measurements.py`, `storage/migration.py`, `storage/migrate.py` and the
+  migration tables, `vocabulary_proposal/`, and the `knowledge_overview` tool.
+- Kept and made ontology-neutral: the module registry (`KNOWLEDGE_ONTOLOGY_MODULES` is
+  empty), the translator (the open-value-partition marker is now an input of
+  `OntologyReader`; the evidence-status and claim annotations are gone), the vocabulary
+  lookup, the acceptance rules the ontology states (`ontology_rules_suite`), HermiT
+  admission (no pinned check), generation (the brief is a required input of
+  `GenerationPrompt`; linked ontologies default to none; no component declaration),
+  representation, storage and the hypothesis service.
+- `ontologies/` and `ontology_translation/` merged into one package, `vocabulary/`
+  (registry in `ontology_modules.py`, the former `ontologies/vocabulary.py` as
+  `lookup.py`, the translator as `vocabulary/translation/`). `ontologies/` now holds
+  only ontology files, and the generated vocabulary modules go into
+  `vocabulary/generated/<family>/`, a package the writer creates per family.
+- The new ontologies copied unchanged into `knowledge/ontologies/`:
+  `gpt_cram_ontologies_primary_actions_v0.22.0/` (all 431 files) and
+  `pouring_action_context_v0.23.0/` (all 52 files; its 31 modules are byte-identical
+  to the 0.22.0 ones). All 121 `.ttl`/`.owl` files parse. `.gitignore` lets their
+  `.txt` files through and the formatting hook leaves the folder alone. None is
+  registered in `KNOWLEDGE_ONTOLOGY_MODULES` yet.
+- The copies refined the same day: `ontologies/` keeps only what the sets' own docs name as
+  needed (128 files: the 40 registered documents, shapes, catalogs, the import registry
+  and the generation templates of 0.22.0, and the pouring bundle without its README);
+  the other 355 files moved, at the same relative paths, to `ontologies_metadata/`,
+  which is not shipped. Every import of the kept files still resolves to a kept file,
+  and every original file is in exactly one of the two folders, byte-identical.
+- The wrapper folders `gpt_cram_ontologies_primary_actions_v0.22.0/gpt_cram_ontologies/`
+  removed in both folders: the 0.22.0 set's own folders (`core/`, `aspects/`,
+  `integrations/`, `domains/`, ...) and its root files (`DUL.owl`, the catalog,
+  `ontology-registry.json`) now lie directly under `ontologies/` and
+  `ontologies_metadata/`; `pouring_action_context_v0.23.0/` is kept as it is. Imports,
+  catalogs and the registry still resolve, since their paths are relative to that root.
+- The pouring bundle merged into the shared tree as `ontologies/actions/pouring/`: its 31
+  module copies, their 11 catalogs and its own catalog and registry are gone, since every
+  copy was byte-identical to the module under `ontologies/`. Kept: the entry `pouring.ttl`,
+  `context/`, `validation/pouring-shapes.ttl`, `bundle-manifest.json` (source paths now
+  `../../<module>`, `modular_entry` `pouring.ttl`, the deleted copies dropped from
+  `generated`, every hash unchanged) and a new `catalog-v001.xml` reaching the shared
+  modules through `../../`. The root `ontology-registry.json` and `catalog-v001.xml` have one
+  entry more, `pouring-action.owl` (41 documents). The README moved to
+  `ontologies_metadata/actions/pouring/`. The entry's closure resolves to the same 32
+  documents the manifest lists, all manifest hashes match, all 17 catalogs resolve and the
+  62 ontology files parse.
+- The knowledge-access contract is 2.0: `frame_parts_filled` and the
+  `knowledge_overview` tool are gone.
+- Not yet adapted, and failing to import: `resolver/knowledge.py`,
+  `observation/components.py`, cramera's knowledge modules, the flow-onset experiment, and
+  51 test modules that use the old ontologies. The 198 other llm_reasoner tests pass.
 
 ## 2a. Moved onto the upstream main (2026-10-21)
 

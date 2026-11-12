@@ -1,0 +1,13 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX mn: <http://aicor.knowledge/ontologies/mobility-navigation.owl#>
+PREFIX pt: <http://aicor.knowledge/ontologies/phases-transitions.owl#>
+PREFIX co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#>
+SELECT ?transition ?from ?to ?fromRole ?toRole ?condition ?expression
+WHERE {
+ ?record ac:expressesDescription/pt:hasPhaseStructure ?structure .
+ ?structure pt:hasTransition ?transition .
+ ?transition pt:fromPhase ?from; pt:toPhase ?to; pt:guardCondition ?condition .
+ ?condition co:hasExpression ?expression .
+ OPTIONAL {?from mn:stageRole ?fromRole}
+ OPTIONAL {?to mn:stageRole ?toRole}
+}

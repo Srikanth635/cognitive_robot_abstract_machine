@@ -9,8 +9,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE, DUL_NAMESPACE
-from llm_reasoner.knowledge.ontologies.linked import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import CRAM_AICOR_NAMESPACE, DUL_NAMESPACE
+from llm_reasoner.knowledge.vocabulary.linked import (
     LinkedOntologyFile,
     LinkedOntologyTerms,
     OntologyFiles,

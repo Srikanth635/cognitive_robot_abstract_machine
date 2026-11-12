@@ -1,0 +1,177 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dc1: <http://aicor.knowledge/ontologies/dynamics-control.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix ot: <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pm: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/dynamics-control.owl> a owl:Ontology ;
+    rdfs:label "Dynamics and control specifications"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl>,
+        <http://aicor.knowledge/ontologies/physical-models.owl> ;
+    owl:versionInfo "0.6.0" .
+
+dc1:Disturbance a dc1:VariableRole,
+        owl:NamedIndividual ;
+    rdfs:label "Disturbance"@en .
+
+dc1:FeedbackControl a dc1:ControllerKind,
+        owl:NamedIndividual ;
+    rdfs:label "Feedback Control"@en .
+
+dc1:Input a dc1:VariableRole,
+        owl:NamedIndividual ;
+    rdfs:label "Input"@en .
+
+dc1:ModelPredictiveControl a dc1:ControllerKind,
+        owl:NamedIndividual ;
+    rdfs:label "Model Predictive Control"@en .
+
+dc1:Output a dc1:VariableRole,
+        owl:NamedIndividual ;
+    rdfs:label "Output"@en .
+
+dc1:State a dc1:VariableRole,
+        owl:NamedIndividual ;
+    rdfs:label "State"@en .
+
+dc1:controllerKind a owl:ObjectProperty ;
+    rdfs:label "Controller Kind"@en ;
+    rdfs:comment "Declared controller family."@en ;
+    rdfs:domain dc1:ControllerSpecification ;
+    rdfs:range dc1:ControllerKind .
+
+dc1:controlsModel a owl:ObjectProperty ;
+    rdfs:label "Controls Model"@en ;
+    rdfs:comment "Model used by this proposed controller."@en ;
+    rdfs:domain dc1:ControllerSpecification ;
+    rdfs:range dc1:DynamicalModelSpecification .
+
+dc1:describesPlant a owl:ObjectProperty ;
+    rdfs:label "Describes Plant"@en ;
+    rdfs:comment "Existing physical model refined by this dynamic specification."@en ;
+    rdfs:domain dc1:DynamicalModelSpecification ;
+    rdfs:range pm:PhysicalModelSpecification .
+
+dc1:dimension a owl:DatatypeProperty ;
+    rdfs:label "Dimension"@en ;
+    rdfs:comment "Number of scalar components in this entry."@en ;
+    rdfs:domain dc1:VariableAssignment ;
+    rdfs:range xsd:positiveInteger .
+
+dc1:evolutionEquation a owl:ObjectProperty ;
+    rdfs:label "Evolution Equation"@en ;
+    rdfs:comment "State-evolution equation, also declared as a model equation."@en ;
+    rdfs:domain dc1:DynamicalModelSpecification ;
+    rdfs:range pm:ModelEquation .
+
+dc1:hasAdaptation a owl:ObjectProperty ;
+    rdfs:label "Has Adaptation"@en ;
+    rdfs:comment "Proposed parameter adaptation."@en ;
+    rdfs:domain dc1:ControllerSpecification ;
+    rdfs:range dc1:AdaptationSpecification .
+
+dc1:hasAssignment a owl:ObjectProperty ;
+    rdfs:label "Has Assignment"@en ;
+    rdfs:comment "Vector entries of this model."@en ;
+    rdfs:domain dc1:DynamicalModelSpecification ;
+    rdfs:range dc1:VariableAssignment .
+
+dc1:inputConstraint a owl:ObjectProperty ;
+    rdfs:label "Input Constraint"@en ;
+    rdfs:comment "Input constraint specification."@en ;
+    rdfs:domain dc1:ControllerSpecification ;
+    rdfs:range ac:ConstraintSpecification .
+
+dc1:objectiveSet a owl:ObjectProperty ;
+    rdfs:label "Objective Set"@en ;
+    rdfs:comment "Objective and hard-constraint configuration."@en ;
+    rdfs:domain dc1:ControllerSpecification ;
+    rdfs:range ot:ObjectiveSet .
+
+dc1:outputEquation a owl:ObjectProperty ;
+    rdfs:label "Output Equation"@en ;
+    rdfs:comment "Output equation, also declared as a model equation."@en ;
+    rdfs:domain dc1:DynamicalModelSpecification ;
+    rdfs:range pm:ModelEquation .
+
+dc1:position a owl:DatatypeProperty ;
+    rdfs:label "Position"@en ;
+    rdfs:comment "One-based position among vector entries."@en ;
+    rdfs:domain dc1:VariableAssignment ;
+    rdfs:range xsd:positiveInteger .
+
+dc1:predictionHorizon a owl:ObjectProperty ;
+    rdfs:label "Prediction Horizon"@en ;
+    rdfs:comment "Optional time parameter."@en ;
+    rdfs:domain dc1:ControllerSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+dc1:role a owl:ObjectProperty ;
+    rdfs:label "Role"@en ;
+    rdfs:comment "Role of the vector entry."@en ;
+    rdfs:domain dc1:VariableAssignment ;
+    rdfs:range dc1:VariableRole .
+
+dc1:samplingPeriod a owl:ObjectProperty ;
+    rdfs:label "Sampling Period"@en ;
+    rdfs:comment "Time parameter; no numeric default."@en ;
+    rdfs:domain dc1:ControllerSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+dc1:stateConstraint a owl:ObjectProperty ;
+    rdfs:label "State Constraint"@en ;
+    rdfs:comment "State constraint specification."@en ;
+    rdfs:domain dc1:ControllerSpecification ;
+    rdfs:range ac:ConstraintSpecification .
+
+dc1:updatesParameter a owl:ObjectProperty ;
+    rdfs:label "Updates Parameter"@en ;
+    rdfs:comment "Parameter to estimate or update."@en ;
+    rdfs:domain dc1:AdaptationSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+dc1:validWhen a owl:ObjectProperty ;
+    rdfs:label "Valid When"@en ;
+    rdfs:comment "Applicability guard of adaptation."@en ;
+    rdfs:domain dc1:AdaptationSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+dc1:variable a owl:ObjectProperty ;
+    rdfs:label "Variable"@en ;
+    rdfs:comment "Variable reused from the physical-model vocabulary."@en ;
+    rdfs:domain dc1:VariableAssignment ;
+    rdfs:range pm:ModelVariable .
+
+dc1:AdaptationSpecification a owl:Class ;
+    rdfs:label "Adaptation Specification"@en ;
+    rdfs:comment "Proposal for updating an existing model parameter under a validity condition."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+dc1:ControllerKind a owl:Class ;
+    rdfs:label "Controller Kind"@en ;
+    rdfs:comment "Conceptual controller family."@en ;
+    rdfs:subClassOf dul:Concept .
+
+dc1:DynamicalModelSpecification a owl:Class ;
+    rdfs:label "Dynamical Model Specification"@en ;
+    rdfs:comment "Partial state/input/output description of a physical model; does not establish controllability or dynamics fidelity."@en ;
+    rdfs:subClassOf pm:PhysicalModelSpecification .
+
+dc1:VariableAssignment a owl:Class ;
+    rdfs:label "Variable Assignment"@en ;
+    rdfs:comment "Position and dimension of a model variable in a declared vector role."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+dc1:VariableRole a owl:Class ;
+    rdfs:label "Variable Role"@en ;
+    rdfs:comment "State, input, output or disturbance role."@en ;
+    rdfs:subClassOf dul:Concept .
+
+dc1:ControllerSpecification a owl:Class ;
+    rdfs:label "Controller Specification"@en ;
+    rdfs:comment "Controller design description; no executable controller or stability guarantee."@en ;
+    rdfs:subClassOf ac:ControlSpecification .
+

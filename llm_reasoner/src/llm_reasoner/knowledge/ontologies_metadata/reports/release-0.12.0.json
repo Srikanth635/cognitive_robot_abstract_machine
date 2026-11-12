@@ -1,0 +1,26 @@
+{
+  "release": "0.12.0",
+  "registered_ontologies": 28,
+  "original_aspect_families": 15,
+  "aspect_and_contract_modules": 17,
+  "semantic_bridges": 5,
+  "new_contract_checks_passed": 31,
+  "prior_competency_checks_passed": 93,
+  "context_checks_passed": 26,
+  "scoped_query_cases": 4,
+  "import_checks_passed": 38,
+  "modular_classifications_passed": 23,
+  "combined_aicor_consistency": "passed",
+  "new_example_record": "pourRecordV8",
+  "exact_statement_coverage": "435 descriptive links excluding rdf:type, labels and comments",
+  "physical_validation_performed": false,
+  "controller_synthesized": false,
+  "source_files_preserved": true,
+  "limitations": [
+    "Synthetic proposed knowledge; no empirical acceptance",
+    "Bounded scalar additive/dimensional checks only",
+    "No general equation solver, unit conversion, calibrated fluid model or control synthesis",
+    "Complete-transfer semantics and execution remain future work",
+    "Combined AICOR check is consistency only"
+  ]
+}

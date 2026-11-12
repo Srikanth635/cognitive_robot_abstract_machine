@@ -1,0 +1,388 @@
+{
+  "audit_version": "0.14.1",
+  "historical_scope": "0.9 to 0.10 capability consolidation; later assembly changes excluded",
+  "later_assembly_changes_excluded": [
+    "integrations/all-action-aspects.ttl"
+  ],
+  "baseline": "gpt_cram_ontologies_aspects_v0.9.0.zip",
+  "baseline_sha256": "7cdbf1d622a4a6fb44906759be76409de8e916c3dfa5fa0419e3dbc4060180dd",
+  "changed_schema_files": [
+    "aspects/capabilities-strategies.ttl",
+    "aspects/entities-materials-affordances.ttl",
+    "aspects/failure-diagnosis.ttl",
+    "aspects/monitoring-requirements.ttl",
+    "aspects/sensorimotor-events.ttl",
+    "core/action-description-core.ttl"
+  ],
+  "byte_identical_ontology_and_example_files": [
+    "DUL.owl",
+    "aspects/aspect-shapes.ttl",
+    "aspects/causal-mechanisms.ttl",
+    "aspects/causal-physical-shapes.ttl",
+    "aspects/conditions-outcomes.ttl",
+    "aspects/control-shapes.ttl",
+    "aspects/dynamics-control.ttl",
+    "aspects/force-dynamics.ttl",
+    "aspects/frame-perspective.ttl",
+    "aspects/frame-shapes.ttl",
+    "aspects/image-schemas.ttl",
+    "aspects/objectives-tradeoffs.ttl",
+    "aspects/participants-relations.ttl",
+    "aspects/phases-transitions.ttl",
+    "aspects/physical-models.ttl",
+    "aspects/remaining-aspect-shapes.ttl",
+    "aspects/strategy-failure-shapes.ttl",
+    "aspects/temporal-shapes.ttl",
+    "candidates/aicor-unified-dul-offline.owl",
+    "candidates/aicor-unified-dul.ttl",
+    "candidates/aicor-unified-preserved.ttl",
+    "core/action-core-shapes.ttl",
+    "core/cram-action-bridge.ttl",
+    "examples/aspect-actions.ttl",
+    "examples/causal-physical-actions.ttl",
+    "examples/control-actions.ttl",
+    "examples/frame-contracts.ttl",
+    "examples/frame-projection-artifacts.ttl",
+    "examples/phase-actions.ttl",
+    "examples/projection-artifacts.ttl",
+    "examples/remaining-aspect-knowledge.ttl",
+    "examples/stereotypical-actions.ttl",
+    "examples/strategy-failure-actions.ttl",
+    "integrations/causal-outcome-bridge.ttl",
+    "integrations/causal-physical-bridge.ttl",
+    "integrations/physical-outcome-bridge.ttl",
+    "integrations/recovery-strategy-bridge.ttl",
+    "reports/removed_dul_parent_axioms.ttl",
+    "reports/replaced_source_metadata.ttl",
+    "sources/aicor-ontology.ttl",
+    "sources/cram-aicor-ontology.ttl"
+  ],
+  "shared_range_property_rows": 74,
+  "checks": [
+    {
+      "case": "preserved-file:DUL.owl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/capabilities-strategies.ttl",
+      "passed": true
+    },
+    {
+      "case": "authorized-schema-delta:aspects/capabilities-strategies.ttl",
+      "passed": true
+    },
+    {
+      "case": "new-requirement-parent:http://aicor.knowledge/ontologies/capabilities-strategies.owl#requiresCapability",
+      "passed": true
+    },
+    {
+      "case": "no-other-logical-delta:aspects/capabilities-strategies.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/causal-mechanisms.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/causal-physical-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/control-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/dynamics-control.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/entities-materials-affordances.ttl",
+      "passed": true
+    },
+    {
+      "case": "authorized-schema-delta:aspects/entities-materials-affordances.ttl",
+      "passed": true
+    },
+    {
+      "case": "new-requirement-parent:http://aicor.knowledge/ontologies/entities-materials-affordances.owl#requiresCapability",
+      "passed": true
+    },
+    {
+      "case": "no-other-logical-delta:aspects/entities-materials-affordances.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/failure-diagnosis.ttl",
+      "passed": true
+    },
+    {
+      "case": "authorized-schema-delta:aspects/failure-diagnosis.ttl",
+      "passed": true
+    },
+    {
+      "case": "new-requirement-parent:http://aicor.knowledge/ontologies/failure-diagnosis.owl#requiresCapability",
+      "passed": true
+    },
+    {
+      "case": "no-other-logical-delta:aspects/failure-diagnosis.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/force-dynamics.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/frame-perspective.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/frame-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/image-schemas.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "authorized-schema-delta:aspects/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "new-requirement-parent:http://aicor.knowledge/ontologies/monitoring-requirements.owl#requiresCapability",
+      "passed": true
+    },
+    {
+      "case": "no-other-logical-delta:aspects/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/objectives-tradeoffs.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/physical-models.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/remaining-aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/sensorimotor-events.ttl",
+      "passed": true
+    },
+    {
+      "case": "authorized-schema-delta:aspects/sensorimotor-events.ttl",
+      "passed": true
+    },
+    {
+      "case": "new-requirement-parent:http://aicor.knowledge/ontologies/sensorimotor-events.owl#requiresCapability",
+      "passed": true
+    },
+    {
+      "case": "new-requirement-parent:http://aicor.knowledge/ontologies/sensorimotor-events.owl#observationRequirement",
+      "passed": true
+    },
+    {
+      "case": "no-other-logical-delta:aspects/sensorimotor-events.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/strategy-failure-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:aspects/temporal-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:candidates/aicor-unified-dul-offline.owl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:candidates/aicor-unified-dul.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:candidates/aicor-unified-preserved.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:core/action-core-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:core/action-description-core.ttl",
+      "passed": true
+    },
+    {
+      "case": "authorized-schema-delta:core/action-description-core.ttl",
+      "passed": true
+    },
+    {
+      "case": "new-requirement-parent:http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement",
+      "passed": true
+    },
+    {
+      "case": "generic-domain-is-description",
+      "passed": true
+    },
+    {
+      "case": "generic-range-is-requirement",
+      "passed": true
+    },
+    {
+      "case": "no-other-logical-delta:core/action-description-core.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:core/cram-action-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/aspect-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/causal-physical-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/control-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/frame-contracts.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/frame-projection-artifacts.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/phase-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/projection-artifacts.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/remaining-aspect-knowledge.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/stereotypical-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:examples/strategy-failure-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:integrations/all-action-aspects.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:integrations/causal-outcome-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:integrations/causal-physical-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:integrations/physical-outcome-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:integrations/recovery-strategy-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:reports/removed_dul_parent_axioms.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:reports/replaced_source_metadata.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:sources/aicor-ontology.ttl",
+      "passed": true
+    },
+    {
+      "case": "preserved-file:sources/cram-aicor-ontology.ttl",
+      "passed": true
+    },
+    {
+      "case": "exactly-six-schema-files-modified",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:ActionDesignator",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:Designator",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:Action",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:ObjectDesignator",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:PhysicalObject",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:Parameter",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:Task",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:Pouring",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:Grasping",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:ProcessModule",
+      "passed": true
+    },
+    {
+      "case": "reviewed-aicor-term-exists:Plan",
+      "passed": true
+    }
+  ],
+  "passed": 81
+}

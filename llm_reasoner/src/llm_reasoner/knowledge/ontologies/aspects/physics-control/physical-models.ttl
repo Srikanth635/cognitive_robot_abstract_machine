@@ -1,0 +1,197 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pm: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/physical-models.owl> a owl:Ontology ;
+    rdfs:label "Physical properties and model specifications"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.6.0" .
+
+pm:Capacity a pm:PropertyKind,
+        owl:NamedIndividual ;
+    rdfs:label "Capacity"@en .
+
+pm:Density a pm:PropertyKind,
+        owl:NamedIndividual ;
+    rdfs:label "Density"@en .
+
+pm:FrictionCoefficient a pm:PropertyKind,
+        owl:NamedIndividual ;
+    rdfs:label "Friction Coefficient"@en .
+
+pm:Geometry a pm:PropertyKind,
+        owl:NamedIndividual ;
+    rdfs:label "Geometry"@en .
+
+pm:Mass a pm:PropertyKind,
+        owl:NamedIndividual ;
+    rdfs:label "Mass"@en .
+
+pm:Viscosity a pm:PropertyKind,
+        owl:NamedIndividual ;
+    rdfs:label "Viscosity"@en .
+
+pm:applicability a owl:ObjectProperty ;
+    rdfs:label "Applicability"@en ;
+    rdfs:comment "Model validity scope."@en ;
+    rdfs:domain pm:PhysicalModelSpecification ;
+    rdfs:range ac:ApplicabilitySpecification .
+
+pm:artifactIRI a owl:DatatypeProperty ;
+    rdfs:label "Artifact IRI"@en ;
+    rdfs:comment "External artifact identifier."@en ;
+    rdfs:domain pm:ModelArtifact ;
+    rdfs:range xsd:anyURI .
+
+pm:artifactVersion a owl:DatatypeProperty ;
+    rdfs:label "Artifact Version"@en ;
+    rdfs:comment "Version or content digest."@en ;
+    rdfs:domain pm:ModelArtifact ;
+    rdfs:range xsd:string .
+
+pm:assumption a owl:ObjectProperty ;
+    rdfs:label "Assumption"@en ;
+    rdfs:comment "Physical-model assumption."@en ;
+    rdfs:domain pm:PhysicalModelSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+pm:describesEntity a owl:ObjectProperty ;
+    rdfs:label "Describes Entity"@en ;
+    rdfs:comment "Conceptual entity whose property is described."@en ;
+    rdfs:domain pm:PhysicalPropertySpecification ;
+    rdfs:range ac:EntitySpecification .
+
+pm:expressionLanguage a owl:DatatypeProperty ;
+    rdfs:label "Expression Language"@en ;
+    rdfs:comment "Language used by the equation."@en ;
+    rdfs:domain pm:ModelEquation ;
+    rdfs:range xsd:string .
+
+pm:expressionText a owl:DatatypeProperty ;
+    rdfs:label "Expression Text"@en ;
+    rdfs:comment "Equation text; no symbolic execution."@en ;
+    rdfs:domain pm:ModelEquation ;
+    rdfs:range xsd:string .
+
+pm:hasArtifact a owl:ObjectProperty ;
+    rdfs:label "Has Artifact"@en ;
+    rdfs:comment "External implementation or geometry artifact."@en ;
+    rdfs:domain pm:PhysicalModelSpecification ;
+    rdfs:range pm:ModelArtifact .
+
+pm:hasEquation a owl:ObjectProperty ;
+    rdfs:label "Has Equation"@en ;
+    rdfs:comment "Equation specifications."@en ;
+    rdfs:domain pm:PhysicalModelSpecification ;
+    rdfs:range pm:ModelEquation .
+
+pm:hasPhysicalProperty a owl:ObjectProperty ;
+    rdfs:label "Has Physical Property"@en ;
+    rdfs:comment "Property descriptions available to this action."@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range pm:PhysicalPropertySpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+pm:hasVariable a owl:ObjectProperty ;
+    rdfs:label "Has Variable"@en ;
+    rdfs:comment "Declared model variables."@en ;
+    rdfs:domain pm:PhysicalModelSpecification ;
+    rdfs:range pm:ModelVariable .
+
+pm:parameter a owl:ObjectProperty ;
+    rdfs:label "Parameter"@en ;
+    rdfs:comment "Reusable parameter represented by the variable."@en ;
+    rdfs:domain pm:ModelVariable ;
+    rdfs:range ac:ParameterSpecification .
+
+pm:propertyKind a owl:ObjectProperty ;
+    rdfs:label "Property Kind"@en ;
+    rdfs:comment "Property concept."@en ;
+    rdfs:domain pm:PhysicalPropertySpecification ;
+    rdfs:range pm:PropertyKind .
+
+pm:studiesModel a owl:ObjectProperty ;
+    rdfs:label "Studies Model"@en ;
+    rdfs:comment "Model proposed for study."@en ;
+    rdfs:domain pm:SimulationStudySpecification ;
+    rdfs:range pm:PhysicalModelSpecification .
+
+pm:symbol a owl:DatatypeProperty ;
+    rdfs:label "Symbol"@en ;
+    rdfs:comment "Variable symbol, unique within a model."@en ;
+    rdfs:domain pm:ModelVariable ;
+    rdfs:range xsd:string .
+
+pm:usesVariable a owl:ObjectProperty ;
+    rdfs:label "Uses Variable"@en ;
+    rdfs:comment "Declared variables used by an equation."@en ;
+    rdfs:domain pm:ModelEquation ;
+    rdfs:range pm:ModelVariable .
+
+pm:validatesModel a owl:ObjectProperty ;
+    rdfs:label "Validates Model"@en ;
+    rdfs:comment "Model evaluated by the external artifact."@en ;
+    rdfs:domain pm:ModelValidationRecord ;
+    rdfs:range pm:PhysicalModelSpecification .
+
+pm:validationArtifactIRI a owl:DatatypeProperty ;
+    rdfs:label "Validation Artifact IRI"@en ;
+    rdfs:comment "External validation record or run identifier."@en ;
+    rdfs:domain pm:ModelValidationRecord ;
+    rdfs:range xsd:anyURI .
+
+pm:validationScope a owl:ObjectProperty ;
+    rdfs:label "Validation Scope"@en ;
+    rdfs:comment "Scope of the recorded evaluation."@en ;
+    rdfs:domain pm:ModelValidationRecord ;
+    rdfs:range ac:ApplicabilitySpecification .
+
+pm:valueParameter a owl:ObjectProperty ;
+    rdfs:label "Value Parameter"@en ;
+    rdfs:comment "Parameter containing optional values, bounds and units."@en ;
+    rdfs:domain pm:PhysicalPropertySpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+pm:SimulationStudySpecification a owl:Class ;
+    rdfs:label "Simulation Study Specification"@en ;
+    rdfs:comment "Description of a proposed simulation study, separate from evidence of an actual run."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pm:ModelArtifact a owl:Class ;
+    rdfs:label "Model Artifact"@en ;
+    rdfs:comment "Reference to a solver, geometry asset or other external artifact; no download or execution is implied."@en ;
+    rdfs:subClassOf dul:InformationObject .
+
+pm:ModelValidationRecord a owl:Class ;
+    rdfs:label "Model Validation Record"@en ;
+    rdfs:comment "Record linking a model to an external validation artifact and its stated scope. Not automatic acceptance."@en ;
+    rdfs:subClassOf ac:EvidenceRecord .
+
+pm:ModelEquation a owl:Class ;
+    rdfs:label "Model Equation"@en ;
+    rdfs:comment "Equation text with declared language and variable bindings; not evaluated by OWL."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pm:ModelVariable a owl:Class ;
+    rdfs:label "Model Variable"@en ;
+    rdfs:comment "Variable bound to a reusable parameter specification."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pm:PhysicalPropertySpecification a owl:Class ;
+    rdfs:label "Physical Property Specification"@en ;
+    rdfs:comment "Description of a physical property of an entity specification; no measured object is implied."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pm:PhysicalModelSpecification a owl:Class ;
+    rdfs:label "Physical Model Specification"@en ;
+    rdfs:comment "Model description with variables, assumptions, applicability and external artifacts."@en ;
+    rdfs:subClassOf ac:PhysicalModelSpecification .
+
+pm:PropertyKind a owl:Class ;
+    rdfs:label "Property Kind"@en ;
+    rdfs:comment "Concept identifying a physical property kind."@en ;
+    rdfs:subClassOf dul:Concept .
+

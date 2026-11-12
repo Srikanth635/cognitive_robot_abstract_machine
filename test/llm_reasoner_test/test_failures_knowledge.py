@@ -15,7 +15,7 @@ from llm_reasoner.clients.tools import ToolBox
 from llm_reasoner.knowledge.admission.hermit import HermitCheck
 from llm_reasoner.knowledge.generation.prompts import GenerationSection
 from llm_reasoner.knowledge.hypotheses.knowledge_access import KnowledgeToolName
-from llm_reasoner.knowledge.ontologies import ActionPerspectiveFile
+from llm_reasoner.knowledge.vocabulary.ontology_modules import ActionPerspectiveFile
 from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     failures,

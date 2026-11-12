@@ -1,0 +1,178 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix fr: <http://aicor.knowledge/ontologies/frame-perspective.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/frame-perspective.owl> a owl:Ontology ;
+    rdfs:label "Frame perspective"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.8.0" .
+
+fr:allowedStatus a owl:ObjectProperty ;
+    rdfs:label "Allowed Status"@en ;
+    rdfs:domain fr:FrameProjectionSpecification ;
+    rdfs:range ac:EpistemicStatus .
+
+fr:defaultEntity a owl:ObjectProperty ;
+    rdfs:label "Default Entity"@en ;
+    rdfs:domain fr:SlotDefinition ;
+    rdfs:range dul:Entity .
+
+fr:defaultLiteral a owl:DatatypeProperty ;
+    rdfs:label "Default Literal"@en ;
+    rdfs:domain fr:SlotDefinition ;
+    rdfs:range rdfs:Literal .
+
+fr:entityValue a owl:ObjectProperty ;
+    rdfs:label "Entity Value"@en ;
+    rdfs:domain fr:FrameSlotValue ;
+    rdfs:range dul:Entity .
+
+fr:evidencePolicy a owl:DatatypeProperty ;
+    rdfs:label "Evidence Policy"@en ;
+    rdfs:domain fr:FrameProjectionSpecification ;
+    rdfs:range xsd:string .
+
+fr:fillsSlot a owl:ObjectProperty ;
+    rdfs:label "Fills Slot"@en ;
+    rdfs:domain fr:FrameSlotValue ;
+    rdfs:range fr:SlotDefinition .
+
+fr:frameDefinition a owl:ObjectProperty ;
+    rdfs:label "Frame Definition"@en ;
+    rdfs:domain fr:FrameProjectionSpecification ;
+    rdfs:range fr:FrameDefinition .
+
+fr:hasMapping a owl:ObjectProperty ;
+    rdfs:label "Has Mapping"@en ;
+    rdfs:domain fr:SlotDefinition ;
+    rdfs:range fr:SlotMapping .
+
+fr:hasOverride a owl:ObjectProperty ;
+    rdfs:label "Has Override"@en ;
+    rdfs:domain fr:FrameDefinition ;
+    rdfs:range fr:SlotOverride .
+
+fr:hasPathStep a owl:ObjectProperty ;
+    rdfs:label "Has Path Step"@en ;
+    rdfs:domain fr:SlotMapping ;
+    rdfs:range fr:PathStep .
+
+fr:hasSlot a owl:ObjectProperty ;
+    rdfs:label "Has Slot"@en ;
+    rdfs:domain fr:FrameDefinition ;
+    rdfs:range fr:SlotDefinition ;
+    rdfs:subPropertyOf dul:defines .
+
+fr:hasSlotValue a owl:ObjectProperty ;
+    rdfs:label "Has Slot Value"@en ;
+    rdfs:domain fr:FrameProjectionArtifact ;
+    rdfs:range fr:FrameSlotValue .
+
+fr:literalValue a owl:DatatypeProperty ;
+    rdfs:label "Literal Value"@en ;
+    rdfs:domain fr:FrameSlotValue ;
+    rdfs:range rdfs:Literal .
+
+fr:maximumCount a owl:DatatypeProperty ;
+    rdfs:label "Maximum Count"@en ;
+    rdfs:domain fr:SlotDefinition ;
+    rdfs:range xsd:nonNegativeInteger .
+
+fr:minimumCount a owl:DatatypeProperty ;
+    rdfs:label "Minimum Count"@en ;
+    rdfs:domain fr:SlotDefinition ;
+    rdfs:range xsd:nonNegativeInteger .
+
+fr:overridesSlot a owl:ObjectProperty ;
+    rdfs:label "Overrides Slot"@en ;
+    rdfs:domain fr:SlotOverride ;
+    rdfs:range fr:SlotDefinition .
+
+fr:parentFrame a owl:ObjectProperty ;
+    rdfs:label "Parent Frame"@en ;
+    rdfs:domain fr:FrameDefinition ;
+    rdfs:range fr:FrameDefinition .
+
+fr:position a owl:DatatypeProperty ;
+    rdfs:label "Position"@en ;
+    rdfs:domain fr:PathStep ;
+    rdfs:range xsd:positiveInteger .
+
+fr:predicateIRI a owl:DatatypeProperty ;
+    rdfs:label "Predicate IRI"@en ;
+    rdfs:domain fr:PathStep ;
+    rdfs:range xsd:anyURI .
+
+fr:projectedFrame a owl:ObjectProperty ;
+    rdfs:label "Projected Frame"@en ;
+    rdfs:domain fr:FrameProjectionArtifact ;
+    rdfs:range fr:FrameDefinition .
+
+fr:replacementLiteral a owl:DatatypeProperty ;
+    rdfs:label "Replacement Literal"@en ;
+    rdfs:domain fr:SlotOverride ;
+    rdfs:range rdfs:Literal .
+
+fr:slotKey a owl:DatatypeProperty ;
+    rdfs:label "Slot Key"@en ;
+    rdfs:domain fr:SlotDefinition ;
+    rdfs:range xsd:string .
+
+fr:sourceClaim a owl:ObjectProperty ;
+    rdfs:label "Source Claim"@en ;
+    rdfs:domain fr:FrameSlotValue ;
+    rdfs:range ac:KnowledgeClaim .
+
+fr:suppressDefault a owl:DatatypeProperty ;
+    rdfs:label "Suppress Default"@en ;
+    rdfs:domain fr:SlotOverride ;
+    rdfs:range xsd:boolean .
+
+fr:valueOrigin a owl:DatatypeProperty ;
+    rdfs:label "Value Origin"@en ;
+    rdfs:domain fr:FrameSlotValue ;
+    rdfs:range xsd:string .
+
+fr:FrameProjectionArtifact a owl:Class ;
+    rdfs:label "Frame Projection Artifact"@en ;
+    rdfs:comment "Derived frame output, not a world event or executable designator."@en ;
+    rdfs:subClassOf ac:ProjectionArtifact .
+
+fr:SlotMapping a owl:Class ;
+    rdfs:label "Slot Mapping"@en ;
+    rdfs:comment "Finite forward predicate path from the source action description."@en ;
+    rdfs:subClassOf dul:Description .
+
+fr:FrameProjectionSpecification a owl:Class ;
+    rdfs:label "Frame Projection Specification"@en ;
+    rdfs:comment "Contract mapping one immutable source record to a frame view."@en ;
+    rdfs:subClassOf ac:ProjectionSpecification .
+
+fr:PathStep a owl:Class ;
+    rdfs:label "Path Step"@en ;
+    rdfs:comment "One ordered predicate traversal; no executable attachment."@en ;
+    rdfs:subClassOf dul:Description .
+
+fr:SlotOverride a owl:Class ;
+    rdfs:label "Slot Override"@en ;
+    rdfs:comment "Explicit replacement or suppression of an inherited default."@en ;
+    rdfs:subClassOf dul:Description .
+
+fr:FrameDefinition a owl:Class ;
+    rdfs:label "Frame Definition"@en ;
+    rdfs:comment "Slot-based descriptive perspective, with bounded single inheritance."@en ;
+    rdfs:subClassOf ac:PerspectiveDescription .
+
+fr:FrameSlotValue a owl:Class ;
+    rdfs:label "Frame Slot Value"@en ;
+    rdfs:comment "Projected value with source-claim provenance, or an explicitly marked default."@en ;
+    rdfs:subClassOf dul:InformationObject .
+
+fr:SlotDefinition a owl:Class ;
+    rdfs:label "Slot Definition"@en ;
+    rdfs:comment "Named slot, cardinality, source mapping and optional unverified default."@en ;
+    rdfs:subClassOf dul:Concept .
+

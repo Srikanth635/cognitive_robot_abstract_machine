@@ -1,0 +1,12 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX rm: <http://aicor.knowledge/ontologies/robot-motion.owl#>
+# Supply ?record explicitly. Targets are descriptive specifications, not robot states.
+SELECT ?action ?kind ?controlledPart ?targetRelation ?target ?success ?capability ?bounds
+WHERE {
+ ?record ac:expressesDescription ?action .
+ ?action ac:hasActionKind ?kind; rm:controlledEntity ?controlledPart;
+ ac:hasSuccessCriterion ?success; ac:hasCapabilityRequirement ?capability .
+ VALUES ?targetRelation {rm:configurationTarget rm:poseTarget rm:pathTarget}
+ ?action ?targetRelation ?target .
+ OPTIONAL {?action rm:bounds ?bounds}
+}

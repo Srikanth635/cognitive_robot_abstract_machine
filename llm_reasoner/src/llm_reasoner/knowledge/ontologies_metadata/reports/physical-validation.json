@@ -1,0 +1,70 @@
+[
+  {
+    "case": "valid-two-action-model-examples",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-mechanism",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-cause",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-effect",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-mechanism-assumption",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-model-scope",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-equation-variable",
+    "passed": true
+  },
+  {
+    "case": "reject-duplicate-variable-symbol",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-property-entity",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-property-parameter",
+    "passed": true
+  },
+  {
+    "case": "reject-equation-without-language",
+    "passed": true
+  },
+  {
+    "case": "reject-causal-cycle",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-causal-link",
+    "passed": true
+  },
+  {
+    "case": "reject-study-without-model",
+    "passed": true
+  },
+  {
+    "case": "properties-remain-unspecified",
+    "passed": true
+  },
+  {
+    "case": "study-is-not-run-evidence",
+    "passed": true
+  },
+  {
+    "case": "new-claims-remain-proposed",
+    "passed": true
+  }
+]

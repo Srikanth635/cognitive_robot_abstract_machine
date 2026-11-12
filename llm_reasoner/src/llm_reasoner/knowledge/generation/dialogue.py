@@ -19,7 +19,7 @@ from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
 from llm_reasoner.knowledge.generation.wire import FragmentDecoder
-from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
+from llm_reasoner.knowledge.vocabulary.linked import LinkedOntologyTerms
 from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 from llm_reasoner.observation.events import (
     GenerationAttemptRejected,
@@ -117,7 +117,7 @@ class GenerationDialogue:
     Judges each answer.
     """
 
-    prompt: GenerationPrompt = field(default_factory=GenerationPrompt)
+    prompt: GenerationPrompt = field(kw_only=True)
     """
     Builds the prompts.
     """
@@ -127,12 +127,10 @@ class GenerationDialogue:
     How many times a rejected answer is returned to the model for correction.
     """
 
-    linked_terms: LinkedOntologyTerms = field(
-        default_factory=LinkedOntologyTerms.pinned
-    )
+    linked_terms: LinkedOntologyTerms = field(default_factory=LinkedOntologyTerms)
     """
-    The classes CRAM-AICOR and DUL declare, which concepts named in their namespaces
-    must be among.
+    The classes the linked ontologies declare, which concepts named in their namespaces
+    must be among; no linked ontology by default.
     """
 
     observer: EventSink = field(default_factory=NullSink)

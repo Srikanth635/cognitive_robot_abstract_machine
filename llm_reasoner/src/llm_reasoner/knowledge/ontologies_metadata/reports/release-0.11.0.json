@@ -1,0 +1,19 @@
+{
+  "release": "0.11.0",
+  "new_context_tests": 26,
+  "source_query_fixture": "2 assessments in context A",
+  "prior_competency_assertions": 93,
+  "imports": 35,
+  "combined_shapes_integrity": 22,
+  "modular_closures": 20,
+  "new_context_classification": {
+    "consistent": true,
+    "unsatisfiable_classes": []
+  },
+  "combined_aicor_consistency": true,
+  "limitations": [
+    "Historical exact-triple provenance gaps remain",
+    "No automatic acceptance or conflict resolution",
+    "Digest verifies exact bytes; no immutable store or RDF canonicalization"
+  ]
+}

@@ -20,7 +20,7 @@ from typing_extensions import Any, Dict, List, Tuple
 
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     CRAM_AICOR_NAMESPACE,
     CRAM_AICOR_ONTOLOGY_IRI,
     DUL_NAMESPACE,

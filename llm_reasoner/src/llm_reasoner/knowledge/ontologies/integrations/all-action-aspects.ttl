@@ -1,0 +1,30 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/all-action-aspects.owl> a owl:Ontology ;
+    rdfs:label "All action knowledge aspects"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/capabilities-strategies.owl>,
+        <http://aicor.knowledge/ontologies/causal-mechanisms.owl>,
+        <http://aicor.knowledge/ontologies/causal-outcome-bridge.owl>,
+        <http://aicor.knowledge/ontologies/causal-physical-bridge.owl>,
+        <http://aicor.knowledge/ontologies/conditions-outcomes.owl>,
+        <http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl>,
+        <http://aicor.knowledge/ontologies/dynamics-control.owl>,
+        <http://aicor.knowledge/ontologies/entities-materials-affordances.owl>,
+        <http://aicor.knowledge/ontologies/failure-diagnosis.owl>,
+        <http://aicor.knowledge/ontologies/force-dynamics.owl>,
+        <http://aicor.knowledge/ontologies/frame-perspective.owl>,
+        <http://aicor.knowledge/ontologies/image-schemas.owl>,
+        <http://aicor.knowledge/ontologies/knowledge-context.owl>,
+        <http://aicor.knowledge/ontologies/model-contracts.owl>,
+        <http://aicor.knowledge/ontologies/monitoring-requirements.owl>,
+        <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl>,
+        <http://aicor.knowledge/ontologies/participants-relations.owl>,
+        <http://aicor.knowledge/ontologies/phases-transitions.owl>,
+        <http://aicor.knowledge/ontologies/physical-models.owl>,
+        <http://aicor.knowledge/ontologies/physical-outcome-bridge.owl>,
+        <http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl>,
+        <http://aicor.knowledge/ontologies/sensorimotor-events.owl>,
+        <http://aicor.knowledge/ontologies/transfer-contracts.owl> ;
+    owl:versionInfo "0.12.0" .
+

@@ -1,0 +1,139 @@
+{
+  "release": "0.22.0",
+  "date": "2026-11-12",
+  "scope": "Improve existing pouring, pickup, placement and navigation; no new ontology modules or action families",
+  "registered_ontologies": 40,
+  "new_ontologies": 0,
+  "changed_ontologies": [
+    "domains/object-manipulation.ttl",
+    "domains/material-transfer.ttl",
+    "domains/mobility-navigation.ttl"
+  ],
+  "changed_shapes": [
+    "domains/object-manipulation-shapes.ttl",
+    "domains/tool-transfer-shapes.ttl",
+    "domains/mobility-navigation-shapes.ttl"
+  ],
+  "changes": [
+    "Maximum cardinality for principal bindings and explicit domain semantics",
+    "Stronger prerequisite, goal, intended-participant and fault linkage checks",
+    "Goals may be weaker than success when every goal conjunct is established",
+    "Reject same-scope contradictory atoms and exact complementary comparisons",
+    "Three-valued combined criteria reporting with explicit unknown fault handling",
+    "SHACL identity, context and quantity-basis consistency",
+    "Four reproducible symbolic generation templates, with imported ontology hashes and no physical scalar defaults"
+  ],
+  "fresh_validation": {
+    "primary-action-validation.json": {
+      "checks": 80,
+      "passed": 80,
+      "report_sha256": "e18ff350b0a41660663c26c39563d397daea87e86435c1898831a4c32d4218fa"
+    },
+    "primary-generation-validation.json": {
+      "checks": 23,
+      "passed": 23,
+      "report_sha256": "8510ce576ae16b79bb08b60e8da5f219dfba9dd543850b0ffb3b2ec3e67847f5"
+    },
+    "object-manipulation-validation.json": {
+      "checks": 102,
+      "passed": 102,
+      "report_sha256": "82a649f0a8baba410f80a024aadb415f3c99cdf5f00e3b0d161ae79a098c94a3"
+    },
+    "mobility-navigation-validation.json": {
+      "checks": 104,
+      "passed": 104,
+      "report_sha256": "8015892fafe889f80cd723aecbf467cbe8da5be169b9d77405a938229a1259c9"
+    },
+    "tool-material-transfer-validation.json": {
+      "checks": 81,
+      "passed": 81,
+      "report_sha256": "268efff8f451220b315de69ba97530892d5d07fe463b76e533512abb10e977ad"
+    },
+    "transport-carrying-validation.json": {
+      "checks": 159,
+      "passed": 159,
+      "report_sha256": "2fac163b05fc5ac2d308c20f888af818f3828510a4c7a4396ce9be358816ada0"
+    },
+    "recipes-specialized-validation.json": {
+      "checks": 149,
+      "passed": 149,
+      "report_sha256": "bf2c8ad9472a0e376903e719094dfac380805361d9bd84210a2ef1d19afc0aaa"
+    },
+    "articulated-mechanisms-validation.json": {
+      "checks": 185,
+      "passed": 185,
+      "report_sha256": "fee552bd3429df60549fab384976433f89465c0929ffb739f419223d7cac2366"
+    },
+    "perception-attention-validation.json": {
+      "checks": 94,
+      "passed": 94,
+      "report_sha256": "1c60463c8cae83977107f44ec7b9f950df540f6cf9287bd23b32288044f80a5f"
+    },
+    "import-validation.json": {
+      "checks": 62,
+      "passed": 62,
+      "report_sha256": "1da4f90ca014b1d912ab9a68f7932dddfc5430bdc1ca07939dc549d4b6bdd690"
+    },
+    "competency-review.json": {
+      "checks": 93,
+      "passed": 93,
+      "report_sha256": "f0ed0a2a0ed857c71dc828d8398b188ce55a9aeaf56c4e3ea295c5ff57ab3c4c"
+    }
+  },
+  "fresh_checks_total": 1132,
+  "fresh_reasoning": {
+    "report": "reports/primary-action-reasoning.json",
+    "classified_closures": 4,
+    "unsatisfiable_named_classes": 0,
+    "combined_generic_examples_and_demo_consistency": "passed",
+    "optional_AICOR": "Not attempted; previous legacy normalization/timeout issue unresolved"
+  },
+  "preservation": {
+    "baseline": "0.21.0",
+    "prior_rdf_files": 87,
+    "byte_identical": 81,
+    "changed": [
+      "gpt_cram_ontologies/domains/material-transfer.ttl",
+      "gpt_cram_ontologies/domains/mobility-navigation-shapes.ttl",
+      "gpt_cram_ontologies/domains/mobility-navigation.ttl",
+      "gpt_cram_ontologies/domains/object-manipulation-shapes.ttl",
+      "gpt_cram_ontologies/domains/object-manipulation.ttl",
+      "gpt_cram_ontologies/domains/tool-transfer-shapes.ttl"
+    ],
+    "missing": [],
+    "ontology_delta": [
+      {
+        "file": "gpt_cram_ontologies/domains/material-transfer.ttl",
+        "removed_nonversion_triples": 0,
+        "added_nonversion_triples": 13
+      },
+      {
+        "file": "gpt_cram_ontologies/domains/mobility-navigation.ttl",
+        "removed_nonversion_triples": 0,
+        "added_nonversion_triples": 41
+      },
+      {
+        "file": "gpt_cram_ontologies/domains/object-manipulation.ttl",
+        "removed_nonversion_triples": 0,
+        "added_nonversion_triples": 26
+      }
+    ],
+    "registry_byte_identical": true,
+    "examples_and_demo_byte_identical": true
+  },
+  "guide": "domains/PRIMARY_ACTION_GENERATION_GUIDE.md",
+  "generation_aid": "generation/primary-action-templates.json",
+  "compatibility": [
+    "Existing success/precondition/fault output fields retained",
+    "Transfer keeps fault and adds failure alias",
+    "Old context-free pickup/place examples retained",
+    "All examples, demo values, records and provenance statements unchanged"
+  ],
+  "limitations": [
+    "Bounded profiles/signatures, not arbitrary entailment or general satisfiability",
+    "No new action families; missing CoraPlex actions remain deferred",
+    "No source-backed knowledge acquisition or empirical completeness claim",
+    "No full output schema, LLM provider call, working projection, EQL/SDT adapter or GitHub push",
+    "No accepted observation, frozen storage guarantee, physical simulation, calibrated model validation or robot execution"
+  ]
+}

@@ -1,0 +1,342 @@
+{
+  "release": "0.22.0",
+  "checks": [
+    {
+      "case": "pickup:existing-profiles-valid",
+      "passed": true
+    },
+    {
+      "case": "pickup:success-cannot-substitute-for-prerequisite",
+      "passed": true
+    },
+    {
+      "case": "pickup:success-must-establish-declared-goal",
+      "passed": true
+    },
+    {
+      "case": "pickup:success-is-not-fault",
+      "passed": true
+    },
+    {
+      "case": "pickup:contradictory-outcome-rejected",
+      "passed": true
+    },
+    {
+      "case": "pickup:goal-cannot-change-object-or-destination",
+      "passed": true
+    },
+    {
+      "case": "pickup:outcome-alone-leaves-combined-criteria-unknown",
+      "passed": true
+    },
+    {
+      "case": "pickup:qualified-supplied-criteria-satisfied",
+      "passed": true
+    },
+    {
+      "case": "pickup:missing-fault-evidence-is-not-no-fault",
+      "passed": true
+    },
+    {
+      "case": "pickup:false-prerequisite-blocks-combined-criteria",
+      "passed": true
+    },
+    {
+      "case": "pickup:success-and-fault-remain-visible",
+      "passed": true
+    },
+    {
+      "case": "pickup:no-observation-acceptance-or-execution",
+      "passed": true
+    },
+    {
+      "case": "pickup:weaker-goal-permitted",
+      "passed": true
+    },
+    {
+      "case": "place:existing-profiles-valid",
+      "passed": true
+    },
+    {
+      "case": "place:success-cannot-substitute-for-prerequisite",
+      "passed": true
+    },
+    {
+      "case": "place:success-must-establish-declared-goal",
+      "passed": true
+    },
+    {
+      "case": "place:success-is-not-fault",
+      "passed": true
+    },
+    {
+      "case": "place:contradictory-outcome-rejected",
+      "passed": true
+    },
+    {
+      "case": "place:goal-cannot-change-object-or-destination",
+      "passed": true
+    },
+    {
+      "case": "place:outcome-alone-leaves-combined-criteria-unknown",
+      "passed": true
+    },
+    {
+      "case": "place:qualified-supplied-criteria-satisfied",
+      "passed": true
+    },
+    {
+      "case": "place:missing-fault-evidence-is-not-no-fault",
+      "passed": true
+    },
+    {
+      "case": "place:false-prerequisite-blocks-combined-criteria",
+      "passed": true
+    },
+    {
+      "case": "place:success-and-fault-remain-visible",
+      "passed": true
+    },
+    {
+      "case": "place:no-observation-acceptance-or-execution",
+      "passed": true
+    },
+    {
+      "case": "place:weaker-goal-permitted",
+      "passed": true
+    },
+    {
+      "case": "navigate:existing-profiles-valid",
+      "passed": true
+    },
+    {
+      "case": "navigate:success-cannot-substitute-for-prerequisite",
+      "passed": true
+    },
+    {
+      "case": "navigate:success-must-establish-declared-goal",
+      "passed": true
+    },
+    {
+      "case": "navigate:success-is-not-fault",
+      "passed": true
+    },
+    {
+      "case": "navigate:contradictory-outcome-rejected",
+      "passed": true
+    },
+    {
+      "case": "navigate:goal-cannot-change-object-or-destination",
+      "passed": true
+    },
+    {
+      "case": "navigate:outcome-alone-leaves-combined-criteria-unknown",
+      "passed": true
+    },
+    {
+      "case": "navigate:qualified-supplied-criteria-satisfied",
+      "passed": true
+    },
+    {
+      "case": "navigate:missing-fault-evidence-is-not-no-fault",
+      "passed": true
+    },
+    {
+      "case": "navigate:false-prerequisite-blocks-combined-criteria",
+      "passed": true
+    },
+    {
+      "case": "navigate:success-and-fault-remain-visible",
+      "passed": true
+    },
+    {
+      "case": "navigate:no-observation-acceptance-or-execution",
+      "passed": true
+    },
+    {
+      "case": "navigate:weaker-goal-permitted",
+      "passed": true
+    },
+    {
+      "case": "pour:existing-profiles-valid",
+      "passed": true
+    },
+    {
+      "case": "pour:success-cannot-substitute-for-prerequisite",
+      "passed": true
+    },
+    {
+      "case": "pour:success-must-establish-declared-goal",
+      "passed": true
+    },
+    {
+      "case": "pour:success-is-not-fault",
+      "passed": true
+    },
+    {
+      "case": "pour:contradictory-outcome-rejected",
+      "passed": true
+    },
+    {
+      "case": "pour:goal-cannot-change-object-or-destination",
+      "passed": true
+    },
+    {
+      "case": "pour:outcome-alone-leaves-combined-criteria-unknown",
+      "passed": true
+    },
+    {
+      "case": "pour:qualified-supplied-criteria-satisfied",
+      "passed": true
+    },
+    {
+      "case": "pour:missing-fault-evidence-is-not-no-fault",
+      "passed": true
+    },
+    {
+      "case": "pour:false-prerequisite-blocks-combined-criteria",
+      "passed": true
+    },
+    {
+      "case": "pour:success-and-fault-remain-visible",
+      "passed": true
+    },
+    {
+      "case": "pour:no-observation-acceptance-or-execution",
+      "passed": true
+    },
+    {
+      "case": "pour:weaker-goal-permitted",
+      "passed": true
+    },
+    {
+      "case": "pickup-support:foreign-prerequisite-binding",
+      "passed": true
+    },
+    {
+      "case": "place-held-object:foreign-prerequisite-binding",
+      "passed": true
+    },
+    {
+      "case": "navigation-footprint:foreign-prerequisite-binding",
+      "passed": true
+    },
+    {
+      "case": "pour-source-destination-material:foreign-prerequisite-binding",
+      "passed": true
+    },
+    {
+      "case": "pickup:current-state-is-not-initial-support",
+      "passed": true
+    },
+    {
+      "case": "place:current-hold-is-not-initial-hold",
+      "passed": true
+    },
+    {
+      "case": "pickup:optional-context-cannot-belong-to-navigation",
+      "passed": true
+    },
+    {
+      "case": "pour:mixed-technique-profile-needs-explicit-contract",
+      "passed": true
+    },
+    {
+      "case": "navigation:roles-cannot-disagree-with-target",
+      "passed": true
+    },
+    {
+      "case": "pour:complementary-spill-comparisons-rejected",
+      "passed": true
+    },
+    {
+      "case": "place:held-before-and-released-after-are-consistent",
+      "passed": true
+    },
+    {
+      "case": "pour:existing-concrete-readiness-and-spill-comparison-remain-valid",
+      "passed": true
+    },
+    {
+      "case": "primary-shapes:existing-profiles-conform",
+      "passed": true
+    },
+    {
+      "case": "primary-shapes:reject-pickup-self-support",
+      "passed": true
+    },
+    {
+      "case": "primary-shapes:reject-place-self-support",
+      "passed": true
+    },
+    {
+      "case": "primary-shapes:reject-navigation-self-target",
+      "passed": true
+    },
+    {
+      "case": "primary-shapes:reject-pour-identical-endpoints",
+      "passed": true
+    },
+    {
+      "case": "primary-shapes:reject-pour-unsupported-basis",
+      "passed": true
+    },
+    {
+      "case": "primary-shapes:reject-pickup-wrong-context",
+      "passed": true
+    },
+    {
+      "case": "primary-shapes:reject-navigate-wrong-context",
+      "passed": true
+    },
+    {
+      "case": "primary-shapes:reject-pour-wrong-context",
+      "passed": true
+    },
+    {
+      "case": "OWL:single-binding:http://aicor.knowledge/ontologies/object-manipulation.owl#object",
+      "passed": true
+    },
+    {
+      "case": "OWL:single-binding:http://aicor.knowledge/ontologies/object-manipulation.owl#initialSupport",
+      "passed": true
+    },
+    {
+      "case": "OWL:single-binding:http://aicor.knowledge/ontologies/object-manipulation.owl#destinationSupport",
+      "passed": true
+    },
+    {
+      "case": "OWL:single-binding:http://aicor.knowledge/ontologies/transfer-contracts.owl#hasTransferContract",
+      "passed": true
+    },
+    {
+      "case": "OWL:single-binding:http://aicor.knowledge/ontologies/mobility-navigation.owl#targetRegion",
+      "passed": true
+    },
+    {
+      "case": "no-new-ontology-modules",
+      "passed": true
+    },
+    {
+      "case": "no-framework-dependency",
+      "passed": true
+    }
+  ],
+  "passed": 80,
+  "scope": "Four existing action families; bounded declarative constraints and synthetic input tests. No new module, world grounding, accepted observation, physical solver or execution.",
+  "input_sha256": {
+    "domains/articulated-mechanisms-shapes.ttl": "4b55e4a0d80442f639a39a6c2d1a3fe42c0e02f559dd7a310b478bfcf2a31e59",
+    "domains/articulated-mechanisms.ttl": "3c41707df3ffa8fcfc57945a1f06545183c5076509e5c6ed23c531509265bf88",
+    "domains/material-transfer.ttl": "19e181e12fdf8892cdf2b7d4886b2541c05d97ea4f7ce69e5a143a187ea63dde",
+    "domains/mobility-navigation-shapes.ttl": "475e7c3b9ebd197bd15e4d2e1078b2b901476ba0bb9d8fb921229f9063944272",
+    "domains/mobility-navigation.ttl": "fd3c2a78f63feaca8bf670307e0ed0a2b4ca0246f52a9f96baa91a33a9985a0f",
+    "domains/object-manipulation-shapes.ttl": "9250bfdcce2c6e72c4219b357a3c6248cd3d46a60523f7833490331c927af1d2",
+    "domains/object-manipulation.ttl": "e8fef18309e647c79f48fe56d940293d1295a04fb6ea6e2e4c9067cb81f1d40b",
+    "domains/perception-attention-shapes.ttl": "d52ef3f885eb2253eabcd603dd3081b15933189a92a611bce307968f01486da7",
+    "domains/perception-attention.ttl": "d2934ef335099ed613e6f2840c860475013063e182a3777a263f37ef2ce136b8",
+    "domains/robot-motion-shapes.ttl": "4f96ca9ab2007e7ae1d18ec79b0c21bed5c1a95b82deaf90db3232a73f53339f",
+    "domains/robot-motion.ttl": "17cd5911494bcb8f14222ae1643f5e856ea7f27ad45a24bf5ae688aaff5d05d8",
+    "domains/tool-interaction.ttl": "b7452f819de7bd39ee0434bb892f1ff84b8bf58e04e9e1015a1d0d09e1493ef1",
+    "domains/tool-transfer-shapes.ttl": "cdb5f46f9ed46c75b6dca8848154907f3e5898d510bc799cebbf60f941ae6ae1"
+  }
+}

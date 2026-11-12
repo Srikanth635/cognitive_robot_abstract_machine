@@ -1,0 +1,134 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix asp: <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pm: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/entities-materials-affordances.owl> a owl:Ontology ;
+    rdfs:label "Entities materials affordances"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/physical-models.owl> ;
+    owl:versionInfo "0.10.0" .
+
+asp:Gas a asp:MaterialState,
+        owl:NamedIndividual ;
+    rdfs:label "Gas"@en .
+
+asp:Granular a asp:MaterialState,
+        owl:NamedIndividual ;
+    rdfs:label "Granular"@en .
+
+asp:Liquid a asp:MaterialState,
+        owl:NamedIndividual ;
+    rdfs:label "Liquid"@en .
+
+asp:Solid a asp:MaterialState,
+        owl:NamedIndividual ;
+    rdfs:label "Solid"@en .
+
+asp:UnknownState a asp:MaterialState,
+        owl:NamedIndividual ;
+    rdfs:label "Unknown State"@en .
+
+asp:affordsActionKind a owl:ObjectProperty ;
+    rdfs:label "Affords Action Kind"@en ;
+    rdfs:domain asp:AffordanceSpecification ;
+    rdfs:range ac:ActionKind .
+
+asp:assetIRI a owl:DatatypeProperty ;
+    rdfs:label "Asset IRI"@en ;
+    rdfs:domain asp:GeometrySpecification ;
+    rdfs:range xsd:anyURI .
+
+asp:assetVersion a owl:DatatypeProperty ;
+    rdfs:label "Asset Version"@en ;
+    rdfs:domain asp:GeometrySpecification ;
+    rdfs:range xsd:string .
+
+asp:constituent a owl:ObjectProperty ;
+    rdfs:label "Constituent"@en ;
+    rdfs:domain asp:MaterialSpecification ;
+    rdfs:range asp:MaterialSpecification .
+
+asp:describesEntity a owl:ObjectProperty ;
+    rdfs:label "Describes Entity"@en ;
+    rdfs:domain asp:EntityDescription ;
+    rdfs:range ac:EntitySpecification .
+
+asp:dimensionParameter a owl:ObjectProperty ;
+    rdfs:label "Dimension Parameter"@en ;
+    rdfs:domain asp:GeometrySpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+asp:hasAffordance a owl:ObjectProperty ;
+    rdfs:label "Has Affordance"@en ;
+    rdfs:domain asp:EntityDescription ;
+    rdfs:range asp:AffordanceSpecification .
+
+asp:hasGeometry a owl:ObjectProperty ;
+    rdfs:label "Has Geometry"@en ;
+    rdfs:domain asp:EntityDescription ;
+    rdfs:range asp:GeometrySpecification .
+
+asp:hasMaterial a owl:ObjectProperty ;
+    rdfs:label "Has Material"@en ;
+    rdfs:domain asp:EntityDescription ;
+    rdfs:range asp:MaterialSpecification .
+
+asp:hasOpening a owl:ObjectProperty ;
+    rdfs:label "Has Opening"@en ;
+    rdfs:domain asp:GeometrySpecification ;
+    rdfs:range asp:OpeningSpecification .
+
+asp:materialState a owl:ObjectProperty ;
+    rdfs:label "Material State"@en ;
+    rdfs:domain asp:MaterialSpecification ;
+    rdfs:range asp:MaterialState .
+
+asp:physicalProperty a owl:ObjectProperty ;
+    rdfs:label "Physical Property"@en ;
+    rdfs:domain asp:EntityDescription ;
+    rdfs:range pm:PhysicalPropertySpecification .
+
+asp:requiresCapability a owl:ObjectProperty ;
+    rdfs:label "Requires Capability"@en ;
+    rdfs:domain asp:AffordanceSpecification ;
+    rdfs:range ac:CapabilityRequirement ;
+    rdfs:subPropertyOf ac:requiresCapability .
+
+asp:validWhen a owl:ObjectProperty ;
+    rdfs:label "Valid When"@en ;
+    rdfs:domain asp:AffordanceSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+asp:OpeningSpecification a owl:Class ;
+    rdfs:label "Opening Specification"@en ;
+    rdfs:comment "Opening geometry; dimensions remain unspecified until provided."@en ;
+    rdfs:subClassOf asp:GeometrySpecification .
+
+asp:AffordanceSpecification a owl:Class ;
+    rdfs:label "Affordance Specification"@en ;
+    rdfs:comment "Conditional action possibility relative to capability requirements and context."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:MaterialSpecification a owl:Class ;
+    rdfs:label "Material Specification"@en ;
+    rdfs:comment "Intensional material/composition description; no actual material instance."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:EntityDescription a owl:Class ;
+    rdfs:label "Entity Description"@en ;
+    rdfs:comment "Record-scoped descriptive facet referencing a shared entity specification."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:GeometrySpecification a owl:Class ;
+    rdfs:label "Geometry Specification"@en ;
+    rdfs:comment "Geometry description with optional external asset reference."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:MaterialState a owl:Class ;
+    rdfs:label "Material State"@en ;
+    rdfs:comment "Described material state category."@en ;
+    rdfs:subClassOf dul:Concept .
+

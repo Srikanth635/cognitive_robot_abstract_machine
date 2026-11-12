@@ -1,0 +1,26 @@
+[
+  {
+    "record": "http://aicor.knowledge/ontologies/robot-motion-examples.owl#jointRepositioningRecord",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/robot-motion-examples.owl#stowingRecord",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/robot-motion-examples.owl#gripperConfigurationChangeRecord",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/robot-motion-examples.owl#gripperApertureChangeRecord",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/robot-motion-examples.owl#cartesianPositioningRecord",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/robot-motion-examples.owl#posePathFollowingRecord",
+    "rows": 1
+  }
+]

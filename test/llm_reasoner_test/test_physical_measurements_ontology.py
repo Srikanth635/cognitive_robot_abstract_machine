@@ -4,7 +4,7 @@ vocabulary generated from it, that no generated knowledge reaches it, the closed
 rules a measurement meets, and what an OWL reasoner concludes from it.
 
 Tests that need CRAM-AICOR or DUL read the pinned copies
-(:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`), and the test that
+(:class:`~llm_reasoner.knowledge.vocabulary.linked.LinkedOntologyFile`), and the test that
 reasons needs ``owlready2`` and a Java runtime and is slow.
 """
 
@@ -28,7 +28,7 @@ from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, ShapeViolation
 from llm_reasoner.knowledge.generation.exceptions import MeasurementIsNotGenerated
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.schema import TypeScope
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     KNOWLEDGE_ONTOLOGY_MODULES,
@@ -42,8 +42,8 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
 )
 from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
-from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
-from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
+from llm_reasoner.knowledge.vocabulary.terms import DescriptionEntity
+from llm_reasoner.knowledge.vocabulary.translation.writing import VocabularyWriter
 
 from .test_predictive_manipulation_ontology import (
     cram_aicor_graph,

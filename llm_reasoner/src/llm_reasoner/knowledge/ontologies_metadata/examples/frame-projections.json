@@ -1,0 +1,196 @@
+[
+  {
+    "sourceRecord": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV6",
+    "sourceVersion": "6",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#pourActionV6",
+    "contract": "http://aicor.knowledge/ontologies/action-examples.owl#PouringFrameContract",
+    "frame": "http://aicor.knowledge/ontologies/action-examples.owl#PouringFrame",
+    "evidencePolicy": "retain-with-status",
+    "slots": [
+      {
+        "key": "action-kind",
+        "slot": "http://aicor.knowledge/ontologies/action-examples.owl#kindSlot",
+        "values": [
+          {
+            "term": {
+              "kind": "iri",
+              "value": "http://aicor.knowledge/ontologies/action-examples.owl#Pouring"
+            },
+            "origin": "source",
+            "support": [],
+            "assessment": "unassessed-template-content"
+          }
+        ],
+        "unknown": false
+      },
+      {
+        "key": "exploration-policy",
+        "slot": "http://aicor.knowledge/ontologies/action-examples.owl#diagnosticPolicySlot",
+        "values": [],
+        "unknown": false
+      },
+      {
+        "key": "goals",
+        "slot": "http://aicor.knowledge/ontologies/action-examples.owl#goalSlot",
+        "values": [
+          {
+            "term": {
+              "kind": "iri",
+              "value": "http://aicor.knowledge/ontologies/action-examples.owl#pourAmountGoal"
+            },
+            "origin": "source",
+            "support": [
+              {
+                "claim": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV2Claim1",
+                "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+                "evidence": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+                ]
+              }
+            ],
+            "assessment": "claims-attached"
+          }
+        ],
+        "unknown": false
+      },
+      {
+        "key": "participants",
+        "slot": "http://aicor.knowledge/ontologies/action-examples.owl#roleSlot",
+        "values": [
+          {
+            "term": {
+              "kind": "iri",
+              "value": "http://aicor.knowledge/ontologies/action-examples.owl#destinationRoleSpec"
+            },
+            "origin": "source",
+            "support": [],
+            "assessment": "unassessed-template-content"
+          },
+          {
+            "term": {
+              "kind": "iri",
+              "value": "http://aicor.knowledge/ontologies/action-examples.owl#sourceRoleSpec"
+            },
+            "origin": "source",
+            "support": [],
+            "assessment": "unassessed-template-content"
+          },
+          {
+            "term": {
+              "kind": "iri",
+              "value": "http://aicor.knowledge/ontologies/action-examples.owl#substanceRoleSpec"
+            },
+            "origin": "source",
+            "support": [],
+            "assessment": "unassessed-template-content"
+          }
+        ],
+        "unknown": false
+      }
+    ],
+    "issues": [],
+    "includedClaims": [
+      "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV2Claim1"
+    ],
+    "executionReadinessAssessed": false
+  },
+  {
+    "sourceRecord": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV6",
+    "sourceVersion": "6",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#graspActionV6",
+    "contract": "http://aicor.knowledge/ontologies/action-examples.owl#GraspingFrameContract",
+    "frame": "http://aicor.knowledge/ontologies/action-examples.owl#GraspingFrame",
+    "evidencePolicy": "retain-with-status",
+    "slots": [
+      {
+        "key": "action-kind",
+        "slot": "http://aicor.knowledge/ontologies/action-examples.owl#kindSlot",
+        "values": [
+          {
+            "term": {
+              "kind": "iri",
+              "value": "http://aicor.knowledge/ontologies/action-examples.owl#Grasping"
+            },
+            "origin": "source",
+            "support": [],
+            "assessment": "unassessed-template-content"
+          }
+        ],
+        "unknown": false
+      },
+      {
+        "key": "exploration-policy",
+        "slot": "http://aicor.knowledge/ontologies/action-examples.owl#diagnosticPolicySlot",
+        "values": [
+          {
+            "term": {
+              "kind": "literal",
+              "value": "request-evidence",
+              "datatype": null,
+              "language": null
+            },
+            "origin": "default",
+            "defaultFrame": "http://aicor.knowledge/ontologies/action-examples.owl#GenericActionFrame",
+            "support": [],
+            "assessment": "default-unverified"
+          }
+        ],
+        "unknown": false
+      },
+      {
+        "key": "goals",
+        "slot": "http://aicor.knowledge/ontologies/action-examples.owl#goalSlot",
+        "values": [
+          {
+            "term": {
+              "kind": "iri",
+              "value": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlledGoal"
+            },
+            "origin": "source",
+            "support": [
+              {
+                "claim": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV2Claim1",
+                "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+                "evidence": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+                ]
+              }
+            ],
+            "assessment": "claims-attached"
+          }
+        ],
+        "unknown": false
+      },
+      {
+        "key": "participants",
+        "slot": "http://aicor.knowledge/ontologies/action-examples.owl#roleSlot",
+        "values": [
+          {
+            "term": {
+              "kind": "iri",
+              "value": "http://aicor.knowledge/ontologies/action-examples.owl#effectorRoleSpec"
+            },
+            "origin": "source",
+            "support": [],
+            "assessment": "unassessed-template-content"
+          },
+          {
+            "term": {
+              "kind": "iri",
+              "value": "http://aicor.knowledge/ontologies/action-examples.owl#graspedRoleSpec"
+            },
+            "origin": "source",
+            "support": [],
+            "assessment": "unassessed-template-content"
+          }
+        ],
+        "unknown": false
+      }
+    ],
+    "issues": [],
+    "includedClaims": [
+      "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV2Claim1"
+    ],
+    "executionReadinessAssessed": false
+  }
+]

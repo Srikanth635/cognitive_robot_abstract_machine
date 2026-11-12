@@ -1,0 +1,173 @@
+@prefix am: <http://aicor.knowledge/ontologies/articulated-mechanisms.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+am:ArticulatedMechanismDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#GoalSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#CapabilityRequirement> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:actuationPhase ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:verificationPhase ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:operator ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PreconditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition> ],
+        [ sh:class <http://aicor.knowledge/ontologies/phases-transitions.owl#PhaseStructure> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/phases-transitions.owl#hasPhaseStructure> ],
+        [ sh:class am:MechanismSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:mechanism ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#FailureCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasFailureCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#SuccessCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:evaluationContext ],
+        [ sh:class <http://aicor.knowledge/ontologies/object-manipulation.owl#ObjectManipulationDescription> ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path am:engagementDescription ] ;
+    sh:targetClass am:ArticulatedMechanismDescription .
+
+am:AxisSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#PositionTarget> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:axisOrigin ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:yAxisParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:xAxisParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:axisFrame ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:zAxisParameter ] ;
+    sh:targetClass am:AxisSpecification .
+
+am:ConfigurationChangeDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:toleranceParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:engagementPhase ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:targetParameter ],
+        [ sh:datatype xsd:boolean ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:latchReleaseRequired ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:errorParameter ] ;
+    sh:targetClass am:ConfigurationChangeDescription .
+
+am:JointSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:closedCoordinate ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:upperLimit ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#CoordinateSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:coordinate ],
+        [ sh:datatype xsd:integer ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:openingDirection ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:openCoordinate ],
+        [ sh:class am:JointKind ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:jointKind ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:lowerLimit ],
+        [ sh:class am:AxisSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:axis ] ;
+    sh:targetClass am:JointSpecification .
+
+am:LatchSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:class am:MechanismSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:latchOf ] ;
+    sh:targetClass am:LatchSpecification .
+
+am:MechanismSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:referenceFrame ],
+        [ sh:class am:LatchSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path am:latch ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path am:handle ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:describesAssembly ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:fixedPart ],
+        [ sh:class am:JointSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:joint ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path am:movingPart ] ;
+    sh:targetClass am:MechanismSpecification .
+

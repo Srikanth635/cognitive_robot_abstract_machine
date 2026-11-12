@@ -1,0 +1,337 @@
+{
+  "release": "0.17.0",
+  "checks": [
+    {
+      "case": "seven-profiles-and-comprehensive-demo-shapes",
+      "passed": true
+    },
+    {
+      "case": "relation-expression-integrity",
+      "passed": true
+    },
+    {
+      "case": "tool-contract-integrity",
+      "passed": true
+    },
+    {
+      "case": "material-contract-integrity",
+      "passed": true
+    },
+    {
+      "case": "demo-phase-monitor-integrity",
+      "passed": true
+    },
+    {
+      "case": "toolPositioning:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "toolPositioning:supplied-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "toolPositioning:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "toolPositioning:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "toolPositioning:missing-required-state-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "toolEngagement:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "toolEngagement:supplied-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "toolEngagement:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "toolEngagement:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "toolEngagement:missing-required-state-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "toolUse:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "toolUse:supplied-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "toolUse:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "toolUse:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "toolUse:missing-required-state-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "toolDisengagement:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "toolDisengagement:supplied-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "toolDisengagement:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "toolDisengagement:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "toolDisengagement:missing-required-state-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "partialTransfer:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "partialTransfer:supplied-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "partialTransfer:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "partialTransfer:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "partialTransfer:missing-required-state-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "completeTransfer:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "completeTransfer:supplied-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "completeTransfer:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "completeTransfer:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "completeTransfer:missing-required-state-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "pouringTransfer:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "pouringTransfer:supplied-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "pouringTransfer:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "pouringTransfer:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "pouringTransfer:missing-required-state-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "contact-alone-not-functional-use",
+      "passed": true
+    },
+    {
+      "case": "still-contacting-not-disengaged",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-working-part",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-effect-binding",
+      "passed": true
+    },
+    {
+      "case": "reject-policy-without-required-contact",
+      "passed": true
+    },
+    {
+      "case": "partialTransfer:under-delivery-fails",
+      "passed": true
+    },
+    {
+      "case": "partialTransfer:excess-spillage-fails",
+      "passed": true
+    },
+    {
+      "case": "partialTransfer:negative-amount-rejected",
+      "passed": true
+    },
+    {
+      "case": "completeTransfer:under-delivery-fails",
+      "passed": true
+    },
+    {
+      "case": "completeTransfer:excess-spillage-fails",
+      "passed": true
+    },
+    {
+      "case": "completeTransfer:negative-amount-rejected",
+      "passed": true
+    },
+    {
+      "case": "pouringTransfer:under-delivery-fails",
+      "passed": true
+    },
+    {
+      "case": "pouringTransfer:excess-spillage-fails",
+      "passed": true
+    },
+    {
+      "case": "pouringTransfer:negative-amount-rejected",
+      "passed": true
+    },
+    {
+      "case": "complete-transfer-needs-small-residual",
+      "passed": true
+    },
+    {
+      "case": "partial-transfer-no-empty-source-default",
+      "passed": true
+    },
+    {
+      "case": "reject-collapsed-transfer-ends",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-transfer-unit",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-mode",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-basis",
+      "passed": true
+    },
+    {
+      "case": "mass-basis-profile-supported",
+      "passed": true
+    },
+    {
+      "case": "demo-marked-fictional",
+      "passed": true
+    },
+    {
+      "case": "demo-readable-and-RDF-tool-tool",
+      "passed": true
+    },
+    {
+      "case": "demo-readable-and-RDF-tool-workingPart",
+      "passed": true
+    },
+    {
+      "case": "demo-readable-and-RDF-tool-target",
+      "passed": true
+    },
+    {
+      "case": "demo-readable-and-RDF-tool-intendedEffect",
+      "passed": true
+    },
+    {
+      "case": "demo-shared-working-part",
+      "passed": true
+    },
+    {
+      "case": "demo-shared-effect",
+      "passed": true
+    },
+    {
+      "case": "fictional-demo-criteria-satisfy",
+      "passed": true
+    },
+    {
+      "case": "fictional-volume-accounting-balanced",
+      "passed": true
+    },
+    {
+      "case": "demo-partial-retains-source-content",
+      "passed": true
+    },
+    {
+      "case": "no-world-bindings",
+      "passed": true
+    },
+    {
+      "case": "exact-provenance:http://aicor.knowledge/ontologies/tool-transfer-examples.owl#completeTransferRecord",
+      "passed": true
+    },
+    {
+      "case": "exact-provenance:http://aicor.knowledge/ontologies/tool-transfer-examples.owl#partialTransferRecord",
+      "passed": true
+    },
+    {
+      "case": "exact-provenance:http://aicor.knowledge/ontologies/tool-transfer-examples.owl#pouringTransferRecord",
+      "passed": true
+    },
+    {
+      "case": "exact-provenance:http://aicor.knowledge/ontologies/tool-transfer-examples.owl#toolDisengagementRecord",
+      "passed": true
+    },
+    {
+      "case": "exact-provenance:http://aicor.knowledge/ontologies/tool-transfer-examples.owl#toolEngagementRecord",
+      "passed": true
+    },
+    {
+      "case": "exact-provenance:http://aicor.knowledge/ontologies/tool-transfer-examples.owl#toolPositioningRecord",
+      "passed": true
+    },
+    {
+      "case": "exact-provenance:http://aicor.knowledge/ontologies/tool-transfer-examples.owl#toolUseRecord",
+      "passed": true
+    },
+    {
+      "case": "exact-provenance:http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#record",
+      "passed": true
+    },
+    {
+      "case": "all-new-claims-proposed",
+      "passed": true
+    }
+  ],
+  "fictionalDemoAccounting": {
+    "dimensionCheck": "compatible",
+    "unitCheck": "identical",
+    "residual": "0E-7",
+    "satisfied": true,
+    "physicalValidityAssessed": false
+  },
+  "limitation": "All example values and assumed outcomes are invented; no physical simulation or safe operating limits established."
+}

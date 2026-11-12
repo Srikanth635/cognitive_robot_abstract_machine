@@ -5,14 +5,14 @@ identifiers, so that llm_reasoner imports no designator package.
 
 from __future__ import annotations
 
-from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
+from llm_reasoner.knowledge.vocabulary.ontology_modules import CRAM_AICOR_NAMESPACE
 from llm_reasoner.knowledge.ontologies.described_actions import (
     DescribedAction,
     DescribedActions,
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity
+from llm_reasoner.knowledge.vocabulary.terms import ConceptReference, DescriptionEntity
 
 POURING_DESIGNATOR = "coraplex.robot_plans.actions.composite.tool_based.PouringAction"
 """

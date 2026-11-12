@@ -1,0 +1,22 @@
+[
+  {
+    "query": "transfer-contract.rq",
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV8",
+    "rows": 1
+  },
+  {
+    "query": "transfer-contract.rq",
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV7",
+    "rows": 0
+  },
+  {
+    "query": "diagnostic-causal-association.rq",
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV8",
+    "rows": 1
+  },
+  {
+    "query": "diagnostic-causal-association.rq",
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV7",
+    "rows": 0
+  }
+]

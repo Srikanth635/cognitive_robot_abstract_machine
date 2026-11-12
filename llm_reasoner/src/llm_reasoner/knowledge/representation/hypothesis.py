@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 
 from typing_extensions import Any
 
-from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
+from llm_reasoner.knowledge.vocabulary.terms import DescriptionEntity
 
 
 @dataclass(frozen=True)

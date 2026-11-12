@@ -1,0 +1,114 @@
+[
+  {
+    "generic_concept": "ActionDescription",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#ActionDesignator",
+    "named_parents": [
+      "http://aicor.knowledge/l2-ontology.owl#AttributiveDesignator",
+      "http://aicor.knowledge/l2-ontology.owl#CRAMDesignator",
+      "http://aicor.knowledge/l2-ontology.owl#Representation",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 6,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "ActionDescription",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#Designator",
+    "named_parents": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 6,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "ActionDescription",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#Action",
+    "named_parents": [
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 0,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "EntitySpecification",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#ObjectDesignator",
+    "named_parents": [
+      "http://aicor.knowledge/l2-ontology.owl#CRAMDesignator",
+      "http://aicor.knowledge/l2-ontology.owl#Representation",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 2,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "EntitySpecification",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#PhysicalObject",
+    "named_parents": [
+      "http://aicor.knowledge/l2-ontology.owl#PhysicalEntity",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 0,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "ParameterSpecification",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#Parameter",
+    "named_parents": [
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 0,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "ActionKind",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#Task",
+    "named_parents": [
+      "http://aicor.knowledge/l2-ontology.owl#Representation",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Description",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 1,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "ActionKind",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#Pouring",
+    "named_parents": [
+      "http://aicor.knowledge/l2-ontology.owl#Transferring",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 4,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "ActionKind",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#Grasping",
+    "named_parents": [
+      "http://aicor.knowledge/l2-ontology.owl#PrimitiveAction",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 0,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "ProcessModuleRequirement",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#ProcessModule",
+    "named_parents": [
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 0,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  },
+  {
+    "generic_concept": "ExecutionStrategy",
+    "aicor_class": "http://aicor.knowledge/l2-ontology.owl#Plan",
+    "named_parents": [
+      "http://aicor.knowledge/l2-ontology.owl#ControlProgram",
+      "http://aicor.knowledge/l2-ontology.owl#Program",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    "anonymous_parent_expressions": 4,
+    "decision": "No equivalence asserted; abstraction and restrictions differ or remain unverified."
+  }
+]

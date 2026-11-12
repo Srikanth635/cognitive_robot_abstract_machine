@@ -1,0 +1,287 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix action: <http://aicor.knowledge/ontologies/action-recipes.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/action-recipes.owl> a owl:Ontology ;
+    rdfs:label "Ordered action recipes"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/specialized-tool-interactions.owl>,
+        <http://aicor.knowledge/ontologies/transport-carrying.owl> ;
+    owl:versionInfo "0.20.0" .
+
+action:AcquireTool a action:RecipeStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Acquire tool stage"@en .
+
+action:AcquireUseReturnTool a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Acquire use return tool"@en .
+
+action:Carry a action:RecipeStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Carry stage"@en .
+
+action:ControlContinuity a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Control continuity over handoff"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition action:ControlContinuityArgument1,
+        action:ControlContinuityArgument2 .
+
+action:EngageTool a action:RecipeStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Engage tool stage"@en .
+
+action:LoadSupportContinuity a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Load support continuity over handoff"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition action:LoadSupportContinuityArgument1,
+        action:LoadSupportContinuityArgument2 .
+
+action:PickCarryPlace a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Pick carry place"@en .
+
+action:Pickup a action:RecipeStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Pickup stage"@en .
+
+action:Place a action:RecipeStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Placement stage"@en .
+
+action:PositionTool a action:RecipeStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Position tool stage"@en .
+
+action:RecipeFault a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Explicit recipe fault"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition action:RecipeFaultArgument1,
+        action:RecipeFaultArgument2 .
+
+action:RecipeResourcesReady a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Recipe resource and compatibility readiness"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition action:RecipeResourcesReadyArgument1,
+        action:RecipeResourcesReadyArgument2 .
+
+action:ReturnTool a action:RecipeStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Return tool stage"@en .
+
+action:UseTool a action:RecipeStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Specialized use stage"@en .
+
+action:WithdrawTool a action:RecipeStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Withdraw tool stage"@en .
+
+action:carrier a owl:ObjectProperty ;
+    rdfs:label "Mobile carrier"@en ;
+    rdfs:domain action:PickCarryPlaceDescription ;
+    rdfs:range ac:EntitySpecification .
+
+action:destinationRegion a owl:ObjectProperty ;
+    rdfs:label "Carrying destination region"@en ;
+    rdfs:domain action:PickCarryPlaceDescription ;
+    rdfs:range ac:EntitySpecification .
+
+action:destinationSupport a owl:ObjectProperty ;
+    rdfs:label "Placement support"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range ac:EntitySpecification .
+
+action:evaluationContext a owl:ObjectProperty ;
+    rdfs:label "Recipe context"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> .
+
+action:finalStep a owl:ObjectProperty ;
+    rdfs:label "Final stage"@en ;
+    rdfs:domain action:RecipeSuccessContract ;
+    rdfs:range action:RecipeStep .
+
+action:fromStep a owl:ObjectProperty ;
+    rdfs:label "Previous stage"@en ;
+    rdfs:domain action:HandoffRequirement ;
+    rdfs:range action:RecipeStep .
+
+action:handoffCondition a owl:ObjectProperty ;
+    rdfs:label "Qualified continuity condition"@en ;
+    rdfs:domain action:HandoffRequirement ;
+    rdfs:range ac:ConditionSpecification .
+
+action:hasHandoff a owl:ObjectProperty ;
+    rdfs:label "Has handoff requirement"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range action:HandoffRequirement .
+
+action:hasStep a owl:ObjectProperty ;
+    rdfs:label "Has ordered stage"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range action:RecipeStep .
+
+action:intendedEffect a owl:ObjectProperty ;
+    rdfs:label "Intended tool effect"@en ;
+    rdfs:domain action:ToolUseCycleDescription ;
+    rdfs:range ac:EntitySpecification .
+
+action:localFailure a owl:ObjectProperty ;
+    rdfs:label "Recipe-local fault"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range ac:ConditionSpecification .
+
+action:localPrecondition a owl:ObjectProperty ;
+    rdfs:label "Recipe-local prerequisites"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range ac:ConditionSpecification .
+
+action:operator a owl:ObjectProperty ;
+    rdfs:label "Recipe manipulator"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range ac:EntitySpecification .
+
+action:payload a owl:ObjectProperty ;
+    rdfs:label "Load or tool"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range ac:EntitySpecification .
+
+action:placementRegion a owl:ObjectProperty ;
+    rdfs:label "Placement region"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/object-manipulation.owl#TargetRegionSpecification> .
+
+action:positionIndex a owl:DatatypeProperty ;
+    rdfs:label "Stage occurrence index"@en ;
+    rdfs:domain action:RecipeStep ;
+    rdfs:range xsd:positiveInteger .
+
+action:requiresHandoff a owl:ObjectProperty ;
+    rdfs:label "Required handoff"@en ;
+    rdfs:domain action:RecipeSuccessContract ;
+    rdfs:range action:HandoffRequirement .
+
+action:requiresStepPrecondition a owl:ObjectProperty ;
+    rdfs:label "Required stage prerequisites"@en ;
+    rdfs:domain action:RecipeSuccessContract ;
+    rdfs:range action:RecipeStep .
+
+action:requiresStepSuccess a owl:ObjectProperty ;
+    rdfs:label "Required stage success"@en ;
+    rdfs:domain action:RecipeSuccessContract ;
+    rdfs:range action:RecipeStep .
+
+action:sourceSupport a owl:ObjectProperty ;
+    rdfs:label "Original support"@en ;
+    rdfs:domain action:RecipeDescription ;
+    rdfs:range ac:EntitySpecification .
+
+action:stepAction a owl:ObjectProperty ;
+    rdfs:label "Stage action description"@en ;
+    rdfs:domain action:RecipeStep ;
+    rdfs:range ac:ActionDescription .
+
+action:stepContext a owl:ObjectProperty ;
+    rdfs:label "Stage context"@en ;
+    rdfs:domain action:RecipeStep ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> .
+
+action:stepRole a owl:ObjectProperty ;
+    rdfs:label "Stage role"@en ;
+    rdfs:domain action:RecipeStep ;
+    rdfs:range action:RecipeStageRole .
+
+action:toStep a owl:ObjectProperty ;
+    rdfs:label "Next stage"@en ;
+    rdfs:domain action:HandoffRequirement ;
+    rdfs:range action:RecipeStep .
+
+action:toolTarget a owl:ObjectProperty ;
+    rdfs:label "Tool-use target"@en ;
+    rdfs:domain action:ToolUseCycleDescription ;
+    rdfs:range ac:EntitySpecification .
+
+action:withinDestination a owl:ObjectProperty ;
+    rdfs:label "Placement-region destination"@en ;
+    rdfs:domain <http://aicor.knowledge/ontologies/object-manipulation.owl#TargetRegionSpecification> ;
+    rdfs:range ac:EntitySpecification .
+
+action:workingPart a owl:ObjectProperty ;
+    rdfs:label "Tool working part"@en ;
+    rdfs:domain action:ToolUseCycleDescription ;
+    rdfs:range ac:EntitySpecification .
+
+action:ControlContinuityArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "operator"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+action:ControlContinuityArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "payload"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+action:LoadSupportContinuityArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "carrier"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+action:LoadSupportContinuityArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "payload"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+action:RecipeFaultArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "operator"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+action:RecipeFaultArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "payload"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+action:RecipeResourcesReadyArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "operator"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+action:RecipeResourcesReadyArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "payload"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+action:PickCarryPlaceDescription a owl:Class ;
+    rdfs:label "Pick carry place recipe"@en ;
+    rdfs:comment "Pickup, sustained transport, then supported placement."@en ;
+    rdfs:subClassOf action:RecipeDescription .
+
+action:ToolUseCycleDescription a owl:Class ;
+    rdfs:label "Acquire use return tool recipe"@en ;
+    rdfs:comment "Acquire, position, engage, specialized use, withdraw and supported return in one declared workspace."@en ;
+    rdfs:subClassOf action:RecipeDescription .
+
+action:RecipeSuccessContract a owl:Class ;
+    rdfs:label "Recipe success contract"@en ;
+    rdfs:comment "Requires each stage precondition/success and each handoff; sequential contexts must not be flattened into a single PostState."@en ;
+    rdfs:subClassOf ac:SuccessCriterion .
+
+action:HandoffRequirement a owl:Class ;
+    rdfs:label "Stage handoff requirement"@en ;
+    rdfs:comment "Explicitly scoped continuity condition over the gap or shared boundary between adjacent stages."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+action:RecipeStageRole a owl:Class ;
+    rdfs:label "Recipe stage role"@en ;
+    rdfs:comment "A semantic role within a bounded recipe template."@en ;
+    rdfs:subClassOf <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Concept> .
+
+action:RecipeStep a owl:Class ;
+    rdfs:label "Recipe stage occurrence"@en ;
+    rdfs:comment "One owned indexed occurrence with its own action description/context."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+action:RecipeDescription a owl:Class ;
+    rdfs:label "Action recipe description"@en ;
+    rdfs:comment "A bounded ordered description with separate stage contexts and explicit continuity requirements; not an execution scheduler."@en ;
+    rdfs:subClassOf ac:ActionDescription .
+

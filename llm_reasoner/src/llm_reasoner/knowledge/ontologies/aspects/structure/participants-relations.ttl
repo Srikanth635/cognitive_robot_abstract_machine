@@ -1,0 +1,207 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pr: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/participants-relations.owl> a owl:Ontology ;
+    rdfs:label "Participants and relations"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.6.0" .
+
+pr:Accessible a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Accessible"@en ;
+    pr:arity "1"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition pr:AccessibleArgument1 ;
+    rdfs:comment "Accessibility under the externally supplied context."@en .
+
+pr:AgentRole a owl:Class ;
+    rdfs:label "Agent Role"@en ;
+    rdfs:comment "Agent role, without requiring any particular robot. Role subclasses are not mutually disjoint: a conceptual role may serve multiple functions."@en ;
+    rdfs:subClassOf ac:ParticipantRole .
+
+pr:ContainedIn a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Contained In"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition pr:ContainedInArgument1,
+        pr:ContainedInArgument2 ;
+    rdfs:comment "The specified content is contained in the specified container; amount is not implied."@en .
+
+pr:Controls a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Controls"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition pr:ControlsArgument1,
+        pr:ControlsArgument2 ;
+    rdfs:comment "A controlled hold or other control relation, with exact operational meaning supplied by an adapter."@en .
+
+pr:DestinationRole a owl:Class ;
+    rdfs:label "Destination Role"@en ;
+    rdfs:comment "Intended recipient or destination. Role subclasses are not mutually disjoint: a conceptual role may serve multiple functions."@en ;
+    rdfs:subClassOf ac:ParticipantRole .
+
+pr:Graspable a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Graspable"@en ;
+    pr:arity "1"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition pr:GraspableArgument1 ;
+    rdfs:comment "Graspability under the externally supplied context; not an intrinsic universal property."@en .
+
+pr:InContactWith a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "In Contact With"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition pr:InContactWithArgument1,
+        pr:InContactWithArgument2 ;
+    rdfs:comment "Contact between the two entities; no force or stability is implied."@en .
+
+pr:InstrumentRole a owl:Class ;
+    rdfs:label "Instrument Role"@en ;
+    rdfs:comment "Means used to carry out an action. Role subclasses are not mutually disjoint: a conceptual role may serve multiple functions."@en ;
+    rdfs:subClassOf ac:ParticipantRole .
+
+pr:SourceRole a owl:Class ;
+    rdfs:label "Source Role"@en ;
+    rdfs:comment "Origin in a transfer or transformation. Role subclasses are not mutually disjoint: a conceptual role may serve multiple functions."@en ;
+    rdfs:subClassOf ac:ParticipantRole .
+
+pr:SupportRole a owl:Class ;
+    rdfs:label "Support Role"@en ;
+    rdfs:comment "Supporting entity role. Role subclasses are not mutually disjoint: a conceptual role may serve multiple functions."@en ;
+    rdfs:subClassOf ac:ParticipantRole .
+
+pr:Supports a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Supports"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition pr:SupportsArgument1,
+        pr:SupportsArgument2 ;
+    rdfs:comment "The first entity supports the second under the stated context."@en .
+
+pr:ThemeRole a owl:Class ;
+    rdfs:label "Theme Role"@en ;
+    rdfs:comment "Entity acted on or transferred. Role subclasses are not mutually disjoint: a conceptual role may serve multiple functions."@en ;
+    rdfs:subClassOf ac:ParticipantRole .
+
+pr:argumentPosition a owl:DatatypeProperty ;
+    rdfs:label "Argument Position"@en ;
+    rdfs:comment "One-based position in a relation signature."@en ;
+    rdfs:domain pr:ArgumentDefinition ;
+    rdfs:range xsd:positiveInteger .
+
+pr:arity a owl:DatatypeProperty ;
+    rdfs:label "Arity"@en ;
+    rdfs:comment "Number of arguments in the signature."@en ;
+    rdfs:domain pr:RelationDefinition ;
+    rdfs:range xsd:positiveInteger .
+
+pr:bindsArgument a owl:ObjectProperty ;
+    rdfs:label "Binds Argument"@en ;
+    rdfs:comment "Signature position assigned by this binding."@en ;
+    rdfs:domain pr:ArgumentBinding ;
+    rdfs:range pr:ArgumentDefinition .
+
+pr:bindsEntity a owl:ObjectProperty ;
+    rdfs:label "Binds Entity"@en ;
+    rdfs:comment "Conceptual entity specification filling this position."@en ;
+    rdfs:domain pr:ArgumentBinding ;
+    rdfs:range ac:EntitySpecification .
+
+pr:hasArgumentBinding a owl:ObjectProperty ;
+    rdfs:label "Has Argument Binding"@en ;
+    rdfs:comment "Argument bindings of a symbolic relation pattern."@en ;
+    rdfs:domain pr:RelationPattern ;
+    rdfs:range pr:ArgumentBinding .
+
+pr:hasArgumentDefinition a owl:ObjectProperty ;
+    rdfs:label "Has Argument Definition"@en ;
+    rdfs:comment "Ordered signature entries."@en ;
+    rdfs:domain pr:RelationDefinition ;
+    rdfs:range pr:ArgumentDefinition .
+
+pr:hasRelationPattern a owl:ObjectProperty ;
+    rdfs:label "Has Relation Pattern"@en ;
+    rdfs:comment "Relation pattern available in this action description."@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range pr:RelationPattern ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+pr:usesRelation a owl:ObjectProperty ;
+    rdfs:label "Uses Relation"@en ;
+    rdfs:comment "Predicate used by a symbolic relation pattern."@en ;
+    rdfs:domain pr:RelationPattern ;
+    rdfs:range pr:RelationDefinition .
+
+pr:AccessibleArgument1 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "entity"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+pr:ContainedInArgument1 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "content"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+pr:ContainedInArgument2 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "container"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+pr:ControlsArgument1 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "controller"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+pr:ControlsArgument2 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "controlled entity"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+pr:GraspableArgument1 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "entity"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+pr:InContactWithArgument1 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "first entity"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+pr:InContactWithArgument2 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "second entity"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+pr:SupportsArgument1 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "support"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+pr:SupportsArgument2 a pr:ArgumentDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "supported entity"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+pr:ArgumentBinding a owl:Class ;
+    rdfs:label "Argument Binding"@en ;
+    rdfs:comment "Associates one signature position with an entity specification in a relation pattern."@en ;
+    rdfs:subClassOf dul:Description .
+
+pr:RelationPattern a owl:Class ;
+    rdfs:label "Relation Pattern"@en ;
+    rdfs:comment "Application of a relation symbol to conceptual entity specifications. Not an asserted world relation."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pr:RelationDefinition a owl:Class ;
+    rdfs:label "Relation Definition"@en ;
+    rdfs:comment "A predicate symbol with an ordered argument signature. Its existence asserts no physical relation."@en ;
+    rdfs:subClassOf dul:Concept .
+
+pr:ArgumentDefinition a owl:Class ;
+    rdfs:label "Argument Definition"@en ;
+    rdfs:comment "One named position in a relation signature. Positions start at one."@en ;
+    rdfs:subClassOf dul:Concept .
+

@@ -21,7 +21,7 @@ from rdflib import Graph, Namespace
 from llm_reasoner.knowledge.acceptance.derived import RestrictionsHold, described
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, StructureShapes
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
 from llm_reasoner.knowledge.admission.consistency import (
     ConsistencyCheck,
     OpenWorldCheck,
@@ -59,13 +59,13 @@ from llm_reasoner.knowledge.generation.request import (
 )
 from llm_reasoner.knowledge.generation.wire import DecodingResult, FragmentDecoder
 from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     CRAM_AICOR_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,
     PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms, OntologyFiles
+from llm_reasoner.knowledge.vocabulary.linked import LinkedOntologyTerms, OntologyFiles
 from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
@@ -73,7 +73,7 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference
+from llm_reasoner.knowledge.vocabulary.terms import ConceptReference
 
 from .prompt_sections import bodies, text_outside_sections
 

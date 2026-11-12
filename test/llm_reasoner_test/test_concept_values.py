@@ -28,15 +28,15 @@ from llm_reasoner.knowledge.admission.consistency import (
 from llm_reasoner.knowledge.admission.report import OntologyMerge
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.generation.wire import FragmentDecoder
-from llm_reasoner.knowledge.ontologies import DUL_NAMESPACE, PhysicalMeasurementFile
-from llm_reasoner.knowledge.ontologies.linked import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import DUL_NAMESPACE, PhysicalMeasurementFile
+from llm_reasoner.knowledge.vocabulary.linked import (
     LinkedClassHierarchy,
     LinkedOntologyTerms,
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.physical_measurements import flow_onset
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.vocabulary.terms import (
     ClassExpression,
     ComplementOf,
     ConceptReference,
@@ -48,7 +48,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     Quantifier,
     UnionOf,
 )
-from llm_reasoner.knowledge.ontologies.vocabulary import (
+from llm_reasoner.knowledge.vocabulary.lookup import (
     Vocabulary,
     declared_value_types,
 )

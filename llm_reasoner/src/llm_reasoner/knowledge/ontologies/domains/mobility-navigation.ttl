@@ -1,0 +1,544 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix mn: <http://aicor.knowledge/ontologies/mobility-navigation.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pr: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/mobility-navigation.owl> a owl:Ontology ;
+    rdfs:label "Mobility and navigation domain"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/knowledge-context.owl>,
+        <http://aicor.knowledge/ontologies/monitoring-requirements.owl>,
+        <http://aicor.knowledge/ontologies/phases-transitions.owl>,
+        <http://aicor.knowledge/ontologies/robot-motion.owl> ;
+    owl:versionInfo "0.22.0" .
+
+mn:CabinAtLevel a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Cabin at level"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:CabinAtLevelArgument1,
+        mn:CabinAtLevelArgument2 ;
+    rdfs:comment "Cabin is explicitly assessed at the intended level."@en .
+
+mn:ChangingLevel a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Changing level"@en .
+
+mn:DoorClosed a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Door closed"@en ;
+    pr:arity "1"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:DoorClosedArgument1 ;
+    rdfs:comment "Door is explicitly assessed closed; not inferred from missing open evidence."@en .
+
+mn:DoorOpen a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Door open"@en ;
+    pr:arity "1"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:DoorOpenArgument1 ;
+    rdfs:comment "Door is explicitly assessed open in the current context."@en .
+
+mn:EnteringCabin a mn:MobilityStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Entering Cabin"@en .
+
+mn:EntryClear a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Entry clear"@en ;
+    pr:arity "3"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:EntryClearArgument1,
+        mn:EntryClearArgument2,
+        mn:EntryClearArgument3 ;
+    rdfs:comment "Entry clearance is assessed for this robot and footprint."@en .
+
+mn:ExitClear a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Exit clear"@en ;
+    pr:arity "3"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:ExitClearArgument1,
+        mn:ExitClearArgument2,
+        mn:ExitClearArgument3 ;
+    rdfs:comment "Exit clearance is assessed for this robot and footprint."@en .
+
+mn:ExitingCabin a mn:MobilityStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Exiting Cabin"@en .
+
+mn:FacilityServiceAvailable a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Facility service available"@en ;
+    pr:arity "3"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:FacilityServiceAvailableArgument1,
+        mn:FacilityServiceAvailableArgument2,
+        mn:FacilityServiceAvailableArgument3 ;
+    rdfs:comment "Facility is explicitly assessed usable for the requested level pair."@en .
+
+mn:FacingDescription a owl:Class ;
+    rdfs:label "Facing description"@en ;
+    rdfs:comment "Facing a target while bounding translation throughout an evaluation interval."@en ;
+    rdfs:subClassOf mn:MobilityDescription .
+
+mn:FacingTarget a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Facing target"@en .
+
+mn:FollowingRoute a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Following route"@en .
+
+mn:InRegion a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "In region"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:InRegionArgument1,
+        mn:InRegionArgument2 ;
+    rdfs:comment "Assessed presence in the specified region."@en .
+
+mn:InsideCabin a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Inside cabin"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:InsideCabinArgument1,
+        mn:InsideCabinArgument2 ;
+    rdfs:comment "Robot is explicitly assessed inside the specified cabin."@en .
+
+mn:MotionCapabilityAvailable a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Motion capability available"@en ;
+    pr:arity "1"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:MotionCapabilityAvailableArgument1 ;
+    rdfs:comment "Required locomotion capability is explicitly assessed available in context."@en .
+
+mn:NavigableTo a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Navigable to"@en ;
+    pr:arity "3"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:NavigableToArgument1,
+        mn:NavigableToArgument2,
+        mn:NavigableToArgument3 ;
+    rdfs:comment "Context-qualified navigability; geometry and locomotion are not computed."@en .
+
+mn:Navigating a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Navigating"@en .
+
+mn:NavigationFault a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Navigation fault"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:NavigationFaultArgument1,
+        mn:NavigationFaultArgument2 ;
+    rdfs:comment "An explicit navigation fault report; absence of success is insufficient."@en .
+
+mn:OnLevel a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "On level"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:OnLevelArgument1,
+        mn:OnLevelArgument2 ;
+    rdfs:comment "Assessed presence on the specified level; XY agreement alone is insufficient."@en .
+
+mn:OutsideCabin a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Outside cabin"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:OutsideCabinArgument1,
+        mn:OutsideCabinArgument2 ;
+    rdfs:comment "Robot is explicitly assessed outside the specified cabin."@en .
+
+mn:RidingCabin a mn:MobilityStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Riding Cabin"@en .
+
+mn:RouteFollowed a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Route followed"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:RouteFollowedArgument1,
+        mn:RouteFollowedArgument2 ;
+    rdfs:comment "Compliance over the entire supplied evaluation interval, not endpoint arrival alone."@en .
+
+mn:RouteTraversableBy a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Route traversable by"@en ;
+    pr:arity "3"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition mn:RouteTraversableByArgument1,
+        mn:RouteTraversableByArgument2,
+        mn:RouteTraversableByArgument3 ;
+    rdfs:comment "Route traversability for the specified robot/footprint and versioned map context."@en .
+
+mn:UsingElevator a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Using elevator"@en .
+
+mn:WaitForEntry a mn:MobilityStageRole,
+        owl:NamedIndividual ;
+    rdfs:label "Wait For Entry"@en .
+
+mn:cabin a owl:ObjectProperty ;
+    rdfs:label "Cabin"@en ;
+    rdfs:domain mn:ElevatorNavigationDescription ;
+    rdfs:range mn:CabinSpecification .
+
+mn:clearanceParameter a owl:ObjectProperty ;
+    rdfs:label "Clearance parameter"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+mn:destinationDoor a owl:ObjectProperty ;
+    rdfs:label "Destination door"@en ;
+    rdfs:domain mn:ElevatorNavigationDescription ;
+    rdfs:range mn:DoorSpecification .
+
+mn:destinationLevel a owl:ObjectProperty ;
+    rdfs:label "Destination level"@en ;
+    rdfs:domain mn:InterLevelNavigationDescription ;
+    rdfs:range mn:LevelSpecification .
+
+mn:destinationRegion a owl:ObjectProperty ;
+    rdfs:label "Destination region"@en ;
+    rdfs:domain mn:RouteSpecification ;
+    rdfs:range mn:RegionSpecification .
+
+mn:evaluationContext a owl:ObjectProperty ;
+    rdfs:label "Evaluation context"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> .
+
+mn:footprint a owl:ObjectProperty ;
+    rdfs:label "Footprint"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range mn:FootprintSpecification .
+
+mn:fromRegion a owl:ObjectProperty ;
+    rdfs:label "From region"@en ;
+    rdfs:domain mn:RouteSegment ;
+    rdfs:range mn:RegionSpecification .
+
+mn:hasSegment a owl:ObjectProperty ;
+    rdfs:label "Has segment"@en ;
+    rdfs:domain mn:RouteSpecification ;
+    rdfs:range mn:RouteSegment .
+
+mn:headingErrorParameter a owl:ObjectProperty ;
+    rdfs:label "Heading error parameter"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+mn:headingToleranceParameter a owl:ObjectProperty ;
+    rdfs:label "Heading tolerance parameter"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+mn:mapSnapshot a owl:ObjectProperty ;
+    rdfs:label "Map snapshot"@en ;
+    rdfs:domain mn:RouteSpecification ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#SourceSnapshot> .
+
+mn:partOfFacility a owl:ObjectProperty ;
+    rdfs:label "Part of facility"@en ;
+    rdfs:domain mn:CabinSpecification ;
+    rdfs:range mn:TransitionFacilitySpecification .
+
+mn:poseSpecification a owl:ObjectProperty ;
+    rdfs:label "Pose specification"@en ;
+    rdfs:domain mn:RegionSpecification ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#PoseTarget> .
+
+mn:positionErrorParameter a owl:ObjectProperty ;
+    rdfs:label "Position error parameter"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+mn:positionIndex a owl:DatatypeProperty ;
+    rdfs:label "Position index"@en ;
+    rdfs:domain mn:RouteSegment ;
+    rdfs:range xsd:positiveInteger .
+
+mn:positionToleranceParameter a owl:ObjectProperty ;
+    rdfs:label "Position tolerance parameter"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+mn:referenceFrame a owl:ObjectProperty ;
+    rdfs:label "Reference frame"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+mn:regionLevel a owl:ObjectProperty ;
+    rdfs:label "Region level"@en ;
+    rdfs:domain mn:RegionSpecification ;
+    rdfs:range mn:LevelSpecification .
+
+mn:robot a owl:ObjectProperty ;
+    rdfs:label "Robot"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range ac:EntitySpecification .
+
+mn:route a owl:ObjectProperty ;
+    rdfs:label "Route"@en ;
+    rdfs:domain mn:RouteNavigationDescription ;
+    rdfs:range mn:RouteSpecification .
+
+mn:routeFrame a owl:ObjectProperty ;
+    rdfs:label "Route frame"@en ;
+    rdfs:domain mn:RouteSpecification ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+mn:sourceDoor a owl:ObjectProperty ;
+    rdfs:label "Source door"@en ;
+    rdfs:domain mn:ElevatorNavigationDescription ;
+    rdfs:range mn:DoorSpecification .
+
+mn:sourceLevel a owl:ObjectProperty ;
+    rdfs:label "Source level"@en ;
+    rdfs:domain mn:InterLevelNavigationDescription ;
+    rdfs:range mn:LevelSpecification .
+
+mn:sourceRegion a owl:ObjectProperty ;
+    rdfs:label "Source region"@en ;
+    rdfs:domain mn:RouteSpecification ;
+    rdfs:range mn:RegionSpecification .
+
+mn:stageRole a owl:ObjectProperty ;
+    rdfs:label "Stage role"@en ;
+    rdfs:domain ac:PhaseSpecification ;
+    rdfs:range mn:MobilityStageRole .
+
+mn:targetRegion a owl:ObjectProperty ;
+    rdfs:label "Target region"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range mn:RegionSpecification .
+
+mn:toRegion a owl:ObjectProperty ;
+    rdfs:label "To region"@en ;
+    rdfs:domain mn:RouteSegment ;
+    rdfs:range mn:RegionSpecification .
+
+mn:transitionFacility a owl:ObjectProperty ;
+    rdfs:label "Transition facility"@en ;
+    rdfs:domain mn:InterLevelNavigationDescription ;
+    rdfs:range mn:TransitionFacilitySpecification .
+
+mn:translationDriftParameter a owl:ObjectProperty ;
+    rdfs:label "Translation drift parameter"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+mn:translationToleranceParameter a owl:ObjectProperty ;
+    rdfs:label "Translation tolerance parameter"@en ;
+    rdfs:domain mn:MobilityDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+mn:CabinAtLevelArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "cabin"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:CabinAtLevelArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "level"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:DoorClosedArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "door"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:DoorOpenArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "door"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:EntryClearArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:EntryClearArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "cabin"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:EntryClearArgument3 a pr:ArgumentDefinition ;
+    rdfs:label "footprint"@en ;
+    pr:argumentPosition "3"^^xsd:positiveInteger .
+
+mn:ExitClearArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:ExitClearArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "target region"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:ExitClearArgument3 a pr:ArgumentDefinition ;
+    rdfs:label "footprint"@en ;
+    pr:argumentPosition "3"^^xsd:positiveInteger .
+
+mn:FacilityServiceAvailableArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "facility"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:FacilityServiceAvailableArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "source level"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:FacilityServiceAvailableArgument3 a pr:ArgumentDefinition ;
+    rdfs:label "destination level"@en ;
+    pr:argumentPosition "3"^^xsd:positiveInteger .
+
+mn:FootprintSpecification a owl:Class ;
+    rdfs:label "Footprint specification"@en ;
+    rdfs:comment "Description of robot footprint requirements; geometry is externally bound."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+mn:InRegionArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:InRegionArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "region"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:InsideCabinArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:InsideCabinArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "cabin"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:MotionCapabilityAvailableArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:NavigableToArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:NavigableToArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "target region"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:NavigableToArgument3 a pr:ArgumentDefinition ;
+    rdfs:label "footprint"@en ;
+    pr:argumentPosition "3"^^xsd:positiveInteger .
+
+mn:NavigationFaultArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:NavigationFaultArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "target region"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:OnLevelArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:OnLevelArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "level"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:OutsideCabinArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:OutsideCabinArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "cabin"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:RouteFollowedArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:RouteFollowedArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "route"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:RouteNavigationDescription a owl:Class ;
+    rdfs:label "Route navigation description"@en ;
+    rdfs:comment "Arrival plus compliance with an explicitly ordered route over an evaluation interval."@en ;
+    rdfs:subClassOf mn:NavigationDescription .
+
+mn:RouteTraversableByArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "route"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+mn:RouteTraversableByArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "robot"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+mn:RouteTraversableByArgument3 a pr:ArgumentDefinition ;
+    rdfs:label "footprint"@en ;
+    pr:argumentPosition "3"^^xsd:positiveInteger .
+
+mn:CabinSpecification a owl:Class ;
+    rdfs:label "Cabin specification"@en ;
+    rdfs:comment "Description of an elevator cabin."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+mn:DoorSpecification a owl:Class ;
+    rdfs:label "Door specification"@en ;
+    rdfs:comment "Description of a door relevant to entry or exit."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+mn:NavigationDescription a owl:Class ;
+    rdfs:label "Navigation description"@en ;
+    rdfs:comment "Arrival at the intended region with specified pose tolerances."@en ;
+    rdfs:subClassOf mn:MobilityDescription .
+
+mn:TransitionFacilitySpecification a owl:Class ;
+    rdfs:label "Transition facility specification"@en ;
+    rdfs:comment "Description of an inter-level transition facility."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+mn:ElevatorNavigationDescription a owl:Class ;
+    rdfs:label "Elevator navigation description"@en ;
+    rdfs:comment "Inter-level profile with guarded cabin entry, ride and exit."@en ;
+    rdfs:subClassOf mn:InterLevelNavigationDescription .
+
+mn:LevelSpecification a owl:Class ;
+    rdfs:label "Level specification"@en ;
+    rdfs:comment "Description of an environmental level; not an actual floor."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+mn:InterLevelNavigationDescription a owl:Class ;
+    rdfs:label "Inter level navigation description"@en ;
+    rdfs:comment "Arrival additionally verified on the intended destination level."@en ;
+    rdfs:subClassOf mn:NavigationDescription .
+
+mn:RouteSegment a owl:Class ;
+    rdfs:label "Route segment"@en ;
+    rdfs:comment "Indexed region-to-region route segment; no traversability inferred."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+mn:MobilityStageRole a owl:Class ;
+    rdfs:label "Mobility stage role"@en ;
+    rdfs:subClassOf <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Concept> .
+
+mn:RouteSpecification a owl:Class ;
+    rdfs:label "Route specification"@en ;
+    rdfs:comment "Description of an ordered route with a frame and versioned map snapshot."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+mn:RegionSpecification a owl:Class ;
+    rdfs:label "Region specification"@en ;
+    rdfs:comment "Descriptive region with an optional pose specification."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+mn:MobilityDescription a owl:Class ;
+    rdfs:label "Mobility description"@en ;
+    rdfs:comment "Intended relocation or orientation of a robot description; no occurring action asserted."@en ;
+    rdfs:subClassOf ac:ActionDescription .
+
+
+# Primary-action consistency hardening 0.22.0
+@prefix focus: <http://aicor.knowledge/ontologies/mobility-navigation.owl#> .
+focus:MobilityDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:robot ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:MobilityDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:targetRegion ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:MobilityDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:referenceFrame ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:MobilityDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:footprint ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:MobilityDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:evaluationContext ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:MobilityDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:headingErrorParameter ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:MobilityDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:headingToleranceParameter ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:MobilityDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:clearanceParameter ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:NavigationDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:positionErrorParameter ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:NavigationDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:positionToleranceParameter ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:NavigationDescription rdfs:comment "Bounded arrival profile: desired region, pose frame, footprint and robot bindings remain consistent across participants, prerequisites, goal, success and faults. Success requires intended-region arrival and explicit position/heading tolerances; a weaker conjunctive goal is permitted when success establishes it. Traversability and capability are externally supplied prerequisites. Endpoint arrival does not establish route compliance or dynamic-obstacle safety."@en .

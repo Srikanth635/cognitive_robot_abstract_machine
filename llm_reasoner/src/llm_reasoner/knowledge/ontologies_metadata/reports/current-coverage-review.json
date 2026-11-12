@@ -1,0 +1,321 @@
+{
+  "release": "0.21.0",
+  "checks": [
+    {
+      "case": "reviewed-requirement-vocabulary-is-current",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:selected-root-only",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:proposed-only",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:synthetic-evidence-only",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:reachable-exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:nested-stage-descriptions-visible",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:root-contract-not-mistaken-for-expression",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:nested-requirements-visible",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:selected-root-only",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:proposed-only",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:synthetic-evidence-only",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:reachable-exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:nested-stage-descriptions-visible",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:root-contract-not-mistaken-for-expression",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:nested-requirements-visible",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:selected-root-only",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:proposed-only",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:synthetic-evidence-only",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:reachable-exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:nested-stage-descriptions-visible",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:root-contract-not-mistaken-for-expression",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:nested-requirements-visible",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:selected-root-only",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:proposed-only",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:synthetic-evidence-only",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:reachable-exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:nested-stage-descriptions-visible",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:root-contract-not-mistaken-for-expression",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:nested-requirements-visible",
+      "passed": true
+    },
+    {
+      "case": "cutting:selected-root-only",
+      "passed": true
+    },
+    {
+      "case": "cutting:proposed-only",
+      "passed": true
+    },
+    {
+      "case": "cutting:synthetic-evidence-only",
+      "passed": true
+    },
+    {
+      "case": "cutting:reachable-exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "wiping:selected-root-only",
+      "passed": true
+    },
+    {
+      "case": "wiping:proposed-only",
+      "passed": true
+    },
+    {
+      "case": "wiping:synthetic-evidence-only",
+      "passed": true
+    },
+    {
+      "case": "wiping:reachable-exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "pressing:selected-root-only",
+      "passed": true
+    },
+    {
+      "case": "pressing:proposed-only",
+      "passed": true
+    },
+    {
+      "case": "pressing:synthetic-evidence-only",
+      "passed": true
+    },
+    {
+      "case": "pressing:reachable-exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "insertion:selected-root-only",
+      "passed": true
+    },
+    {
+      "case": "insertion:proposed-only",
+      "passed": true
+    },
+    {
+      "case": "insertion:synthetic-evidence-only",
+      "passed": true
+    },
+    {
+      "case": "insertion:reachable-exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "current-action-capabilities:no-unrelated-owner-leakage",
+      "passed": true
+    },
+    {
+      "case": "current-action-capabilities:unknown-record-rejected",
+      "passed": true
+    },
+    {
+      "case": "current-action-conditions:no-unrelated-owner-leakage",
+      "passed": true
+    },
+    {
+      "case": "current-action-conditions:unknown-record-rejected",
+      "passed": true
+    },
+    {
+      "case": "cycle-does-not-duplicate-capabilities",
+      "passed": true
+    },
+    {
+      "case": "ambiguous-root-rejected",
+      "passed": true
+    },
+    {
+      "case": "pinned-static-action-count",
+      "passed": true
+    },
+    {
+      "case": "pinned-static-motion-count",
+      "passed": true
+    },
+    {
+      "case": "mixing-gap-explicit",
+      "passed": true
+    },
+    {
+      "case": "commented-search-not-counted",
+      "passed": true
+    },
+    {
+      "case": "30-local-question-rows",
+      "passed": true
+    },
+    {
+      "case": "65-distinct-scientific-questions",
+      "passed": true
+    },
+    {
+      "case": "all-40-modules-reviewed",
+      "passed": true
+    },
+    {
+      "case": "generic-imports-exclude-optional-cram-aicor",
+      "passed": true
+    }
+  ],
+  "passed": 59,
+  "snapshot_audits": [
+    {
+      "record": "http://aicor.knowledge/ontologies/recipe-examples.owl#pickCarryPlaceRecord",
+      "root": "http://aicor.knowledge/ontologies/recipe-examples.owl#pickCarryPlace",
+      "claims": 973,
+      "descriptive_links_in_local_namespace_closure": 973,
+      "links_missing_exact_statement_claims": 0,
+      "condition_rows": 24,
+      "action_profile_capability_rows": 22
+    },
+    {
+      "record": "http://aicor.knowledge/ontologies/recipe-examples.owl#routeOrientedPickCarryPlaceRecord",
+      "root": "http://aicor.knowledge/ontologies/recipe-examples.owl#routeOrientedPickCarryPlace",
+      "claims": 1059,
+      "descriptive_links_in_local_namespace_closure": 1059,
+      "links_missing_exact_statement_claims": 0,
+      "condition_rows": 24,
+      "action_profile_capability_rows": 22
+    },
+    {
+      "record": "http://aicor.knowledge/ontologies/recipe-examples.owl#cuttingCycleRecord",
+      "root": "http://aicor.knowledge/ontologies/recipe-examples.owl#cuttingCycle",
+      "claims": 814,
+      "descriptive_links_in_local_namespace_closure": 814,
+      "links_missing_exact_statement_claims": 0,
+      "condition_rows": 28,
+      "action_profile_capability_rows": 24
+    },
+    {
+      "record": "http://aicor.knowledge/ontologies/recipe-examples.owl#wipingCycleRecord",
+      "root": "http://aicor.knowledge/ontologies/recipe-examples.owl#wipingCycle",
+      "claims": 834,
+      "descriptive_links_in_local_namespace_closure": 834,
+      "links_missing_exact_statement_claims": 0,
+      "condition_rows": 28,
+      "action_profile_capability_rows": 24
+    },
+    {
+      "record": "http://aicor.knowledge/ontologies/specialized-tool-examples.owl#cuttingRecord",
+      "root": "http://aicor.knowledge/ontologies/specialized-tool-examples.owl#cutting",
+      "claims": 111,
+      "descriptive_links_in_local_namespace_closure": 111,
+      "links_missing_exact_statement_claims": 0,
+      "condition_rows": 4,
+      "action_profile_capability_rows": 2
+    },
+    {
+      "record": "http://aicor.knowledge/ontologies/specialized-tool-examples.owl#wipingRecord",
+      "root": "http://aicor.knowledge/ontologies/specialized-tool-examples.owl#wiping",
+      "claims": 131,
+      "descriptive_links_in_local_namespace_closure": 131,
+      "links_missing_exact_statement_claims": 0,
+      "condition_rows": 4,
+      "action_profile_capability_rows": 2
+    },
+    {
+      "record": "http://aicor.knowledge/ontologies/specialized-tool-examples.owl#pressingRecord",
+      "root": "http://aicor.knowledge/ontologies/specialized-tool-examples.owl#pressing",
+      "claims": 121,
+      "descriptive_links_in_local_namespace_closure": 121,
+      "links_missing_exact_statement_claims": 0,
+      "condition_rows": 4,
+      "action_profile_capability_rows": 2
+    },
+    {
+      "record": "http://aicor.knowledge/ontologies/specialized-tool-examples.owl#insertionRecord",
+      "root": "http://aicor.knowledge/ontologies/specialized-tool-examples.owl#insertion",
+      "claims": 146,
+      "descriptive_links_in_local_namespace_closure": 146,
+      "links_missing_exact_statement_claims": 0,
+      "condition_rows": 4,
+      "action_profile_capability_rows": 2
+    }
+  ],
+  "scope": "Eight current synthetic tool/recipe records; descriptive queries and coverage artifact checks. Not 65 automated scientific answers, simulation, provider matching or robot execution.",
+  "query_sha256": {
+    "queries/current-action-capabilities.rq": "c17a3d3941a0c1184748360d92e098a635ac4075a0edaf848bc3ee9d3ba756e7",
+    "queries/current-action-conditions.rq": "81a1e9b586bbdf2b3b44502c764635aed8e7f8ece380b79b8c740c66c777124e"
+  }
+}

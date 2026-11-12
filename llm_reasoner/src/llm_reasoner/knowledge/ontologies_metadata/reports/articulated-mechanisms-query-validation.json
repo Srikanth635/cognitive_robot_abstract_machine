@@ -1,0 +1,109 @@
+{
+  "checks": [
+    {
+      "case": "revoluteConfiguration:only-selected-targets",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:latch-action-has-no-invented-panel-target",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:owned-guards",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:only-selected-targets",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:latch-action-has-no-invented-panel-target",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:owned-guards",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:only-selected-targets",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:latch-action-has-no-invented-panel-target",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:owned-guards",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:only-selected-targets",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:latch-action-has-no-invented-panel-target",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:owned-guards",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:only-selected-targets",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:latch-action-has-no-invented-panel-target",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:owned-guards",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:only-selected-targets",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:latch-action-has-no-invented-panel-target",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:owned-guards",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:only-selected-targets",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:latch-action-has-no-invented-panel-target",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:owned-guards",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:only-selected-targets",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:latch-action-has-no-invented-panel-target",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:owned-guards",
+      "passed": true
+    },
+    {
+      "case": "targets:unknown-record-empty",
+      "passed": true
+    },
+    {
+      "case": "guards:unknown-record-empty",
+      "passed": true
+    }
+  ],
+  "scope": "Explicitly bound records; descriptive retrieval only"
+}

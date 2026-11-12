@@ -1,0 +1,116 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix asp: <http://aicor.knowledge/ontologies/force-dynamics.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/force-dynamics.owl> a owl:Ontology ;
+    rdfs:label "Force dynamics"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.9.0" .
+
+asp:AgonistStronger a asp:StrengthRelation,
+        owl:NamedIndividual ;
+    rdfs:label "Agonist Stronger"@en .
+
+asp:AntagonistStronger a asp:StrengthRelation,
+        owl:NamedIndividual ;
+    rdfs:label "Antagonist Stronger"@en .
+
+asp:Balanced a asp:StrengthRelation,
+        owl:NamedIndividual ;
+    rdfs:label "Balanced"@en .
+
+asp:Motion a asp:Resultant,
+        owl:NamedIndividual ;
+    rdfs:label "Motion"@en .
+
+asp:Rest a asp:Resultant,
+        owl:NamedIndividual ;
+    rdfs:label "Rest"@en .
+
+asp:TowardMotion a asp:Tendency,
+        owl:NamedIndividual ;
+    rdfs:label "Toward Motion"@en .
+
+asp:TowardRest a asp:Tendency,
+        owl:NamedIndividual ;
+    rdfs:label "Toward Rest"@en .
+
+asp:UnknownResult a asp:Resultant,
+        owl:NamedIndividual ;
+    rdfs:label "Unknown Result"@en .
+
+asp:UnknownStrength a asp:StrengthRelation,
+        owl:NamedIndividual ;
+    rdfs:label "Unknown Strength"@en .
+
+asp:UnknownTendency a asp:Tendency,
+        owl:NamedIndividual ;
+    rdfs:label "Unknown Tendency"@en .
+
+asp:agonist a owl:ObjectProperty ;
+    rdfs:label "Agonist"@en ;
+    rdfs:domain asp:ForceDynamicDescription ;
+    rdfs:range asp:ForceParticipant .
+
+asp:antagonist a owl:ObjectProperty ;
+    rdfs:label "Antagonist"@en ;
+    rdfs:domain asp:ForceDynamicDescription ;
+    rdfs:range asp:ForceParticipant .
+
+asp:applicability a owl:ObjectProperty ;
+    rdfs:label "Applicability"@en ;
+    rdfs:domain asp:ForceDynamicDescription ;
+    rdfs:range ac:ApplicabilitySpecification .
+
+asp:atPhase a owl:ObjectProperty ;
+    rdfs:label "At Phase"@en ;
+    rdfs:domain asp:ForceDynamicDescription ;
+    rdfs:range ac:PhaseSpecification .
+
+asp:describedResult a owl:ObjectProperty ;
+    rdfs:label "Described Result"@en ;
+    rdfs:domain asp:ForceDynamicDescription ;
+    rdfs:range asp:Resultant .
+
+asp:entity a owl:ObjectProperty ;
+    rdfs:label "Entity"@en ;
+    rdfs:domain asp:ForceParticipant ;
+    rdfs:range ac:EntitySpecification .
+
+asp:relativeStrength a owl:ObjectProperty ;
+    rdfs:label "Relative Strength"@en ;
+    rdfs:domain asp:ForceDynamicDescription ;
+    rdfs:range asp:StrengthRelation .
+
+asp:tendency a owl:ObjectProperty ;
+    rdfs:label "Tendency"@en ;
+    rdfs:domain asp:ForceParticipant ;
+    rdfs:range asp:Tendency .
+
+asp:ForceParticipant a owl:Class ;
+    rdfs:label "Force Participant"@en ;
+    rdfs:comment "Entity specification in a qualitative force role."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:Resultant a owl:Class ;
+    rdfs:label "Resultant"@en ;
+    rdfs:comment "Described resultant motion/rest/unknown; never inferred from a force magnitude."@en ;
+    rdfs:subClassOf dul:Concept .
+
+asp:Tendency a owl:Class ;
+    rdfs:label "Tendency"@en ;
+    rdfs:comment "Qualitative tendency toward motion or rest."@en ;
+    rdfs:subClassOf dul:Concept .
+
+asp:StrengthRelation a owl:Class ;
+    rdfs:label "Strength Relation"@en ;
+    rdfs:comment "Qualitative relative strength, with unknown explicitly representable."@en ;
+    rdfs:subClassOf dul:Concept .
+
+asp:ForceDynamicDescription a owl:Class ;
+    rdfs:label "Force Dynamic Description"@en ;
+    rdfs:comment "Qualitative opposing-force pattern; no measured force or physical prediction."@en ;
+    rdfs:subClassOf ac:PerspectiveDescription .
+

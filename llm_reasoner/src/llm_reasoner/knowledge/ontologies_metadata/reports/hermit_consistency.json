@@ -1,0 +1,7 @@
+{
+  "status": "completed",
+  "returncode": 0,
+  "stdout": "http://www.w3.org/2002/07/owl#Thing is satisfiable.\n",
+  "stderr": "",
+  "elapsed_seconds": 1.09
+}

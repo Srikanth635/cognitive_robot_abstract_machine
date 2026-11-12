@@ -1,0 +1,8 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+SELECT ?record ?description ?kind ?claim ?status ?component ?evidence
+WHERE {
+ ?record a ac:KnowledgeRecord; ac:expressesDescription ?description; ac:hasClaim ?claim .
+ ?description ac:hasActionKind ?kind .
+ ?claim ac:hasStatus ?status; ac:aboutComponent ?component .
+ OPTIONAL { ?claim ac:hasEvidence ?evidence }
+}

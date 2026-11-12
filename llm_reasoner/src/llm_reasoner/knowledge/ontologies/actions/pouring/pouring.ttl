@@ -1,0 +1,13 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/pouring-action.owl> a owl:Ontology ;
+    rdfs:label "Pouring action knowledge profile"@en ;
+    rdfs:comment "Action-specific entry ontology for comprehensive pouring descriptions. Reuses the existing material-transfer PouringDescription and Pouring action kind. Imports expose representation vocabulary; they do not assert that every pour requires pickup, tool contact, every aspect, or a physical controller. This profile remains world-independent and its current bounded pouring template describes partial transfer."@en ;
+    rdfs:seeAlso <http://aicor.knowledge/ontologies/material-transfer.owl#PouringDescription>,
+        <http://aicor.knowledge/ontologies/material-transfer.owl#Pouring> ;
+    owl:imports <http://aicor.knowledge/ontologies/all-action-aspects.owl>,
+        <http://aicor.knowledge/ontologies/material-transfer.owl>,
+        <http://aicor.knowledge/ontologies/object-manipulation.owl>,
+        <http://aicor.knowledge/ontologies/pouring-tool-bridge.owl> ;
+    owl:versionInfo "0.23.0" .

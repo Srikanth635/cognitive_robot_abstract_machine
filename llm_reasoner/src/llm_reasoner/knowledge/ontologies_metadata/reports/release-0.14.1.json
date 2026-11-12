@@ -1,0 +1,34 @@
+{
+  "release": "0.14.1",
+  "scope": "Physical aspect-file organization; all prior RDF bytes and ontology IRIs preserved",
+  "registered_ontologies": 31,
+  "implemented_domains": 2,
+  "next_recommended_domain": "Mobility and navigation",
+  "mobility_ontology_implemented": false,
+  "aspect_folders": [
+    "structure",
+    "observation",
+    "causality",
+    "physics-control",
+    "planning",
+    "perspectives",
+    "entities-transfer",
+    "validation"
+  ],
+  "moved_files": 25,
+  "fresh_checks": {
+    "layout_audit": 183,
+    "imports_and_catalogs": 51,
+    "robot_motion": 58,
+    "object_manipulation": 102,
+    "pouring_contracts": 31,
+    "context": 26,
+    "competency_review": 93,
+    "physical_suite": 17,
+    "historical_capability_audit_current_layout": 81
+  },
+  "historical_reasoning": "0.14 results retained; no new classification needed or claimed for byte-identical RDF",
+  "optional_aicor_integration": "Existing HermiT normalization issue remains unresolved",
+  "extended_completion_suite": "Long full mutation rerun interrupted; not counted as a fresh pass. The pouring suite independently passed combined-example SHACL with the complete schema, and domain suites passed. Historical completion report retained.",
+  "upgrade": "Extract into a fresh directory; do not overlay the older flat layout."
+}

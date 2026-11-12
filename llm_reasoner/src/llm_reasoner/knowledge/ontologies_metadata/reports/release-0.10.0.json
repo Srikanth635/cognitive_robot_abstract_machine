@@ -1,0 +1,44 @@
+{
+  "release": "0.10.0",
+  "date": "2026-11-11",
+  "registered_ontologies": 24,
+  "aspect_modules": 15,
+  "competency_questions": {
+    "sparql": 24,
+    "additional_reasoning_and_completeness": 6,
+    "assertions_passed": 93
+  },
+  "fresh_validation": {
+    "consolidation_audit": 81,
+    "imports": 34,
+    "combined_shapes_and_integrity": 22,
+    "modular_classifications": 20,
+    "combined_aicor_consistency": "passed"
+  },
+  "preservation": {
+    "changed_schema_files": [
+      "aspects/capabilities-strategies.ttl",
+      "aspects/entities-materials-affordances.ttl",
+      "aspects/failure-diagnosis.ttl",
+      "aspects/monitoring-requirements.ttl",
+      "aspects/sensorimotor-events.ttl",
+      "core/action-description-core.ttl"
+    ],
+    "byte_identical_prior_ontology_and_example_files": 42
+  },
+  "limitations": [
+    "Synthetic pouring/grasping fixtures only",
+    "Proposed claims, not accepted domain truth",
+    "Full AICOR satisfiability not established",
+    "Provenance/context and domain-semantic gaps remain",
+    "No new projections or runtime integrations"
+  ],
+  "current_reports": [
+    "competency-review.json",
+    "consolidation-audit.json",
+    "import-validation.json",
+    "completion-validation.json",
+    "import-classification.json",
+    "strategy-integration.json"
+  ]
+}

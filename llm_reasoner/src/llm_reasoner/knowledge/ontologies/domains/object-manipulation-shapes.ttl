@@ -1,0 +1,115 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix om: <http://aicor.knowledge/ontologies/object-manipulation.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+om:FixationDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:evaluationContext ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:anchorFrame ] ;
+    sh:targetClass om:FixationDescription .
+
+om:HoldingDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:evaluationContext ] ;
+    sh:targetClass om:HoldingDescription .
+
+om:ManipulationMotionRequirementShape a sh:NodeShape ;
+    sh:property [ sh:class ac:EntitySpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:motionControlledEntity ],
+        [ sh:class om:TargetRegionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path om:motionTarget ],
+        [ sh:class ac:ActionKind ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:motionKind ] ;
+    sh:targetClass om:ManipulationMotionRequirement .
+
+om:ObjectManipulationDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class ac:GoalSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path ac:hasGoal ],
+        [ sh:class ac:CapabilityRequirement ;
+            sh:minCount 1 ;
+            sh:path ac:hasCapabilityRequirement ],
+        [ sh:class ac:EntitySpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:manipulator ],
+        [ sh:class ac:PreconditionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path ac:hasPrecondition ],
+        [ sh:class om:ManipulationMotionRequirement ;
+            sh:minCount 1 ;
+            sh:path om:requiresMotion ],
+        [ sh:class ac:FailureCriterion ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path ac:hasFailureCriterion ],
+        [ sh:class ac:EntitySpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:object ],
+        [ sh:class ac:SuccessCriterion ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path ac:hasSuccessCriterion ] ;
+    sh:targetClass om:ObjectManipulationDescription .
+
+om:PickupDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class ac:EntitySpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:initialSupport ] ;
+    sh:targetClass om:PickupDescription .
+
+om:PlacementDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class ac:EntitySpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:destinationSupport ],
+        [ sh:class om:TargetRegionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:targetRegion ] ;
+    sh:targetClass om:PlacementDescription .
+
+om:ReachingDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class om:TargetRegionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path om:targetRegion ] ;
+    sh:targetClass om:ReachingDescription .
+
+
+# Primary-action consistency hardening 0.22.0
+@prefix om: <http://aicor.knowledge/ontologies/object-manipulation.owl#> .
+@prefix mn: <http://aicor.knowledge/ontologies/mobility-navigation.owl#> .
+@prefix mt: <http://aicor.knowledge/ontologies/material-transfer.owl#> .
+@prefix tc: <http://aicor.knowledge/ontologies/transfer-contracts.owl#> .
+@prefix kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#> .
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+
+om:PrimaryManipulationConsistencyShape a sh:NodeShape ;
+ sh:targetClass om:ObjectManipulationDescription ;
+ sh:property [ sh:path om:manipulator ; sh:disjoint om:object ],
+             [ sh:path om:evaluationContext ; sh:maxCount 1 ; sh:class kc:KnowledgeContext ] ;
+ sh:sparql [ sh:message "A supplied manipulation context must describe this action." ;
+ sh:select """SELECT $this WHERE { $this <http://aicor.knowledge/ontologies/object-manipulation.owl#evaluationContext> ?context . FILTER NOT EXISTS { ?context <http://aicor.knowledge/ontologies/knowledge-context.owl#scopedDescription> $this } }""" ] .
+om:PrimaryPickupConsistencyShape a sh:NodeShape ; sh:targetClass om:PickupDescription ;
+ sh:property [ sh:path om:initialSupport ; sh:disjoint om:object ; sh:disjoint om:manipulator ] .
+om:PrimaryPlacementConsistencyShape a sh:NodeShape ; sh:targetClass om:PlacementDescription ;
+ sh:property [ sh:path om:destinationSupport ; sh:disjoint om:object ; sh:disjoint om:manipulator ] .

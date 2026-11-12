@@ -1,0 +1,24 @@
+{
+  "participants-relations": {
+    "Class": 10,
+    "ObjectProperty": 6,
+    "DatatypeProperty": 2,
+    "NamedIndividual": 16,
+    "all_entities_labeled": true
+  },
+  "conditions-outcomes": {
+    "Class": 13,
+    "ObjectProperty": 11,
+    "DatatypeProperty": 2,
+    "NamedIndividual": 10,
+    "all_entities_labeled": true
+  },
+  "prior_maintained_files_unchanged": [
+    "DUL.owl",
+    "candidates/aicor-unified-dul.ttl",
+    "core/action-description-core.ttl",
+    "core/cram-action-bridge.ttl",
+    "core/action-core-shapes.ttl",
+    "examples/stereotypical-actions.ttl"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "prior_turtle_files_unchanged_except_assembly": 39,
+  "force-dynamics": {
+    "Class": 5,
+    "ObjectProperty": 8,
+    "DatatypeProperty": 0,
+    "NamedIndividual": 10
+  },
+  "image-schemas": {
+    "Class": 6,
+    "ObjectProperty": 11,
+    "DatatypeProperty": 1,
+    "NamedIndividual": 0
+  },
+  "entities-materials-affordances": {
+    "Class": 6,
+    "ObjectProperty": 12,
+    "DatatypeProperty": 2,
+    "NamedIndividual": 5
+  },
+  "sensorimotor-events": {
+    "Class": 5,
+    "ObjectProperty": 11,
+    "DatatypeProperty": 0,
+    "NamedIndividual": 5
+  },
+  "projection_development_deferred": true
+}

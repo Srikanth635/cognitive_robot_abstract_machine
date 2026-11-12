@@ -1,0 +1,58 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/action-examples.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Conceptual template individuals only: no actual bottle, robot, grasp or pour.
+ex:pouring a ac:ActionDescription; ac:hasActionKind ex:Pouring;
+ ac:hasRoleSpecification ex:sourceRoleSpec, ex:destinationRoleSpec, ex:substanceRoleSpec;
+ ac:hasGoal ex:transferGoal; ac:hasParameter ex:targetAmount;
+ ac:hasPhase ex:transferPhase; ac:hasCapabilityRequirement ex:flowControl;
+ dul:defines ex:sourceRole, ex:destinationRole, ex:substanceRole.
+ex:Pouring a ac:ActionKind; rdfs:label "Pouring".
+ex:sourceRole a ac:ParticipantRole.
+ex:destinationRole a ac:ParticipantRole.
+ex:substanceRole a ac:ParticipantRole.
+ex:sourceRoleSpec a ac:RoleSpecification; ac:specifiesRole ex:sourceRole; ac:hasEntitySpecification ex:sourceContainer.
+ex:destinationRoleSpec a ac:RoleSpecification; ac:specifiesRole ex:destinationRole; ac:hasEntitySpecification ex:receivingContainer.
+ex:substanceRoleSpec a ac:RoleSpecification; ac:specifiesRole ex:substanceRole; ac:hasEntitySpecification ex:transferableSubstance.
+ex:sourceContainer a ac:EntitySpecification; rdfs:label "source container specification".
+ex:receivingContainer a ac:EntitySpecification; rdfs:label "receiving container specification".
+ex:transferableSubstance a ac:EntitySpecification; rdfs:label "transferable substance specification".
+ex:transferGoal a ac:GoalSpecification; rdfs:label "transfer a specified amount to the destination".
+ex:targetAmount a ac:ParameterSpecification; ac:parameterKey "target-amount".
+ex:transferPhase a ac:PhaseSpecification; rdfs:label "material transfer phase".
+ex:flowControl a ac:CapabilityRequirement; rdfs:label "ability to regulate material transfer".
+ex:pourRecordV1 a ac:KnowledgeRecord; ac:recordVersion "1"; ac:expressesDescription ex:pouring;
+ ac:hasClaim ex:pourGoalClaim, ex:pourPhaseClaim; ac:hasAnnotation ex:pourAnnotation.
+ex:pourGoalClaim a ac:KnowledgeClaim; ac:hasStatus ac:Proposed; ac:aboutComponent ex:transferGoal;
+ ac:hasStatement ex:pourGoalStatement; ac:hasEvidence ex:exampleEvidence.
+ex:pourGoalStatement a ac:Statement; ac:statementSubject ex:transferGoal;
+ ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-examples.owl#recipientSpecification"^^xsd:anyURI; ac:statementObject ex:receivingContainer.
+ex:pourPhaseClaim a ac:KnowledgeClaim; ac:hasStatus ac:Proposed; ac:aboutComponent ex:transferPhase;
+ ac:hasStatement ex:pourPhaseStatement; ac:hasEvidence ex:exampleEvidence.
+ex:pourPhaseStatement a ac:Statement; ac:statementSubject ex:transferPhase;
+ ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-examples.owl#transfersSpecification"^^xsd:anyURI; ac:statementObject ex:transferableSubstance.
+ex:pourAnnotation a ac:AnnotationRecord; ac:producerIdentifier "curated-schema-smoke-example";
+ ac:annotatesDescription ex:pouring; ac:contributesClaim ex:pourGoalClaim, ex:pourPhaseClaim.
+ex:exampleEvidence a ac:EvidenceRecord; ac:evidenceKind ac:CuratedExample;
+ ac:evidenceText "Synthetic example for schema testing, not empirical or simulation evidence.".
+
+ex:grasping a ac:ActionDescription; ac:hasActionKind ex:Grasping;
+ ac:hasRoleSpecification ex:graspedRoleSpec; ac:hasGoal ex:holdGoal;
+ ac:hasParameter ex:gripForce; dul:defines ex:graspedRole.
+ex:Grasping a ac:ActionKind; rdfs:label "Grasping".
+ex:graspedRole a ac:ParticipantRole.
+ex:graspedRoleSpec a ac:RoleSpecification; ac:specifiesRole ex:graspedRole; ac:hasEntitySpecification ex:graspableObject.
+ex:graspableObject a ac:EntitySpecification; rdfs:label "object to be held specification".
+ex:holdGoal a ac:GoalSpecification; rdfs:label "establish a controlled hold".
+ex:gripForce a ac:ParameterSpecification; ac:parameterKey "grip-force".
+ex:graspRecordV1 a ac:KnowledgeRecord; ac:recordVersion "1"; ac:expressesDescription ex:grasping; ac:hasClaim ex:graspClaim.
+ex:graspClaim a ac:KnowledgeClaim; ac:hasStatus ac:Proposed; ac:aboutComponent ex:holdGoal;
+ ac:hasStatement ex:graspStatement; ac:hasEvidence ex:exampleEvidence.
+ex:graspStatement a ac:Statement; ac:statementSubject ex:holdGoal;
+ ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-examples.owl#heldEntitySpecification"^^xsd:anyURI; ac:statementObject ex:graspableObject.
+
+ex:goalView a ac:ProjectionSpecification; ac:projectionKey "goal-view"; ac:missingInformationPolicy "omit-and-report".
+ex:phaseView a ac:ProjectionSpecification; ac:projectionKey "phase-view"; ac:missingInformationPolicy "omit-and-report".

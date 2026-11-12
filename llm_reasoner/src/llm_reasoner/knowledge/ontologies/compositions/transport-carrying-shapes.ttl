@@ -1,0 +1,113 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix tc: <http://aicor.knowledge/ontologies/transport-carrying.owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+tc:CarryingDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:carrier ],
+        [ sh:class tc:LoadedFootprintSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:loadedFootprint ],
+        [ sh:class <http://aicor.knowledge/ontologies/mobility-navigation.owl#NavigationDescription> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:mobilityRequirement ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#SuccessCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#FailureCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasFailureCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:localPrecondition ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:motionPhase ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:localFailure ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:localSuccess ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PreconditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:load ],
+        [ sh:class <http://aicor.knowledge/ontologies/mobility-navigation.owl#RegionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:destination ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:evaluationContext ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#GoalSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal> ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:intervalPolicy ],
+        [ sh:class <http://aicor.knowledge/ontologies/object-manipulation.owl#HoldingDescription> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:holdingRequirement ],
+        [ sh:class tc:OrientationRequirement ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path tc:orientationRequirement ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:manipulator ] ;
+    sh:targetClass tc:CarryingDescription .
+
+tc:LoadedFootprintSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:footprintCarrier ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:footprintLoad ] ;
+    sh:targetClass tc:LoadedFootprintSpecification .
+
+tc:OrientationRequirementShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:orientedLoad ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#OrientationTarget> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:orientationTarget ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:orientationFrame ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:deviationTolerance ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path tc:maximumDeviation ] ;
+    sh:targetClass tc:OrientationRequirement .
+

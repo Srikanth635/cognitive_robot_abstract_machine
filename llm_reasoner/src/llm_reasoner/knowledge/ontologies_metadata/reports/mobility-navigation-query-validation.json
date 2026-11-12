@@ -1,0 +1,77 @@
+[
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#navigationRecord",
+    "query": "mobility-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#navigationRecord",
+    "query": "mobility-route.rq",
+    "rows": 0
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#navigationRecord",
+    "query": "mobility-guards.rq",
+    "rows": 3
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#routeNavigationRecord",
+    "query": "mobility-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#routeNavigationRecord",
+    "query": "mobility-route.rq",
+    "rows": 2
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#routeNavigationRecord",
+    "query": "mobility-guards.rq",
+    "rows": 3
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#facingRecord",
+    "query": "mobility-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#facingRecord",
+    "query": "mobility-route.rq",
+    "rows": 0
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#facingRecord",
+    "query": "mobility-guards.rq",
+    "rows": 3
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#levelNavigationRecord",
+    "query": "mobility-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#levelNavigationRecord",
+    "query": "mobility-route.rq",
+    "rows": 0
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#levelNavigationRecord",
+    "query": "mobility-guards.rq",
+    "rows": 3
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#elevatorNavigationRecord",
+    "query": "mobility-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#elevatorNavigationRecord",
+    "query": "mobility-route.rq",
+    "rows": 0
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/mobility-examples.owl#elevatorNavigationRecord",
+    "query": "mobility-guards.rq",
+    "rows": 9
+  }
+]

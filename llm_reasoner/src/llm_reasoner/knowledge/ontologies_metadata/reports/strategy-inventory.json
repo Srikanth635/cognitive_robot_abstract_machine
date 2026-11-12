@@ -1,0 +1,15 @@
+{
+  "prior_turtle_files_unchanged_except_assembly": 30,
+  "capabilities-strategies": {
+    "Class": 6,
+    "ObjectProperty": 17,
+    "DatatypeProperty": 1,
+    "NamedIndividual": 3
+  },
+  "failure-diagnosis": {
+    "Class": 5,
+    "ObjectProperty": 16,
+    "DatatypeProperty": 0,
+    "NamedIndividual": 4
+  }
+}

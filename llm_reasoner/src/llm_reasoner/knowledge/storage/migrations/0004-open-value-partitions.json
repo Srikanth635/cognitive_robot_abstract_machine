@@ -1,5 +1,0 @@
-{
-  "module_versions": [
-    {"module": "action-core.ttl", "old": "0.6.0", "new": "0.7.0"}
-  ]
-}

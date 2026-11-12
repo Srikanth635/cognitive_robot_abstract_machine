@@ -1,0 +1,8 @@
+*.gif
+media/
+*.mp4
+out/
+*.pdf
+*.pptx
+*.webp
+!assets/logos/*.png

@@ -19,6 +19,8 @@ msg/_*.py
 *muh*
 *.txt
 !cramera/src/cramera/web/vendor/licenses/*.txt
+!llm_reasoner/src/llm_reasoner/knowledge/ontologies/**/*.txt
+!llm_reasoner/src/llm_reasoner/knowledge/ontologies_metadata/**/*.txt
 *.png
 *.lprof
 tmp_data/

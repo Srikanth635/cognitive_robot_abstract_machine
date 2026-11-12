@@ -1,0 +1,110 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dom: <http://aicor.knowledge/ontologies/material-transfer.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/material-transfer.owl> a owl:Ontology ;
+    rdfs:label "Material transfer"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/knowledge-context.owl>,
+        <http://aicor.knowledge/ontologies/monitoring-requirements.owl>,
+        <http://aicor.knowledge/ontologies/transfer-contracts.owl> ;
+    owl:versionInfo "0.22.0" .
+
+dom:CompleteMaterialTransfer a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Complete material transfer"@en .
+
+dom:CompleteTransferDescription a owl:Class ;
+    rdfs:label "Complete transfer description"@en ;
+    rdfs:comment "Transfer with explicit residual-source amount and tolerance criteria."@en ;
+    rdfs:subClassOf dom:MaterialTransferDescription .
+
+dom:PartialMaterialTransfer a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Partial material transfer"@en .
+
+dom:PartialTransferDescription a owl:Class ;
+    rdfs:label "Partial transfer description"@en ;
+    rdfs:comment "Transfer a requested amount without requiring an empty source."@en ;
+    rdfs:subClassOf dom:MaterialTransferDescription .
+
+dom:Pouring a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Pouring"@en .
+
+dom:PouringDescription a owl:Class ;
+    rdfs:label "Pouring description"@en ;
+    rdfs:comment "Material-transfer specialization; physical flow laws and tool requirements are supplied separately."@en ;
+    rdfs:subClassOf dom:MaterialTransferDescription .
+
+dom:TransferFault a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Transfer fault"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition dom:TransferFaultArgument1,
+        dom:TransferFaultArgument2 ;
+    rdfs:comment "Context-qualified transfer condition requiring explicit evidence."@en .
+
+dom:TransferReady a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Transfer ready"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition dom:TransferReadyArgument1,
+        dom:TransferReadyArgument2,
+        dom:TransferReadyArgument3 ;
+    rdfs:comment "Context-qualified transfer condition requiring explicit evidence."@en .
+
+dom:evaluationContext a owl:ObjectProperty ;
+    rdfs:label "Evaluation context"@en ;
+    rdfs:domain dom:MaterialTransferDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> .
+
+dom:quantityBasis a owl:DatatypeProperty ;
+    rdfs:label "Quantity basis"@en ;
+    rdfs:domain dom:MaterialTransferDescription ;
+    rdfs:range xsd:string .
+
+dom:residualAmount a owl:ObjectProperty ;
+    rdfs:label "Residual amount"@en ;
+    rdfs:domain dom:MaterialTransferDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+dom:residualTolerance a owl:ObjectProperty ;
+    rdfs:label "Residual tolerance"@en ;
+    rdfs:domain dom:MaterialTransferDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+dom:TransferFaultArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "source"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+dom:TransferFaultArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "destination"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+dom:TransferReadyArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "source"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+dom:TransferReadyArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "destination"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+dom:TransferReadyArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "substance"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+dom:MaterialTransferDescription a owl:Class ;
+    rdfs:label "Material transfer description"@en ;
+    rdfs:comment "Describes intended material transfer and quantity referents, independent of transfer technique."@en ;
+    rdfs:subClassOf ac:ActionDescription .
+
+
+# Primary-action consistency hardening 0.22.0
+@prefix focus: <http://aicor.knowledge/ontologies/material-transfer.owl#> .
+focus:MaterialTransferDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:evaluationContext ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:MaterialTransferDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:quantityBasis ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:MaterialTransferDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty <http://aicor.knowledge/ontologies/transfer-contracts.owl#hasTransferContract> ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:PouringDescription rdfs:comment "Bounded partial-pouring profile: preconditions use scoped TransferReady for the intended endpoints/material, or explicit pre-state source containment and destination accessibility. Success binds intended portion/destination and delivered-target/spill-tolerance comparisons. A weaker conjunctive goal is permitted when success establishes it. Failure identifies these endpoints through a current TransferFault, or uses explicit post-state spill exceedance. Container tilting or a completed motion path alone is not transfer success. Quantities may remain unspecified; no physical values or validated flow model are implied."@en .

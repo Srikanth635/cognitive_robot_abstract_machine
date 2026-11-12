@@ -1,0 +1,222 @@
+[
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV6",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#pourActionV6",
+    "requiredCapabilities": [
+      "http://aicor.knowledge/ontologies/action-examples.owl#pourManipulationCapability",
+      "http://aicor.knowledge/ontologies/action-examples.owl#pourVerificationCapability"
+    ],
+    "strategies": [
+      {
+        "strategy": "http://aicor.knowledge/ontologies/action-examples.owl#pourExecutionStrategy",
+        "precedenceLayers": [
+          [
+            "http://aicor.knowledge/ontologies/action-examples.owl#pourPerformStep"
+          ],
+          [
+            "http://aicor.knowledge/ontologies/action-examples.owl#pourVerifyStep"
+          ]
+        ],
+        "parallelExecutionAuthorized": false,
+        "providerMatchingPerformed": false,
+        "executed": false,
+        "processes": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourPerformProcess",
+            "interfaceKey": "pour.perform.abstract",
+            "requirements": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#pourManipulationCapability"
+            ]
+          },
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVerifyProcess",
+            "interfaceKey": "pour.verify.abstract",
+            "requirements": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#pourVerificationCapability"
+            ]
+          }
+        ]
+      }
+    ],
+    "failures": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourFailureDescription",
+        "kind": "http://aicor.knowledge/ontologies/failure-diagnosis.owl#Spillage",
+        "criteria": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourSpillFailure"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourDiagnosisHypothesis",
+        "candidateCause": "http://aicor.knowledge/ontologies/action-examples.owl#pourSuspectedCause",
+        "explains": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourFailureDescription"
+        ],
+        "support": [],
+        "refutation": []
+      }
+    ],
+    "recoveries": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecoveryOption",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecoveryGuard",
+        "intendedCondition": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecoveryGoal",
+        "budgetParameter": "http://aicor.knowledge/ontologies/action-examples.owl#pourRetryBudget",
+        "budgetValue": null,
+        "strategy": {
+          "strategy": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecoveryStrategy",
+          "precedenceLayers": [
+            [
+              "http://aicor.knowledge/ontologies/action-examples.owl#pourRecoveryStep"
+            ]
+          ],
+          "parallelExecutionAuthorized": false,
+          "providerMatchingPerformed": false,
+          "executed": false
+        }
+      }
+    ],
+    "newClaims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourStrategyClaim2",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourStrategyClaim3",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourStrategyClaim0",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourStrategyClaim1",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      }
+    ]
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV6",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#graspActionV6",
+    "requiredCapabilities": [
+      "http://aicor.knowledge/ontologies/action-examples.owl#graspManipulationCapability",
+      "http://aicor.knowledge/ontologies/action-examples.owl#graspVerificationCapability"
+    ],
+    "strategies": [
+      {
+        "strategy": "http://aicor.knowledge/ontologies/action-examples.owl#graspExecutionStrategy",
+        "precedenceLayers": [
+          [
+            "http://aicor.knowledge/ontologies/action-examples.owl#graspPerformStep"
+          ],
+          [
+            "http://aicor.knowledge/ontologies/action-examples.owl#graspVerifyStep"
+          ]
+        ],
+        "parallelExecutionAuthorized": false,
+        "providerMatchingPerformed": false,
+        "executed": false,
+        "processes": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspVerifyProcess",
+            "interfaceKey": "grasp.verify.abstract",
+            "requirements": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#graspVerificationCapability"
+            ]
+          },
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspPerformProcess",
+            "interfaceKey": "grasp.perform.abstract",
+            "requirements": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#graspManipulationCapability"
+            ]
+          }
+        ]
+      }
+    ],
+    "failures": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspFailureDescription",
+        "kind": "http://aicor.knowledge/ontologies/failure-diagnosis.owl#LossOfControl",
+        "criteria": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspControlFailure"
+        ]
+      }
+    ],
+    "hypotheses": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspDiagnosisHypothesis",
+        "candidateCause": "http://aicor.knowledge/ontologies/action-examples.owl#graspSuspectedCause",
+        "explains": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspFailureDescription"
+        ],
+        "support": [],
+        "refutation": []
+      }
+    ],
+    "recoveries": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecoveryOption",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecoveryGuard",
+        "intendedCondition": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecoveryGoal",
+        "budgetParameter": "http://aicor.knowledge/ontologies/action-examples.owl#graspRetryBudget",
+        "budgetValue": null,
+        "strategy": {
+          "strategy": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecoveryStrategy",
+          "precedenceLayers": [
+            [
+              "http://aicor.knowledge/ontologies/action-examples.owl#graspRecoveryStep"
+            ]
+          ],
+          "parallelExecutionAuthorized": false,
+          "providerMatchingPerformed": false,
+          "executed": false
+        }
+      }
+    ],
+    "newClaims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspStrategyClaim1",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspStrategyClaim0",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspStrategyClaim3",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspStrategyClaim2",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      }
+    ]
+  }
+]

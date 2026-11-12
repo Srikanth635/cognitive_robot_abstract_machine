@@ -1,0 +1,39 @@
+{
+  "release": "0.15.0",
+  "registered_ontologies": 32,
+  "implemented_domains": 3,
+  "new_domain": "mobility-navigation",
+  "profiles": [
+    "Navigation",
+    "Route navigation",
+    "Facing",
+    "Inter-level navigation",
+    "Elevator navigation"
+  ],
+  "fresh_validation": {
+    "mobility_contract_checks_passed": 104,
+    "scoped_query_cases": 15,
+    "imports_and_catalogs_passed": 52,
+    "robot_motion_regression_checks_passed": 58,
+    "object_manipulation_regression_checks_passed": 102,
+    "historical_competency_assertions_passed": 93,
+    "standalone_domain_classification": "passed; no unsatisfiable named classes",
+    "combined_assembly_classification": "passed; no unsatisfiable named classes",
+    "generic_combined_examples_consistency": "passed",
+    "optional_aicor_combined_consistency": "passed"
+  },
+  "aicor_history": "Current optional consistency run passed. Earlier SceneNode normalization failure remains unexplained; no claim of repair or full AICOR class satisfiability.",
+  "preservation": {
+    "prior_ontology_and_example_files": 63,
+    "byte_identical": 62,
+    "changed_prior_ontology": "integrations/all-action-knowledge.ttl"
+  },
+  "limitations": [
+    "Synthetic Proposed profiles, no accepted physical-world observations",
+    "Caller-supplied metrics and predicates; no geometric or temporal evidence validation",
+    "No route planner, localization, collision checker, elevator controller or execution adapter",
+    "No quaternion normalization, general unit conversion or mixed-profile composite contracts",
+    "Actual map/robot/frame/capability bindings must be injected",
+    "Working projections remain deferred"
+  ]
+}

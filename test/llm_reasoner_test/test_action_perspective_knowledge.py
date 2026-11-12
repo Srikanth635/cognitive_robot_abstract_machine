@@ -33,7 +33,7 @@ from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.hypotheses.knowledge_access import KnowledgeToolName
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     CRAM_AICOR_NAMESPACE,
     KNOWLEDGE_ONTOLOGY_MODULES,
     OntologyModuleFile,
@@ -47,8 +47,8 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
 )
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
 from llm_reasoner.knowledge.ontologies.perspective_roots import PERSPECTIVE_ROOTS
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
+from llm_reasoner.knowledge.vocabulary.terms import ConceptReference
 from llm_reasoner.knowledge.storage.record import (
     ConsistencyVerdict,
     current_module_versions,

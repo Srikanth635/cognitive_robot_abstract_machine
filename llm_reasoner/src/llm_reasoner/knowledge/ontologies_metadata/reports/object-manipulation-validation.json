@@ -1,0 +1,429 @@
+{
+  "release": "0.14.0",
+  "checks": [
+    {
+      "case": "seven-profiles-conform",
+      "passed": true
+    },
+    {
+      "case": "relation-and-expression-signatures",
+      "passed": true
+    },
+    {
+      "case": "phase-and-monitor-integrity",
+      "passed": true
+    },
+    {
+      "case": "domain-contract-integrity",
+      "passed": true
+    },
+    {
+      "case": "reaching:missing-evidence-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "reaching:bound-required-state-succeeds",
+      "passed": true
+    },
+    {
+      "case": "reaching:success-is-not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "reaching:missing-required-fact-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "reaching:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "reaching:requires-manipulator",
+      "passed": true
+    },
+    {
+      "case": "reaching:fault-unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "reaching:unknown-fault-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "grasping:missing-evidence-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "grasping:bound-required-state-succeeds",
+      "passed": true
+    },
+    {
+      "case": "grasping:success-is-not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "grasping:missing-required-fact-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "grasping:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "grasping:requires-manipulator",
+      "passed": true
+    },
+    {
+      "case": "grasping:fault-unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "grasping:unknown-fault-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "holding:missing-evidence-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "holding:bound-required-state-succeeds",
+      "passed": true
+    },
+    {
+      "case": "holding:success-is-not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "holding:missing-required-fact-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "holding:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "holding:requires-manipulator",
+      "passed": true
+    },
+    {
+      "case": "holding:fault-unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "holding:unknown-fault-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "pickup:missing-evidence-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "pickup:bound-required-state-succeeds",
+      "passed": true
+    },
+    {
+      "case": "pickup:success-is-not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "pickup:missing-required-fact-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "pickup:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "pickup:requires-manipulator",
+      "passed": true
+    },
+    {
+      "case": "pickup:fault-unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "pickup:unknown-fault-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "placement:missing-evidence-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "placement:bound-required-state-succeeds",
+      "passed": true
+    },
+    {
+      "case": "placement:success-is-not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "placement:missing-required-fact-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "placement:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "placement:requires-manipulator",
+      "passed": true
+    },
+    {
+      "case": "placement:fault-unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "placement:unknown-fault-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "release:missing-evidence-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "release:bound-required-state-succeeds",
+      "passed": true
+    },
+    {
+      "case": "release:success-is-not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "release:missing-required-fact-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "release:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "release:requires-manipulator",
+      "passed": true
+    },
+    {
+      "case": "release:fault-unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "release:unknown-fault-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "fixation:missing-evidence-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "fixation:bound-required-state-succeeds",
+      "passed": true
+    },
+    {
+      "case": "fixation:success-is-not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "fixation:missing-required-fact-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "fixation:violated-required-state-fails",
+      "passed": true
+    },
+    {
+      "case": "fixation:requires-manipulator",
+      "passed": true
+    },
+    {
+      "case": "fixation:fault-unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "fixation:unknown-fault-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "gripper-closed-is-not-a-grasp",
+      "passed": true
+    },
+    {
+      "case": "contact-alone-is-not-a-grasp",
+      "passed": true
+    },
+    {
+      "case": "hold-alone-does-not-establish-pickup",
+      "passed": true
+    },
+    {
+      "case": "still-supported-is-not-pickup",
+      "passed": true
+    },
+    {
+      "case": "support-without-stability-is-not-placement",
+      "passed": true
+    },
+    {
+      "case": "held-object-is-not-completed-placement",
+      "passed": true
+    },
+    {
+      "case": "release-does-not-require-placement-support",
+      "passed": true
+    },
+    {
+      "case": "holding:endpoint-alone-not-sustained",
+      "passed": true
+    },
+    {
+      "case": "holding:aggregate-without-interval-rejected-as-evidence",
+      "passed": true
+    },
+    {
+      "case": "holding:wrong-context-rejected",
+      "passed": true
+    },
+    {
+      "case": "holding:zero-interval-rejected",
+      "passed": true
+    },
+    {
+      "case": "fixation:endpoint-alone-not-sustained",
+      "passed": true
+    },
+    {
+      "case": "fixation:aggregate-without-interval-rejected-as-evidence",
+      "passed": true
+    },
+    {
+      "case": "fixation:wrong-context-rejected",
+      "passed": true
+    },
+    {
+      "case": "fixation:zero-interval-rejected",
+      "passed": true
+    },
+    {
+      "case": "holding-does-not-establish-fixation",
+      "passed": true
+    },
+    {
+      "case": "conflicting-endpoint-and-fault-flagged",
+      "passed": true
+    },
+    {
+      "case": "pickup-hold-monitor-only-after-acquisition",
+      "passed": true
+    },
+    {
+      "case": "unknown-acquisition-selects-no-transition",
+      "passed": true
+    },
+    {
+      "case": "ambiguous-acquisition-is-reported",
+      "passed": true
+    },
+    {
+      "case": "holding:missing-context-fails-shapes",
+      "passed": true
+    },
+    {
+      "case": "fixation:missing-context-fails-shapes",
+      "passed": true
+    },
+    {
+      "case": "foreign-interval-description-rejected",
+      "passed": true
+    },
+    {
+      "case": "current-hold-does-not-substitute-post-state",
+      "passed": true
+    },
+    {
+      "case": "wrong-destination-cannot-substitute",
+      "passed": true
+    },
+    {
+      "case": "release-precondition-reported-separately",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-end",
+      "passed": true
+    },
+    {
+      "case": "reject-naive-time",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-manipulator",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-placement-support",
+      "passed": true
+    },
+    {
+      "case": "reject-collapsed-pickup-support",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-motion-target",
+      "passed": true
+    },
+    {
+      "case": "reaching:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "grasping:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "holding:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "pickup:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "placement:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "release:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "fixation:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "no-world-binding",
+      "passed": true
+    },
+    {
+      "case": "no-execution-framework-import",
+      "passed": true
+    },
+    {
+      "case": "all-claims-proposed",
+      "passed": true
+    }
+  ],
+  "imports": [
+    "http://aicor.knowledge/ontologies/action-description-core.owl",
+    "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+    "http://aicor.knowledge/ontologies/dynamics-control.owl",
+    "http://aicor.knowledge/ontologies/knowledge-context.owl",
+    "http://aicor.knowledge/ontologies/model-contracts.owl",
+    "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+    "http://aicor.knowledge/ontologies/object-manipulation.owl",
+    "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+    "http://aicor.knowledge/ontologies/participants-relations.owl",
+    "http://aicor.knowledge/ontologies/phases-transitions.owl",
+    "http://aicor.knowledge/ontologies/physical-models.owl",
+    "http://aicor.knowledge/ontologies/robot-motion.owl",
+    "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+  ],
+  "scope": "Seven synthetic domain profiles; externally supplied predicate evidence only, no physical validation or execution."
+}

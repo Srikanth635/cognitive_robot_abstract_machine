@@ -1,0 +1,12 @@
+# Bind ?record explicitly. No acquired effect, safe force or accepted belief inferred.
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX st: <http://aicor.knowledge/ontologies/specialized-tool-interactions.owl#>
+PREFIX ti: <http://aicor.knowledge/ontologies/tool-interaction.owl#>
+SELECT ?action ?technique ?kind ?tool ?part ?target ?effect ?context ?depth
+WHERE {
+ ?record ac:expressesDescription ?action .
+ VALUES ?technique { st:CuttingDescription st:WipingDescription st:PressingDescription st:InsertionDescription }
+ ?action a ?technique ; ac:hasActionKind ?kind ; ti:tool ?tool ; ti:workingPart ?part ;
+         ti:target ?target ; ti:intendedEffect ?effect ; ti:evaluationContext ?context .
+ OPTIONAL { ?action st:targetDepth ?depth }
+}

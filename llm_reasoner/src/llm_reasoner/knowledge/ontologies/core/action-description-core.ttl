@@ -1,0 +1,573 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/action-description-core.owl> a owl:Ontology ;
+    rdfs:label "Action description core"@en ;
+    rdfs:comment "World-independent action descriptions and versioned evidence-bearing records. Projections are derived artifacts; no executable semantics is supplied by this ontology." ;
+    owl:imports <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
+    owl:versionInfo "0.10.0" .
+
+ac:ExecutionProjectionSpecification a owl:Class ;
+    rdfs:label "Execution Projection Specification"@en ;
+    rdfs:comment "Contract intended for an execution adapter; readiness must be separately checked." ;
+    rdfs:subClassOf ac:ProjectionSpecification .
+
+ac:aboutComponent a owl:ObjectProperty ;
+    rdfs:label "About Component"@en ;
+    rdfs:domain ac:KnowledgeClaim ;
+    rdfs:range ac:ActionComponent ;
+    rdfs:subPropertyOf dul:isAbout .
+
+ac:annotatesDescription a owl:ObjectProperty ;
+    rdfs:label "Annotates Description"@en ;
+    rdfs:domain ac:AnnotationRecord ;
+    rdfs:range ac:ActionDescription ;
+    rdfs:subPropertyOf dul:isAbout .
+
+ac:bindingContextIRI a owl:DatatypeProperty ;
+    rdfs:label "Binding Context IRI"@en ;
+    rdfs:domain ac:BindingRecord ;
+    rdfs:range xsd:anyURI .
+
+ac:bindingTargetIRI a owl:DatatypeProperty ;
+    rdfs:label "Binding Target IRI"@en ;
+    rdfs:domain ac:BindingRecord ;
+    rdfs:range xsd:anyURI .
+
+ac:bindsSpecification a owl:ObjectProperty ;
+    rdfs:label "Binds Specification"@en ;
+    rdfs:domain ac:BindingRecord ;
+    rdfs:range ac:EntitySpecification .
+
+ac:conformsToSpecification a owl:ObjectProperty ;
+    rdfs:label "Conforms To Specification"@en ;
+    rdfs:domain ac:ProjectionArtifact ;
+    rdfs:range ac:ProjectionSpecification .
+
+ac:contributesClaim a owl:ObjectProperty ;
+    rdfs:label "Contributes Claim"@en ;
+    rdfs:domain ac:AnnotationRecord ;
+    rdfs:range ac:KnowledgeClaim .
+
+ac:createdAt a owl:DatatypeProperty ;
+    rdfs:label "Created At"@en ;
+    rdfs:domain ac:AnnotationRecord ;
+    rdfs:range xsd:dateTime .
+
+ac:derivedFromRecord a owl:ObjectProperty ;
+    rdfs:label "Derived From Record"@en ;
+    rdfs:domain ac:ProjectionArtifact ;
+    rdfs:range ac:KnowledgeRecord .
+
+ac:evidenceKind a owl:ObjectProperty ;
+    rdfs:label "Evidence Kind"@en ;
+    rdfs:domain ac:EvidenceRecord ;
+    rdfs:range ac:EvidenceKind .
+
+ac:evidenceText a owl:DatatypeProperty ;
+    rdfs:label "Evidence Text"@en ;
+    rdfs:domain ac:EvidenceRecord ;
+    rdfs:range xsd:string .
+
+ac:expressesDescription a owl:ObjectProperty ;
+    rdfs:label "Expresses Description"@en ;
+    rdfs:domain ac:KnowledgeRecord ;
+    rdfs:range ac:ActionDescription ;
+    rdfs:subPropertyOf dul:expresses .
+
+ac:expressionLanguage a owl:DatatypeProperty ;
+    rdfs:label "Expression Language"@en ;
+    rdfs:domain ac:ConditionSpecification ;
+    rdfs:range xsd:string .
+
+ac:hasActionKind a owl:ObjectProperty ;
+    rdfs:label "Has Action Kind"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:ActionKind ;
+    rdfs:subPropertyOf dul:defines .
+
+ac:hasAnnotation a owl:ObjectProperty ;
+    rdfs:label "Has Annotation"@en ;
+    rdfs:domain ac:KnowledgeRecord ;
+    rdfs:range ac:AnnotationRecord .
+
+ac:hasApplicability a owl:ObjectProperty ;
+    rdfs:label "Has Applicability"@en ;
+    rdfs:domain ac:KnowledgeClaim ;
+    rdfs:range ac:ApplicabilitySpecification .
+
+ac:hasBinding a owl:ObjectProperty ;
+    rdfs:label "Has Binding"@en ;
+    rdfs:domain ac:KnowledgeRecord ;
+    rdfs:range ac:BindingRecord .
+
+ac:hasCapabilityRequirement a owl:ObjectProperty ;
+    rdfs:label "Has Capability Requirement"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:CapabilityRequirement ;
+    rdfs:subPropertyOf ac:hasComponent,
+        ac:requiresCapability .
+
+ac:hasCausalModel a owl:ObjectProperty ;
+    rdfs:label "Has Causal Model"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:CausalSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasClaim a owl:ObjectProperty ;
+    rdfs:label "Has Claim"@en ;
+    rdfs:domain ac:KnowledgeRecord ;
+    rdfs:range ac:KnowledgeClaim .
+
+ac:hasConstraint a owl:ObjectProperty ;
+    rdfs:label "Has Constraint"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:ConstraintSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasControl a owl:ObjectProperty ;
+    rdfs:label "Has Control"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:ControlSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasEntitySpecification a owl:ObjectProperty ;
+    rdfs:label "Has Entity Specification"@en ;
+    rdfs:domain ac:RoleSpecification ;
+    rdfs:range ac:EntitySpecification .
+
+ac:hasEvidence a owl:ObjectProperty ;
+    rdfs:label "Has Evidence"@en ;
+    rdfs:domain ac:KnowledgeClaim ;
+    rdfs:range ac:EvidenceRecord .
+
+ac:hasFailureCriterion a owl:ObjectProperty ;
+    rdfs:label "Has Failure Criterion"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:FailureCriterion ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasGoal a owl:ObjectProperty ;
+    rdfs:label "Has Goal"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:GoalSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasObjective a owl:ObjectProperty ;
+    rdfs:label "Has Objective"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:ObjectiveSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasParameter a owl:ObjectProperty ;
+    rdfs:label "Has Parameter"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:ParameterSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasPerspective a owl:ObjectProperty ;
+    rdfs:label "Has Perspective"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:PerspectiveDescription ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasPhase a owl:ObjectProperty ;
+    rdfs:label "Has Phase"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:PhaseSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasPhysicalModel a owl:ObjectProperty ;
+    rdfs:label "Has Physical Model"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:PhysicalModelSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasPrecondition a owl:ObjectProperty ;
+    rdfs:label "Has Precondition"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:PreconditionSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasRecovery a owl:ObjectProperty ;
+    rdfs:label "Has Recovery"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:RecoverySpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasRoleSpecification a owl:ObjectProperty ;
+    rdfs:label "Has Role Specification"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:RoleSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:hasStatement a owl:ObjectProperty ;
+    rdfs:label "Has Statement"@en ;
+    rdfs:domain ac:KnowledgeClaim ;
+    rdfs:range ac:Statement .
+
+ac:hasStatus a owl:ObjectProperty ;
+    rdfs:label "Has Status"@en ;
+    rdfs:domain ac:KnowledgeClaim ;
+    rdfs:range ac:EpistemicStatus .
+
+ac:hasSubActionDescription a owl:ObjectProperty ;
+    rdfs:label "Has Sub Action Description"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:ActionDescription .
+
+ac:hasSuccessCriterion a owl:ObjectProperty ;
+    rdfs:label "Has Success Criterion"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:SuccessCriterion ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+ac:includesClaim a owl:ObjectProperty ;
+    rdfs:label "Includes Claim"@en ;
+    rdfs:domain ac:ProjectionArtifact ;
+    rdfs:range ac:KnowledgeClaim .
+
+ac:lexicalExpression a owl:DatatypeProperty ;
+    rdfs:label "Lexical Expression"@en ;
+    rdfs:domain ac:ConditionSpecification ;
+    rdfs:range xsd:string .
+
+ac:lowerBound a owl:DatatypeProperty ;
+    rdfs:label "Lower Bound"@en ;
+    rdfs:domain ac:ParameterSpecification ;
+    rdfs:range xsd:decimal .
+
+ac:missingInformationPolicy a owl:DatatypeProperty ;
+    rdfs:label "Missing Information Policy"@en ;
+    rdfs:domain ac:ProjectionSpecification ;
+    rdfs:range xsd:string .
+
+ac:numericValue a owl:DatatypeProperty ;
+    rdfs:label "Numeric Value"@en ;
+    rdfs:domain ac:ParameterSpecification ;
+    rdfs:range xsd:decimal .
+
+ac:objectiveDirection a owl:DatatypeProperty ;
+    rdfs:label "Objective Direction"@en ;
+    rdfs:domain ac:ObjectiveSpecification ;
+    rdfs:range xsd:string .
+
+ac:outputSchemaIRI a owl:DatatypeProperty ;
+    rdfs:label "Output Schema IRI"@en ;
+    rdfs:domain ac:ProjectionSpecification ;
+    rdfs:range xsd:anyURI .
+
+ac:parameterKey a owl:DatatypeProperty ;
+    rdfs:label "Parameter Key"@en ;
+    rdfs:domain ac:ParameterSpecification ;
+    rdfs:range xsd:string .
+
+ac:precedesPhase a owl:ObjectProperty ;
+    rdfs:label "Precedes Phase"@en ;
+    rdfs:domain ac:PhaseSpecification ;
+    rdfs:range ac:PhaseSpecification .
+
+ac:previousVersion a owl:ObjectProperty ;
+    rdfs:label "Previous Version"@en ;
+    rdfs:domain ac:KnowledgeRecord ;
+    rdfs:range ac:KnowledgeRecord .
+
+ac:priority a owl:DatatypeProperty ;
+    rdfs:label "Priority"@en ;
+    rdfs:domain ac:ObjectiveSpecification ;
+    rdfs:range xsd:integer .
+
+ac:producerIdentifier a owl:DatatypeProperty ;
+    rdfs:label "Producer Identifier"@en ;
+    rdfs:domain ac:AnnotationRecord ;
+    rdfs:range xsd:string .
+
+ac:projectionKey a owl:DatatypeProperty ;
+    rdfs:label "Projection Key"@en ;
+    rdfs:domain ac:ProjectionSpecification ;
+    rdfs:range xsd:string .
+
+ac:recordVersion a owl:DatatypeProperty ;
+    rdfs:label "Record Version"@en ;
+    rdfs:domain ac:KnowledgeRecord ;
+    rdfs:range xsd:string .
+
+ac:requiredField a owl:DatatypeProperty ;
+    rdfs:label "Required Field"@en ;
+    rdfs:domain ac:ProjectionSpecification ;
+    rdfs:range xsd:string .
+
+ac:sourceIRI a owl:DatatypeProperty ;
+    rdfs:label "Source IRI"@en ;
+    rdfs:domain ac:EvidenceRecord ;
+    rdfs:range xsd:anyURI .
+
+ac:specifiesRole a owl:ObjectProperty ;
+    rdfs:label "Specifies Role"@en ;
+    rdfs:domain ac:RoleSpecification ;
+    rdfs:range ac:ParticipantRole .
+
+ac:statementLiteral a owl:DatatypeProperty ;
+    rdfs:label "Statement Literal"@en ;
+    rdfs:domain ac:Statement ;
+    rdfs:range rdfs:Literal .
+
+ac:statementObject a owl:ObjectProperty ;
+    rdfs:label "Statement Object"@en ;
+    rdfs:domain ac:Statement ;
+    rdfs:range dul:Entity .
+
+ac:statementPredicateIRI a owl:DatatypeProperty ;
+    rdfs:label "Statement Predicate IRI"@en ;
+    rdfs:domain ac:Statement ;
+    rdfs:range xsd:anyURI .
+
+ac:statementSubject a owl:ObjectProperty ;
+    rdfs:label "Statement Subject"@en ;
+    rdfs:domain ac:Statement ;
+    rdfs:range dul:Entity .
+
+ac:unitIRI a owl:DatatypeProperty ;
+    rdfs:label "Unit IRI"@en ;
+    rdfs:domain ac:ParameterSpecification ;
+    rdfs:range xsd:anyURI .
+
+ac:upperBound a owl:DatatypeProperty ;
+    rdfs:label "Upper Bound"@en ;
+    rdfs:domain ac:ParameterSpecification ;
+    rdfs:range xsd:decimal .
+
+ac:ActionKind a owl:Class ;
+    rdfs:label "Action Kind"@en ;
+    rdfs:comment "A task concept identifying the kind of action described. No actual action occurrence is required." ;
+    rdfs:subClassOf dul:Task .
+
+ac:ApplicabilitySpecification a owl:Class ;
+    rdfs:label "Applicability Specification"@en ;
+    rdfs:comment "Conditions limiting the scope of a claim or model." ;
+    rdfs:subClassOf ac:ConditionSpecification .
+
+ac:CausalSpecification a owl:Class ;
+    rdfs:label "Causal Specification"@en ;
+    rdfs:comment "Proposed explanatory or causal model, whose support is recorded in claims." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:ConstraintSpecification a owl:Class ;
+    rdfs:label "Constraint Specification"@en ;
+    rdfs:comment "Requirement restricting permissible actions, states or parameters." ;
+    rdfs:subClassOf ac:ConditionSpecification .
+
+ac:ControlSpecification a owl:Class ;
+    rdfs:label "Control Specification"@en ;
+    rdfs:comment "Optional abstract control specification without mandatory robot joints or actuators." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:CuratedExample a ac:EvidenceKind,
+        owl:NamedIndividual ;
+    rdfs:label "Curated Example"@en .
+
+ac:Disputed a ac:EpistemicStatus,
+        owl:NamedIndividual ;
+    rdfs:label "Disputed"@en .
+
+ac:DocumentSource a ac:EvidenceKind,
+        owl:NamedIndividual ;
+    rdfs:label "Document Source"@en .
+
+ac:FailureCriterion a owl:Class ;
+    rdfs:label "Failure Criterion"@en ;
+    rdfs:comment "Criterion used to recognize failure." ;
+    rdfs:subClassOf ac:ConditionSpecification .
+
+ac:GoalSpecification a owl:Class ;
+    rdfs:label "Goal Specification"@en ;
+    rdfs:comment "Desired outcome specification; does not imply an actual agent or achieved state." ;
+    rdfs:subClassOf ac:ConditionSpecification .
+
+ac:LLMGeneration a ac:EvidenceKind,
+        owl:NamedIndividual ;
+    rdfs:label "LLM Generation"@en .
+
+ac:LogicalDerivation a ac:EvidenceKind,
+        owl:NamedIndividual ;
+    rdfs:label "Logical Derivation"@en .
+
+ac:Observation a ac:EvidenceKind,
+        owl:NamedIndividual ;
+    rdfs:label "Observation"@en .
+
+ac:ParticipantRole a owl:Class ;
+    rdfs:label "Participant Role"@en ;
+    rdfs:comment "Role defined by an action description, such as source, destination or manipulated object." ;
+    rdfs:subClassOf dul:Role .
+
+ac:PerspectiveDescription a owl:Class ;
+    rdfs:label "Perspective Description"@en ;
+    rdfs:comment "Extension point for frames, image schemas, force dynamics and other views." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:PhysicalModelSpecification a owl:Class ;
+    rdfs:label "Physical Model Specification"@en ;
+    rdfs:comment "Description of a physical model with assumptions and applicability; not physics validation." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:PreconditionSpecification a owl:Class ;
+    rdfs:label "Precondition Specification"@en ;
+    rdfs:comment "Condition required before an action or phase." ;
+    rdfs:subClassOf ac:ConditionSpecification .
+
+ac:Proposed a ac:EpistemicStatus,
+        owl:NamedIndividual ;
+    rdfs:label "Proposed"@en .
+
+ac:RecoverySpecification a owl:Class ;
+    rdfs:label "Recovery Specification"@en ;
+    rdfs:comment "Description of a response to a failure condition." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:Rejected a ac:EpistemicStatus,
+        owl:NamedIndividual ;
+    rdfs:label "Rejected"@en .
+
+ac:SimulationResult a ac:EvidenceKind,
+        owl:NamedIndividual ;
+    rdfs:label "Simulation Result"@en .
+
+ac:SuccessCriterion a owl:Class ;
+    rdfs:label "Success Criterion"@en ;
+    rdfs:comment "Criterion used to judge success; not a report of success." ;
+    rdfs:subClassOf ac:ConditionSpecification .
+
+ac:Supported a ac:EpistemicStatus,
+        owl:NamedIndividual ;
+    rdfs:label "Supported"@en .
+
+ac:Unknown a ac:EpistemicStatus,
+        owl:NamedIndividual ;
+    rdfs:label "Unknown"@en .
+
+ac:requiresCapability a owl:ObjectProperty ;
+    rdfs:label "Requires Capability"@en ;
+    rdfs:comment "Abstract capability required by a description. This relation states a requirement, not satisfaction, provider availability or execution readiness. Specialized properties retain the kind of requiring description."@en ;
+    rdfs:domain dul:Description ;
+    rdfs:range ac:CapabilityRequirement .
+
+ac:CapabilityRequirement a owl:Class ;
+    rdfs:label "Capability Requirement"@en ;
+    rdfs:comment "Abstract required ability; no robot or implementation is required." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:EntitySpecification a owl:Class ;
+    rdfs:label "Entity Specification"@en ;
+    rdfs:comment "Intensional specification of an entity slot; not a physical object or world instance." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:ObjectiveSpecification a owl:Class ;
+    rdfs:label "Objective Specification"@en ;
+    rdfs:comment "Optimization preference; distinct from a hard constraint." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:PhaseSpecification a owl:Class ;
+    rdfs:label "Phase Specification"@en ;
+    rdfs:comment "Description of a phase; not an event occurrence." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:ProjectionArtifact a owl:Class ;
+    rdfs:label "Projection Artifact"@en ;
+    rdfs:comment "Derived output from a specified version of a knowledge record; not inherently executable." ;
+    rdfs:subClassOf dul:InformationObject ;
+    owl:disjointWith dul:Event,
+        dul:PhysicalObject .
+
+ac:RoleSpecification a owl:Class ;
+    rdfs:label "Role Specification"@en ;
+    rdfs:comment "Associates a conceptual participant role with an entity specification in this description." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:BindingRecord a owl:Class ;
+    rdfs:label "Binding Record"@en ;
+    rdfs:comment "Optional externally supplied binding of an entity specification to a world entity identifier." ;
+    rdfs:subClassOf dul:InformationObject .
+
+ac:EvidenceRecord a owl:Class ;
+    rdfs:label "Evidence Record"@en ;
+    rdfs:comment "Record of a source or result supporting or challenging a claim." ;
+    rdfs:subClassOf dul:InformationObject .
+
+ac:AnnotationRecord a owl:Class ;
+    rdfs:label "Annotation Record"@en ;
+    rdfs:comment "Record of an annotator contribution; an information record, not the computation event." ;
+    rdfs:subClassOf dul:InformationObject .
+
+ac:Statement a owl:Class ;
+    rdfs:label "Statement"@en ;
+    rdfs:comment "Reified subject/predicate/object statement. The predicate is encoded as an IRI literal; no RDF assertion is implied." ;
+    rdfs:subClassOf dul:InformationObject .
+
+ac:EpistemicStatus a owl:Class ;
+    rdfs:label "Epistemic Status"@en ;
+    rdfs:comment "Workflow status of a claim, distinct from probability or physical truth." ;
+    rdfs:subClassOf dul:Concept .
+
+ac:ParameterSpecification a owl:Class ;
+    rdfs:label "Parameter Specification"@en ;
+    rdfs:comment "Description of a parameter, including an optional value, unit and bounds. Absence means unspecified." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:ProjectionSpecification a owl:Class ;
+    rdfs:label "Projection Specification"@en ;
+    rdfs:comment "Contract for a projection, including required information and missing-information policy." ;
+    rdfs:subClassOf dul:Description .
+
+ac:EvidenceKind a owl:Class ;
+    rdfs:label "Evidence Kind"@en ;
+    rdfs:comment "Kind of evidence, not a guarantee of correctness." ;
+    rdfs:subClassOf dul:Concept .
+
+ac:ConditionSpecification a owl:Class ;
+    rdfs:label "Condition Specification"@en ;
+    rdfs:comment "A condition described symbolically. Does not assert that the condition holds." ;
+    rdfs:subClassOf ac:ActionComponent .
+
+ac:KnowledgeClaim a owl:Class ;
+    rdfs:label "Knowledge Claim"@en ;
+    rdfs:comment "Evidence-bearing assertion about descriptive content; its statement is not automatically asserted as a world fact." ;
+    rdfs:subClassOf dul:InformationObject .
+
+ac:KnowledgeRecord a owl:Class ;
+    rdfs:label "Knowledge Record"@en ;
+    rdfs:comment "Versioned information artifact expressing a shared action description, with claims and annotation history." ;
+    rdfs:subClassOf dul:InformationObject ;
+    owl:disjointWith dul:Event,
+        dul:PhysicalObject .
+
+ac:ActionComponent a owl:Class ;
+    rdfs:label "Action Component"@en ;
+    rdfs:comment "Reusable descriptive component of action knowledge." ;
+    rdfs:subClassOf dul:Description ;
+    owl:disjointWith dul:Event,
+        dul:PhysicalObject .
+
+ac:hasComponent a owl:ObjectProperty ;
+    rdfs:label "Has Component"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range ac:ActionComponent ;
+    rdfs:subPropertyOf dul:hasComponent .
+
+ac:ActionDescription a owl:Class ;
+    rdfs:label "Action Description"@en ;
+    rdfs:comment "Conceptual description of an action, not an occurring action. Partial descriptions are permitted." ;
+    rdfs:subClassOf dul:Description ;
+    owl:disjointWith dul:Event,
+        dul:PhysicalObject .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( ac:Proposed ac:Supported ac:Disputed ac:Rejected ac:Unknown ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( ac:CuratedExample ac:LLMGeneration ac:DocumentSource ac:LogicalDerivation ac:SimulationResult ac:Observation ) .
+

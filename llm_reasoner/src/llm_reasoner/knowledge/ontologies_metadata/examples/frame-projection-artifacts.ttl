@@ -1,0 +1,77 @@
+@prefix ns1: <http://aicor.knowledge/ontologies/frame-perspective.owl#> .
+@prefix ns2: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853> a ns1:FrameProjectionArtifact ;
+    ns2:conformsToSpecification <http://aicor.knowledge/ontologies/action-examples.owl#PouringFrameContract> ;
+    ns2:derivedFromRecord <http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV6> ;
+    ns2:includesClaim <http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV2Claim1> ;
+    ns1:hasSlotValue <http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-34ef94a0ea33-0>,
+        <http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-34ef94a0ea33-1>,
+        <http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-34ef94a0ea33-2>,
+        <http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-b5b471c61bb0-0>,
+        <http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-e0b8897687fa-0> ;
+    ns1:projectedFrame <http://aicor.knowledge/ontologies/action-examples.owl#PouringFrame> .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d> a ns1:FrameProjectionArtifact ;
+    ns2:conformsToSpecification <http://aicor.knowledge/ontologies/action-examples.owl#GraspingFrameContract> ;
+    ns2:derivedFromRecord <http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV6> ;
+    ns2:includesClaim <http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV2Claim1> ;
+    ns1:hasSlotValue <http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-34ef94a0ea33-0>,
+        <http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-34ef94a0ea33-1>,
+        <http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-4c3825a78c88-0>,
+        <http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-b5b471c61bb0-0>,
+        <http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-e0b8897687fa-0> ;
+    ns1:projectedFrame <http://aicor.knowledge/ontologies/action-examples.owl#GraspingFrame> .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-34ef94a0ea33-0> a ns1:FrameSlotValue ;
+    ns1:entityValue <http://aicor.knowledge/ontologies/action-examples.owl#destinationRoleSpec> ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#roleSlot> ;
+    ns1:valueOrigin "source" .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-34ef94a0ea33-1> a ns1:FrameSlotValue ;
+    ns1:entityValue <http://aicor.knowledge/ontologies/action-examples.owl#sourceRoleSpec> ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#roleSlot> ;
+    ns1:valueOrigin "source" .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-34ef94a0ea33-2> a ns1:FrameSlotValue ;
+    ns1:entityValue <http://aicor.knowledge/ontologies/action-examples.owl#substanceRoleSpec> ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#roleSlot> ;
+    ns1:valueOrigin "source" .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-b5b471c61bb0-0> a ns1:FrameSlotValue ;
+    ns1:entityValue <http://aicor.knowledge/ontologies/action-examples.owl#pourAmountGoal> ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#goalSlot> ;
+    ns1:sourceClaim <http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV2Claim1> ;
+    ns1:valueOrigin "source" .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#94fa44d88c13f03bbb319670c648b07b9368ac9441f1931b688ffa29ba52d853-e0b8897687fa-0> a ns1:FrameSlotValue ;
+    ns1:entityValue <http://aicor.knowledge/ontologies/action-examples.owl#Pouring> ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#kindSlot> ;
+    ns1:valueOrigin "source" .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-34ef94a0ea33-0> a ns1:FrameSlotValue ;
+    ns1:entityValue <http://aicor.knowledge/ontologies/action-examples.owl#effectorRoleSpec> ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#roleSlot> ;
+    ns1:valueOrigin "source" .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-34ef94a0ea33-1> a ns1:FrameSlotValue ;
+    ns1:entityValue <http://aicor.knowledge/ontologies/action-examples.owl#graspedRoleSpec> ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#roleSlot> ;
+    ns1:valueOrigin "source" .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-4c3825a78c88-0> a ns1:FrameSlotValue ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#diagnosticPolicySlot> ;
+    ns1:literalValue "request-evidence" ;
+    ns1:valueOrigin "default" .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-b5b471c61bb0-0> a ns1:FrameSlotValue ;
+    ns1:entityValue <http://aicor.knowledge/ontologies/action-examples.owl#graspControlledGoal> ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#goalSlot> ;
+    ns1:sourceClaim <http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV2Claim1> ;
+    ns1:valueOrigin "source" .
+
+<http://aicor.knowledge/ontologies/frame-artifacts#97c3488e11f7f4f9a121a2f9370524116ad2cc5e41590fda40f4d4d25c848f6d-e0b8897687fa-0> a ns1:FrameSlotValue ;
+    ns1:entityValue <http://aicor.knowledge/ontologies/action-examples.owl#Grasping> ;
+    ns1:fillsSlot <http://aicor.knowledge/ontologies/action-examples.owl#kindSlot> ;
+    ns1:valueOrigin "source" .
+

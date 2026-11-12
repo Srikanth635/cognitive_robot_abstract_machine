@@ -1,0 +1,15 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/causal-mechanisms.owl#intendedOutcome> a owl:ObjectProperty ;
+    rdfs:label "Intended Outcome"@en ;
+    rdfs:comment "Desired intervention outcome."@en ;
+    rdfs:domain <http://aicor.knowledge/ontologies/causal-mechanisms.owl#InterventionSpecification> ;
+    rdfs:range <http://aicor.knowledge/ontologies/conditions-outcomes.owl#OutcomeSpecification> .
+
+<http://aicor.knowledge/ontologies/causal-outcome-bridge.owl> a owl:Ontology ;
+    rdfs:label "Causal outcome bridge"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/causal-mechanisms.owl>,
+        <http://aicor.knowledge/ontologies/conditions-outcomes.owl> ;
+    owl:versionInfo "0.6.0" .
+

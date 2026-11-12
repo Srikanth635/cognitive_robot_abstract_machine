@@ -1,0 +1,72 @@
+[
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#reachingRecord",
+    "query": "object-manipulation-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#reachingRecord",
+    "query": "object-manipulation-monitors.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#graspingRecord",
+    "query": "object-manipulation-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#graspingRecord",
+    "query": "object-manipulation-monitors.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#holdingRecord",
+    "query": "object-manipulation-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#holdingRecord",
+    "query": "object-manipulation-monitors.rq",
+    "rows": 2
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#pickupRecord",
+    "query": "object-manipulation-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#pickupRecord",
+    "query": "object-manipulation-monitors.rq",
+    "rows": 2
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#placementRecord",
+    "query": "object-manipulation-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#placementRecord",
+    "query": "object-manipulation-monitors.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#releaseRecord",
+    "query": "object-manipulation-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#releaseRecord",
+    "query": "object-manipulation-monitors.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#fixationRecord",
+    "query": "object-manipulation-targets.rq",
+    "rows": 1
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#fixationRecord",
+    "query": "object-manipulation-monitors.rq",
+    "rows": 2
+  }
+]

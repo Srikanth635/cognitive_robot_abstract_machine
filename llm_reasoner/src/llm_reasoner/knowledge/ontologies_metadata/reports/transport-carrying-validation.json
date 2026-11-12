@@ -1,0 +1,659 @@
+{
+  "release": "0.19.0",
+  "checks": [
+    {
+      "case": "four-composed-profile-shapes",
+      "passed": true
+    },
+    {
+      "case": "composition-bindings",
+      "passed": true
+    },
+    {
+      "case": "expression-signatures",
+      "passed": true
+    },
+    {
+      "case": "child-phases-and-composition-monitors",
+      "passed": true
+    },
+    {
+      "case": "carrying:empty-input-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "carrying:qualified-composition-succeeds",
+      "passed": true
+    },
+    {
+      "case": "carrying:success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "carrying:no-placement-release-or-execution",
+      "passed": true
+    },
+    {
+      "case": "carrying:arrival-without-holding-unknown",
+      "passed": true
+    },
+    {
+      "case": "carrying:holding-without-arrival-unknown",
+      "passed": true
+    },
+    {
+      "case": "carrying:raw-positive-aggregates-without-window-withheld",
+      "passed": true
+    },
+    {
+      "case": "carrying:parent-window-not-inherited-by-child",
+      "passed": true
+    },
+    {
+      "case": "carrying:coextensive-navigation-scope-required",
+      "passed": true
+    },
+    {
+      "case": "carrying:endpoint-grasp-not-maintained-grasp",
+      "passed": true
+    },
+    {
+      "case": "carrying:interrupted-hold-fails-despite-arrival",
+      "passed": true
+    },
+    {
+      "case": "carrying:carrier-arrival-not-load-arrival",
+      "passed": true
+    },
+    {
+      "case": "carrying:held-but-not-borne-load-fails-carrying",
+      "passed": true
+    },
+    {
+      "case": "carrying:footprint-declaration-not-clearance-evidence",
+      "passed": true
+    },
+    {
+      "case": "carrying:wrong-child-context",
+      "passed": true
+    },
+    {
+      "case": "carrying:shorter-hold-interval",
+      "passed": true
+    },
+    {
+      "case": "carrying:different-navigation-window",
+      "passed": true
+    },
+    {
+      "case": "carrying:equal-instants-different-timezones",
+      "passed": true
+    },
+    {
+      "case": "carrying:foreign-parent-window",
+      "passed": true
+    },
+    {
+      "case": "carrying:unqualified-component-input",
+      "passed": true
+    },
+    {
+      "case": "carrying:foreign-component-input",
+      "passed": true
+    },
+    {
+      "case": "carrying:child-window-needs-parent-window",
+      "passed": true
+    },
+    {
+      "case": "carrying:zero-duration-window",
+      "passed": true
+    },
+    {
+      "case": "carrying:timezone-required",
+      "passed": true
+    },
+    {
+      "case": "carrying:success-and-component-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "carrying:load-fault-exposed-independently",
+      "passed": true
+    },
+    {
+      "case": "carrying:unknown-load-monitor-declares-suspension",
+      "passed": true
+    },
+    {
+      "case": "carrying:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:empty-input-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:qualified-composition-succeeds",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:no-placement-release-or-execution",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:arrival-without-holding-unknown",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:holding-without-arrival-unknown",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:raw-positive-aggregates-without-window-withheld",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:parent-window-not-inherited-by-child",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:coextensive-navigation-scope-required",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:endpoint-grasp-not-maintained-grasp",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:interrupted-hold-fails-despite-arrival",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:carrier-arrival-not-load-arrival",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:held-but-not-borne-load-fails-carrying",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:footprint-declaration-not-clearance-evidence",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:wrong-child-context",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:shorter-hold-interval",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:different-navigation-window",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:equal-instants-different-timezones",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:foreign-parent-window",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:unqualified-component-input",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:foreign-component-input",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:child-window-needs-parent-window",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:zero-duration-window",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:timezone-required",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:success-and-component-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:load-fault-exposed-independently",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:unknown-load-monitor-declares-suspension",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:endpoint-does-not-prove-requested-route",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:empty-input-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:qualified-composition-succeeds",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:no-placement-release-or-execution",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:arrival-without-holding-unknown",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:holding-without-arrival-unknown",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:raw-positive-aggregates-without-window-withheld",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:parent-window-not-inherited-by-child",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:coextensive-navigation-scope-required",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:endpoint-grasp-not-maintained-grasp",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:interrupted-hold-fails-despite-arrival",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:carrier-arrival-not-load-arrival",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:held-but-not-borne-load-fails-carrying",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:footprint-declaration-not-clearance-evidence",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:wrong-child-context",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:shorter-hold-interval",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:different-navigation-window",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:equal-instants-different-timezones",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:foreign-parent-window",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:unqualified-component-input",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:foreign-component-input",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:child-window-needs-parent-window",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:zero-duration-window",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:timezone-required",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:success-and-component-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:load-fault-exposed-independently",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:unknown-load-monitor-declares-suspension",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:maximum-deviation-not-endpoint-orientation",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:endpoint-metric-cannot-substitute",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:invalid-orientation-negative",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:invalid-orientation-nonfinite",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:invalid-orientation-wrong-unit",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:empty-input-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:qualified-composition-succeeds",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:no-placement-release-or-execution",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:arrival-without-holding-unknown",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:holding-without-arrival-unknown",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:raw-positive-aggregates-without-window-withheld",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:parent-window-not-inherited-by-child",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:coextensive-navigation-scope-required",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:endpoint-grasp-not-maintained-grasp",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:interrupted-hold-fails-despite-arrival",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:carrier-arrival-not-load-arrival",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:held-but-not-borne-load-fails-carrying",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:footprint-declaration-not-clearance-evidence",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:wrong-child-context",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:shorter-hold-interval",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:different-navigation-window",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:equal-instants-different-timezones",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:foreign-parent-window",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:unqualified-component-input",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:foreign-component-input",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:child-window-needs-parent-window",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:zero-duration-window",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:timezone-required",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:success-and-component-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:load-fault-exposed-independently",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:unknown-load-monitor-declares-suspension",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:maximum-deviation-not-endpoint-orientation",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:endpoint-metric-cannot-substitute",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:invalid-orientation-negative",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:invalid-orientation-nonfinite",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:invalid-orientation-wrong-unit",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:endpoint-does-not-prove-requested-route",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-load",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-carrier",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-manipulator-membership",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-destination",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-footprint",
+      "passed": true
+    },
+    {
+      "case": "reject-footprint-for-other-load",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-holding-child",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-kind",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-policy",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-local-success",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-monitor-context",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-motion-phase",
+      "passed": true
+    },
+    {
+      "case": "reject-unsafe-unknown-response",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-orientation-load",
+      "passed": true
+    },
+    {
+      "case": "reject-orientation-metric-omitted",
+      "passed": true
+    },
+    {
+      "case": "reject-parent-omits-holding",
+      "passed": true
+    },
+    {
+      "case": "reject-arrival-or-holding-instead-of-both",
+      "passed": true
+    },
+    {
+      "case": "reject-extra-placement-child",
+      "passed": true
+    },
+    {
+      "case": "reject-holding-child-mislabeled-as-release",
+      "passed": true
+    },
+    {
+      "case": "reject-mobility-child-mislabeled-as-route",
+      "passed": true
+    },
+    {
+      "case": "reject-quaternion-not-normalized",
+      "passed": true
+    },
+    {
+      "case": "reject-negative-tolerance",
+      "passed": true
+    },
+    {
+      "case": "carrying:exact-statement-provenance",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:exact-statement-provenance",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:exact-statement-provenance",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:exact-statement-provenance",
+      "passed": true
+    },
+    {
+      "case": "no-orphan-description-nodes",
+      "passed": true
+    },
+    {
+      "case": "all-claims-proposed",
+      "passed": true
+    },
+    {
+      "case": "no-physical-values",
+      "passed": true
+    },
+    {
+      "case": "no-world-bindings",
+      "passed": true
+    },
+    {
+      "case": "independent-from-framework-and-other-domains",
+      "passed": true
+    }
+  ],
+  "imports": [
+    "http://aicor.knowledge/ontologies/action-description-core.owl",
+    "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+    "http://aicor.knowledge/ontologies/dynamics-control.owl",
+    "http://aicor.knowledge/ontologies/knowledge-context.owl",
+    "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+    "http://aicor.knowledge/ontologies/model-contracts.owl",
+    "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+    "http://aicor.knowledge/ontologies/object-manipulation.owl",
+    "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+    "http://aicor.knowledge/ontologies/participants-relations.owl",
+    "http://aicor.knowledge/ontologies/phases-transitions.owl",
+    "http://aicor.knowledge/ontologies/physical-models.owl",
+    "http://aicor.knowledge/ontologies/robot-motion.owl",
+    "http://aicor.knowledge/ontologies/transport-carrying.owl",
+    "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+  ],
+  "scope": "Four synthetic composition fixtures; interval metadata scopes supplied evidence and does not verify coverage or accept observations."
+}

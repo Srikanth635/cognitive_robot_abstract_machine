@@ -1,0 +1,11 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX pa: <http://aicor.knowledge/ontologies/perception-attention.owl#>
+PREFIX kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#>
+SELECT ?result ?outcome ?at ?frame ?candidate ?entity ?match ?estimate
+WHERE {
+ ?record ac:expressesDescription ?action . ?action pa:query ?query; pa:evaluationContext ?context .
+ ?result pa:inRecord ?record; pa:answersQuery ?query; pa:inContext ?context;
+ pa:outcome ?outcome; kc:observedAt ?at; pa:resultFrame ?frame .
+ OPTIONAL {?result pa:hasCandidate ?candidate . ?candidate pa:candidateEntity ?entity; pa:matchAssessment ?match .
+ OPTIONAL {?candidate pa:poseEstimate ?estimate}}
+}

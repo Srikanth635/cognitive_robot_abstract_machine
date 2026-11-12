@@ -1,0 +1,268 @@
+{
+  "record": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#record",
+  "action": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pouring",
+  "type": "Pouring",
+  "status": "Proposed",
+  "illustrationOnly": true,
+  "worldBound": false,
+  "executionReadinessAssessed": false,
+  "evidence": {
+    "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#fictionalEvidence",
+    "kind": "CuratedExample",
+    "note": "All values and assumed outcomes are fictional, not validated limits."
+  },
+  "context": {
+    "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pouringContext",
+    "frame": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#demoFrame"
+  },
+  "entities": {
+    "source": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#sourceBottle",
+      "label": "Bottle",
+      "material": "glass",
+      "dryMass": {
+        "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#BottleDryMass",
+        "value": 0.42,
+        "unit": "http://qudt.org/vocab/unit/KiloGM"
+      },
+      "initialContents": {
+        "substance": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#water",
+        "volume": {
+          "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#sourceBefore",
+          "value": 0.0006,
+          "unit": "http://qudt.org/vocab/unit/M3"
+        }
+      }
+    },
+    "substance": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#water",
+      "label": "Water",
+      "density": {
+        "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourPropertyParameter",
+        "value": 998.0,
+        "unit": "http://qudt.org/vocab/unit/KiloGM-PER-M3"
+      },
+      "viscosity": {
+        "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#WaterViscosity",
+        "value": 0.0011,
+        "unit": "http://qudt.org/vocab/unit/PA-SEC"
+      }
+    },
+    "destination": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#destinationGlass",
+      "label": "Glass",
+      "capacity": {
+        "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#GlassCapacity",
+        "value": 0.0004,
+        "unit": "http://qudt.org/vocab/unit/M3"
+      }
+    },
+    "transferredPortion": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#transferredWater",
+    "operator": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#robotEndEffector",
+    "workingPart": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#bottleMouth"
+  },
+  "transfer": {
+    "contract": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourTransferContract",
+    "mode": "partial",
+    "quantityBasis": "volume",
+    "target": {
+      "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#targetAmount",
+      "value": 0.00025,
+      "unit": "http://qudt.org/vocab/unit/M3"
+    },
+    "spillageTolerance": {
+      "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#spillTolerance",
+      "value": 5e-06,
+      "unit": "http://qudt.org/vocab/unit/M3"
+    },
+    "success": [
+      "delivered >= target",
+      "spilled <= tolerance",
+      "transferred portion contained in intended destination"
+    ]
+  },
+  "toolInteraction": {
+    "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#toolUse",
+    "tool": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#sourceBottle",
+    "workingPart": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#bottleMouth",
+    "target": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#destinationGlass",
+    "intendedEffect": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#flowIntoGlass",
+    "contactPolicy": "unspecified",
+    "hypotheticalForceLimit": {
+      "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#HypotheticalForceLimit",
+      "value": 8.0,
+      "unit": "http://qudt.org/vocab/unit/N"
+    }
+  },
+  "motion": {
+    "targetPose": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourPose",
+    "position": {
+      "x": {
+        "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#PourPosex",
+        "value": 0.62,
+        "unit": "http://qudt.org/vocab/unit/M"
+      },
+      "y": {
+        "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#PourPosey",
+        "value": -0.18,
+        "unit": "http://qudt.org/vocab/unit/M"
+      },
+      "z": {
+        "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#PourPosez",
+        "value": 0.94,
+        "unit": "http://qudt.org/vocab/unit/M"
+      }
+    },
+    "tilt": {
+      "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#PourTilt",
+      "value": 1.15,
+      "unit": "http://qudt.org/vocab/unit/RAD"
+    },
+    "maximumAngularSpeed": {
+      "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#MaximumAngularSpeed",
+      "value": 0.35,
+      "unit": "http://qudt.org/vocab/unit/RAD-PER-SEC"
+    },
+    "maximumAcceleration": {
+      "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#MaximumAcceleration",
+      "value": 0.4,
+      "unit": "http://qudt.org/vocab/unit/M-PER-SEC2"
+    }
+  },
+  "knowledgeAspects": {
+    "preconditions": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourPrecondition",
+      "summary": [
+        "source contains the substance",
+        "destination accessible",
+        "tool functional/held as separately specified"
+      ]
+    },
+    "phases": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourPhaseStructure",
+      "members": [
+        "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourAbort",
+        "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourComplete",
+        "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourPrepare",
+        "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourTransfer",
+        "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourVerify"
+      ]
+    },
+    "monitoring": {
+      "controlPoint": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourControlPoint",
+      "unknownPolicy": "RequestEvidence; do not assume success"
+    },
+    "causality": {
+      "model": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourCausalModel",
+      "mechanism": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourMechanism",
+      "status": "Proposed; no causal probability invented"
+    },
+    "physics": {
+      "model": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourPhysicalModel",
+      "accountingContract": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#volumeAccountingContract",
+      "equation": "V_after = V_before - V_delivered - V_spilled",
+      "assumptions": [
+        "incompressible approximation",
+        "all source losses represented as delivered or spilled"
+      ],
+      "physicalValidity": "not assessed"
+    },
+    "control": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourController",
+      "kind": "FeedbackControl",
+      "samplingPeriod": {
+        "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourSamplingPeriod",
+        "value": 0.02,
+        "unit": "http://qudt.org/vocab/unit/SEC"
+      },
+      "missing": [
+        "state evolution equation",
+        "output equation",
+        "calibrated actuator model"
+      ],
+      "controllerSynthesized": false
+    },
+    "objectives": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourObjectives",
+      "policy": "Lexicographic",
+      "priorities": [
+        "minimize spillage",
+        "minimize completion time"
+      ]
+    },
+    "capabilities": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourCapabilityProfile",
+      "requirements": [
+        "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourManipulationCapability",
+        "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourVerificationCapability",
+        "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#relationAssessmentCapability"
+      ],
+      "providersMatched": false
+    },
+    "strategy": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourExecutionStrategy",
+      "summary": [
+        "perform transfer",
+        "verify transfer outcome"
+      ],
+      "executable": false
+    },
+    "diagnosis": {
+      "association": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#spillDiagnosticAssociation",
+      "status": "Proposed candidate explanation, not proven root cause"
+    },
+    "recovery": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourRecoveryOption",
+      "retryBudget": {
+        "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourRetryBudget",
+        "value": 2.0,
+        "unit": "http://qudt.org/vocab/unit/UNITLESS"
+      },
+      "strategy": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourRecoveryStrategy",
+      "executed": false
+    },
+    "framePerspective": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#framePerspective",
+      "schemaReference": "http://aicor.knowledge/ontologies/action-examples.owl#PouringFrame",
+      "note": "Illustrative slot summary, no new frame projection generated",
+      "slots": {
+        "source": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#sourceBottle",
+        "substance": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#water",
+        "destination": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#destinationGlass"
+      }
+    },
+    "forceDynamics": {
+      "id": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourForcePattern",
+      "relativeStrength": "UnknownStrength",
+      "note": "No quantitative physics inferred from qualitative roles"
+    },
+    "imageSchemas": [
+      "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourContainmentSchema",
+      "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#pourPathSchema"
+    ]
+  },
+  "hypothesizedOutcome": {
+    "notAnObservation": true,
+    "delivered": {
+      "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#deliveredAmount",
+      "value": 0.000252,
+      "unit": "http://qudt.org/vocab/unit/M3"
+    },
+    "spilled": {
+      "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#spillAmount",
+      "value": 1e-06,
+      "unit": "http://qudt.org/vocab/unit/M3"
+    },
+    "sourceRemaining": {
+      "parameter": "http://aicor.knowledge/ontologies/comprehensive-pouring-demo.owl#sourceAfter",
+      "value": 0.000347,
+      "unit": "http://qudt.org/vocab/unit/M3"
+    },
+    "assumedDestinationContainment": true,
+    "illustrativeAccounting": "600 mL = 347 mL + 252 mL + 1 mL"
+  },
+  "projections": {
+    "CoraPlexExecutable": null,
+    "reason": "No runtime world/robot bindings or execution adapter supplied"
+  }
+}

@@ -1,0 +1,9 @@
+# Bind ?record explicitly. A handoff requirement is not evidence it was satisfied.
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX ar: <http://aicor.knowledge/ontologies/action-recipes.owl#>
+SELECT ?recipe ?handoff ?fromStep ?toStep ?condition
+WHERE {
+ ?record ac:expressesDescription ?recipe .
+ ?recipe ar:hasHandoff ?handoff .
+ ?handoff ar:fromStep ?fromStep ; ar:toStep ?toStep ; ar:handoffCondition ?condition .
+}

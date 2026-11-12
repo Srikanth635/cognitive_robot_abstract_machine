@@ -1,0 +1,15 @@
+{
+  "prior_turtle_files_unchanged": 19,
+  "causal-mechanisms": {
+    "Class": 6,
+    "ObjectProperty": 13,
+    "DatatypeProperty": 0,
+    "NamedIndividual": 0
+  },
+  "physical-models": {
+    "Class": 8,
+    "ObjectProperty": 16,
+    "DatatypeProperty": 6,
+    "NamedIndividual": 6
+  }
+}

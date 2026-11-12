@@ -1,0 +1,19 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/all-action-knowledge.owl> a owl:Ontology ;
+    rdfs:label "All action knowledge"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-recipes.owl>,
+        <http://aicor.knowledge/ontologies/all-action-aspects.owl>,
+        <http://aicor.knowledge/ontologies/articulated-mechanisms.owl>,
+        <http://aicor.knowledge/ontologies/material-transfer.owl>,
+        <http://aicor.knowledge/ontologies/mobility-navigation.owl>,
+        <http://aicor.knowledge/ontologies/object-manipulation.owl>,
+        <http://aicor.knowledge/ontologies/perception-attention.owl>,
+        <http://aicor.knowledge/ontologies/pouring-tool-bridge.owl>,
+        <http://aicor.knowledge/ontologies/robot-motion.owl>,
+        <http://aicor.knowledge/ontologies/specialized-tool-interactions.owl>,
+        <http://aicor.knowledge/ontologies/tool-interaction.owl>,
+        <http://aicor.knowledge/ontologies/transport-carrying.owl> ;
+    owl:versionInfo "0.20.0" .
+

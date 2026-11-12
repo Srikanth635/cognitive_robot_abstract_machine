@@ -1,0 +1,13 @@
+# Bind ?record explicitly. This retrieves descriptive requirements, not observations.
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX am: <http://aicor.knowledge/ontologies/articulated-mechanisms.owl#>
+SELECT ?action ?mechanism ?assembly ?fixed ?moving ?joint ?kind ?frame ?coordinate ?target ?unit ?latch
+WHERE {
+  ?record ac:expressesDescription ?action .
+  ?action am:mechanism ?mechanism .
+  ?mechanism am:describesAssembly ?assembly ; am:fixedPart ?fixed ;
+             am:movingPart ?moving ; am:joint ?joint ; am:referenceFrame ?frame .
+  ?joint am:jointKind ?kind ; am:coordinate ?coordinate .
+  OPTIONAL { ?action am:targetParameter ?target . ?target ac:unitIRI ?unit }
+  OPTIONAL { ?mechanism am:latch ?latch }
+}

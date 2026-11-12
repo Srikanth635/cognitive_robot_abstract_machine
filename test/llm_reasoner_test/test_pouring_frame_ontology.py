@@ -12,7 +12,7 @@ from types import ModuleType
 import pytest
 from rdflib import OWL, RDF, Graph, Namespace, URIRef
 
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     ActionCoreAnnotation,
     ActionPerspectiveFile,
@@ -21,7 +21,7 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     pouring_frame,
 )
-from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
+from llm_reasoner.knowledge.vocabulary.translation.writing import VocabularyWriter
 
 from .test_action_core_ontology import (
     AICOR,

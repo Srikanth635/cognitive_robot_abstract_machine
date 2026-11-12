@@ -1,0 +1,340 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/action-examples.owl#> .
+@prefix pr: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:destinationRole a pr:DestinationRole .
+
+ex:graspRecordV2 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:graspingV2 ;
+    ac:hasAnnotation ex:graspRecordV2Annotation ;
+    ac:hasClaim ex:graspRecordV2Claim0,
+        ex:graspRecordV2Claim1,
+        ex:graspRecordV2Claim2,
+        ex:graspRecordV2Claim3 ;
+    ac:previousVersion ex:graspRecordV1 ;
+    ac:recordVersion "2" .
+
+ex:graspedRole a pr:ThemeRole .
+
+ex:pourRecordV2 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:pouringV2 ;
+    ac:hasAnnotation ex:pourRecordV2Annotation ;
+    ac:hasClaim ex:pourRecordV2Claim0,
+        ex:pourRecordV2Claim1,
+        ex:pourRecordV2Claim2,
+        ex:pourRecordV2Claim3 ;
+    ac:previousVersion ex:pourRecordV1 ;
+    ac:recordVersion "2" .
+
+ex:sourceRole a pr:SourceRole .
+
+ex:substanceRole a pr:ThemeRole .
+
+ex:acceptableSpillageExpression a co:Negation ;
+    co:hasOperand ex:spillFailureExpression .
+
+ex:contactPost a co:AtomicCondition ;
+    co:hasPattern ex:graspContactPattern ;
+    co:inScope co:PostState .
+
+ex:controlledHoldPatternBinding1 a pr:ArgumentBinding ;
+    pr:bindsArgument pr:ControlsArgument1 ;
+    pr:bindsEntity ex:gripperSpecification .
+
+ex:controlledHoldPatternBinding2 a pr:ArgumentBinding ;
+    pr:bindsArgument pr:ControlsArgument2 ;
+    pr:bindsEntity ex:graspableObject .
+
+ex:deliveredAmountPost a co:ParameterReference ;
+    co:inScope co:PostState ;
+    co:parameter ex:deliveredAmount .
+
+ex:destinationAccessiblePatternBinding1 a pr:ArgumentBinding ;
+    pr:bindsArgument pr:AccessibleArgument1 ;
+    pr:bindsEntity ex:receivingContainer .
+
+ex:destinationPreAtom a co:AtomicCondition ;
+    co:hasPattern ex:destinationAccessiblePattern ;
+    co:inScope co:PreState .
+
+ex:effectorRole a pr:InstrumentRole ;
+    rdfs:label "Grasping effector role"@en .
+
+ex:effectorRoleSpec a ac:RoleSpecification ;
+    ac:hasEntitySpecification ex:gripperSpecification ;
+    ac:specifiesRole ex:effectorRole .
+
+ex:graspContactPatternBinding1 a pr:ArgumentBinding ;
+    pr:bindsArgument pr:InContactWithArgument1 ;
+    pr:bindsEntity ex:gripperSpecification .
+
+ex:graspContactPatternBinding2 a pr:ArgumentBinding ;
+    pr:bindsArgument pr:InContactWithArgument2 ;
+    pr:bindsEntity ex:graspableObject .
+
+ex:graspOutcome a co:OutcomeSpecification ;
+    co:afterCondition ex:graspControlledGoal ;
+    co:beforeCondition ex:graspPrecondition .
+
+ex:graspRecordV2Annotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:graspingV2 ;
+    ac:contributesClaim ex:graspRecordV2Claim0,
+        ex:graspRecordV2Claim1,
+        ex:graspRecordV2Claim2,
+        ex:graspRecordV2Claim3 ;
+    ac:producerIdentifier "curated-aspect-schema-example" .
+
+ex:graspRecordV2Claim0Statement a ac:Statement ;
+    ac:statementObject ex:graspablePre ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:graspPrecondition .
+
+ex:graspRecordV2Claim1Statement a ac:Statement ;
+    ac:statementObject ex:graspSuccessExpression ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:graspControlledGoal .
+
+ex:graspRecordV2Claim2Statement a ac:Statement ;
+    ac:statementObject ex:graspSuccessExpression ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:graspControlledSuccess .
+
+ex:graspRecordV2Claim3Statement a ac:Statement ;
+    ac:statementObject ex:lostControlExpression ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:graspControlFailure .
+
+ex:graspablePatternBinding1 a pr:ArgumentBinding ;
+    pr:bindsArgument pr:GraspableArgument1 ;
+    pr:bindsEntity ex:graspableObject .
+
+ex:pourOutcome a co:OutcomeSpecification ;
+    co:afterCondition ex:pourAmountGoal ;
+    co:beforeCondition ex:pourPrecondition .
+
+ex:pourRecordV2Annotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:pouringV2 ;
+    ac:contributesClaim ex:pourRecordV2Claim0,
+        ex:pourRecordV2Claim1,
+        ex:pourRecordV2Claim2,
+        ex:pourRecordV2Claim3 ;
+    ac:producerIdentifier "curated-aspect-schema-example" .
+
+ex:pourRecordV2Claim0Statement a ac:Statement ;
+    ac:statementObject ex:pourPreExpression ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:pourPrecondition .
+
+ex:pourRecordV2Claim1Statement a ac:Statement ;
+    ac:statementObject ex:pourAmountExpression ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:pourAmountGoal .
+
+ex:pourRecordV2Claim2Statement a ac:Statement ;
+    ac:statementObject ex:pourSuccessExpression ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:pourAmountSuccess .
+
+ex:pourRecordV2Claim3Statement a ac:Statement ;
+    ac:statementObject ex:spillFailureExpression ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:pourSpillFailure .
+
+ex:sourceContainmentPatternBinding1 a pr:ArgumentBinding ;
+    pr:bindsArgument pr:ContainedInArgument1 ;
+    pr:bindsEntity ex:transferableSubstance .
+
+ex:sourceContainmentPatternBinding2 a pr:ArgumentBinding ;
+    pr:bindsArgument pr:ContainedInArgument2 ;
+    pr:bindsEntity ex:sourceContainer .
+
+ex:sourcePreAtom a co:AtomicCondition ;
+    co:hasPattern ex:sourceContainmentPattern ;
+    co:inScope co:PreState .
+
+ex:spillPost a co:ParameterReference ;
+    co:inScope co:PostState ;
+    co:parameter ex:spillAmount .
+
+ex:targetAmountContext a co:ParameterReference ;
+    co:inScope co:TaskContext ;
+    co:parameter ex:targetAmount .
+
+ex:toleranceContext a co:ParameterReference ;
+    co:inScope co:TaskContext ;
+    co:parameter ex:spillTolerance .
+
+ex:controlPost a co:AtomicCondition ;
+    co:hasPattern ex:controlledHoldPattern ;
+    co:inScope co:PostState .
+
+ex:controlledHoldPattern a pr:RelationPattern ;
+    pr:hasArgumentBinding ex:controlledHoldPatternBinding1,
+        ex:controlledHoldPatternBinding2 ;
+    pr:usesRelation pr:Controls .
+
+ex:deliveredAmount a ac:ParameterSpecification ;
+    rdfs:label "Amount delivered to destination"@en ;
+    ac:parameterKey "delivered-amount" .
+
+ex:destinationAccessiblePattern a pr:RelationPattern ;
+    pr:hasArgumentBinding ex:destinationAccessiblePatternBinding1 ;
+    pr:usesRelation pr:Accessible .
+
+ex:graspContactPattern a pr:RelationPattern ;
+    pr:hasArgumentBinding ex:graspContactPatternBinding1,
+        ex:graspContactPatternBinding2 ;
+    pr:usesRelation pr:InContactWith .
+
+ex:graspRecordV2Claim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspPrecondition ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspRecordV2Claim0Statement ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspRecordV2Claim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspControlledGoal ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspRecordV2Claim1Statement ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspRecordV2Claim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspControlledSuccess ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspRecordV2Claim2Statement ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspRecordV2Claim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspControlFailure ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspRecordV2Claim3Statement ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspablePattern a pr:RelationPattern ;
+    pr:hasArgumentBinding ex:graspablePatternBinding1 ;
+    pr:usesRelation pr:Graspable .
+
+ex:graspablePre a co:AtomicCondition ;
+    co:hasPattern ex:graspablePattern ;
+    co:inScope co:PreState .
+
+ex:graspingV2 a ac:ActionDescription ;
+    ac:hasActionKind ex:Grasping ;
+    ac:hasFailureCriterion ex:graspControlFailure ;
+    ac:hasGoal ex:graspControlledGoal ;
+    ac:hasPrecondition ex:graspPrecondition ;
+    ac:hasRoleSpecification ex:effectorRoleSpec,
+        ex:graspedRoleSpec ;
+    ac:hasSuccessCriterion ex:graspControlledSuccess ;
+    co:hasOutcome ex:graspOutcome ;
+    pr:hasRelationPattern ex:controlledHoldPattern,
+        ex:graspContactPattern,
+        ex:graspablePattern .
+
+ex:lostControlExpression a co:Negation ;
+    co:hasOperand ex:controlPost .
+
+ex:pourPreExpression a co:Conjunction ;
+    co:hasOperand ex:destinationPreAtom,
+        ex:sourcePreAtom .
+
+ex:pourRecordV2Claim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourPrecondition ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourRecordV2Claim0Statement ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourRecordV2Claim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourAmountGoal ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourRecordV2Claim1Statement ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourRecordV2Claim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourAmountSuccess ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourRecordV2Claim2Statement ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourRecordV2Claim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourSpillFailure ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourRecordV2Claim3Statement ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourSuccessExpression a co:Conjunction ;
+    co:hasOperand ex:acceptableSpillageExpression,
+        ex:pourAmountExpression .
+
+ex:pouringV2 a ac:ActionDescription ;
+    ac:hasActionKind ex:Pouring ;
+    ac:hasFailureCriterion ex:pourSpillFailure ;
+    ac:hasGoal ex:pourAmountGoal ;
+    ac:hasParameter ex:deliveredAmount,
+        ex:spillAmount,
+        ex:spillTolerance,
+        ex:targetAmount ;
+    ac:hasPrecondition ex:pourPrecondition ;
+    ac:hasRoleSpecification ex:destinationRoleSpec,
+        ex:sourceRoleSpec,
+        ex:substanceRoleSpec ;
+    ac:hasSuccessCriterion ex:pourAmountSuccess ;
+    co:hasOutcome ex:pourOutcome ;
+    pr:hasRelationPattern ex:destinationAccessiblePattern,
+        ex:sourceContainmentPattern .
+
+ex:sourceContainmentPattern a pr:RelationPattern ;
+    pr:hasArgumentBinding ex:sourceContainmentPatternBinding1,
+        ex:sourceContainmentPatternBinding2 ;
+    pr:usesRelation pr:ContainedIn .
+
+ex:spillAmount a ac:ParameterSpecification ;
+    ac:parameterKey "spill-amount" .
+
+ex:spillTolerance a ac:ParameterSpecification ;
+    ac:parameterKey "spill-tolerance" .
+
+ex:graspControlFailure a ac:FailureCriterion ;
+    co:hasExpression ex:lostControlExpression .
+
+ex:graspControlledSuccess a ac:SuccessCriterion ;
+    co:hasExpression ex:graspSuccessExpression .
+
+ex:gripperSpecification a ac:EntitySpecification ;
+    rdfs:label "Unbound grasping effector specification"@en .
+
+ex:pourAmountExpression a co:Comparison ;
+    co:leftOperand ex:deliveredAmountPost ;
+    co:operator co:GreaterOrEqual ;
+    co:rightOperand ex:targetAmountContext .
+
+ex:pourAmountSuccess a ac:SuccessCriterion ;
+    co:hasExpression ex:pourSuccessExpression .
+
+ex:pourSpillFailure a ac:FailureCriterion ;
+    co:hasExpression ex:spillFailureExpression .
+
+ex:spillFailureExpression a co:Comparison ;
+    co:leftOperand ex:spillPost ;
+    co:operator co:GreaterThan ;
+    co:rightOperand ex:toleranceContext .
+
+ex:graspControlledGoal a ac:GoalSpecification ;
+    co:hasExpression ex:graspSuccessExpression .
+
+ex:graspPrecondition a ac:PreconditionSpecification ;
+    co:hasExpression ex:graspablePre .
+
+ex:graspSuccessExpression a co:Conjunction ;
+    co:hasOperand ex:contactPost,
+        ex:controlPost .
+
+ex:pourAmountGoal a ac:GoalSpecification ;
+    co:hasExpression ex:pourAmountExpression .
+
+ex:pourPrecondition a ac:PreconditionSpecification ;
+    co:hasExpression ex:pourPreExpression .
+

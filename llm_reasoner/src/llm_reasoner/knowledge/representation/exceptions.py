@@ -43,8 +43,8 @@ class ConceptWrittenAsIndividual(LLMReasonerError, DataclassException):
 
     def suggest_correction(self) -> str:
         return (
-            "migrate the record with python -m llm_reasoner.knowledge.storage.migrate, "
-            "which writes the concept as an anonymous instance of its class"
+            "generate the hypothesis again, which writes the concept as an anonymous "
+            "instance of its class"
         )
 
 

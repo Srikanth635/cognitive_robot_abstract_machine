@@ -1,0 +1,71 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix asp: <http://aicor.knowledge/ontologies/model-contracts.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/model-contracts.owl> a owl:Ontology ;
+    rdfs:label "Model Contracts"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/dynamics-control.owl> ;
+    owl:versionInfo "0.12.0" .
+
+asp:coefficient a owl:DatatypeProperty ;
+    rdfs:label "Coefficient"@en ;
+    rdfs:domain asp:EquationTerm ;
+    rdfs:range xsd:decimal .
+
+asp:dimensionVector a owl:DatatypeProperty ;
+    rdfs:label "Dimension vector"@en ;
+    rdfs:domain asp:QuantityContract ;
+    rdfs:range xsd:string .
+
+asp:equation a owl:ObjectProperty ;
+    rdfs:label "Equation"@en ;
+    rdfs:domain asp:AdditiveEquationContract ;
+    rdfs:range <http://aicor.knowledge/ontologies/physical-models.owl#ModelEquation> .
+
+asp:hasTerm a owl:ObjectProperty ;
+    rdfs:label "Has term"@en ;
+    rdfs:domain asp:AdditiveEquationContract ;
+    rdfs:range asp:EquationTerm .
+
+asp:parameter a owl:ObjectProperty ;
+    rdfs:label "Parameter"@en ;
+    rdfs:domain asp:QuantityContract ;
+    rdfs:range ac:ParameterSpecification .
+
+asp:resultParameter a owl:ObjectProperty ;
+    rdfs:label "Result parameter"@en ;
+    rdfs:domain asp:AdditiveEquationContract ;
+    rdfs:range ac:ParameterSpecification .
+
+asp:scope a owl:ObjectProperty ;
+    rdfs:label "Scope"@en ;
+    rdfs:domain asp:AdditiveEquationContract ;
+    rdfs:range ac:ApplicabilitySpecification .
+
+asp:termParameter a owl:ObjectProperty ;
+    rdfs:label "Term parameter"@en ;
+    rdfs:domain asp:EquationTerm ;
+    rdfs:range ac:ParameterSpecification .
+
+asp:unitIRI a owl:DatatypeProperty ;
+    rdfs:label "Unit i r i"@en ;
+    rdfs:domain asp:QuantityContract ;
+    rdfs:range xsd:anyURI .
+
+asp:EquationTerm a owl:Class ;
+    rdfs:label "Equation Term"@en ;
+    rdfs:comment "One signed scalar term in a bounded additive equation."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:QuantityContract a owl:Class ;
+    rdfs:label "Quantity Contract"@en ;
+    rdfs:comment "Explicit dimension vector and exact unit identifier for a scalar parameter. SI basis order: length,mass,time,current,temperature,amount,luminous intensity."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:AdditiveEquationContract a owl:Class ;
+    rdfs:label "Additive Equation Contract"@en ;
+    rdfs:comment "A bounded scalar additive equation: result equals signed sum of terms. No general equation parser or physical validity inference."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+

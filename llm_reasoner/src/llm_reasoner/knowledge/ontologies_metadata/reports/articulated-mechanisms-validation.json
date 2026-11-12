@@ -1,0 +1,762 @@
+{
+  "release": "0.18.0",
+  "checks": [
+    {
+      "case": "eight-profile-shapes",
+      "passed": true
+    },
+    {
+      "case": "relation-expression-integrity",
+      "passed": true
+    },
+    {
+      "case": "phase-monitor-integrity",
+      "passed": true
+    },
+    {
+      "case": "mechanism-profile-integrity",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:unknown-without-input",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:supplied-success",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:post-success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:never-executes-or-accepts",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:missing-metric-unknown",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:excess-error-fails",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:nonfinite-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:wrong-input-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:concurrent-success-and-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:unknown-monitor-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:unknown-without-input",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:supplied-success",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:post-success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:never-executes-or-accepts",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:missing-metric-unknown",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:excess-error-fails",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:nonfinite-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:wrong-input-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:concurrent-success-and-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:unknown-monitor-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:unknown-without-input",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:supplied-success",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:post-success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:never-executes-or-accepts",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:missing-required-atom-unknown",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:false-required-atom-fails",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:excess-error-fails",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:nonfinite-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:wrong-input-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:concurrent-success-and-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:unknown-monitor-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:unknown-without-input",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:supplied-success",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:post-success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:never-executes-or-accepts",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:missing-required-atom-unknown",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:false-required-atom-fails",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:excess-error-fails",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:nonfinite-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:wrong-input-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:concurrent-success-and-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:unknown-monitor-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:unknown-without-input",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:supplied-success",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:post-success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:never-executes-or-accepts",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:missing-required-atom-unknown",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:false-required-atom-fails",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:excess-error-fails",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:nonfinite-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:wrong-input-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:concurrent-success-and-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:unknown-monitor-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:unknown-without-input",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:supplied-success",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:post-success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:never-executes-or-accepts",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:missing-required-atom-unknown",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:false-required-atom-fails",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:excess-error-fails",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:nonfinite-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:wrong-input-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:concurrent-success-and-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:unknown-monitor-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:unknown-without-input",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:supplied-success",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:post-success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:never-executes-or-accepts",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:missing-required-atom-unknown",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:false-required-atom-fails",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:concurrent-success-and-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:unknown-monitor-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:unknown-without-input",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:supplied-success",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:post-success-not-precondition",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:never-executes-or-accepts",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:missing-required-atom-unknown",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:false-required-atom-fails",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:explicit-preconditions-satisfy",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:concurrent-success-and-fault-exposed",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:unknown-monitor-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:closure-does-not-require-or-infer-latching",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:latch-presence-not-automatic-release-precondition",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:declared-nonblocking-latch-policy",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:closure-does-not-require-or-infer-latching",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:latch-presence-not-automatic-release-precondition",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:declared-nonblocking-latch-policy",
+      "passed": true
+    },
+    {
+      "case": "latch-release-does-not-establish-opening",
+      "passed": true
+    },
+    {
+      "case": "securing-without-closure-remains-unknown",
+      "passed": true
+    },
+    {
+      "case": "another-part-open-does-not-prove-target-open",
+      "passed": true
+    },
+    {
+      "case": "incompatible-open-closed-reports-exposed",
+      "passed": true
+    },
+    {
+      "case": "incompatible-latch-reports-exposed",
+      "passed": true
+    },
+    {
+      "case": "unknown-engagement-does-not-select-transition",
+      "passed": true
+    },
+    {
+      "case": "secured-is-not-released",
+      "passed": true
+    },
+    {
+      "case": "prestate-release-is-not-current-release",
+      "passed": true
+    },
+    {
+      "case": "engagement-and-fault-ambiguity-not-arbitrated",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-action-kind",
+      "passed": true
+    },
+    {
+      "case": "reject-collapsed-fixed-moving",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-handle",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-latch",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-axis-frame",
+      "passed": true
+    },
+    {
+      "case": "reject-unsupported-joint-kind",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-coordinate-kind",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-unit",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-metric-coordinate",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-metric-target",
+      "passed": true
+    },
+    {
+      "case": "reject-aliased-error-tolerance",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-opening-target",
+      "passed": true
+    },
+    {
+      "case": "reject-bad-opening-direction",
+      "passed": true
+    },
+    {
+      "case": "reject-ambiguous-latch-policy",
+      "passed": true
+    },
+    {
+      "case": "reject-release-required-closing-without-release-guard",
+      "passed": true
+    },
+    {
+      "case": "reject-negative-tolerance",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-success-condition",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-precondition-scope",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-completion-scope",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-guard",
+      "passed": true
+    },
+    {
+      "case": "reject-skip-verification",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-final-criterion",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-phase",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-move-guard",
+      "passed": true
+    },
+    {
+      "case": "negative-opening-coordinate-supported",
+      "passed": true
+    },
+    {
+      "case": "positive-opening-coordinate-supported",
+      "passed": true
+    },
+    {
+      "case": "reject-out-of-range-open",
+      "passed": true
+    },
+    {
+      "case": "reject-reversed-limits",
+      "passed": true
+    },
+    {
+      "case": "reject-degenerate-limits",
+      "passed": true
+    },
+    {
+      "case": "reject-reversed-opening-convention",
+      "passed": true
+    },
+    {
+      "case": "reject-zero-axis",
+      "passed": true
+    },
+    {
+      "case": "reject-nonnormal-axis",
+      "passed": true
+    },
+    {
+      "case": "reject-out-of-range-request",
+      "passed": true
+    },
+    {
+      "case": "reject-mixed-opening-closing-profile",
+      "passed": true
+    },
+    {
+      "case": "materialized-inheritance-is-accepted",
+      "passed": true
+    },
+    {
+      "case": "reject-required-but-unidentified-latch",
+      "passed": true
+    },
+    {
+      "case": "reject-unmonitored-actuation",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-fault-exit",
+      "passed": true
+    },
+    {
+      "case": "optional-engagement-reference-binding",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-engagement-handle",
+      "passed": true
+    },
+    {
+      "case": "shape-reject-missing-axis",
+      "passed": true
+    },
+    {
+      "case": "shape-reject-missing-context",
+      "passed": true
+    },
+    {
+      "case": "shape-reject-missing-actuation-phase",
+      "passed": true
+    },
+    {
+      "case": "revoluteConfiguration:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "prismaticConfiguration:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "revoluteOpening:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "prismaticOpening:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "revoluteClosing:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "prismaticClosing:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "releaseLatch:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "secureLatch:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "no-unrecorded-orphan-description-nodes",
+      "passed": true
+    },
+    {
+      "case": "all-claims-proposed",
+      "passed": true
+    },
+    {
+      "case": "no-numeric-physical-defaults",
+      "passed": true
+    },
+    {
+      "case": "no-world-bindings",
+      "passed": true
+    },
+    {
+      "case": "no-framework-tool-or-transfer-import",
+      "passed": true
+    }
+  ],
+  "imports": [
+    "http://aicor.knowledge/ontologies/action-description-core.owl",
+    "http://aicor.knowledge/ontologies/articulated-mechanisms.owl",
+    "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+    "http://aicor.knowledge/ontologies/dynamics-control.owl",
+    "http://aicor.knowledge/ontologies/knowledge-context.owl",
+    "http://aicor.knowledge/ontologies/model-contracts.owl",
+    "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+    "http://aicor.knowledge/ontologies/object-manipulation.owl",
+    "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+    "http://aicor.knowledge/ontologies/participants-relations.owl",
+    "http://aicor.knowledge/ontologies/phases-transitions.owl",
+    "http://aicor.knowledge/ontologies/physical-models.owl",
+    "http://aicor.knowledge/ontologies/robot-motion.owl",
+    "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+  ],
+  "scope": "Eight synthetic mechanism profiles; supplied-state tests do not establish physical validity or execution readiness."
+}

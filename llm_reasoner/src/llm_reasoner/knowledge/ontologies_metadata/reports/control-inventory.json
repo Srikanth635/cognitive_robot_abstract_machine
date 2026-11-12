@@ -1,0 +1,15 @@
+{
+  "prior_turtle_files_unchanged": 23,
+  "objectives-tradeoffs": {
+    "Class": 5,
+    "ObjectProperty": 9,
+    "DatatypeProperty": 1,
+    "NamedIndividual": 5
+  },
+  "dynamics-control": {
+    "Class": 6,
+    "ObjectProperty": 16,
+    "DatatypeProperty": 2,
+    "NamedIndividual": 6
+  }
+}

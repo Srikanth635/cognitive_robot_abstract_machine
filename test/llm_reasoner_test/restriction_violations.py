@@ -5,7 +5,7 @@ The restrictions of their classes that fragments under test violate.
 from __future__ import annotations
 
 from llm_reasoner.knowledge.acceptance.derived import RestrictionsHold
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.vocabulary.terms import (
     DescriptionEntity,
     PropertyRestriction,
     PropertyTerm,

@@ -1,0 +1,142 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/knowledge-context.owl> a owl:Ontology ;
+    rdfs:label "Knowledge provenance and context"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.11.0" .
+
+kc:assessedAt a owl:DatatypeProperty ;
+    rdfs:label "Assessed At"@en ;
+    rdfs:domain kc:ClaimAssessment ;
+    rdfs:range xsd:dateTime .
+
+kc:assessedStatus a owl:ObjectProperty ;
+    rdfs:label "Assessed Status"@en ;
+    rdfs:domain kc:ClaimAssessment ;
+    rdfs:range ac:EpistemicStatus .
+
+kc:assessesClaim a owl:ObjectProperty ;
+    rdfs:label "Assesses Claim"@en ;
+    rdfs:domain kc:ClaimAssessment ;
+    rdfs:range ac:KnowledgeClaim .
+
+kc:contextKey a owl:DatatypeProperty ;
+    rdfs:label "Context Key"@en ;
+    rdfs:domain kc:KnowledgeContext ;
+    rdfs:range xsd:string .
+
+kc:exactExcerpt a owl:DatatypeProperty ;
+    rdfs:label "Exact Excerpt"@en ;
+    rdfs:domain kc:SourceSnapshot ;
+    rdfs:range xsd:string .
+
+kc:externalContextIRI a owl:DatatypeProperty ;
+    rdfs:label "External Context I R I"@en ;
+    rdfs:domain kc:KnowledgeContext ;
+    rdfs:range xsd:anyURI .
+
+kc:inContext a owl:ObjectProperty ;
+    rdfs:label "In Context"@en ;
+    rdfs:domain kc:ClaimAssessment ;
+    rdfs:range kc:KnowledgeContext .
+
+kc:inRecord a owl:ObjectProperty ;
+    rdfs:label "In Record"@en ;
+    rdfs:domain kc:ClaimAssessment ;
+    rdfs:range ac:KnowledgeRecord .
+
+kc:observedAt a owl:DatatypeProperty ;
+    rdfs:label "Observed At"@en ;
+    rdfs:domain kc:ObservationEvidence ;
+    rdfs:range xsd:dateTime .
+
+kc:revisesAssessment a owl:ObjectProperty ;
+    rdfs:label "Revises Assessment"@en ;
+    rdfs:domain kc:ClaimAssessment ;
+    rdfs:range kc:ClaimAssessment .
+
+kc:scopedDescription a owl:ObjectProperty ;
+    rdfs:label "Scoped Description"@en ;
+    rdfs:domain kc:KnowledgeContext ;
+    rdfs:range ac:ActionDescription .
+
+kc:selector a owl:DatatypeProperty ;
+    rdfs:label "Selector"@en ;
+    rdfs:domain kc:SourceSnapshot ;
+    rdfs:range xsd:string .
+
+kc:serializationProfile a owl:DatatypeProperty ;
+    rdfs:label "Serialization Profile"@en ;
+    rdfs:domain kc:RecordSnapshot ;
+    rdfs:range xsd:string .
+
+kc:sha256 a owl:DatatypeProperty ;
+    rdfs:label "Sha256"@en ;
+    rdfs:domain dul:InformationObject ;
+    rdfs:range xsd:string .
+
+kc:snapshotOf a owl:ObjectProperty ;
+    rdfs:label "Snapshot Of"@en ;
+    rdfs:domain kc:RecordSnapshot ;
+    rdfs:range ac:KnowledgeRecord .
+
+kc:sourceIRI a owl:DatatypeProperty ;
+    rdfs:label "Source I R I"@en ;
+    rdfs:domain kc:SourceSnapshot ;
+    rdfs:range xsd:anyURI .
+
+kc:sourceSnapshot a owl:ObjectProperty ;
+    rdfs:label "Source Snapshot"@en ;
+    rdfs:domain ac:EvidenceRecord ;
+    rdfs:range kc:SourceSnapshot .
+
+kc:sourceVersion a owl:DatatypeProperty ;
+    rdfs:label "Source Version"@en ;
+    rdfs:domain kc:SourceSnapshot ;
+    rdfs:range xsd:string .
+
+kc:usesEvidence a owl:ObjectProperty ;
+    rdfs:label "Uses Evidence"@en ;
+    rdfs:domain kc:ClaimAssessment ;
+    rdfs:range ac:EvidenceRecord .
+
+kc:validFrom a owl:DatatypeProperty ;
+    rdfs:label "Valid From"@en ;
+    rdfs:domain kc:ClaimAssessment ;
+    rdfs:range xsd:dateTime .
+
+kc:validUntil a owl:DatatypeProperty ;
+    rdfs:label "Valid Until"@en ;
+    rdfs:domain kc:ClaimAssessment ;
+    rdfs:range xsd:dateTime .
+
+kc:ObservationEvidence a owl:Class ;
+    rdfs:label "Observation Evidence"@en ;
+    rdfs:comment "Externally supplied observation evidence with a timestamp, not an occurring event."@en ;
+    rdfs:subClassOf ac:EvidenceRecord .
+
+kc:RecordSnapshot a owl:Class ;
+    rdfs:label "Record Snapshot"@en ;
+    rdfs:comment "Digest of exact record dataset bytes under a named serialization profile; storage enforcement is external."@en ;
+    rdfs:subClassOf dul:InformationObject .
+
+kc:KnowledgeContext a owl:Class ;
+    rdfs:label "Knowledge Context"@en ;
+    rdfs:comment "An explicit evaluation scope. Distinct contexts do not share truth or values automatically."@en ;
+    rdfs:subClassOf dul:Description .
+
+kc:SourceSnapshot a owl:Class ;
+    rdfs:label "Source Snapshot"@en ;
+    rdfs:comment "Versioned source content locator and optional exact supporting excerpt."@en ;
+    rdfs:subClassOf dul:InformationObject .
+
+kc:ClaimAssessment a owl:Class ;
+    rdfs:label "Claim Assessment"@en ;
+    rdfs:comment "Immutable-by-contract assessment of one claim in one record and context; does not replace the original claim status."@en ;
+    rdfs:subClassOf dul:InformationObject .
+

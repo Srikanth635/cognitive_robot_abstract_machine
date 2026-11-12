@@ -12,7 +12,7 @@ from operator import attrgetter
 from typing_extensions import Any, Optional
 
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite, Severity, Violation
-from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
+from llm_reasoner.knowledge.acceptance.suite import ontology_rules_suite
 from llm_reasoner.knowledge.admission.consistency import (
     ConsistencyCheck,
     ContradictionLocaliser,
@@ -67,7 +67,7 @@ class HypothesisAssessor:
     given, the ontology in the open world.
     """
 
-    suite: AcceptanceSuite = field(default_factory=predictive_manipulation_suite)
+    suite: AcceptanceSuite = field(default_factory=ontology_rules_suite)
     """
     The acceptance rules an answer must pass.
     """
@@ -110,7 +110,7 @@ class HypothesisAssessor:
                         f"'{str(node).removeprefix(DRAFT_NAMESPACE)}'"
                         for node in conflict
                     )
-                    + " together contradict the ontology, CRAM-AICOR or DUL"
+                    + " together contradict the ontology or the ontologies it links to"
                 )
         if problems:
             return Assessment(problems=problems)

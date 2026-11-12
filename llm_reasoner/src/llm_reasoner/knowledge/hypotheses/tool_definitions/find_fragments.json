@@ -3,7 +3,7 @@
   "description": {
     "purpose": "Find the fragments of the knowledge that belong to a vocabulary class.",
     "returns": "The class asked about and its fragments, each with its name, its class and its label, in the order the knowledge holds them; fragments of more specific classes are included.",
-    "use_when": "Looking for knowledge of one sort, such as the failure events or the condition requirements, without going through the phases.",
+    "use_when": "Looking for knowledge of one sort, every fragment of one vocabulary class, without following links from fragment to fragment.",
     "avoid": "Guessing class names; take them from the classes other knowledge answers name."
   },
   "input_schema": {

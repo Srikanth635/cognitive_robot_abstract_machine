@@ -1,0 +1,46 @@
+[
+  {
+    "case": "valid-two-action-examples",
+    "passed": true
+  },
+  {
+    "case": "foreign-annotation-claim",
+    "passed": true
+  },
+  {
+    "case": "missing-status",
+    "passed": true
+  },
+  {
+    "case": "supported-without-evidence",
+    "passed": true
+  },
+  {
+    "case": "ambiguous-statement-object",
+    "passed": true
+  },
+  {
+    "case": "numeric-parameter-without-unit",
+    "passed": true
+  },
+  {
+    "case": "reversed-parameter-bounds",
+    "passed": true
+  },
+  {
+    "case": "unscoped-binding",
+    "passed": true
+  },
+  {
+    "case": "foreign-projection-claim",
+    "passed": true
+  },
+  {
+    "case": "proposal-not-materialized",
+    "passed": true
+  },
+  {
+    "case": "core-imports-only-DUL",
+    "passed": true
+  }
+]

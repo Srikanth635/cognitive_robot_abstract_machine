@@ -1,0 +1,212 @@
+[
+  {
+    "id": "LOCAL-CQ01",
+    "question": "Which action kind, participant roles and entity specifications are described?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq01.rq"
+  },
+  {
+    "id": "LOCAL-CQ02",
+    "question": "Which goals, preconditions, success and failure criteria have formal expressions?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Recipe lexical success contracts are structured contracts, not co:hasExpression ASTs; old query returns the condition with an unbound expression. Add typed contract dispatch, never arbitrary text evaluation.",
+    "evidence": "queries/competency/cq02.rq"
+  },
+  {
+    "id": "LOCAL-CQ03",
+    "question": "Which scoped facts or quantities does each action-level condition depend on?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Expand reviewed dependency routes to nested stages/contexts and lexical recipe contracts; historical query is action-level only.",
+    "evidence": "queries/competency/cq03.rq"
+  },
+  {
+    "id": "LOCAL-CQ04",
+    "question": "Which directly attached action parameters lack an explicit scalar value?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Nested domain/controller/recipe parameters are outside the historical direct-only inventory.",
+    "evidence": "queries/competency/cq04.rq"
+  },
+  {
+    "id": "LOCAL-CQ05",
+    "question": "Which guarded phase transitions belong to this description?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq05.rq"
+  },
+  {
+    "id": "LOCAL-CQ06",
+    "question": "What must be observed and what response is specified for unknown evidence?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq06.rq"
+  },
+  {
+    "id": "LOCAL-CQ07",
+    "question": "Which causal links, mechanisms and enabling conditions are proposed?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq07.rq"
+  },
+  {
+    "id": "LOCAL-CQ08",
+    "question": "Which equations, variables, parameters and validity scopes describe the physical models?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq08.rq"
+  },
+  {
+    "id": "LOCAL-CQ09",
+    "question": "Which model-validation evidence is explicitly included by a claim in this record?",
+    "status": "deferred-runtime-or-projection",
+    "current_assessment": "No model-validation result in synthetic examples; a planned study is not evidence.",
+    "evidence": "queries/competency/cq09.rq"
+  },
+  {
+    "id": "LOCAL-CQ10",
+    "question": "What objective policy, priorities and hard constraints are declared?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq10.rq"
+  },
+  {
+    "id": "LOCAL-CQ11",
+    "question": "Which control-model roles, dimensions and timing parameters are specified?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq11.rq"
+  },
+  {
+    "id": "LOCAL-CQ12",
+    "question": "Which capabilities are required across profiles, recovery, affordances and sensing?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "New current-action-capabilities query covers recursive action/profile routes; it intentionally does not replace other specialized requirement-owner routes.",
+    "evidence": "queries/competency/cq12.rq"
+  },
+  {
+    "id": "LOCAL-CQ13",
+    "question": "Which strategy steps and abstract process interfaces are declared?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq13.rq"
+  },
+  {
+    "id": "LOCAL-CQ14",
+    "question": "Which failures and candidate diagnostic causes are described?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq14.rq"
+  },
+  {
+    "id": "LOCAL-CQ15",
+    "question": "Which recovery options, guards, intended effects and retry budgets are described?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq15.rq"
+  },
+  {
+    "id": "LOCAL-CQ16",
+    "question": "Is a frame projection already derived from this exact record?",
+    "status": "deferred-runtime-or-projection",
+    "current_assessment": "Historical V6 projection artifacts are not projections of current snapshots. Working current projections remain deferred.",
+    "evidence": "queries/competency/cq16.rq"
+  },
+  {
+    "id": "LOCAL-CQ17",
+    "question": "What qualitative force roles, tendencies and relative strength are supplied?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq17.rq"
+  },
+  {
+    "id": "LOCAL-CQ18",
+    "question": "Which image-schema structures refer to the shared entity specifications?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq18.rq"
+  },
+  {
+    "id": "LOCAL-CQ19",
+    "question": "Which entity facets, material states and geometry descriptions belong to this action record?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq19.rq"
+  },
+  {
+    "id": "LOCAL-CQ20",
+    "question": "Under which conditions and capability requirements is an affordance described?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq20.rq"
+  },
+  {
+    "id": "LOCAL-CQ21",
+    "question": "How do sensorimotor boundaries connect phases, expected conditions and modalities?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq21.rq"
+  },
+  {
+    "id": "LOCAL-CQ22",
+    "question": "What status, exact statement and source accompany claims included in this record?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Proposed/Supported are workflow statuses, not Measured/Derived/Sourced evidence grades; sources and acceptance need separate contracts.",
+    "evidence": "queries/competency/cq22.rq"
+  },
+  {
+    "id": "LOCAL-CQ23",
+    "question": "Which direct description links lack exact statement-level provenance in this record?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Later authored snapshots add exact claim coverage; historical root-only audit remains limited and is not a storage freeze.",
+    "evidence": "queries/competency/cq23.rq"
+  },
+  {
+    "id": "LOCAL-CQ24",
+    "question": "Which entities and parameter objects are reused across goals, models and perspectives?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Declared structure is queryable for supplied fixtures; expand current-profile fixture cases and retain scope, record identity and unknown/evidence boundaries.",
+    "evidence": "queries/competency/cq24.rq"
+  },
+  {
+    "id": "LOCAL-CQ25",
+    "question": "Does the success condition hold given supplied facts and quantities?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Bounded True/False/Unknown only for supported expressions and supplied inputs. No acquired observations, physical solving or world acceptance.",
+    "evidence": "review/COMPETENCY_QUESTIONS.md"
+  },
+  {
+    "id": "LOCAL-CQ26",
+    "question": "Does pouring success establish transfer to the intended destination?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "V8 transfer contract addresses intended-destination containment/referents; V7 gap intentionally remains as a historical regression. Physical observation still required.",
+    "evidence": "review/COMPETENCY_QUESTIONS.md"
+  },
+  {
+    "id": "LOCAL-CQ27",
+    "question": "Which causal link supports a diagnostic explanation?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "V8 diagnostic-causal association addresses schema linkage; no experimentally established causal diagnosis follows.",
+    "evidence": "review/COMPETENCY_QUESTIONS.md"
+  },
+  {
+    "id": "LOCAL-CQ28",
+    "question": "Can concurrent occurrences, conflicting sources and stale observations be distinguished reliably?",
+    "status": "bounded-support-with-limitations",
+    "current_assessment": "Knowledge-context and scoped episode contracts improve separation. Enforced immutability, freshness, source conflicts and acceptance are still integration responsibilities.",
+    "evidence": "review/COMPETENCY_QUESTIONS.md"
+  },
+  {
+    "id": "LOCAL-CQ29",
+    "question": "What would changing physical parameters do, and which model is trustworthy?",
+    "status": "deferred-runtime-or-projection",
+    "current_assessment": "No validated counterfactual solver, model selection or physical-trust decision in this standalone package.",
+    "evidence": "review/COMPETENCY_QUESTIONS.md"
+  },
+  {
+    "id": "LOCAL-CQ30",
+    "question": "Can a specified robot safely execute this action in its current world?",
+    "status": "deferred-runtime-or-projection",
+    "current_assessment": "No established safe-world executability; requires injected bindings, provider matching, physical checks and accepted evidence.",
+    "evidence": "review/COMPETENCY_QUESTIONS.md"
+  }
+]

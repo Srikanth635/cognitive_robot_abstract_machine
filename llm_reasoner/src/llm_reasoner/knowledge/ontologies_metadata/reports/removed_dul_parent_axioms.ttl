@@ -1,0 +1,14 @@
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+aicor:ComputationalMedium rdfs:subClassOf dul:InformationObject .
+
+aicor:ComputationalProcess rdfs:subClassOf dul:Process .
+
+aicor:ExecutiveCapability rdfs:subClassOf dul:Quality .
+
+aicor:ReifiedTemporalEntity rdfs:subClassOf dul:InformationObject .
+
+aicor:TaskStatus rdfs:subClassOf dul:InformationObject .
+

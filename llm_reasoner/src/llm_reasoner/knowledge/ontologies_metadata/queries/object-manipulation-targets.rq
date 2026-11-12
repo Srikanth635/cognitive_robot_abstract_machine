@@ -1,0 +1,13 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX om: <http://aicor.knowledge/ontologies/object-manipulation.owl#>
+# Bind ?record explicitly. Results describe intended interactions, not physical facts.
+SELECT ?action ?kind ?manipulator ?object ?sourceSupport ?destinationSupport ?target ?motionKind ?context
+WHERE {
+ ?record ac:expressesDescription ?action .
+ ?action ac:hasActionKind ?kind; om:manipulator ?manipulator; om:object ?object; om:requiresMotion ?motion .
+ ?motion om:motionKind ?motionKind .
+ OPTIONAL {?action om:initialSupport ?sourceSupport}
+ OPTIONAL {?action om:destinationSupport ?destinationSupport}
+ OPTIONAL {?action om:targetRegion ?target}
+ OPTIONAL {?action om:evaluationContext ?context}
+}

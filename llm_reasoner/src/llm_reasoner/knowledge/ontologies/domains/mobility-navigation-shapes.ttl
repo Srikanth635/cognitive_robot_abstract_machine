@@ -1,0 +1,182 @@
+@prefix mn: <http://aicor.knowledge/ontologies/mobility-navigation.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+mn:CabinSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:class mn:TransitionFacilitySpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:partOfFacility ] ;
+    sh:targetClass mn:CabinSpecification .
+
+mn:ElevatorNavigationDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class mn:CabinSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:cabin ],
+        [ sh:class mn:DoorSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:destinationDoor ],
+        [ sh:class mn:DoorSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:sourceDoor ] ;
+    sh:targetClass mn:ElevatorNavigationDescription .
+
+mn:FacingDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:translationToleranceParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:translationDriftParameter ] ;
+    sh:targetClass mn:FacingDescription .
+
+mn:InterLevelNavigationDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class mn:LevelSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:destinationLevel ],
+        [ sh:class mn:TransitionFacilitySpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:transitionFacility ],
+        [ sh:class mn:LevelSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:sourceLevel ] ;
+    sh:targetClass mn:InterLevelNavigationDescription .
+
+mn:MobilityDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class mn:RegionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:targetRegion ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:clearanceParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:robot ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:evaluationContext ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#GoalSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PreconditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#FailureCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasFailureCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:headingToleranceParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:referenceFrame ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#SuccessCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:headingErrorParameter ],
+        [ sh:class mn:FootprintSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:footprint ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#CapabilityRequirement> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement> ] ;
+    sh:targetClass mn:MobilityDescription .
+
+mn:NavigationDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:positionToleranceParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:positionErrorParameter ] ;
+    sh:targetClass mn:NavigationDescription .
+
+mn:NavigationTargetShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#PoseTarget> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:poseSpecification ] ;
+    sh:targetObjectsOf mn:targetRegion .
+
+mn:RouteNavigationDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class mn:RouteSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:route ] ;
+    sh:targetClass mn:RouteNavigationDescription .
+
+mn:RouteSegmentShape a sh:NodeShape ;
+    sh:property [ sh:class mn:RegionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:toRegion ],
+        [ sh:datatype xsd:positiveInteger ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:positionIndex ],
+        [ sh:class mn:RegionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:fromRegion ] ;
+    sh:targetClass mn:RouteSegment .
+
+mn:RouteSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:class mn:RegionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:sourceRegion ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:routeFrame ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#SourceSnapshot> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:mapSnapshot ],
+        [ sh:class mn:RegionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path mn:destinationRegion ],
+        [ sh:class mn:RouteSegment ;
+            sh:minCount 1 ;
+            sh:path mn:hasSegment ] ;
+    sh:targetClass mn:RouteSpecification .
+
+
+# Primary-action consistency hardening 0.22.0
+@prefix om: <http://aicor.knowledge/ontologies/object-manipulation.owl#> .
+@prefix mn: <http://aicor.knowledge/ontologies/mobility-navigation.owl#> .
+@prefix mt: <http://aicor.knowledge/ontologies/material-transfer.owl#> .
+@prefix tc: <http://aicor.knowledge/ontologies/transfer-contracts.owl#> .
+@prefix kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#> .
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+
+mn:PrimaryMobilityConsistencyShape a sh:NodeShape ; sh:targetClass mn:MobilityDescription ;
+ sh:property [ sh:path mn:robot ; sh:disjoint mn:targetRegion ; sh:disjoint mn:footprint ],
+             [ sh:path mn:targetRegion ; sh:disjoint mn:footprint ] ;
+ sh:sparql [ sh:message "The navigation context must describe this action." ;
+ sh:select """SELECT $this WHERE { $this <http://aicor.knowledge/ontologies/mobility-navigation.owl#evaluationContext> ?context . FILTER NOT EXISTS { ?context <http://aicor.knowledge/ontologies/knowledge-context.owl#scopedDescription> $this } }""" ] .

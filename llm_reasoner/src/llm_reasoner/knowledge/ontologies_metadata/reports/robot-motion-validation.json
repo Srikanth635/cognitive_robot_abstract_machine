@@ -1,0 +1,250 @@
+{
+  "release": "0.13.0",
+  "checks": [
+    {
+      "case": "six-profile-shacl",
+      "passed": true
+    },
+    {
+      "case": "domain-integrity",
+      "passed": true
+    },
+    {
+      "case": "expression-integrity",
+      "passed": true
+    },
+    {
+      "case": "jointRepositioning:unknown-without-context",
+      "passed": true
+    },
+    {
+      "case": "jointRepositioning:no-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "jointRepositioning:supplied-metrics-satisfy",
+      "passed": true
+    },
+    {
+      "case": "jointRepositioning:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "jointRepositioning:reject-negative-error",
+      "passed": true
+    },
+    {
+      "case": "stowing:unknown-without-context",
+      "passed": true
+    },
+    {
+      "case": "stowing:no-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "stowing:supplied-metrics-satisfy",
+      "passed": true
+    },
+    {
+      "case": "stowing:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "stowing:reject-negative-error",
+      "passed": true
+    },
+    {
+      "case": "gripperConfigurationChange:unknown-without-context",
+      "passed": true
+    },
+    {
+      "case": "gripperConfigurationChange:no-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "gripperConfigurationChange:supplied-metrics-satisfy",
+      "passed": true
+    },
+    {
+      "case": "gripperConfigurationChange:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "gripperConfigurationChange:reject-negative-error",
+      "passed": true
+    },
+    {
+      "case": "gripperApertureChange:unknown-without-context",
+      "passed": true
+    },
+    {
+      "case": "gripperApertureChange:no-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "gripperApertureChange:supplied-metrics-satisfy",
+      "passed": true
+    },
+    {
+      "case": "gripperApertureChange:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "gripperApertureChange:reject-negative-error",
+      "passed": true
+    },
+    {
+      "case": "cartesianPositioning:unknown-without-context",
+      "passed": true
+    },
+    {
+      "case": "cartesianPositioning:no-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "cartesianPositioning:supplied-metrics-satisfy",
+      "passed": true
+    },
+    {
+      "case": "cartesianPositioning:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "cartesianPositioning:reject-negative-error",
+      "passed": true
+    },
+    {
+      "case": "posePathFollowing:unknown-without-context",
+      "passed": true
+    },
+    {
+      "case": "posePathFollowing:no-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "endpoint-alone-not-path-success",
+      "passed": true
+    },
+    {
+      "case": "bad-path-tracking-fails-despite-endpoint",
+      "passed": true
+    },
+    {
+      "case": "posePathFollowing:supplied-metrics-satisfy",
+      "passed": true
+    },
+    {
+      "case": "posePathFollowing:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "posePathFollowing:reject-negative-error",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-controlled-part",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-coordinate-target",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-frame",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-position-axis",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-waypoint-pose",
+      "passed": true
+    },
+    {
+      "case": "reject-duplicate-waypoint-index",
+      "passed": true
+    },
+    {
+      "case": "reject-mixed-frames",
+      "passed": true
+    },
+    {
+      "case": "reject-mismatched-coordinate-units",
+      "passed": true
+    },
+    {
+      "case": "reject-unknown-coordinate-kind",
+      "passed": true
+    },
+    {
+      "case": "reject-negative-speed-limit",
+      "passed": true
+    },
+    {
+      "case": "angular-unit-cannot-be-linear-coordinate",
+      "passed": true
+    },
+    {
+      "case": "path-cannot-drop-tracking-metric",
+      "passed": true
+    },
+    {
+      "case": "bound-path-metric-must-match-expression",
+      "passed": true
+    },
+    {
+      "case": "orientation-cannot-silently-use-position-only-success",
+      "passed": true
+    },
+    {
+      "case": "no-world-or-cram-dependency",
+      "passed": true
+    },
+    {
+      "case": "no-world-bindings",
+      "passed": true
+    },
+    {
+      "case": "all-example-claims-proposed",
+      "passed": true
+    },
+    {
+      "case": "jointRepositioning:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "stowing:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "gripperConfigurationChange:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "gripperApertureChange:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "cartesianPositioning:exact-statement-coverage",
+      "passed": true
+    },
+    {
+      "case": "posePathFollowing:exact-statement-coverage",
+      "passed": true
+    }
+  ],
+  "imports": [
+    "http://aicor.knowledge/ontologies/action-description-core.owl",
+    "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+    "http://aicor.knowledge/ontologies/dynamics-control.owl",
+    "http://aicor.knowledge/ontologies/model-contracts.owl",
+    "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+    "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+    "http://aicor.knowledge/ontologies/participants-relations.owl",
+    "http://aicor.knowledge/ontologies/physical-models.owl",
+    "http://aicor.knowledge/ontologies/robot-motion.owl",
+    "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+  ],
+  "scope": "Six synthetic descriptive profiles; supplied error metrics only, no FK/IK or motion execution."
+}

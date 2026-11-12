@@ -1,0 +1,602 @@
+{
+  "release": "0.20.0",
+  "checks": [
+    {
+      "case": "eight-fixture-shapes",
+      "passed": true
+    },
+    {
+      "case": "specialized-tool-integrity",
+      "passed": true
+    },
+    {
+      "case": "recipe-integrity",
+      "passed": true
+    },
+    {
+      "case": "expression-signatures",
+      "passed": true
+    },
+    {
+      "case": "nested-phase-monitor-integrity",
+      "passed": true
+    },
+    {
+      "case": "cutting:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "cutting:specific-outcome-satisfies",
+      "passed": true
+    },
+    {
+      "case": "cutting:generic-tool-effect-insufficient",
+      "passed": true
+    },
+    {
+      "case": "cutting:specific-effect-false-fails",
+      "passed": true
+    },
+    {
+      "case": "cutting:foreign-target-effect-not-borrowed",
+      "passed": true
+    },
+    {
+      "case": "cutting:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "cutting:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "wiping:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "wiping:specific-outcome-satisfies",
+      "passed": true
+    },
+    {
+      "case": "wiping:generic-tool-effect-insufficient",
+      "passed": true
+    },
+    {
+      "case": "wiping:specific-effect-false-fails",
+      "passed": true
+    },
+    {
+      "case": "wiping:foreign-target-effect-not-borrowed",
+      "passed": true
+    },
+    {
+      "case": "wiping:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "wiping:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "wiping:coverage-without-window-withheld",
+      "passed": true
+    },
+    {
+      "case": "pressing:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "pressing:specific-outcome-satisfies",
+      "passed": true
+    },
+    {
+      "case": "pressing:generic-tool-effect-insufficient",
+      "passed": true
+    },
+    {
+      "case": "pressing:specific-effect-false-fails",
+      "passed": true
+    },
+    {
+      "case": "pressing:foreign-target-effect-not-borrowed",
+      "passed": true
+    },
+    {
+      "case": "pressing:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "pressing:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "insertion:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "insertion:specific-outcome-satisfies",
+      "passed": true
+    },
+    {
+      "case": "insertion:generic-tool-effect-insufficient",
+      "passed": true
+    },
+    {
+      "case": "insertion:specific-effect-false-fails",
+      "passed": true
+    },
+    {
+      "case": "insertion:foreign-target-effect-not-borrowed",
+      "passed": true
+    },
+    {
+      "case": "insertion:foreign-context",
+      "passed": true
+    },
+    {
+      "case": "insertion:no-fault-from-missing-success",
+      "passed": true
+    },
+    {
+      "case": "insertion:seated-label-not-depth-proof",
+      "passed": true
+    },
+    {
+      "case": "insertion:negative-error",
+      "passed": true
+    },
+    {
+      "case": "insertion:wrong-error-unit",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:no-history-unknown",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:qualified-history-satisfies",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:no-execution-or-stage-selection",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:stage-successes-not-handoff-proof",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:failed-continuity-fails-recipe",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:handoff-must-cover-gap",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:foreign-handoff-context",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:wrong-handoff-stage",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:foreign-stage-context",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:overlapping-stages",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:later-stage-not-missing-history",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:qualified-prefix-not-complete",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:child-interval-needs-parent",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:timezone-required",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:parent-end-is-final-stage-end",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:success-and-fault-visible",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:successful-outcome-does-not-waive-prerequisite",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:unqualified-stage-window-not-invented",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:explicit-shared-boundary-continuity",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:nested-carry-window-not-inherited",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:historical-holding-and-release-not-flattened",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:no-history-unknown",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:qualified-history-satisfies",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:no-execution-or-stage-selection",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:stage-successes-not-handoff-proof",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:failed-continuity-fails-recipe",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:handoff-must-cover-gap",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:foreign-handoff-context",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:wrong-handoff-stage",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:foreign-stage-context",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:overlapping-stages",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:later-stage-not-missing-history",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:qualified-prefix-not-complete",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:child-interval-needs-parent",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:timezone-required",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:parent-end-is-final-stage-end",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:success-and-fault-visible",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:successful-outcome-does-not-waive-prerequisite",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:unqualified-stage-window-not-invented",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:explicit-shared-boundary-continuity",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:nested-carry-window-not-inherited",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:historical-holding-and-release-not-flattened",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:no-history-unknown",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:qualified-history-satisfies",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:no-execution-or-stage-selection",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:stage-successes-not-handoff-proof",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:failed-continuity-fails-recipe",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:handoff-must-cover-gap",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:foreign-handoff-context",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:wrong-handoff-stage",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:foreign-stage-context",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:overlapping-stages",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:later-stage-not-missing-history",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:qualified-prefix-not-complete",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:child-interval-needs-parent",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:timezone-required",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:parent-end-is-final-stage-end",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:success-and-fault-visible",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:successful-outcome-does-not-waive-prerequisite",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:unqualified-stage-window-not-invented",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:explicit-shared-boundary-continuity",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:no-history-unknown",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:qualified-history-satisfies",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:no-execution-or-stage-selection",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:stage-successes-not-handoff-proof",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:failed-continuity-fails-recipe",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:handoff-must-cover-gap",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:foreign-handoff-context",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:wrong-handoff-stage",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:foreign-stage-context",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:overlapping-stages",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:later-stage-not-missing-history",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:qualified-prefix-not-complete",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:child-interval-needs-parent",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:timezone-required",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:parent-end-is-final-stage-end",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:success-and-fault-visible",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:successful-outcome-does-not-waive-prerequisite",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:unqualified-stage-window-not-invented",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:explicit-shared-boundary-continuity",
+      "passed": true
+    },
+    {
+      "case": "wiping-cycle:contact-not-coverage",
+      "passed": true
+    },
+    {
+      "case": "reject-duplicate-stage-index",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-stage-role",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-final-stage",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-payload",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-recipe-kind",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-stage-action",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-stage-context",
+      "passed": true
+    },
+    {
+      "case": "reject-omitted-carry-outcome",
+      "passed": true
+    },
+    {
+      "case": "reject-omitted-stage-prerequisite",
+      "passed": true
+    },
+    {
+      "case": "reject-nonadjacent-handoff",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-tool-return-support",
+      "passed": true
+    },
+    {
+      "case": "reject-tool-target-changed",
+      "passed": true
+    },
+    {
+      "case": "reject-tool-stage-frame",
+      "passed": true
+    },
+    {
+      "case": "foreign-handoff-input",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-technique-outcome",
+      "passed": true
+    },
+    {
+      "case": "reject-mixed-technique-kind",
+      "passed": true
+    },
+    {
+      "case": "reject-depth-target-mismatch",
+      "passed": true
+    },
+    {
+      "case": "reject-depth-unit",
+      "passed": true
+    },
+    {
+      "case": "reject-press-without-contact-policy",
+      "passed": true
+    },
+    {
+      "case": "cutting:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "wiping:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "pressing:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "insertion:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "no-orphan-descriptions",
+      "passed": true
+    },
+    {
+      "case": "all-claims-proposed",
+      "passed": true
+    },
+    {
+      "case": "no-physical-parameter-defaults",
+      "passed": true
+    },
+    {
+      "case": "no-world-bindings",
+      "passed": true
+    }
+  ],
+  "scope": "Synthetic contracts; no physics, accepted observations or robot execution."
+}

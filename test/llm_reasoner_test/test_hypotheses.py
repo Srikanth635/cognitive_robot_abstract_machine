@@ -19,7 +19,7 @@ from llm_reasoner.knowledge.representation.rdf import HYPOTHESIS_NAMESPACE_ROOT
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
-from llm_reasoner.knowledge.ontologies.terms import is_inferred
+from llm_reasoner.knowledge.vocabulary.terms import is_inferred
 from llm_reasoner.knowledge.hypotheses.graph import (
     HypothesisGraph,
     HypothesisGraphNodeKind,
@@ -30,7 +30,7 @@ from llm_reasoner.knowledge.hypotheses.graph import (
 from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService, StoreRequired
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView, UnknownCitation
-from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
+from llm_reasoner.knowledge.vocabulary.ontology_modules import CRAM_AICOR_NAMESPACE
 from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
@@ -38,7 +38,7 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.vocabulary.terms import (
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,

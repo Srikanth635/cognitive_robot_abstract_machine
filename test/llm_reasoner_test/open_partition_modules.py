@@ -10,7 +10,7 @@ from pathlib import Path
 
 from rdflib import Namespace
 
-from llm_reasoner.knowledge.ontologies import OntologyModuleFile
+from llm_reasoner.knowledge.vocabulary.ontology_modules import OntologyModuleFile
 
 # %% the family
 

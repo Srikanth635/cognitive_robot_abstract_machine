@@ -22,11 +22,11 @@ from typing_extensions import Any, Iterable, Optional, Sequence
 
 from llm_reasoner.knowledge.acceptance.derived import DerivedRule
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceRule, Severity, Violation
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
 from llm_reasoner.knowledge.representation.rdf import GraphWriter
-from llm_reasoner.knowledge.ontologies import KNOWLEDGE_ONTOLOGY_MODULES
-from llm_reasoner.knowledge.ontologies.linked import OntologyFiles
-from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
+from llm_reasoner.knowledge.vocabulary.ontology_modules import KNOWLEDGE_ONTOLOGY_MODULES
+from llm_reasoner.knowledge.vocabulary.linked import OntologyFiles
+from llm_reasoner.knowledge.vocabulary.terms import DescriptionEntity, PropertyTerm
 
 CHECKED_NAMESPACE = "http://www.ease-crc.org/ont/llm_reasoner/checked#"
 """

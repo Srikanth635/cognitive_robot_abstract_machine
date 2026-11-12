@@ -1,0 +1,91 @@
+{
+  "changes": [
+    {
+      "module": "participants-relations.ttl",
+      "before": [
+        "http://aicor.knowledge/ontologies/action-description-core.owl"
+      ],
+      "after": [
+        "http://aicor.knowledge/ontologies/action-description-core.owl"
+      ]
+    },
+    {
+      "module": "conditions-outcomes.ttl",
+      "before": [
+        "http://aicor.knowledge/ontologies/participants-relations.owl"
+      ],
+      "after": [
+        "http://aicor.knowledge/ontologies/participants-relations.owl"
+      ]
+    },
+    {
+      "module": "phases-transitions.ttl",
+      "before": [
+        "http://aicor.knowledge/ontologies/conditions-outcomes.owl"
+      ],
+      "after": [
+        "http://aicor.knowledge/ontologies/conditions-outcomes.owl"
+      ]
+    },
+    {
+      "module": "monitoring-requirements.ttl",
+      "before": [
+        "http://aicor.knowledge/ontologies/phases-transitions.owl"
+      ],
+      "after": [
+        "http://aicor.knowledge/ontologies/conditions-outcomes.owl"
+      ]
+    },
+    {
+      "module": "causal-mechanisms.ttl",
+      "before": [
+        "http://aicor.knowledge/ontologies/phases-transitions.owl"
+      ],
+      "after": [
+        "http://aicor.knowledge/ontologies/action-description-core.owl"
+      ]
+    },
+    {
+      "module": "physical-models.ttl",
+      "before": [
+        "http://aicor.knowledge/ontologies/causal-mechanisms.owl"
+      ],
+      "after": [
+        "http://aicor.knowledge/ontologies/action-description-core.owl"
+      ]
+    },
+    {
+      "module": "objectives-tradeoffs.ttl",
+      "before": [
+        "http://aicor.knowledge/ontologies/physical-models.owl"
+      ],
+      "after": [
+        "http://aicor.knowledge/ontologies/action-description-core.owl"
+      ]
+    },
+    {
+      "module": "dynamics-control.ttl",
+      "before": [
+        "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl"
+      ],
+      "after": [
+        "http://aicor.knowledge/ontologies/physical-models.owl",
+        "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl"
+      ]
+    }
+  ],
+  "bridges": [
+    {
+      "module": "causal-outcome-bridge",
+      "term": "http://aicor.knowledge/ontologies/causal-mechanisms.owl#intendedOutcome"
+    },
+    {
+      "module": "physical-outcome-bridge",
+      "term": "http://aicor.knowledge/ontologies/physical-models.owl#testsOutcome"
+    },
+    {
+      "module": "causal-physical-bridge",
+      "term": "http://aicor.knowledge/ontologies/physical-models.owl#realizesMechanism"
+    }
+  ]
+}

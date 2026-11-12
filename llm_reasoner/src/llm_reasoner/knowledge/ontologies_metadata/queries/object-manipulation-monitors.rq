@@ -1,0 +1,8 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX mr: <http://aicor.knowledge/ontologies/monitoring-requirements.owl#>
+SELECT ?action ?phase ?monitor ?condition ?unknownResponse
+WHERE {
+ ?record ac:expressesDescription ?action .
+ ?action ac:hasPhase ?phase . ?phase mr:hasMonitoringRequirement ?monitor .
+ ?monitor mr:monitorsCondition ?condition; mr:whenUnknown ?unknownResponse .
+}

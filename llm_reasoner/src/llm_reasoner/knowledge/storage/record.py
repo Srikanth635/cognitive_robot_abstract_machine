@@ -19,7 +19,7 @@ from krrood.adapters.json_serializer import SubclassJSONSerializer
 from typing_extensions import Any, Dict, Iterable, Self
 
 from llm_reasoner.clients.base import Exchange
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     OntologyModuleFile,
     module_file_named,
@@ -190,7 +190,7 @@ class HypothesisRecord(SubclassJSONSerializer):
     builds_on: list[str] = field(default_factory=list)
     """
     The records of the stored hypotheses whose fragments the hypothesis refers to
-    without stating them, such as the action core a perspective describes.
+    without stating them.
     """
 
     def to_json(self) -> Dict[str, Any]:

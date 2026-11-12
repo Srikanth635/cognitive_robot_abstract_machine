@@ -1,0 +1,167 @@
+[
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#ActionDesignator",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#AttributiveDesignator>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#CRAMDesignator>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#Representation>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#hasPart>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#DesignatorConstraintSet>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#references>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#ActionEventType>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#resolvesTo>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#EntityDesignator>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#resolvesTo>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#LocationDesignator>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#resolvesTo>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#MotionDesignator>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#resolvesTo>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#ObjectDesignator>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#ActionRef",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#DesignatorTarget>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#Representation>"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#BeliefState",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#Representation>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#hasValue> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#hasAmbiguity>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#hasValue> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#hasInaccuracy>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#hasValue> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#isContinuouslyUpdated>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#hasValue> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#isProbabilistic>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#hasPart>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#StateEstimate>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#includes>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#CRAMSemanticDigitalTwin>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#includes>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#ExecutionStateBelief>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#includes>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#ProspectiveBelief>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#isAbout>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#BodyWorldSystem>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#resourceFor>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#ActionDesignator>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#ComputationalProcess",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#operatesOn>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#Representation>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#Critic",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#ComputationalProcess>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#yieldsVerdict>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#Verdict>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#ExecutiveCapability",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#determinedBy>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#CapabilityInteraction>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#determinedBy>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#ComponentCapability>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#determinedBy>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#ExecutiveComponent>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#determinesPerformanceOn>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#ManipulationProblem>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#Fluent",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#FluentType>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#Representation>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#hasValue> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#isPulsed>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#listensTo>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#EventType>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#partOf>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#StructuredReactivePlan>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#ForceDynamicEvent",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#Representation>"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#Monitor",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#ComputationalProcess>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#dul_Description>"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#Projection",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#ComputationalProcess>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#Envisioning>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#InternalSimulation>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#hasValue> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#isMonteCarlo>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#drives>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#PlanTransformation>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#partOf>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#GenerativeModel>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#producesTimeline>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#EnvisionedTimeline>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#Prospection",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#InternalSimulation>"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#RelationConstraint",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#RequestConstraint>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#hasValue> \"relation\"^^<http://www.w3.org/2001/XMLSchema#string>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#constraintKind>]",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#constrainsRelation>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#SpatialRelation>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#StateEstimate",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#Representation>"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#Task",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#Representation>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#dul_Description>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#hasStatus>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://aicor.knowledge/l2-ontology.owl#Fluent>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#TaskStatus",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#FluentType>",
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> [<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Restriction>|<http://www.w3.org/2002/07/owl#onProperty> <http://aicor.knowledge/l2-ontology.owl#statusCode>|<http://www.w3.org/2002/07/owl#someValuesFrom> <http://www.w3.org/2001/XMLSchema#string>]"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#TerminalStatus",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2002/07/owl#disjointWith> <http://aicor.knowledge/l2-ontology.owl#NonterminalStatus>"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#Verdict",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://aicor.knowledge/l2-ontology.owl#VerdictComponent>"
+    ]
+  },
+  {
+    "subject": "http://aicor.knowledge/l2-ontology.owl#partOf",
+    "removed": [],
+    "added": [
+      "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#TransitiveProperty>"
+    ]
+  }
+]

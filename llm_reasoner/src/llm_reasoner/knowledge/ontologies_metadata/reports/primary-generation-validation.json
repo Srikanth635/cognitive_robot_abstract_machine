@@ -1,0 +1,99 @@
+{
+  "release": "0.22.0",
+  "checks": [
+    {
+      "case": "template-builder-byte-reproduction",
+      "passed": true
+    },
+    {
+      "case": "four-requested-actions-only",
+      "passed": true
+    },
+    {
+      "case": "pickup:required-symbolic-roles",
+      "passed": true
+    },
+    {
+      "case": "pickup:no-physical-scalar-defaults",
+      "passed": true
+    },
+    {
+      "case": "pickup:no-dangling-or-world-argument-symbols",
+      "passed": true
+    },
+    {
+      "case": "place:required-symbolic-roles",
+      "passed": true
+    },
+    {
+      "case": "place:no-physical-scalar-defaults",
+      "passed": true
+    },
+    {
+      "case": "place:no-dangling-or-world-argument-symbols",
+      "passed": true
+    },
+    {
+      "case": "navigate:required-symbolic-roles",
+      "passed": true
+    },
+    {
+      "case": "navigate:no-physical-scalar-defaults",
+      "passed": true
+    },
+    {
+      "case": "navigate:no-dangling-or-world-argument-symbols",
+      "passed": true
+    },
+    {
+      "case": "pour:required-symbolic-roles",
+      "passed": true
+    },
+    {
+      "case": "pour:no-physical-scalar-defaults",
+      "passed": true
+    },
+    {
+      "case": "pour:no-dangling-or-world-argument-symbols",
+      "passed": true
+    },
+    {
+      "case": "not-a-full-output-schema-or-accepted-evidence",
+      "passed": true
+    },
+    {
+      "case": "ontology-input-hashes-current",
+      "passed": true
+    },
+    {
+      "case": "quantity-basis:plain-volume",
+      "passed": true
+    },
+    {
+      "case": "quantity-basis:typed-volume",
+      "passed": true
+    },
+    {
+      "case": "quantity-basis:plain-mass",
+      "passed": true
+    },
+    {
+      "case": "quantity-basis:typed-mass",
+      "passed": true
+    },
+    {
+      "case": "quantity-basis:count",
+      "passed": true
+    },
+    {
+      "case": "quantity-basis:language-tagged",
+      "passed": true
+    },
+    {
+      "case": "quantity-basis:trailing-newline",
+      "passed": true
+    }
+  ],
+  "passed": 23,
+  "scope": "Symbolic generation template reproduction and RDF literal compatibility; no LLM transport or physical execution."
+}

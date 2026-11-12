@@ -1,0 +1,58 @@
+[
+  {
+    "id": "O1",
+    "objective": "Additional LLM EQL generative backend alongside probabilistic models",
+    "assessment": "Architecture-compatible; standalone integration deferred",
+    "evidence": "core/action-description-core.ttl; upstream llm_reasoner/doc/architecture.md",
+    "next_acceptance_step": "Publish versioned mapping/dispatch contract; preserve backend-specific calibrated scores; test same EQL question via both providers."
+  },
+  {
+    "id": "O2",
+    "objective": "Commonsense adaptation to new objects, robots and environments",
+    "assessment": "Representation available; effectiveness untested",
+    "evidence": "core/knowledge-context.ttl; aspects/entities-transfer/entities-materials-affordances.ttl",
+    "next_acceptance_step": "Populate sourced hypotheses, test held-out objects/robots/contexts, compare abstention and feasibility with probabilistic baseline."
+  },
+  {
+    "id": "O3",
+    "objective": "Resolve unknown entities, actions and parameters through injection",
+    "assessment": "Specifications and contexts available; grounding deferred",
+    "evidence": "core/action-description-core.ttl; core/knowledge-context.ttl",
+    "next_acceptance_step": "Keep unknowns explicit; define injected provider interfaces, binding identity and validity checks before promoting proposals."
+  },
+  {
+    "id": "O4",
+    "objective": "One comprehensive record with multiple queryable perspectives and competence levels",
+    "assessment": "Broad schema and bounded inspectors; incomplete end-to-end competence",
+    "evidence": "aspects; domains; compositions; queries",
+    "next_acceptance_step": "Current-record CQ registry, per-answer evidence grades, explicit projection dependencies; Bloom labels alone do not confer competence."
+  },
+  {
+    "id": "O5",
+    "objective": "Physics-backed reasoning and Isaac Sim checks when needed",
+    "assessment": "Model/study/evidence contracts; no new simulation evidence",
+    "evidence": "aspects/physics-control; integrations/physical-outcome-bridge.ttl",
+    "next_acceptance_step": "Define simulator adapter, model fidelity/validity and acceptance policy; volume/foam/fluid effects require suitable models and measurement."
+  },
+  {
+    "id": "O6",
+    "objective": "Query all knowledge through EQL and KRROOD semantic annotations",
+    "assessment": "Standalone SPARQL and bounded Python; integration deferred",
+    "evidence": "queries; upstream llm_reasoner/doc/architecture.md",
+    "next_acceptance_step": "Implement semantic annotation and EQL mapping after stable contracts; do not claim the existing repo resolver automatically consumes this package."
+  },
+  {
+    "id": "O7",
+    "objective": "DUL foundation and logic/ontology consistency",
+    "assessment": "Generic structural checks established; truth and optional AICOR compatibility incomplete",
+    "evidence": "DUL.owl; ontology-registry.json; reports/release-0.20.0.json",
+    "next_acceptance_step": "Retain SHACL/OWL/runtime boundaries; isolate optional AICOR reasoning issue; validate sources and claims independently of logical consistency."
+  },
+  {
+    "id": "O8",
+    "objective": "World-independent core with injected SDT/world information",
+    "assessment": "Architectural boundary retained; runtime injection deferred",
+    "evidence": "integrations/all-action-knowledge.ttl; core/knowledge-context.ttl",
+    "next_acceptance_step": "Keep SDT/CoraPlex/Isaac adapters outside generic imports; test two world backends with the same description."
+  }
+]

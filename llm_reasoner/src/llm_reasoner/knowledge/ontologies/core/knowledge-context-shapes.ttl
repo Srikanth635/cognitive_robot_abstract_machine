@@ -1,0 +1,40 @@
+@prefix kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#> .
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+kc:ContextShape a sh:NodeShape; sh:targetClass kc:KnowledgeContext;
+ sh:property [sh:path kc:contextKey; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path kc:scopedDescription; sh:minCount 1; sh:maxCount 1; sh:class ac:ActionDescription].
+kc:AssessmentShape a sh:NodeShape; sh:targetClass kc:ClaimAssessment;
+ sh:property [sh:path kc:inRecord; sh:minCount 1; sh:maxCount 1; sh:class ac:KnowledgeRecord];
+ sh:property [sh:path kc:assessesClaim; sh:minCount 1; sh:maxCount 1; sh:class ac:KnowledgeClaim];
+ sh:property [sh:path kc:inContext; sh:minCount 1; sh:maxCount 1; sh:class kc:KnowledgeContext];
+ sh:property [sh:path kc:assessedStatus; sh:minCount 1; sh:maxCount 1; sh:in (ac:Proposed ac:Supported ac:Disputed ac:Rejected ac:Unknown)];
+ sh:property [sh:path kc:assessedAt; sh:minCount 1; sh:maxCount 1; sh:pattern "(Z|[+-][0-9]{2}:[0-9]{2})$"; sh:datatype xsd:dateTime];
+ sh:property [sh:path kc:validFrom; sh:minCount 1; sh:maxCount 1; sh:pattern "(Z|[+-][0-9]{2}:[0-9]{2})$"; sh:datatype xsd:dateTime; sh:lessThan kc:validUntil];
+ sh:property [sh:path kc:validUntil; sh:minCount 1; sh:maxCount 1; sh:pattern "(Z|[+-][0-9]{2}:[0-9]{2})$"; sh:datatype xsd:dateTime];
+ sh:property [sh:path kc:usesEvidence; sh:class ac:EvidenceRecord];
+ sh:sparql [sh:message "Assessment claim must belong to its record and context must describe that record's action."; sh:select """
+ PREFIX kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#>
+ PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+ SELECT $this WHERE {$this kc:inRecord ?r; kc:assessesClaim ?c; kc:inContext ?ctx .
+ {FILTER NOT EXISTS {?r ac:hasClaim ?c}} UNION
+ {?ctx kc:scopedDescription ?d . FILTER NOT EXISTS {?r ac:expressesDescription ?d}}}
+ """];
+ sh:sparql [sh:message "Supported assessment requires explicit evidence."; sh:select """
+ PREFIX kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#>
+ PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+ SELECT $this WHERE {$this kc:assessedStatus ac:Supported . FILTER NOT EXISTS {$this kc:usesEvidence ?e}}
+ """].
+kc:SourceShape a sh:NodeShape; sh:targetClass kc:SourceSnapshot;
+ sh:property [sh:path kc:sourceIRI; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:anyURI];
+ sh:property [sh:path kc:sourceVersion; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path kc:selector; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string].
+kc:ObservationShape a sh:NodeShape; sh:targetClass kc:ObservationEvidence;
+ sh:property [sh:path kc:observedAt; sh:minCount 1; sh:maxCount 1; sh:pattern "(Z|[+-][0-9]{2}:[0-9]{2})$"; sh:datatype xsd:dateTime].
+kc:DigestShape a sh:NodeShape; sh:targetSubjectsOf kc:sha256;
+ sh:property [sh:path kc:sha256; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string; sh:pattern "^[0-9a-f]{64}$"].
+kc:SnapshotShape a sh:NodeShape; sh:targetClass kc:RecordSnapshot;
+ sh:property [sh:path kc:snapshotOf; sh:minCount 1; sh:maxCount 1; sh:class ac:KnowledgeRecord];
+ sh:property [sh:path kc:sha256; sh:minCount 1; sh:maxCount 1];
+ sh:property [sh:path kc:serializationProfile; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string].

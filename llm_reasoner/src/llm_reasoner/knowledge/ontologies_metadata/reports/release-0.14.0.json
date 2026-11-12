@@ -1,0 +1,37 @@
+{
+  "release": "0.14.0",
+  "domain_modules": 2,
+  "registered_ontologies": 31,
+  "new_domain": "object-manipulation",
+  "profiles": [
+    "Reaching",
+    "Grasp acquisition",
+    "Holding",
+    "Pickup",
+    "Placement",
+    "Release",
+    "Fixation"
+  ],
+  "validation": {
+    "new_checks_passed": 102,
+    "scoped_query_cases": 14,
+    "imports_passed": 41,
+    "robot_motion_regression_checks_passed": 58,
+    "historical_competency_checks_passed": 93,
+    "domain_and_combined_assembly_classification": "passed, no unsatisfiable named classes",
+    "generic_examples_consistency": "passed",
+    "optional_aicor_integration": "blocked by existing HermiT DisjointClasses(SceneNode) normalization error"
+  },
+  "preservation": {
+    "prior_ontology_and_example_files": 60,
+    "byte_identical": 59,
+    "only_changed_prior_ontology": "integrations/all-action-knowledge.ttl"
+  },
+  "limitations": [
+    "Synthetic Proposed profiles, not validated empirical domain knowledge",
+    "Predicates and interval evidence supplied externally",
+    "No quantitative grasp/stability/clearance model, planning or execution",
+    "Optional AICOR compatibility unverified",
+    "No CoraPlex adapter or new working projections"
+  ]
+}

@@ -1,0 +1,44 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix cm: <http://aicor.knowledge/ontologies/causal-mechanisms.owl#> .
+@prefix pm: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+cm:ModelShape a sh:NodeShape; sh:targetClass cm:CausalModel; sh:property [sh:path cm:hasLink; sh:minCount 1; sh:class cm:CausalLink].
+cm:LinkShape a sh:NodeShape; sh:targetClass cm:CausalLink;
+ sh:property [sh:path cm:antecedent; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path cm:consequent; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path cm:mechanism; sh:minCount 1; sh:maxCount 1; sh:class cm:MechanismSpecification];
+ sh:property [sh:path cm:enablingCondition; sh:class cm:EnablingCondition].
+cm:MechanismShape a sh:NodeShape; sh:targetClass cm:MechanismSpecification;
+ sh:property [sh:path cm:assumption; sh:minCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path cm:applicability; sh:minCount 1; sh:class ac:ApplicabilitySpecification].
+cm:InterventionShape a sh:NodeShape; sh:targetClass cm:InterventionSpecification;
+ sh:property [sh:path cm:intendedOutcome; sh:minCount 1; sh:maxCount 1].
+cm:SuppressionShape a sh:NodeShape; sh:targetClass cm:SuppressionSpecification;
+ sh:property [sh:path cm:intervention; sh:minCount 1; sh:maxCount 1; sh:class cm:InterventionSpecification];
+ sh:property [sh:path cm:suppressedLink; sh:minCount 1; sh:maxCount 1; sh:class cm:CausalLink].
+pm:PropertyShape a sh:NodeShape; sh:targetClass pm:PhysicalPropertySpecification;
+ sh:property [sh:path pm:describesEntity; sh:minCount 1; sh:maxCount 1; sh:class ac:EntitySpecification];
+ sh:property [sh:path pm:propertyKind; sh:minCount 1; sh:maxCount 1; sh:class pm:PropertyKind];
+ sh:property [sh:path pm:valueParameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification].
+pm:ModelShape a sh:NodeShape; sh:targetClass pm:PhysicalModelSpecification;
+ sh:property [sh:path pm:hasVariable; sh:minCount 1; sh:class pm:ModelVariable];
+ sh:property [sh:path pm:assumption; sh:minCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path pm:applicability; sh:minCount 1; sh:class ac:ApplicabilitySpecification].
+pm:VariableShape a sh:NodeShape; sh:targetClass pm:ModelVariable;
+ sh:property [sh:path pm:symbol; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path pm:parameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification].
+pm:EquationShape a sh:NodeShape; sh:targetClass pm:ModelEquation;
+ sh:property [sh:path pm:expressionText; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path pm:expressionLanguage; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path pm:usesVariable; sh:minCount 1; sh:class pm:ModelVariable].
+pm:ArtifactShape a sh:NodeShape; sh:targetClass pm:ModelArtifact;
+ sh:property [sh:path pm:artifactIRI; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:anyURI];
+ sh:property [sh:path pm:artifactVersion; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string].
+pm:StudyShape a sh:NodeShape; sh:targetClass pm:SimulationStudySpecification;
+ sh:property [sh:path pm:studiesModel; sh:minCount 1; sh:maxCount 1; sh:class pm:PhysicalModelSpecification];
+ sh:property [sh:path pm:testsOutcome; sh:minCount 1; sh:maxCount 1].
+pm:ValidationShape a sh:NodeShape; sh:targetClass pm:ModelValidationRecord;
+ sh:property [sh:path pm:validatesModel; sh:minCount 1; sh:maxCount 1; sh:class pm:PhysicalModelSpecification];
+ sh:property [sh:path pm:validationScope; sh:minCount 1; sh:class ac:ApplicabilitySpecification];
+ sh:property [sh:path pm:validationArtifactIRI; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:anyURI].

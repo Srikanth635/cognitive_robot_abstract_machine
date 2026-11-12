@@ -1,0 +1,2 @@
+
+b'* Owlready2 * Running HermiT...\n    java -Xmx2048M -cp /workspace/scratch/512a24139029/deps/owlready2/hermit:/workspace/scratch/512a24139029/deps/owlready2/hermit/HermiT.jar org.semanticweb.HermiT.cli.CommandLine -c -O -D -I file:////tmp/tmprbm4rxr1\n'

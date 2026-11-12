@@ -1,0 +1,36 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix asp: <http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl> a owl:Ontology ;
+    rdfs:label "Diagnostic Causal Bridge"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/causal-mechanisms.owl>,
+        <http://aicor.knowledge/ontologies/failure-diagnosis.owl> ;
+    owl:versionInfo "0.12.0" .
+
+asp:applicability a owl:ObjectProperty ;
+    rdfs:label "Applicability"@en ;
+    rdfs:domain asp:DiagnosticCausalAssociation ;
+    rdfs:range ac:ApplicabilitySpecification .
+
+asp:causalLink a owl:ObjectProperty ;
+    rdfs:label "Causal link"@en ;
+    rdfs:domain asp:DiagnosticCausalAssociation ;
+    rdfs:range <http://aicor.knowledge/ontologies/causal-mechanisms.owl#CausalLink> .
+
+asp:causeCondition a owl:ObjectProperty ;
+    rdfs:label "Cause condition"@en ;
+    rdfs:domain asp:DiagnosticCausalAssociation ;
+    rdfs:range ac:ConditionSpecification .
+
+asp:hypothesis a owl:ObjectProperty ;
+    rdfs:label "Hypothesis"@en ;
+    rdfs:domain asp:DiagnosticCausalAssociation ;
+    rdfs:range <http://aicor.knowledge/ontologies/failure-diagnosis.owl#DiagnosticHypothesis> .
+
+asp:DiagnosticCausalAssociation a owl:Class ;
+    rdfs:label "Diagnostic Causal Association"@en ;
+    rdfs:comment "Proposed association of a diagnostic hypothesis with an explanatory causal link; never a proof of root cause."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+

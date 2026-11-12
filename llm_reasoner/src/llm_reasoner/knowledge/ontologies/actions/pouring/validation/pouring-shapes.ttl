@@ -1,0 +1,1672 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix mt: <http://aicor.knowledge/ontologies/material-transfer.owl#> .
+@prefix n0: <http://aicor.knowledge/ontologies/capabilities-strategies.owl#> .
+@prefix n1: <http://aicor.knowledge/ontologies/causal-mechanisms.owl#> .
+@prefix n10: <http://aicor.knowledge/ontologies/knowledge-context.owl#> .
+@prefix n11: <http://aicor.knowledge/ontologies/model-contracts.owl#> .
+@prefix n12: <http://aicor.knowledge/ontologies/monitoring-requirements.owl#> .
+@prefix n13: <http://aicor.knowledge/ontologies/object-manipulation.owl#> .
+@prefix n14: <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#> .
+@prefix n15: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix n16: <http://aicor.knowledge/ontologies/phases-transitions.owl#> .
+@prefix n17: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix n18: <http://aicor.knowledge/ontologies/robot-motion.owl#> .
+@prefix n19: <http://aicor.knowledge/ontologies/sensorimotor-events.owl#> .
+@prefix n2: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix n20: <http://aicor.knowledge/ontologies/tool-interaction.owl#> .
+@prefix n21: <http://aicor.knowledge/ontologies/transfer-contracts.owl#> .
+@prefix n22: <http://www.w3.org/ns/shacl#> .
+@prefix n3: <http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl#> .
+@prefix n4: <http://aicor.knowledge/ontologies/dynamics-control.owl#> .
+@prefix n5: <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#> .
+@prefix n6: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#> .
+@prefix n7: <http://aicor.knowledge/ontologies/force-dynamics.owl#> .
+@prefix n8: <http://aicor.knowledge/ontologies/frame-perspective.owl#> .
+@prefix n9: <http://aicor.knowledge/ontologies/image-schemas.owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ac:ActionShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ActionKind ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasActionKind ],
+        [ n22:class ac:ActionComponent ;
+            n22:path ac:hasComponent ] ;
+    n22:targetClass ac:ActionDescription .
+
+ac:AnnotationShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ActionDescription ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:annotatesDescription ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:producerIdentifier ],
+        [ n22:class ac:KnowledgeClaim ;
+            n22:minCount 1 ;
+            n22:path ac:contributesClaim ],
+        [ n22:datatype xsd:dateTime ;
+            n22:maxCount 1 ;
+            n22:path ac:createdAt ] ;
+    n22:targetClass ac:AnnotationRecord .
+
+ac:BindingShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:bindsSpecification ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:bindingTargetIRI ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:bindingContextIRI ] ;
+    n22:targetClass ac:BindingRecord .
+
+ac:ClaimShape a n22:NodeShape ;
+    n22:or ( [ n22:property [ n22:in ( ac:Proposed ac:Disputed ac:Rejected ac:Unknown ) ;
+                        n22:path ac:hasStatus ] ] [ n22:property [ n22:minCount 1 ;
+                        n22:path ac:hasEvidence ] ] ) ;
+    n22:property [ n22:class ac:Statement ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasStatement ],
+        [ n22:in ( ac:Proposed ac:Supported ac:Disputed ac:Rejected ac:Unknown ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasStatus ],
+        [ n22:class ac:EvidenceRecord ;
+            n22:path ac:hasEvidence ],
+        [ n22:class ac:ActionComponent ;
+            n22:minCount 1 ;
+            n22:path ac:aboutComponent ] ;
+    n22:targetClass ac:KnowledgeClaim .
+
+ac:EvidenceShape a n22:NodeShape ;
+    n22:or ( [ n22:property [ n22:datatype xsd:anyURI ;
+                        n22:minCount 1 ;
+                        n22:path ac:sourceIRI ] ] [ n22:property [ n22:datatype xsd:string ;
+                        n22:minCount 1 ;
+                        n22:path ac:evidenceText ] ] ) ;
+    n22:property [ n22:class ac:EvidenceKind ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:evidenceKind ] ;
+    n22:targetClass ac:EvidenceRecord .
+
+ac:ParameterShape a n22:NodeShape ;
+    n22:or ( [ n22:property [ n22:maxCount 0 ;
+                        n22:path ac:upperBound ],
+                    [ n22:maxCount 0 ;
+                        n22:path ac:lowerBound ],
+                    [ n22:maxCount 0 ;
+                        n22:path ac:numericValue ] ] [ n22:property [ n22:minCount 1 ;
+                        n22:path ac:unitIRI ] ] ) ;
+    n22:property [ n22:datatype xsd:decimal ;
+            n22:maxCount 1 ;
+            n22:path ac:numericValue ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:parameterKey ],
+        [ n22:datatype xsd:decimal ;
+            n22:maxCount 1 ;
+            n22:path ac:upperBound ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:path ac:unitIRI ],
+        [ n22:datatype xsd:decimal ;
+            n22:lessThanOrEquals ac:upperBound ;
+            n22:maxCount 1 ;
+            n22:path ac:lowerBound ] ;
+    n22:targetClass ac:ParameterSpecification .
+
+ac:ProjectionShape a n22:NodeShape ;
+    n22:property [ n22:class ac:KnowledgeClaim ;
+            n22:path ac:includesClaim ],
+        [ n22:class ac:ProjectionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:conformsToSpecification ],
+        [ n22:class ac:KnowledgeRecord ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:derivedFromRecord ] ;
+    n22:sparql [ n22:message "A projection may include only claims present in its source record." ;
+            n22:select """
+ PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+ SELECT $this WHERE { $this ac:derivedFromRecord ?r; ac:includesClaim ?c . FILTER NOT EXISTS { ?r ac:hasClaim ?c } }
+ """ ] ;
+    n22:targetClass ac:ProjectionArtifact .
+
+ac:ProjectionSpecificationShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:projectionKey ],
+        [ n22:in ( "omit-and-report" "reject" "retain-unknown" ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:missingInformationPolicy ] ;
+    n22:targetClass ac:ProjectionSpecification .
+
+ac:RecordShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:recordVersion ],
+        [ n22:class ac:ActionDescription ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:expressesDescription ],
+        [ n22:class ac:AnnotationRecord ;
+            n22:path ac:hasAnnotation ],
+        [ n22:class ac:KnowledgeClaim ;
+            n22:path ac:hasClaim ],
+        [ n22:class ac:BindingRecord ;
+            n22:path ac:hasBinding ] ;
+    n22:sparql [ n22:message "An annotation must target this record's description and contribute claims present in this record." ;
+            n22:select """
+ PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+ SELECT $this WHERE {
+  $this ac:hasAnnotation ?a; ac:expressesDescription ?d .
+  { ?a ac:annotatesDescription ?other . FILTER (?other != ?d) }
+  UNION { ?a ac:contributesClaim ?c . FILTER NOT EXISTS { $this ac:hasClaim ?c } }
+ }
+ """ ] ;
+    n22:targetClass ac:KnowledgeRecord .
+
+ac:RoleShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasEntitySpecification ],
+        [ n22:class ac:ParticipantRole ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:specifiesRole ] ;
+    n22:targetClass ac:RoleSpecification .
+
+ac:StatementShape a n22:NodeShape ;
+    n22:property [ n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:nodeKind n22:IRI ;
+            n22:path ac:statementSubject ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:statementPredicateIRI ;
+            n22:pattern "^[A-Za-z][A-Za-z0-9+.-]*:" ] ;
+    n22:targetClass ac:Statement ;
+    n22:xone ( [ n22:property [ n22:maxCount 1 ;
+                        n22:minCount 1 ;
+                        n22:nodeKind n22:IRI ;
+                        n22:path ac:statementObject ],
+                    [ n22:maxCount 0 ;
+                        n22:path ac:statementLiteral ] ] [ n22:property [ n22:maxCount 0 ;
+                        n22:path ac:statementObject ],
+                    [ n22:maxCount 1 ;
+                        n22:minCount 1 ;
+                        n22:nodeKind n22:Literal ;
+                        n22:path ac:statementLiteral ] ] ) .
+
+n0:AssessmentShape a n22:NodeShape ;
+    n22:or ( [ n22:property [ n22:hasValue n0:Undetermined ;
+                        n22:path n0:assessmentOutcome ] ] [ n22:property [ n22:minCount 1 ;
+                        n22:path n0:assessmentEvidence ] ] ) ;
+    n22:property [ n22:class ac:EvidenceRecord ;
+            n22:path n0:assessmentEvidence ],
+        [ n22:class ac:ApplicabilitySpecification ;
+            n22:minCount 1 ;
+            n22:path n0:assessmentContext ],
+        [ n22:in ( n0:Met n0:Unmet n0:Undetermined ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n0:assessmentOutcome ],
+        [ n22:class ac:CapabilityRequirement ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n0:assessesRequirement ] ;
+    n22:targetClass n0:CapabilityAssessment .
+
+n0:ProcessShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:path n0:inputParameter ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:path n0:outputParameter ],
+        [ n22:class ac:CapabilityRequirement ;
+            n22:minCount 1 ;
+            n22:path n0:fulfillsRequirement ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n0:interfaceKey ] ;
+    n22:targetClass n0:ProcessModuleRequirement .
+
+n0:ProfileShape a n22:NodeShape ;
+    n22:property [ n22:class ac:CapabilityRequirement ;
+            n22:minCount 1 ;
+            n22:path n0:requiresCapability ] ;
+    n22:targetClass n0:CapabilityProfile .
+
+n0:StepShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ActionDescription ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n0:describesAction ],
+        [ n22:class n0:ProcessModuleRequirement ;
+            n22:minCount 1 ;
+            n22:path n0:requiresProcess ],
+        [ n22:class n0:StrategyStep ;
+            n22:path n0:precedesStep ] ;
+    n22:targetClass n0:StrategyStep .
+
+n0:StrategyShape a n22:NodeShape ;
+    n22:property [ n22:class n0:StrategyStep ;
+            n22:minCount 1 ;
+            n22:path n0:hasStep ] ;
+    n22:targetClass n0:ExecutionStrategy .
+
+n1:InterventionShape a n22:NodeShape ;
+    n22:property [ n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n1:intendedOutcome ] ;
+    n22:targetClass n1:InterventionSpecification .
+
+n1:LinkShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n1:antecedent ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n1:consequent ],
+        [ n22:class n1:EnablingCondition ;
+            n22:path n1:enablingCondition ],
+        [ n22:class n1:MechanismSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n1:mechanism ] ;
+    n22:targetClass n1:CausalLink .
+
+n1:MechanismShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ApplicabilitySpecification ;
+            n22:minCount 1 ;
+            n22:path n1:applicability ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:minCount 1 ;
+            n22:path n1:assumption ] ;
+    n22:targetClass n1:MechanismSpecification .
+
+n1:ModelShape a n22:NodeShape ;
+    n22:property [ n22:class n1:CausalLink ;
+            n22:minCount 1 ;
+            n22:path n1:hasLink ] ;
+    n22:targetClass n1:CausalModel .
+
+n1:SuppressionShape a n22:NodeShape ;
+    n22:property [ n22:class n1:CausalLink ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n1:suppressedLink ],
+        [ n22:class n1:InterventionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n1:intervention ] ;
+    n22:targetClass n1:SuppressionSpecification .
+
+n2:AtomicShape a n22:NodeShape ;
+    n22:property [ n22:in ( n2:PreState n2:PostState n2:CurrentState n2:TaskContext ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:inScope ],
+        [ n22:class n15:RelationPattern ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:hasPattern ] ;
+    n22:targetClass n2:AtomicCondition .
+
+n2:BooleanTypeShape a n22:NodeShape ;
+    n22:not [ n22:class n2:ValueExpression ] ;
+    n22:targetClass n2:BooleanExpression .
+
+n2:ComparisonShape a n22:NodeShape ;
+    n22:property [ n22:class n2:ValueExpression ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:leftOperand ],
+        [ n22:in ( n2:Equal n2:NotEqual n2:LessThan n2:LessOrEqual n2:GreaterThan n2:GreaterOrEqual ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:operator ],
+        [ n22:class n2:ValueExpression ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:rightOperand ] ;
+    n22:targetClass n2:Comparison .
+
+n2:ConditionShape a n22:NodeShape ;
+    n22:property [ n22:class n2:BooleanExpression ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:hasExpression ] ;
+    n22:targetSubjectsOf n2:hasExpression .
+
+n2:ConstantShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:decimal ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:decimalValue ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:unitIRI ;
+            n22:pattern "^[A-Za-z][A-Za-z0-9+.-]*:" ] ;
+    n22:targetClass n2:QuantityConstant .
+
+n2:ExpressionShape a n22:NodeShape ;
+    n22:targetClass n2:Expression ;
+    n22:xone ( [ n22:class n2:AtomicCondition ] [ n22:class n2:Conjunction ] [ n22:class n2:Disjunction ] [ n22:class n2:Negation ] [ n22:class n2:Comparison ] [ n22:class n2:ParameterReference ] [ n22:class n2:QuantityConstant ] ) .
+
+n2:NaryShape a n22:NodeShape ;
+    n22:property [ n22:class n2:BooleanExpression ;
+            n22:minCount 2 ;
+            n22:path n2:hasOperand ] ;
+    n22:targetClass n2:Conjunction,
+        n2:Disjunction .
+
+n2:NegationShape a n22:NodeShape ;
+    n22:property [ n22:class n2:BooleanExpression ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:hasOperand ] ;
+    n22:targetClass n2:Negation .
+
+n2:OutcomeShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:afterCondition ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:beforeCondition ] ;
+    n22:targetClass n2:OutcomeSpecification .
+
+n2:ParameterShape a n22:NodeShape ;
+    n22:property [ n22:in ( n2:PreState n2:PostState n2:CurrentState n2:TaskContext ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:inScope ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:parameter ] ;
+    n22:targetClass n2:ParameterReference .
+
+n2:ValueTypeShape a n22:NodeShape ;
+    n22:not [ n22:class n2:BooleanExpression ] ;
+    n22:targetClass n2:ValueExpression .
+
+n3:Shape a n22:NodeShape ;
+    n22:property [ n22:class n6:DiagnosticHypothesis ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n3:hypothesis ],
+        [ n22:class n1:CausalLink ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n3:causalLink ],
+        [ n22:class ac:ApplicabilitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n3:applicability ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n3:causeCondition ] ;
+    n22:sparql [ n22:message "Association cause must match both diagnostic candidate and causal antecedent." ;
+            n22:select """
+ PREFIX db: <http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl#>
+ PREFIX fd: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#>
+ PREFIX cm: <http://aicor.knowledge/ontologies/causal-mechanisms.owl#>
+ SELECT $this WHERE {$this db:hypothesis ?h; db:causalLink ?l; db:causeCondition ?c .
+ FILTER NOT EXISTS {?h fd:candidateCause ?c . ?l cm:antecedent ?c}}
+ """ ] ;
+    n22:targetClass n3:DiagnosticCausalAssociation .
+
+n4:AdaptationShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:updatesParameter ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:validWhen ] ;
+    n22:targetClass n4:AdaptationSpecification .
+
+n4:AssignmentShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:positiveInteger ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:dimension ],
+        [ n22:datatype xsd:positiveInteger ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:position ],
+        [ n22:in ( n4:State n4:Input n4:Output n4:Disturbance ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:role ],
+        [ n22:class n17:ModelVariable ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:variable ] ;
+    n22:targetClass n4:VariableAssignment .
+
+n4:ControllerShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:samplingPeriod ],
+        [ n22:class n4:ControllerKind ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:controllerKind ],
+        [ n22:class n14:ObjectiveSet ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:objectiveSet ],
+        [ n22:class n4:DynamicalModelSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n4:controlsModel ] ;
+    n22:targetClass n4:ControllerSpecification .
+
+n4:ModelShape a n22:NodeShape ;
+    n22:property [ n22:class n4:VariableAssignment ;
+            n22:minCount 1 ;
+            n22:path n4:hasAssignment ] ;
+    n22:targetClass n4:DynamicalModelSpecification .
+
+n6:FailureShape a n22:NodeShape ;
+    n22:property [ n22:class n6:FailureKind ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n6:failureKind ],
+        [ n22:class ac:FailureCriterion ;
+            n22:minCount 1 ;
+            n22:path n6:detectedBy ] ;
+    n22:targetClass n6:FailureSpecification .
+
+n6:HypothesisShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EvidenceRecord ;
+            n22:path n6:supportingEvidence ],
+        [ n22:class ac:EvidenceRecord ;
+            n22:path n6:refutingEvidence ],
+        [ n22:class n6:FailureSpecification ;
+            n22:minCount 1 ;
+            n22:path n6:explainsFailure ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n6:candidateCause ] ;
+    n22:targetClass n6:DiagnosticHypothesis .
+
+n6:ProfileShape a n22:NodeShape ;
+    n22:property [ n22:class n6:DiagnosticHypothesis ;
+            n22:path n6:hasHypothesis ],
+        [ n22:class n6:FailureSpecification ;
+            n22:minCount 1 ;
+            n22:path n6:hasFailure ],
+        [ n22:class n6:RecoveryOption ;
+            n22:path n6:hasRecoveryOption ] ;
+    n22:targetClass n6:FailureProfile .
+
+n6:RecoveryShape a n22:NodeShape ;
+    n22:property [ n22:class n0:ExecutionStrategy ;
+            n22:maxCount 1 ;
+            n22:path n6:usesStrategy ],
+        [ n22:class ac:CapabilityRequirement ;
+            n22:minCount 1 ;
+            n22:path n6:requiresCapability ],
+        [ n22:class n6:FailureSpecification ;
+            n22:minCount 1 ;
+            n22:path n6:addressesFailure ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n6:guardedBy ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n6:restoresCondition ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:path n6:retryBudget ] ;
+    n22:targetClass n6:RecoveryOption .
+
+n8:ContractShape a n22:NodeShape ;
+    n22:property [ n22:class n8:FrameDefinition ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n8:frameDefinition ],
+        [ n22:in ( "retain-with-status" "require-allowed-claim" ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n8:evidencePolicy ] ;
+    n22:targetClass n8:FrameProjectionSpecification .
+
+n8:FrameShape a n22:NodeShape ;
+    n22:property [ n22:class n8:FrameDefinition ;
+            n22:maxCount 1 ;
+            n22:path n8:parentFrame ],
+        [ n22:class n8:SlotDefinition ;
+            n22:path n8:hasSlot ],
+        [ n22:class n8:SlotOverride ;
+            n22:path n8:hasOverride ] ;
+    n22:targetClass n8:FrameDefinition .
+
+n8:SlotShape a n22:NodeShape ;
+    n22:property [ n22:class n8:SlotMapping ;
+            n22:maxCount 1 ;
+            n22:path n8:hasMapping ],
+        [ n22:datatype xsd:nonNegativeInteger ;
+            n22:maxCount 1 ;
+            n22:path n8:maximumCount ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n8:slotKey ],
+        [ n22:datatype xsd:nonNegativeInteger ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n8:minimumCount ] ;
+    n22:targetClass n8:SlotDefinition .
+
+n8:StepShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:positiveInteger ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n8:position ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n8:predicateIRI ] ;
+    n22:targetClass n8:PathStep .
+
+n8:ValueShape a n22:NodeShape ;
+    n22:property [ n22:in ( "source" "default" ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n8:valueOrigin ],
+        [ n22:class n8:SlotDefinition ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n8:fillsSlot ] ;
+    n22:targetClass n8:FrameSlotValue ;
+    n22:xone ( [ n22:property [ n22:maxCount 0 ;
+                        n22:path n8:literalValue ],
+                    [ n22:maxCount 1 ;
+                        n22:minCount 1 ;
+                        n22:path n8:entityValue ] ] [ n22:property [ n22:maxCount 1 ;
+                        n22:minCount 1 ;
+                        n22:path n8:literalValue ],
+                    [ n22:maxCount 0 ;
+                        n22:path n8:entityValue ] ] ) .
+
+n10:AssessmentShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EvidenceRecord ;
+            n22:path n10:usesEvidence ],
+        [ n22:in ( ac:Proposed ac:Supported ac:Disputed ac:Rejected ac:Unknown ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:assessedStatus ],
+        [ n22:class ac:KnowledgeRecord ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:inRecord ],
+        [ n22:class ac:KnowledgeClaim ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:assessesClaim ],
+        [ n22:datatype xsd:dateTime ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:assessedAt ;
+            n22:pattern "(Z|[+-][0-9]{2}:[0-9]{2})$" ],
+        [ n22:class n10:KnowledgeContext ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:inContext ],
+        [ n22:datatype xsd:dateTime ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:validUntil ;
+            n22:pattern "(Z|[+-][0-9]{2}:[0-9]{2})$" ],
+        [ n22:datatype xsd:dateTime ;
+            n22:lessThan n10:validUntil ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:validFrom ;
+            n22:pattern "(Z|[+-][0-9]{2}:[0-9]{2})$" ] ;
+    n22:sparql [ n22:message "Assessment claim must belong to its record and context must describe that record's action." ;
+            n22:select """
+ PREFIX kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#>
+ PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+ SELECT $this WHERE {$this kc:inRecord ?r; kc:assessesClaim ?c; kc:inContext ?ctx .
+ {FILTER NOT EXISTS {?r ac:hasClaim ?c}} UNION
+ {?ctx kc:scopedDescription ?d . FILTER NOT EXISTS {?r ac:expressesDescription ?d}}}
+ """ ],
+        [ n22:message "Supported assessment requires explicit evidence." ;
+            n22:select """
+ PREFIX kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#>
+ PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+ SELECT $this WHERE {$this kc:assessedStatus ac:Supported . FILTER NOT EXISTS {$this kc:usesEvidence ?e}}
+ """ ] ;
+    n22:targetClass n10:ClaimAssessment .
+
+n10:ContextShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:contextKey ],
+        [ n22:class ac:ActionDescription ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:scopedDescription ] ;
+    n22:targetClass n10:KnowledgeContext .
+
+n10:DigestShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:sha256 ;
+            n22:pattern "^[0-9a-f]{64}$" ] ;
+    n22:targetSubjectsOf n10:sha256 .
+
+n10:ObservationShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:dateTime ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:observedAt ;
+            n22:pattern "(Z|[+-][0-9]{2}:[0-9]{2})$" ] ;
+    n22:targetClass n10:ObservationEvidence .
+
+n10:SnapshotShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:serializationProfile ],
+        [ n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:sha256 ],
+        [ n22:class ac:KnowledgeRecord ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:snapshotOf ] ;
+    n22:targetClass n10:RecordSnapshot .
+
+n10:SourceShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:sourceIRI ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:selector ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n10:sourceVersion ] ;
+    n22:targetClass n10:SourceSnapshot .
+
+mt:CompleteTransferDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path mt:residualTolerance ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path mt:residualAmount ] ;
+    n22:targetClass mt:CompleteTransferDescription .
+
+mt:MaterialTransferDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class ac:PreconditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasPrecondition ],
+        [ n22:class ac:SuccessCriterion ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasSuccessCriterion ],
+        [ n22:class n10:KnowledgeContext ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path mt:evaluationContext ],
+        [ n22:class ac:FailureCriterion ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasFailureCriterion ],
+        [ n22:class ac:GoalSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasGoal ],
+        [ n22:class n21:TransferContract ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:hasTransferContract ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path mt:quantityBasis ] ;
+    n22:targetClass mt:MaterialTransferDescription .
+
+mt:PrimaryTransferConsistencyShape a n22:NodeShape ;
+    n22:property [ n22:in ( "volume" "mass" "volume"^^xsd:string "mass"^^xsd:string ) ;
+            n22:path mt:quantityBasis ] ;
+    n22:sparql [ n22:message "The transfer context must describe this action." ;
+            n22:select "SELECT $this WHERE { $this <http://aicor.knowledge/ontologies/material-transfer.owl#evaluationContext> ?context . FILTER NOT EXISTS { ?context <http://aicor.knowledge/ontologies/knowledge-context.owl#scopedDescription> $this } }" ] ;
+    n22:targetClass mt:MaterialTransferDescription .
+
+n11:EquationShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ApplicabilitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n11:scope ],
+        [ n22:class n11:EquationTerm ;
+            n22:minCount 1 ;
+            n22:path n11:hasTerm ],
+        [ n22:class n17:ModelEquation ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n11:equation ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n11:resultParameter ] ;
+    n22:targetClass n11:AdditiveEquationContract .
+
+n11:QuantityShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n11:parameter ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n11:unitIRI ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n11:dimensionVector ;
+            n22:pattern "^-?[0-9]+( -?[0-9]+){6}$" ] ;
+    n22:targetClass n11:QuantityContract .
+
+n11:TermShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:decimal ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n11:coefficient ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n11:termParameter ] ;
+    n22:targetClass n11:EquationTerm .
+
+n12:MonitorShape a n22:NodeShape ;
+    n22:property [ n22:class n12:ObservationRequirement ;
+            n22:path n12:requiresObservation ],
+        [ n22:in ( n12:RequestEvidence n12:RequestSuspension n12:ReportUnknown ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n12:whenUnknown ],
+        [ n22:in ( n12:PhaseEntry n12:DuringPhase n12:PhaseExit n12:TransitionCheck ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n12:atPoint ],
+        [ n22:class n12:MonitoringResponse ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n12:whenFalse ],
+        [ n22:class n12:MonitoringResponse ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n12:whenTrue ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n12:monitorsCondition ] ;
+    n22:targetClass n12:MonitoringRequirement .
+
+n12:ObservationShape a n22:NodeShape ;
+    n22:property [ n22:class ac:CapabilityRequirement ;
+            n22:path n12:requiresCapability ],
+        [ n22:in ( n2:PreState n2:PostState n2:CurrentState n2:TaskContext ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n12:inScope ] ;
+    n22:targetClass n12:ObservationRequirement ;
+    n22:xone ( [ n22:class n12:RelationObservation ] [ n22:class n12:QuantityObservation ] ) .
+
+n12:QuantityObservationShape a n22:NodeShape ;
+    n22:property [ n22:maxCount 0 ;
+            n22:path n12:observesPattern ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n12:observesParameter ] ;
+    n22:targetClass n12:QuantityObservation .
+
+n12:RelationObservationShape a n22:NodeShape ;
+    n22:property [ n22:maxCount 0 ;
+            n22:path n12:observesParameter ],
+        [ n22:class n15:RelationPattern ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n12:observesPattern ] ;
+    n22:targetClass n12:RelationObservation .
+
+n13:FixationDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class n18:FrameSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:anchorFrame ],
+        [ n22:class n10:KnowledgeContext ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:evaluationContext ] ;
+    n22:targetClass n13:FixationDescription .
+
+n13:HoldingDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class n10:KnowledgeContext ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:evaluationContext ] ;
+    n22:targetClass n13:HoldingDescription .
+
+n13:ManipulationMotionRequirementShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:motionControlledEntity ],
+        [ n22:class n13:TargetRegionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 0 ;
+            n22:path n13:motionTarget ],
+        [ n22:class ac:ActionKind ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:motionKind ] ;
+    n22:targetClass n13:ManipulationMotionRequirement .
+
+n13:ObjectManipulationDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:manipulator ],
+        [ n22:class n13:ManipulationMotionRequirement ;
+            n22:minCount 1 ;
+            n22:path n13:requiresMotion ],
+        [ n22:class ac:FailureCriterion ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasFailureCriterion ],
+        [ n22:class ac:GoalSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasGoal ],
+        [ n22:class ac:PreconditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasPrecondition ],
+        [ n22:class ac:SuccessCriterion ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasSuccessCriterion ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:object ],
+        [ n22:class ac:CapabilityRequirement ;
+            n22:minCount 1 ;
+            n22:path ac:hasCapabilityRequirement ] ;
+    n22:targetClass n13:ObjectManipulationDescription .
+
+n13:PickupDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:initialSupport ] ;
+    n22:targetClass n13:PickupDescription .
+
+n13:PlacementDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class n13:TargetRegionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:targetRegion ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:destinationSupport ] ;
+    n22:targetClass n13:PlacementDescription .
+
+n13:PrimaryManipulationConsistencyShape a n22:NodeShape ;
+    n22:property [ n22:class n10:KnowledgeContext ;
+            n22:maxCount 1 ;
+            n22:path n13:evaluationContext ],
+        [ n22:disjoint n13:object ;
+            n22:path n13:manipulator ] ;
+    n22:sparql [ n22:message "A supplied manipulation context must describe this action." ;
+            n22:select "SELECT $this WHERE { $this <http://aicor.knowledge/ontologies/object-manipulation.owl#evaluationContext> ?context . FILTER NOT EXISTS { ?context <http://aicor.knowledge/ontologies/knowledge-context.owl#scopedDescription> $this } }" ] ;
+    n22:targetClass n13:ObjectManipulationDescription .
+
+n13:PrimaryPickupConsistencyShape a n22:NodeShape ;
+    n22:property [ n22:disjoint n13:manipulator,
+                n13:object ;
+            n22:path n13:initialSupport ] ;
+    n22:targetClass n13:PickupDescription .
+
+n13:PrimaryPlacementConsistencyShape a n22:NodeShape ;
+    n22:property [ n22:disjoint n13:manipulator,
+                n13:object ;
+            n22:path n13:destinationSupport ] ;
+    n22:targetClass n13:PlacementDescription .
+
+n13:ReachingDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class n13:TargetRegionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n13:targetRegion ] ;
+    n22:targetClass n13:ReachingDescription .
+
+n14:HardConditionShape a n22:NodeShape ;
+    n22:property [ n22:class n2:BooleanExpression ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:hasExpression ] ;
+    n22:targetObjectsOf n4:inputConstraint,
+        n4:stateConstraint,
+        n14:hardConstraint .
+
+n14:NormalizationShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n14:scaleParameter ] ;
+    n22:targetClass n14:NormalizationSpecification .
+
+n14:SetShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ConstraintSpecification ;
+            n22:path n14:hardConstraint ],
+        [ n22:in ( n14:WeightedSum n14:Lexicographic n14:Pareto ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n14:aggregationPolicy ],
+        [ n22:class n14:ObjectiveTerm ;
+            n22:minCount 1 ;
+            n22:path n14:hasTerm ] ;
+    n22:targetClass n14:ObjectiveSet .
+
+n14:TermShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:nonNegativeInteger ;
+            n22:maxCount 1 ;
+            n22:path n14:rank ],
+        [ n22:class n14:NormalizationSpecification ;
+            n22:maxCount 1 ;
+            n22:path n14:normalizedBy ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n14:metricParameter ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:path n14:weightParameter ],
+        [ n22:in ( n14:Minimize n14:Maximize ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n14:direction ] ;
+    n22:targetClass n14:ObjectiveTerm .
+
+n15:ArgumentShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:positiveInteger ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n15:argumentPosition ] ;
+    n22:targetClass n15:ArgumentDefinition .
+
+n15:BindingShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n15:bindsEntity ],
+        [ n22:class n15:ArgumentDefinition ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n15:bindsArgument ] ;
+    n22:targetClass n15:ArgumentBinding .
+
+n15:PatternShape a n22:NodeShape ;
+    n22:property [ n22:class n15:RelationDefinition ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n15:usesRelation ],
+        [ n22:class n15:ArgumentBinding ;
+            n22:minCount 1 ;
+            n22:path n15:hasArgumentBinding ] ;
+    n22:targetClass n15:RelationPattern .
+
+n15:RelationShape a n22:NodeShape ;
+    n22:property [ n22:class n15:ArgumentDefinition ;
+            n22:minCount 1 ;
+            n22:path n15:hasArgumentDefinition ],
+        [ n22:datatype xsd:positiveInteger ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n15:arity ] ;
+    n22:targetClass n15:RelationDefinition .
+
+n16:ConditionReferenceShape a n22:NodeShape ;
+    n22:property [ n22:class n2:BooleanExpression ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n2:hasExpression ] ;
+    n22:targetObjectsOf n12:monitorsCondition,
+        n16:entryCondition,
+        n16:exitCondition,
+        n16:guardCondition,
+        n16:invariantCondition .
+
+n16:PhaseShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:path n16:exitCondition ],
+        [ n22:class n2:OutcomeSpecification ;
+            n22:path n16:expectedOutcome ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:path n16:entryCondition ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:path n16:invariantCondition ] ;
+    n22:targetClass ac:PhaseSpecification .
+
+n16:StructureShape a n22:NodeShape ;
+    n22:property [ n22:class ac:PhaseSpecification ;
+            n22:minCount 1 ;
+            n22:path n16:hasMemberPhase ],
+        [ n22:class ac:PhaseSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n16:initialPhase ],
+        [ n22:class n16:PhaseTransition ;
+            n22:path n16:hasTransition ] ;
+    n22:targetClass n16:PhaseStructure .
+
+n16:SuccessfulTerminalShape a n22:NodeShape ;
+    n22:not [ n22:class n16:FailedTerminalPhase ] ;
+    n22:targetClass n16:SuccessfulTerminalPhase .
+
+n16:TransitionShape a n22:NodeShape ;
+    n22:property [ n22:class ac:PhaseSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n16:fromPhase ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n16:guardCondition ],
+        [ n22:class ac:PhaseSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n16:toPhase ] ;
+    n22:targetClass n16:PhaseTransition ;
+    n22:xone ( [ n22:class n16:OrdinaryTransition ] [ n22:class n16:FailureTransition ] [ n22:class n16:RecoveryTransition ] ) .
+
+n17:ArtifactShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:artifactVersion ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:artifactIRI ] ;
+    n22:targetClass n17:ModelArtifact .
+
+n17:EquationShape a n22:NodeShape ;
+    n22:property [ n22:class n17:ModelVariable ;
+            n22:minCount 1 ;
+            n22:path n17:usesVariable ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:expressionLanguage ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:expressionText ] ;
+    n22:targetClass n17:ModelEquation .
+
+n17:ModelShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ApplicabilitySpecification ;
+            n22:minCount 1 ;
+            n22:path n17:applicability ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:minCount 1 ;
+            n22:path n17:assumption ],
+        [ n22:class n17:ModelVariable ;
+            n22:minCount 1 ;
+            n22:path n17:hasVariable ] ;
+    n22:targetClass n17:PhysicalModelSpecification .
+
+n17:PropertyShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:describesEntity ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:valueParameter ],
+        [ n22:class n17:PropertyKind ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:propertyKind ] ;
+    n22:targetClass n17:PhysicalPropertySpecification .
+
+n17:StudyShape a n22:NodeShape ;
+    n22:property [ n22:class n17:PhysicalModelSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:studiesModel ],
+        [ n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:testsOutcome ] ;
+    n22:targetClass n17:SimulationStudySpecification .
+
+n17:ValidationShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ApplicabilitySpecification ;
+            n22:minCount 1 ;
+            n22:path n17:validationScope ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:validationArtifactIRI ],
+        [ n22:class n17:PhysicalModelSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:validatesModel ] ;
+    n22:targetClass n17:ModelValidationRecord .
+
+n17:VariableShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:parameter ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n17:symbol ] ;
+    n22:targetClass n17:ModelVariable .
+
+n18:CartesianMotionDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class n18:PoseTarget ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:poseTarget ] ;
+    n22:targetClass n18:CartesianMotionDescription .
+
+n18:ConfigurationMotionDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class n18:ConfigurationTarget ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:configurationTarget ] ;
+    n22:targetClass n18:ConfigurationMotionDescription .
+
+n18:ConfigurationTargetShape a n22:NodeShape ;
+    n22:property [ n22:class n18:CoordinateTarget ;
+            n22:minCount 1 ;
+            n22:path n18:hasCoordinateTarget ] ;
+    n22:targetClass n18:ConfigurationTarget .
+
+n18:CoordinateSpecificationShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:coordinateKey ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:coordinateKind ] ;
+    n22:targetClass n18:CoordinateSpecification .
+
+n18:CoordinateTargetShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:toleranceParameter ],
+        [ n22:class n18:CoordinateSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:coordinate ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:errorParameter ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:targetParameter ] ;
+    n22:targetClass n18:CoordinateTarget .
+
+n18:MotionBoundsShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 0 ;
+            n22:path n18:accelerationLimit ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 0 ;
+            n22:path n18:speedLimit ] ;
+    n22:targetClass n18:MotionBounds .
+
+n18:OrientationTargetShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:qzParameter ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:orientationConvention ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:qyParameter ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:qxParameter ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:qwParameter ] ;
+    n22:targetClass n18:OrientationTarget .
+
+n18:PathFollowingDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class n18:PathSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:pathTarget ] ;
+    n22:targetClass n18:PathFollowingDescription .
+
+n18:PathSpecificationShape a n22:NodeShape ;
+    n22:property [ n22:class n18:WaypointSpecification ;
+            n22:minCount 2 ;
+            n22:path n18:hasWaypoint ] ;
+    n22:targetClass n18:PathSpecification .
+
+n18:PoseTargetShape a n22:NodeShape ;
+    n22:property [ n22:class n18:FrameSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:referenceFrame ],
+        [ n22:class n18:OrientationTarget ;
+            n22:maxCount 1 ;
+            n22:minCount 0 ;
+            n22:path n18:orientation ],
+        [ n22:class n18:PositionTarget ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:position ] ;
+    n22:targetClass n18:PoseTarget .
+
+n18:PositionTargetShape a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:yParameter ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:xParameter ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:zParameter ] ;
+    n22:targetClass n18:PositionTarget .
+
+n18:RobotMotionDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class ac:PreconditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasPrecondition ],
+        [ n22:class ac:GoalSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasGoal ],
+        [ n22:class ac:SuccessCriterion ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasSuccessCriterion ],
+        [ n22:class ac:CapabilityRequirement ;
+            n22:minCount 1 ;
+            n22:path ac:hasCapabilityRequirement ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:controlledEntity ] ;
+    n22:targetClass n18:RobotMotionDescription .
+
+n18:WaypointSpecificationShape a n22:NodeShape ;
+    n22:property [ n22:datatype xsd:positiveInteger ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:positionIndex ],
+        [ n22:class n18:PoseTarget ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n18:waypointPose ] ;
+    n22:targetClass n18:WaypointSpecification .
+
+n20:ToolInteractionDescriptionShape a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n20:tool ],
+        [ n22:class n18:FrameSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n20:referenceFrame ],
+        [ n22:class ac:FailureCriterion ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasFailureCriterion ],
+        [ n22:class ac:GoalSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasGoal ],
+        [ n22:class n10:KnowledgeContext ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n20:evaluationContext ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n20:contactPolicy ],
+        [ n22:class ac:PreconditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasPrecondition ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n20:intendedEffect ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n20:target ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n20:operator ],
+        [ n22:class ac:SuccessCriterion ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path ac:hasSuccessCriterion ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n20:workingPart ] ;
+    n22:targetClass n20:ToolInteractionDescription .
+
+n21:PrimaryTransferReferentShape a n22:NodeShape ;
+    n22:property [ n22:disjoint n21:destination ;
+            n22:path n21:source ],
+        [ n22:disjoint n21:substance ;
+            n22:path n21:transferredPortion ] ;
+    n22:targetClass n21:TransferContract .
+
+n21:Shape a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:source ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:substance ],
+        [ n22:class ac:SuccessCriterion ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:successCriterion ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:destination ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:transferredPortion ],
+        [ n22:in ( "partial"^^xsd:string "complete"^^xsd:string ) ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:transferMode ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:targetAmount ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:spillTolerance ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:spillAmount ],
+        [ n22:class ac:ParameterSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n21:deliveredAmount ] ;
+    n22:targetClass n21:TransferContract .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class n7:Tendency ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n7:tendency ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n7:entity ] ;
+    n22:targetClass n7:ForceParticipant .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:content ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:container ] ;
+    n22:targetClass n9:ContainmentSchema .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:CapabilityRequirement ;
+            n22:minCount 1 ;
+            n22:path n19:requiresCapability ],
+        [ n22:class n19:SensoryModality ;
+            n22:minCount 1 ;
+            n22:path n19:modality ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n19:expectedCondition ] ;
+    n22:targetClass n19:SensoryExpectation .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class n5:MaterialSpecification ;
+            n22:path n5:hasMaterial ],
+        [ n22:class n5:AffordanceSpecification ;
+            n22:path n5:hasAffordance ],
+        [ n22:class n5:GeometrySpecification ;
+            n22:path n5:hasGeometry ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n5:describesEntity ] ;
+    n22:targetClass n5:EntityDescription .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n19:discrepancyCondition ] ;
+    n22:targetClass n19:MismatchSpecification .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class n5:MaterialState ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n5:materialState ],
+        [ n22:class n5:MaterialSpecification ;
+            n22:path n5:constituent ] ;
+    n22:targetClass n5:MaterialSpecification .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:location ],
+        [ n22:datatype xsd:positiveInteger ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:position ] ;
+    n22:targetClass n9:PathElement .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:supporter ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:supported ] ;
+    n22:targetClass n9:SupportSchema .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:secondContactEntity ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:firstContactEntity ] ;
+    n22:targetClass n9:ContactSchema .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:ParameterSpecification ;
+            n22:path n5:dimensionParameter ],
+        [ n22:datatype xsd:string ;
+            n22:maxCount 1 ;
+            n22:path n5:assetVersion ],
+        [ n22:datatype xsd:anyURI ;
+            n22:maxCount 1 ;
+            n22:path n5:assetIRI ] ;
+    n22:targetClass n5:GeometrySpecification .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:CapabilityRequirement ;
+            n22:minCount 1 ;
+            n22:path n19:observationRequirement ],
+        [ n22:class n19:SensoryExpectation ;
+            n22:minCount 1 ;
+            n22:path n19:hasExpectation ],
+        [ n22:class n19:EventBoundarySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n19:atBoundary ],
+        [ n22:class n19:MismatchSpecification ;
+            n22:path n19:mismatchCriterion ] ;
+    n22:targetClass n19:ControlPointSpecification .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:PhaseSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n19:beforePhase ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n19:boundaryCondition ],
+        [ n22:class ac:PhaseSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n19:afterPhase ] ;
+    n22:targetClass n19:EventBoundarySpecification .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class n7:ForceParticipant ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n7:agonist ],
+        [ n22:class ac:ApplicabilitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n7:applicability ],
+        [ n22:class n7:Resultant ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n7:describedResult ],
+        [ n22:class n7:ForceParticipant ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n7:antagonist ],
+        [ n22:class n7:StrengthRelation ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n7:relativeStrength ] ;
+    n22:targetClass n7:ForceDynamicDescription .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:theme ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:source ],
+        [ n22:class ac:EntitySpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n9:goal ],
+        [ n22:class n9:PathElement ;
+            n22:path n9:hasPathElement ] ;
+    n22:targetClass n9:SourcePathGoalSchema .
+
+[] a n22:NodeShape ;
+    n22:property [ n22:class ac:CapabilityRequirement ;
+            n22:minCount 1 ;
+            n22:path n5:requiresCapability ],
+        [ n22:class ac:ActionKind ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n5:affordsActionKind ],
+        [ n22:class ac:ConditionSpecification ;
+            n22:maxCount 1 ;
+            n22:minCount 1 ;
+            n22:path n5:validWhen ] ;
+    n22:targetClass n5:AffordanceSpecification .
+

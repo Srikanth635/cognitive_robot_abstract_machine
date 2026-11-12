@@ -1,0 +1,9 @@
+{
+  "comparedRelease": "0.16.0",
+  "unchangedOntologyAndExampleFiles": 68,
+  "changed": [
+    "integrations/all-action-knowledge.ttl"
+  ],
+  "missing": [],
+  "expectedAssemblyChangeOnly": true
+}

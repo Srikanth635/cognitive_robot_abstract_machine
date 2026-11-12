@@ -1,0 +1,674 @@
+{
+  "release": "0.22.0",
+  "artifact_kind": "symbolic generation aid",
+  "complete_output_schema": false,
+  "new_record_identity_policy": "Use a fresh record and mutable annotation/context identities; reuse immutable descriptions/specifications only through an explicit versioned sharing policy.",
+  "unknown_value_policy": "Leave physical values unspecified; scalar_default null is template metadata, never an RDF numeric literal.",
+  "epistemic_policy": "Generated claims remain Proposed; no observations, world bindings or accepted beliefs are produced.",
+  "templates": [
+    {
+      "action": "pickup",
+      "source_fixture": "examples/object-manipulation-profiles.ttl",
+      "source_record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#pickupRecord",
+      "source_record_version": "1",
+      "source_description": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#pickup",
+      "action_kind": "http://aicor.knowledge/ontologies/object-manipulation.owl#PickingUp",
+      "entity_roles": [
+        "initial_support",
+        "manipulator",
+        "object"
+      ],
+      "parameters": {},
+      "conditions": {
+        "precondition": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PreState",
+              "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#Supports",
+              "arguments": [
+                "entity:initial_support",
+                "entity:object"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PreState",
+              "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#Graspable",
+              "arguments": [
+                "entity:object"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        },
+        "goal": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#Supports",
+              "arguments": [
+                "entity:initial_support",
+                "entity:object"
+              ],
+              "negated": true
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#Holds",
+              "arguments": [
+                "entity:manipulator",
+                "entity:object"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#ClearOfSupport",
+              "arguments": [
+                "entity:object",
+                "entity:initial_support"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        },
+        "success": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#Supports",
+              "arguments": [
+                "entity:initial_support",
+                "entity:object"
+              ],
+              "negated": true
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#Holds",
+              "arguments": [
+                "entity:manipulator",
+                "entity:object"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#ClearOfSupport",
+              "arguments": [
+                "entity:object",
+                "entity:initial_support"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        },
+        "fault": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#AtomicCondition",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#HoldLost",
+              "arguments": [
+                "entity:manipulator",
+                "entity:object"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        }
+      }
+    },
+    {
+      "action": "place",
+      "source_fixture": "examples/object-manipulation-profiles.ttl",
+      "source_record": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#placementRecord",
+      "source_record_version": "1",
+      "source_description": "http://aicor.knowledge/ontologies/object-manipulation-examples.owl#placement",
+      "action_kind": "http://aicor.knowledge/ontologies/object-manipulation.owl#Placing",
+      "entity_roles": [
+        "destination_support",
+        "manipulator",
+        "object",
+        "target_region"
+      ],
+      "parameters": {},
+      "conditions": {
+        "precondition": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#AtomicCondition",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PreState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#Holds",
+              "arguments": [
+                "entity:manipulator",
+                "entity:object"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        },
+        "goal": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#Supports",
+              "arguments": [
+                "entity:destination_support",
+                "entity:object"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#ManipulatorClear",
+              "arguments": [
+                "entity:manipulator",
+                "entity:object"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#Holds",
+              "arguments": [
+                "entity:manipulator",
+                "entity:object"
+              ],
+              "negated": true
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#StableOnSupport",
+              "arguments": [
+                "entity:object",
+                "entity:destination_support"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#AtTarget",
+              "arguments": [
+                "entity:object",
+                "entity:target_region"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        },
+        "success": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#Supports",
+              "arguments": [
+                "entity:destination_support",
+                "entity:object"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#ManipulatorClear",
+              "arguments": [
+                "entity:manipulator",
+                "entity:object"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#Holds",
+              "arguments": [
+                "entity:manipulator",
+                "entity:object"
+              ],
+              "negated": true
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#StableOnSupport",
+              "arguments": [
+                "entity:object",
+                "entity:destination_support"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#AtTarget",
+              "arguments": [
+                "entity:object",
+                "entity:target_region"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        },
+        "fault": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#AtomicCondition",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+              "relation": "http://aicor.knowledge/ontologies/object-manipulation.owl#SupportUnstable",
+              "arguments": [
+                "entity:object",
+                "entity:destination_support"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        }
+      }
+    },
+    {
+      "action": "navigate",
+      "source_fixture": "examples/mobility-navigation-profiles.ttl",
+      "source_record": "http://aicor.knowledge/ontologies/mobility-examples.owl#navigationRecord",
+      "source_record_version": "1",
+      "source_description": "http://aicor.knowledge/ontologies/mobility-examples.owl#navigation",
+      "action_kind": "http://aicor.knowledge/ontologies/mobility-navigation.owl#Navigating",
+      "entity_roles": [
+        "footprint",
+        "frame",
+        "robot",
+        "target_region"
+      ],
+      "parameters": {
+        "position_error": {
+          "unit_iri": "http://qudt.org/vocab/unit/M",
+          "scalar_default": null
+        },
+        "position_tolerance": {
+          "unit_iri": "http://qudt.org/vocab/unit/M",
+          "scalar_default": null
+        },
+        "heading_error": {
+          "unit_iri": "http://qudt.org/vocab/unit/RAD",
+          "scalar_default": null
+        },
+        "heading_tolerance": {
+          "unit_iri": "http://qudt.org/vocab/unit/RAD",
+          "scalar_default": null
+        },
+        "clearance": {
+          "unit_iri": "http://qudt.org/vocab/unit/M",
+          "scalar_default": null
+        }
+      },
+      "conditions": {
+        "precondition": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PreState",
+              "relation": "http://aicor.knowledge/ontologies/mobility-navigation.owl#NavigableTo",
+              "arguments": [
+                "entity:robot",
+                "entity:target_region",
+                "entity:footprint"
+              ],
+              "negated": false
+            },
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+              "relation": "http://aicor.knowledge/ontologies/mobility-navigation.owl#MotionCapabilityAvailable",
+              "arguments": [
+                "entity:robot"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        },
+        "goal": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/mobility-navigation.owl#InRegion",
+              "arguments": [
+                "entity:robot",
+                "entity:target_region"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": [
+            {
+              "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#LessOrEqual",
+              "left": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "parameter": "parameter:heading_error"
+              },
+              "right": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "parameter": "parameter:heading_tolerance"
+              }
+            },
+            {
+              "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#LessOrEqual",
+              "left": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "parameter": "parameter:position_error"
+              },
+              "right": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "parameter": "parameter:position_tolerance"
+              }
+            }
+          ]
+        },
+        "success": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/mobility-navigation.owl#InRegion",
+              "arguments": [
+                "entity:robot",
+                "entity:target_region"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": [
+            {
+              "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#LessOrEqual",
+              "left": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "parameter": "parameter:heading_error"
+              },
+              "right": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "parameter": "parameter:heading_tolerance"
+              }
+            },
+            {
+              "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#LessOrEqual",
+              "left": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "parameter": "parameter:position_error"
+              },
+              "right": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "parameter": "parameter:position_tolerance"
+              }
+            }
+          ]
+        },
+        "fault": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#AtomicCondition",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+              "relation": "http://aicor.knowledge/ontologies/mobility-navigation.owl#NavigationFault",
+              "arguments": [
+                "entity:robot",
+                "entity:target_region"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        }
+      }
+    },
+    {
+      "action": "pour",
+      "source_fixture": "examples/tool-material-transfer-profiles.ttl",
+      "source_record": "http://aicor.knowledge/ontologies/tool-transfer-examples.owl#pouringTransferRecord",
+      "source_record_version": "1",
+      "source_description": "http://aicor.knowledge/ontologies/tool-transfer-examples.owl#pouringTransfer",
+      "action_kind": "http://aicor.knowledge/ontologies/material-transfer.owl#Pouring",
+      "entity_roles": [
+        "destination",
+        "material",
+        "source",
+        "transferred_portion"
+      ],
+      "parameters": {
+        "delivered_amount": {
+          "unit_iri": "http://qudt.org/vocab/unit/M3",
+          "scalar_default": null
+        },
+        "target_amount": {
+          "unit_iri": "http://qudt.org/vocab/unit/M3",
+          "scalar_default": null
+        },
+        "spill_amount": {
+          "unit_iri": "http://qudt.org/vocab/unit/M3",
+          "scalar_default": null
+        },
+        "spill_tolerance": {
+          "unit_iri": "http://qudt.org/vocab/unit/M3",
+          "scalar_default": null
+        }
+      },
+      "conditions": {
+        "precondition": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#AtomicCondition",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PreState",
+              "relation": "http://aicor.knowledge/ontologies/material-transfer.owl#TransferReady",
+              "arguments": [
+                "entity:source",
+                "entity:destination",
+                "entity:material"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        },
+        "goal": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#ContainedIn",
+              "arguments": [
+                "entity:transferred_portion",
+                "entity:destination"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": [
+            {
+              "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#GreaterOrEqual",
+              "left": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "parameter": "parameter:delivered_amount"
+              },
+              "right": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "parameter": "parameter:target_amount"
+              }
+            },
+            {
+              "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#LessOrEqual",
+              "left": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "parameter": "parameter:spill_amount"
+              },
+              "right": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "parameter": "parameter:spill_tolerance"
+              }
+            }
+          ]
+        },
+        "success": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#ContainedIn",
+              "arguments": [
+                "entity:transferred_portion",
+                "entity:destination"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": [
+            {
+              "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#GreaterOrEqual",
+              "left": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "parameter": "parameter:delivered_amount"
+              },
+              "right": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "parameter": "parameter:target_amount"
+              }
+            },
+            {
+              "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#LessOrEqual",
+              "left": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "parameter": "parameter:spill_amount"
+              },
+              "right": {
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "parameter": "parameter:spill_tolerance"
+              }
+            }
+          ]
+        },
+        "fault": {
+          "combination": "all-clauses",
+          "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#AtomicCondition",
+          "atoms": [
+            {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+              "relation": "http://aicor.knowledge/ontologies/material-transfer.owl#TransferFault",
+              "arguments": [
+                "entity:source",
+                "entity:destination"
+              ],
+              "negated": false
+            }
+          ],
+          "comparisons": []
+        }
+      }
+    }
+  ],
+  "schema_imports": [
+    "http://aicor.knowledge/ontologies/action-description-core.owl",
+    "http://aicor.knowledge/ontologies/action-recipes.owl",
+    "http://aicor.knowledge/ontologies/all-action-aspects.owl",
+    "http://aicor.knowledge/ontologies/all-action-knowledge.owl",
+    "http://aicor.knowledge/ontologies/articulated-mechanisms.owl",
+    "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+    "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+    "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+    "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+    "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+    "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+    "http://aicor.knowledge/ontologies/dynamics-control.owl",
+    "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+    "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+    "http://aicor.knowledge/ontologies/force-dynamics.owl",
+    "http://aicor.knowledge/ontologies/frame-perspective.owl",
+    "http://aicor.knowledge/ontologies/image-schemas.owl",
+    "http://aicor.knowledge/ontologies/knowledge-context.owl",
+    "http://aicor.knowledge/ontologies/material-transfer.owl",
+    "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+    "http://aicor.knowledge/ontologies/model-contracts.owl",
+    "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+    "http://aicor.knowledge/ontologies/object-manipulation.owl",
+    "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+    "http://aicor.knowledge/ontologies/participants-relations.owl",
+    "http://aicor.knowledge/ontologies/perception-attention.owl",
+    "http://aicor.knowledge/ontologies/phases-transitions.owl",
+    "http://aicor.knowledge/ontologies/physical-models.owl",
+    "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+    "http://aicor.knowledge/ontologies/pouring-tool-bridge.owl",
+    "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+    "http://aicor.knowledge/ontologies/robot-motion.owl",
+    "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+    "http://aicor.knowledge/ontologies/specialized-tool-interactions.owl",
+    "http://aicor.knowledge/ontologies/tool-interaction.owl",
+    "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+    "http://aicor.knowledge/ontologies/transport-carrying.owl",
+    "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+  ],
+  "ontology_sha256": {
+    "core/action-description-core.ttl": "f4815cdfa272c7d693bf7f2560c63d026004b49cfd54cdf33e773766eed52ce0",
+    "compositions/action-recipes.ttl": "062ad58d8cc6ca8fe49aff9ebde4af90f0021dffde4d023bc3693c8d1721fb12",
+    "integrations/all-action-aspects.ttl": "097a28681db79871f8ebc502822e06e50663e6b24f0af858e8239582f2052178",
+    "integrations/all-action-knowledge.ttl": "a1d92554bbfe04876e68d8f839bdf5a5bbda6ffbb193a68d811850d15ee215f5",
+    "domains/articulated-mechanisms.ttl": "3c41707df3ffa8fcfc57945a1f06545183c5076509e5c6ed23c531509265bf88",
+    "aspects/planning/capabilities-strategies.ttl": "aaf50b68bd6f285d36daf1a9410ec5d54f9a13079cdf0a5e674243768f9a4e41",
+    "aspects/causality/causal-mechanisms.ttl": "3c7979cd6b57e748f3973b9cf9869bbc2731bf639cf5e8caa27a4f0e35110d4c",
+    "integrations/causal-outcome-bridge.ttl": "bc44591787f1392140eb3baf3d9a64a53f76e0bb25ef020ef371b815f3d6eb88",
+    "integrations/causal-physical-bridge.ttl": "8bea3208cdbfd8e2469785fefe98e011d911c43ecbf486b464c5ff3023f14488",
+    "aspects/structure/conditions-outcomes.ttl": "21b3daaac617e04e74a365e1fd648114ec9cee7d550bc11448b9c85dd28d9ac0",
+    "integrations/diagnostic-causal-bridge.ttl": "41f80f6fa7cea1f301ac92ddeedccad0c1776c1d2db23f4a9cce00cff6c0dcfa",
+    "aspects/physics-control/dynamics-control.ttl": "fae5c7ed2a80779d949af80fa38ce5a9be3268c76c94d450ae266ed6fc5901a2",
+    "aspects/entities-transfer/entities-materials-affordances.ttl": "7864c4d5bd3f14c742629cfcfbf6e39f78ea9777e8d2e286f04382731fdc8d82",
+    "aspects/planning/failure-diagnosis.ttl": "901e45818ab274b91a81519b69a6962ff6bbfc48330d021adaa749d5ea50c165",
+    "aspects/perspectives/force-dynamics.ttl": "dbeee75e4afa3cba0f21c1874f0b0650d2fb72ce59e6faf45e7ecfbb390bf0d2",
+    "aspects/perspectives/frame-perspective.ttl": "e72d0403f4e35799f36e5df747ada832e5142641d7378a990fd57d350efd432c",
+    "aspects/perspectives/image-schemas.ttl": "37205d754e793bc2108155b4683d94f904cf2cb2ffc2fc07f1f19674000346d5",
+    "core/knowledge-context.ttl": "6cd9afd7d184cab830f99d5014f70eb815e2acf5f1a2855d3a6ea88353cbe9fd",
+    "domains/material-transfer.ttl": "19e181e12fdf8892cdf2b7d4886b2541c05d97ea4f7ce69e5a143a187ea63dde",
+    "domains/mobility-navigation.ttl": "fd3c2a78f63feaca8bf670307e0ed0a2b4ca0246f52a9f96baa91a33a9985a0f",
+    "aspects/physics-control/model-contracts.ttl": "1464fe71823e40ed6cd79c43763281acfc7f7e4e60664b2e4581ff989d0a8c3d",
+    "aspects/observation/monitoring-requirements.ttl": "f4bd224191a81b0a29cd9c0fa5b9716b1ff0f69a3c6b5ce285bdbaea92db3121",
+    "domains/object-manipulation.ttl": "e8fef18309e647c79f48fe56d940293d1295a04fb6ea6e2e4c9067cb81f1d40b",
+    "aspects/planning/objectives-tradeoffs.ttl": "873dfece06d1cea8cc5123f9fda25b9b7ede78d8c174db9cc6f899ed814c57c1",
+    "aspects/structure/participants-relations.ttl": "689dcd48485b7b5bce881074113cb8f498382aca0bcce65f76049d72f04230b1",
+    "domains/perception-attention.ttl": "d2934ef335099ed613e6f2840c860475013063e182a3777a263f37ef2ce136b8",
+    "aspects/structure/phases-transitions.ttl": "98cb41a94234fae88a7b0e31049c650eaf670c0ea4cca4998cc03baab6c7da15",
+    "aspects/physics-control/physical-models.ttl": "4fbcb778be894546a0ca52349ec7ff2960c16cdc22acc21fd7311c25712f34b4",
+    "integrations/physical-outcome-bridge.ttl": "b72ce9a2ab2d70cbc6ed3af498f582cf281d64dbaf234dc5a0ab47f20d562672",
+    "integrations/pouring-tool-bridge.ttl": "d08e58ab587880fd8752525270e665e4496dad7037961d5c765f00bd1beec66c",
+    "integrations/recovery-strategy-bridge.ttl": "e8fa5f988127d9d8da6869ac114717ba706c25ef08804eb56fc5a3af494f2347",
+    "domains/robot-motion.ttl": "17cd5911494bcb8f14222ae1643f5e856ea7f27ad45a24bf5ae688aaff5d05d8",
+    "aspects/observation/sensorimotor-events.ttl": "0bdddf35d503fca290ff608f5d93e1e9f7dfbe8342e5be422b86320abf58a0ce",
+    "refinements/specialized-tool-interactions.ttl": "14f57da4e9d817f331ff2f7ec4e84803ab84b82f68bc7b513f748c6e2b065315",
+    "domains/tool-interaction.ttl": "b7452f819de7bd39ee0434bb892f1ff84b8bf58e04e9e1015a1d0d09e1493ef1",
+    "aspects/entities-transfer/transfer-contracts.ttl": "2e2180d9a2d3f7da2aac93a3f9d9b6e89ca079bb37c4c456b3b8728873c78839",
+    "compositions/transport-carrying.ttl": "c097b8ab434df5ee8214a516219da16b1ee1d46b1f474fd1e52336f09a43132e",
+    "DUL.owl": "6b0945b794d44e7cd7020e3dc4612e6cf7566045fd49ec21aa52a247a2eed7d9"
+  },
+  "input_sha256": {
+    "examples/mobility-navigation-profiles.ttl": "46c723e0c54cf2f7f10393f0433ca18c238fcdceffc2214de3e89718c0ccfd17",
+    "examples/object-manipulation-profiles.ttl": "f5dab2a7acd56f40bb514c89cce8648f3dd635570e0cb7f6ab4939ff61eb3dcb",
+    "examples/tool-material-transfer-profiles.ttl": "0bf63d525195de763d63c428fff7dec20dcb903ca6cd724fa5548fe51c25fefb"
+  }
+}

@@ -1,0 +1,86 @@
+[
+  {
+    "case": "valid-two-partial-controller-examples",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-vector-variable",
+    "passed": true
+  },
+  {
+    "case": "reject-noncontiguous-position",
+    "passed": true
+  },
+  {
+    "case": "reject-dimension-mismatch",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-input-role",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-evolution-equation",
+    "passed": true
+  },
+  {
+    "case": "reject-duplicate-rank",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-rank",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-weight",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-normalization",
+    "passed": true
+  },
+  {
+    "case": "reject-negative-weight",
+    "passed": true
+  },
+  {
+    "case": "reject-zero-normalization",
+    "passed": true
+  },
+  {
+    "case": "reject-zero-sampling-period",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-adaptation-target",
+    "passed": true
+  },
+  {
+    "case": "reject-all-zero-weights",
+    "passed": true
+  },
+  {
+    "case": "reject-hard-constraint-without-expression",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-controller-model",
+    "passed": true
+  },
+  {
+    "case": "explicit-positive-weights-and-scales-accepted",
+    "passed": true
+  },
+  {
+    "case": "dimension-calculated-from-entries",
+    "passed": true
+  },
+  {
+    "case": "missing-settings-explicit",
+    "passed": true
+  },
+  {
+    "case": "claims-remain-proposed",
+    "passed": true
+  }
+]

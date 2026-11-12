@@ -1,0 +1,112 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/material-transfer.owl#CompleteTransferDescriptionShape> a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/material-transfer.owl#residualTolerance> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/material-transfer.owl#residualAmount> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/material-transfer.owl#CompleteTransferDescription> .
+
+<http://aicor.knowledge/ontologies/material-transfer.owl#MaterialTransferDescriptionShape> a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#FailureCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasFailureCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/transfer-contracts.owl#TransferContract> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/transfer-contracts.owl#hasTransferContract> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#SuccessCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion> ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/material-transfer.owl#quantityBasis> ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/material-transfer.owl#evaluationContext> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PreconditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#GoalSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/material-transfer.owl#MaterialTransferDescription> .
+
+<http://aicor.knowledge/ontologies/tool-interaction.owl#ToolInteractionDescriptionShape> a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/tool-interaction.owl#evaluationContext> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#GoalSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#FailureCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasFailureCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#SuccessCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/tool-interaction.owl#target> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PreconditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition> ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/tool-interaction.owl#referenceFrame> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/tool-interaction.owl#tool> ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/tool-interaction.owl#contactPolicy> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/tool-interaction.owl#workingPart> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/tool-interaction.owl#operator> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/tool-interaction.owl#intendedEffect> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/tool-interaction.owl#ToolInteractionDescription> .
+
+
+# Primary-action consistency hardening 0.22.0
+@prefix om: <http://aicor.knowledge/ontologies/object-manipulation.owl#> .
+@prefix mn: <http://aicor.knowledge/ontologies/mobility-navigation.owl#> .
+@prefix mt: <http://aicor.knowledge/ontologies/material-transfer.owl#> .
+@prefix tc: <http://aicor.knowledge/ontologies/transfer-contracts.owl#> .
+@prefix kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#> .
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+
+mt:PrimaryTransferConsistencyShape a sh:NodeShape ; sh:targetClass mt:MaterialTransferDescription ;
+ sh:property [ sh:path mt:quantityBasis ; sh:in ( "volume" "mass" "volume"^^xsd:string "mass"^^xsd:string ) ] ;
+ sh:sparql [ sh:message "The transfer context must describe this action." ;
+ sh:select """SELECT $this WHERE { $this <http://aicor.knowledge/ontologies/material-transfer.owl#evaluationContext> ?context . FILTER NOT EXISTS { ?context <http://aicor.knowledge/ontologies/knowledge-context.owl#scopedDescription> $this } }""" ] .
+tc:PrimaryTransferReferentShape a sh:NodeShape ; sh:targetClass tc:TransferContract ;
+ sh:property [ sh:path tc:source ; sh:disjoint tc:destination ],
+             [ sh:path tc:transferredPortion ; sh:disjoint tc:substance ] .

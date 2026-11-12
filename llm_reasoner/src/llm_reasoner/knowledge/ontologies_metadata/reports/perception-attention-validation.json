@@ -1,0 +1,398 @@
+{
+  "release": "0.16.0",
+  "checks": [
+    {
+      "case": "five-profile-shapes",
+      "passed": true
+    },
+    {
+      "case": "domain-contracts",
+      "passed": true
+    },
+    {
+      "case": "relation-signatures",
+      "passed": true
+    },
+    {
+      "case": "phase-monitor-integrity",
+      "passed": true
+    },
+    {
+      "case": "attention:no-result-remains-unknown",
+      "passed": true
+    },
+    {
+      "case": "attention:unknown-guard-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "visibility:no-result-remains-unknown",
+      "passed": true
+    },
+    {
+      "case": "visibility:unknown-guard-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "detection:no-result-remains-unknown",
+      "passed": true
+    },
+    {
+      "case": "detection:unknown-guard-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "identification:no-result-remains-unknown",
+      "passed": true
+    },
+    {
+      "case": "identification:unknown-guard-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "search:no-result-remains-unknown",
+      "passed": true
+    },
+    {
+      "case": "search:unknown-guard-requests-evidence",
+      "passed": true
+    },
+    {
+      "case": "attention-state:Directed",
+      "passed": true
+    },
+    {
+      "case": "attention-state:NotDirected",
+      "passed": true
+    },
+    {
+      "case": "attention-state:AttentionUnknown",
+      "passed": true
+    },
+    {
+      "case": "visibility-assessment:Visible",
+      "passed": true
+    },
+    {
+      "case": "visibility-assessment:Occluded",
+      "passed": true
+    },
+    {
+      "case": "visibility-assessment:VisibilityUnknown",
+      "passed": true
+    },
+    {
+      "case": "candidate-does-not-prove-attention",
+      "passed": true
+    },
+    {
+      "case": "attention-does-not-prove-detection",
+      "passed": true
+    },
+    {
+      "case": "detection:",
+      "passed": true
+    },
+    {
+      "case": "no-global-absence:[]",
+      "passed": true
+    },
+    {
+      "case": "detection:Matches",
+      "passed": true
+    },
+    {
+      "case": "no-global-absence:[rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#Matches')]",
+      "passed": true
+    },
+    {
+      "case": "detection:Matches,Matches",
+      "passed": true
+    },
+    {
+      "case": "no-global-absence:[rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#Matches'), rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#Matches')]",
+      "passed": true
+    },
+    {
+      "case": "detection:DoesNotMatch",
+      "passed": true
+    },
+    {
+      "case": "no-global-absence:[rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#DoesNotMatch')]",
+      "passed": true
+    },
+    {
+      "case": "detection:MatchUnknown",
+      "passed": true
+    },
+    {
+      "case": "no-global-absence:[rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#MatchUnknown')]",
+      "passed": true
+    },
+    {
+      "case": "detection:Matches,MatchUnknown",
+      "passed": true
+    },
+    {
+      "case": "no-global-absence:[rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#Matches'), rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#MatchUnknown')]",
+      "passed": true
+    },
+    {
+      "case": "identification:[rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#Matches')]",
+      "passed": true
+    },
+    {
+      "case": "identification:[rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#Matches'), rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#DoesNotMatch')]",
+      "passed": true
+    },
+    {
+      "case": "identification:[rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#Matches'), rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#Matches')]",
+      "passed": true
+    },
+    {
+      "case": "identification:[rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#Matches'), rdflib.term.URIRef('http://aicor.knowledge/ontologies/perception-attention.owl#MatchUnknown')]",
+      "passed": true
+    },
+    {
+      "case": "identification:[]",
+      "passed": true
+    },
+    {
+      "case": "failed-operation-not-successful-detection",
+      "passed": true
+    },
+    {
+      "case": "undetermined-operation-stays-unknown",
+      "passed": true
+    },
+    {
+      "case": "stale-evidence-does-not-establish-success",
+      "passed": true
+    },
+    {
+      "case": "future-evidence-does-not-establish-success",
+      "passed": true
+    },
+    {
+      "case": "unsupported-kind:LLMGeneration",
+      "passed": true
+    },
+    {
+      "case": "unsupported-kind:DocumentSource",
+      "passed": true
+    },
+    {
+      "case": "synthetic-input-explicit",
+      "passed": true
+    },
+    {
+      "case": "no-belief-publication",
+      "passed": true
+    },
+    {
+      "case": "inspection-does-not-mutate-graph",
+      "passed": true
+    },
+    {
+      "case": "result-record-validates-against-core-and-context-shapes",
+      "passed": true
+    },
+    {
+      "case": "foreign-record",
+      "passed": true
+    },
+    {
+      "case": "foreign-context",
+      "passed": true
+    },
+    {
+      "case": "foreign-query",
+      "passed": true
+    },
+    {
+      "case": "wrong-frame",
+      "passed": true
+    },
+    {
+      "case": "duplicate-result-selection",
+      "passed": true
+    },
+    {
+      "case": "negative-freshness-limit",
+      "passed": true
+    },
+    {
+      "case": "nonfinite-freshness-limit",
+      "passed": true
+    },
+    {
+      "case": "timezone-required",
+      "passed": true
+    },
+    {
+      "case": "multiple-results-require-policy",
+      "passed": true
+    },
+    {
+      "case": "candidate-hypothesis-result-scope",
+      "passed": true
+    },
+    {
+      "case": "first-empty-view-is-incomplete",
+      "passed": true
+    },
+    {
+      "case": "all-views-exhausted-is-local",
+      "passed": true
+    },
+    {
+      "case": "out-of-order-view-not-silently-accepted",
+      "passed": true
+    },
+    {
+      "case": "budget-exhaustion-distinct-from-view-exhaustion",
+      "passed": true
+    },
+    {
+      "case": "budget-overrun-reported",
+      "passed": true
+    },
+    {
+      "case": "search-can-stop-after-a-match",
+      "passed": true
+    },
+    {
+      "case": "results-after-stop-require-policy",
+      "passed": true
+    },
+    {
+      "case": "search-fault-not-absence",
+      "passed": true
+    },
+    {
+      "case": "unknown-match-does-not-exhaust-search",
+      "passed": true
+    },
+    {
+      "case": "multiple-results-for-view-require-policy",
+      "passed": true
+    },
+    {
+      "case": "foreign-search-view",
+      "passed": true
+    },
+    {
+      "case": "estimate-remains-a-hypothesis",
+      "passed": true
+    },
+    {
+      "case": "estimate-shape-valid",
+      "passed": true
+    },
+    {
+      "case": "foreign-estimate-frame",
+      "passed": true
+    },
+    {
+      "case": "incomplete-estimate-shape-rejected",
+      "passed": true
+    },
+    {
+      "case": "proposal-scope-valid",
+      "passed": true
+    },
+    {
+      "case": "proposal-does-not-publish",
+      "passed": true
+    },
+    {
+      "case": "foreign-proposal-context-rejected",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-observer",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-query-frame",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-viewpoint",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-target",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-view-frame",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-view-region",
+      "passed": true
+    },
+    {
+      "case": "reject-duplicate-view-index",
+      "passed": true
+    },
+    {
+      "case": "reject-zero-budget",
+      "passed": true
+    },
+    {
+      "case": "reject-fractional-budget",
+      "passed": true
+    },
+    {
+      "case": "attention:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "visibility:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "detection:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "identification:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "search:exact-provenance",
+      "passed": true
+    },
+    {
+      "case": "no-result-observation-in-profile-data",
+      "passed": true
+    },
+    {
+      "case": "no-world-bindings",
+      "passed": true
+    },
+    {
+      "case": "no-execution-framework-or-mobility-domain-import",
+      "passed": true
+    }
+  ],
+  "imports": [
+    "http://aicor.knowledge/ontologies/action-description-core.owl",
+    "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+    "http://aicor.knowledge/ontologies/dynamics-control.owl",
+    "http://aicor.knowledge/ontologies/knowledge-context.owl",
+    "http://aicor.knowledge/ontologies/model-contracts.owl",
+    "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+    "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+    "http://aicor.knowledge/ontologies/participants-relations.owl",
+    "http://aicor.knowledge/ontologies/perception-attention.owl",
+    "http://aicor.knowledge/ontologies/phases-transitions.owl",
+    "http://aicor.knowledge/ontologies/physical-models.owl",
+    "http://aicor.knowledge/ontologies/robot-motion.owl",
+    "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+    "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+  ],
+  "scope": "Five hypothetical profiles; result records are synthetic in-memory fixtures only. No sensor acquisition or accepted belief update."
+}

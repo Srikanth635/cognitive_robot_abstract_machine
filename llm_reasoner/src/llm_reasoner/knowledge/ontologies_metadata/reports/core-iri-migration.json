@@ -1,0 +1,28 @@
+{
+  "version": "0.1.1",
+  "namespace_migrations": [
+    {
+      "from": "urn:cram:action-core:ontology",
+      "to": "http://aicor.knowledge/ontologies/action-description-core.owl"
+    },
+    {
+      "from": "urn:cram:action-bridge:ontology",
+      "to": "http://aicor.knowledge/ontologies/cram-action-bridge.owl"
+    },
+    {
+      "from": "urn:cram:action-core:",
+      "to": "http://aicor.knowledge/ontologies/action-description-core.owl#"
+    },
+    {
+      "from": "urn:cram:action-bridge:",
+      "to": "http://aicor.knowledge/ontologies/cram-action-bridge.owl#"
+    },
+    {
+      "from": "urn:cram:examples:",
+      "to": "http://aicor.knowledge/ontologies/action-examples.owl#"
+    }
+  ],
+  "local_names_preserved": true,
+  "note": "HTTP IRIs identify the ontologies; hosting at these addresses is not configured. Local XML catalogs resolve imports.",
+  "logical_axioms_preserved_under_iri_renaming": true
+}

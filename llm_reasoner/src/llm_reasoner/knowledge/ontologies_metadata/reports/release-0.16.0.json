@@ -1,0 +1,37 @@
+{
+  "release": "0.16.0",
+  "registered_ontologies": 33,
+  "implemented_domains": 4,
+  "new_domain": "perception-attention",
+  "profiles": [
+    "Attention direction",
+    "Visibility assessment",
+    "Detection",
+    "Identification",
+    "Bounded search"
+  ],
+  "validation": {
+    "new_checks_passed": 94,
+    "scoped_query_cases": 15,
+    "import_catalog_checks_passed": 53,
+    "object_manipulation_regressions_passed": 102,
+    "mobility_regressions_passed": 104,
+    "historical_competency_assertions_passed": 93,
+    "domain_and_combined_assembly_classification": "passed, no unsatisfiable named classes",
+    "generic_examples_consistency": "passed",
+    "optional_aicor_consistency": "passed"
+  },
+  "aicor_history": "Latest optional check passed; earlier normalization failure not explained and full AICOR satisfiability unverified.",
+  "preservation": {
+    "prior_RDF_files": 66,
+    "byte_identical": 65,
+    "only_changed_prior_ontology": "integrations/all-action-knowledge.ttl"
+  },
+  "limitations": [
+    "Synthetic Proposed knowledge; no acquired images, sensor results or accepted beliefs in profiles",
+    "Result/pose/proposal tests use only synthetic in-memory inputs",
+    "No detection/identity algorithm, geometric visibility model, tracking or fusion",
+    "No world-model write or acceptance policy implementation",
+    "No movement executor, CoraPlex/RoboKudo adapter or working projection"
+  ]
+}

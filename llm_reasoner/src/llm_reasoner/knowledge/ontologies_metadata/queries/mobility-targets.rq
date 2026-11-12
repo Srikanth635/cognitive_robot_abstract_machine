@@ -1,0 +1,10 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX mn: <http://aicor.knowledge/ontologies/mobility-navigation.owl#>
+SELECT ?action ?kind ?robot ?target ?frame ?footprint ?context ?route ?sourceLevel ?destinationLevel ?facility
+WHERE {
+ ?record ac:expressesDescription ?action .
+ ?action ac:hasActionKind ?kind; mn:robot ?robot; mn:targetRegion ?target;
+ mn:referenceFrame ?frame; mn:footprint ?footprint; mn:evaluationContext ?context .
+ OPTIONAL {?action mn:route ?route}
+ OPTIONAL {?action mn:sourceLevel ?sourceLevel; mn:destinationLevel ?destinationLevel; mn:transitionFacility ?facility}
+}

@@ -1,0 +1,342 @@
+{
+  "bundle_version": "0.23.0",
+  "profile_ontology": "http://aicor.knowledge/ontologies/pouring-action.owl",
+  "focus_description_class": "http://aicor.knowledge/ontologies/material-transfer.owl#PouringDescription",
+  "focus_action_kind": "http://aicor.knowledge/ontologies/material-transfer.owl#Pouring",
+  "modular_entry": "pouring.ttl",
+  "self_contained_ontology": "context/pouring-complete.ttl",
+  "single_document_llm_context": "context/pouring-context.md",
+  "validation_shapes": "validation/pouring-shapes.ttl",
+  "closure_documents": 32,
+  "closure_kind": "Complete import closure, not minimal axiom extraction",
+  "flattening_policy": "Standardize blank nodes apart, deduplicate RDF triples, remove imports and dependency ontology header metadata; retain the entry header and all non-header triples.",
+  "sources": [
+    {
+      "iri": "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "path": "../../core/action-description-core.ttl",
+      "version_info": [
+        "0.10.0"
+      ],
+      "sha256": "f4815cdfa272c7d693bf7f2560c63d026004b49cfd54cdf33e773766eed52ce0"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/all-action-aspects.owl",
+      "path": "../../integrations/all-action-aspects.ttl",
+      "version_info": [
+        "0.12.0"
+      ],
+      "sha256": "097a28681db79871f8ebc502822e06e50663e6b24f0af858e8239582f2052178"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "path": "../../aspects/planning/capabilities-strategies.ttl",
+      "version_info": [
+        "0.10.0"
+      ],
+      "sha256": "aaf50b68bd6f285d36daf1a9410ec5d54f9a13079cdf0a5e674243768f9a4e41"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "path": "../../aspects/causality/causal-mechanisms.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "3c7979cd6b57e748f3973b9cf9869bbc2731bf639cf5e8caa27a4f0e35110d4c"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+      "path": "../../integrations/causal-outcome-bridge.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "bc44591787f1392140eb3baf3d9a64a53f76e0bb25ef020ef371b815f3d6eb88"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+      "path": "../../integrations/causal-physical-bridge.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "8bea3208cdbfd8e2469785fefe98e011d911c43ecbf486b464c5ff3023f14488"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "path": "../../aspects/structure/conditions-outcomes.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "21b3daaac617e04e74a365e1fd648114ec9cee7d550bc11448b9c85dd28d9ac0"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+      "path": "../../integrations/diagnostic-causal-bridge.ttl",
+      "version_info": [
+        "0.12.0"
+      ],
+      "sha256": "41f80f6fa7cea1f301ac92ddeedccad0c1776c1d2db23f4a9cce00cff6c0dcfa"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "path": "../../aspects/physics-control/dynamics-control.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "fae5c7ed2a80779d949af80fa38ce5a9be3268c76c94d450ae266ed6fc5901a2"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+      "path": "../../aspects/entities-transfer/entities-materials-affordances.ttl",
+      "version_info": [
+        "0.10.0"
+      ],
+      "sha256": "7864c4d5bd3f14c742629cfcfbf6e39f78ea9777e8d2e286f04382731fdc8d82"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "path": "../../aspects/planning/failure-diagnosis.ttl",
+      "version_info": [
+        "0.10.0"
+      ],
+      "sha256": "901e45818ab274b91a81519b69a6962ff6bbfc48330d021adaa749d5ea50c165"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/force-dynamics.owl",
+      "path": "../../aspects/perspectives/force-dynamics.ttl",
+      "version_info": [
+        "0.9.0"
+      ],
+      "sha256": "dbeee75e4afa3cba0f21c1874f0b0650d2fb72ce59e6faf45e7ecfbb390bf0d2"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/frame-perspective.owl",
+      "path": "../../aspects/perspectives/frame-perspective.ttl",
+      "version_info": [
+        "0.8.0"
+      ],
+      "sha256": "e72d0403f4e35799f36e5df747ada832e5142641d7378a990fd57d350efd432c"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/image-schemas.owl",
+      "path": "../../aspects/perspectives/image-schemas.ttl",
+      "version_info": [
+        "0.9.0"
+      ],
+      "sha256": "37205d754e793bc2108155b4683d94f904cf2cb2ffc2fc07f1f19674000346d5"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "path": "../../core/knowledge-context.ttl",
+      "version_info": [
+        "0.11.0"
+      ],
+      "sha256": "6cd9afd7d184cab830f99d5014f70eb815e2acf5f1a2855d3a6ea88353cbe9fd"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/material-transfer.owl",
+      "path": "../../domains/material-transfer.ttl",
+      "version_info": [
+        "0.22.0"
+      ],
+      "sha256": "19e181e12fdf8892cdf2b7d4886b2541c05d97ea4f7ce69e5a143a187ea63dde"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "path": "../../aspects/physics-control/model-contracts.ttl",
+      "version_info": [
+        "0.12.0"
+      ],
+      "sha256": "1464fe71823e40ed6cd79c43763281acfc7f7e4e60664b2e4581ff989d0a8c3d"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "path": "../../aspects/observation/monitoring-requirements.ttl",
+      "version_info": [
+        "0.10.0"
+      ],
+      "sha256": "f4bd224191a81b0a29cd9c0fa5b9716b1ff0f69a3c6b5ce285bdbaea92db3121"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "path": "../../domains/object-manipulation.ttl",
+      "version_info": [
+        "0.22.0"
+      ],
+      "sha256": "e8fef18309e647c79f48fe56d940293d1295a04fb6ea6e2e4c9067cb81f1d40b"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "path": "../../aspects/planning/objectives-tradeoffs.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "873dfece06d1cea8cc5123f9fda25b9b7ede78d8c174db9cc6f899ed814c57c1"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "path": "../../aspects/structure/participants-relations.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "689dcd48485b7b5bce881074113cb8f498382aca0bcce65f76049d72f04230b1"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "path": "../../aspects/structure/phases-transitions.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "98cb41a94234fae88a7b0e31049c650eaf670c0ea4cca4998cc03baab6c7da15"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/physical-models.owl",
+      "path": "../../aspects/physics-control/physical-models.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "4fbcb778be894546a0ca52349ec7ff2960c16cdc22acc21fd7311c25712f34b4"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+      "path": "../../integrations/physical-outcome-bridge.ttl",
+      "version_info": [
+        "0.6.0"
+      ],
+      "sha256": "b72ce9a2ab2d70cbc6ed3af498f582cf281d64dbaf234dc5a0ab47f20d562672"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/pouring-action.owl",
+      "path": "pouring.ttl",
+      "version_info": [
+        "0.23.0"
+      ],
+      "sha256": "14d268d366a6998e5ef8895712237cc387cc54d70b48659e5f92afdbd5cf69e8"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/pouring-tool-bridge.owl",
+      "path": "../../integrations/pouring-tool-bridge.ttl",
+      "version_info": [
+        "0.17.0"
+      ],
+      "sha256": "d08e58ab587880fd8752525270e665e4496dad7037961d5c765f00bd1beec66c"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+      "path": "../../integrations/recovery-strategy-bridge.ttl",
+      "version_info": [
+        "0.7.0"
+      ],
+      "sha256": "e8fa5f988127d9d8da6869ac114717ba706c25ef08804eb56fc5a3af494f2347"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "path": "../../domains/robot-motion.ttl",
+      "version_info": [
+        "0.13.0"
+      ],
+      "sha256": "17cd5911494bcb8f14222ae1643f5e856ea7f27ad45a24bf5ae688aaff5d05d8"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "path": "../../aspects/observation/sensorimotor-events.ttl",
+      "version_info": [
+        "0.10.0"
+      ],
+      "sha256": "0bdddf35d503fca290ff608f5d93e1e9f7dfbe8342e5be422b86320abf58a0ce"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/tool-interaction.owl",
+      "path": "../../domains/tool-interaction.ttl",
+      "version_info": [
+        "0.17.0"
+      ],
+      "sha256": "b7452f819de7bd39ee0434bb892f1ff84b8bf58e04e9e1015a1d0d09e1493ef1"
+    },
+    {
+      "iri": "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "path": "../../aspects/entities-transfer/transfer-contracts.ttl",
+      "version_info": [
+        "0.12.0"
+      ],
+      "sha256": "2e2180d9a2d3f7da2aac93a3f9d9b6e89ca079bb37c4c456b3b8728873c78839"
+    },
+    {
+      "iri": "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl",
+      "path": "../../DUL.owl",
+      "version_info": [
+        "3.32",
+        "Created by Aldo Gangemi as both a simplification and extension of DOLCE and Descriptions and Situations ontologies.",
+        "In 3.2, the links between instances of Region or Parameter, and datatypes have been revised and made more powerful, in order to support efficient design patterns for data value modelling in OWL1.0.\nAlso, the names of the related properties have been changed in order to make them more intuitive.\nFurthermore, a large comment field has been added to the 'expresses' object property, in order to clarify some issues about the many interpretations.\nIn 3.3, the relation between regions, parameters, and datatypes has been still improved.\nIn 3.5, the person-related classes have been refactored: Person in 3.4 is now SocialPerson, to avoid confusion with commonsense intuition; Person is now the union of social persons and humans, therefore being a subclass of Agent.\nIn 3.6, other fixes on universal restriction involving expresses. Also added the property 'isConstraintFor' between parameters and entities. Moved the properties: 'assumes' and 'adopts' to the new module: http://www.ontologydesignpatterns.org/ont/dul/Conceptualization.owl.\nIn 3.7, some fixes on the names of classes and properties related to FormalEntity; created a new separate module for general universal restrictions (DULGCI.owl).\nIn 3.8, more fixes on the interface to formal entities and links to IOLite.owl.\nIn 3.9, some naming and comment fixes.\nIn 3.10, removed cardinality restriction from hasPart and isPartOf restrictions (changed to hasComponent and isComponentOf), for OWL(DL) compatibility. Also enlarged the range of includesAgent to contain both social and physical agents, and of conceptualizes universal restriction on agents, to include all social objects.\nIn 3.11, some more subproperty axioms have been introduced, and all elements have got English labels.\nIn 3.12, added some classes to map some old DolceLitePlus classes that were used to align OntoWordNet.\nIn 3.13, added the LocalConcept class to express a Concept that cannot be used in a Description different from the one that defines it. Also updated some comments.\nIn 3.14, added some comments.\nIn 3.15, removed some owl:disjointWith axioms relating Collection to InformationObject, Description, Situation, and SocialAgent. The rationale for doing that is to allow less strict constraints on domain relations involving collections that can be also conceived as descriptions, situations, social agents, or information objects; for example: a collection of sentences from a text (an information object) that are ranked with a relevance criterion can be still considered a text.\nIn 3.16, name of isActedBy changed to actsThrough, which is clearer. Also added SpatioTemporalRegion as constituted by a SpaceRegion and a TimeInterval.\nIn 3.17, removed redundant universal axioms from Entity and other top classes. Fixed restrictions on FunctionalSubstance class, and comments in Design and Substance classes.\nIn 3.18, removed subClassOf axiom from FunctionalSubstance to DesignedArtifact, created a new subclass of FunctionalSubstance, called DesignedSubstance, and created a subClassOf axiom from DesignedSubstance to DesignedArtifact.\nIn 3.19, removed disjointness axiom between Concept and Collection (the same rationale applies as in 3.15 version.\nIn 3.20, revised the comment for Quality, added InformationEntity as the superclass for InformationObject and InformationRealization (represented as the union of those classes). This is needed in many domain ontologies that do not need to distinguish between abstract and concrete aspects of information entities. One possible revision (not implemented here) would be to introduce the relations: expresses and isAbout with a broader domain:InformationEntity, and two more specific properties: abstractlyExpresses and isAbstractlyAbout. This last revision has not been implemented yet, since a large revision procedure should be carried out in order to check the impact of the revision on the existing DOLCE-DnS-Ultralite plugins.\nIn 3.21, added comment to InformationEntity, and optimized representation of equivalence for InformationRealization.\nIn 3.22, added comment to Personification.\nIn 3.23, added associatedWith object property, and put all object properties as subproperties of it.\nIn 3.24, removed hasProxy datatype property.\nIn 3.25, generalized domain and range of hasComponent and isComponentOf.\nIn 3.26, updated some comments in order to clarify or exemplify the concepts.\nIn 3.27, added rdfs:isDefinedBy annotations for Linked Data browsers.\nIn 3.28, broadened the universe of pre-/post-conditions to give room to events and states.\nIn 3.29, added some properties to support DBpedia alignment: sameSettingAs (situational analogous to coparticipation), including relations originating e.g. from sharing kinship, ownership, or roleplaying situations.\nIn 3.30, completed some domains and ranges (formerly owl:Thing, now dul:Entity), and added axiom: Organism subClassOf PhysicalAgent.\nIn 3.31, added a restriction to Quality and one to Region in order to ensure the original DOLCE constraint of qualities being always associated with a region, and vice versa. These axioms do not however exclude a direct applicability of qualities or regions to any other entity.\nIn 3.32, removed redundant union axioms and some restrictions, which spot a negative trade-off between expressivity and complexity."
+      ],
+      "sha256": "6b0945b794d44e7cd7020e3dc4612e6cf7566045fd49ec21aa52a247a2eed7d9"
+    }
+  ],
+  "shape_sources": [
+    {
+      "path": "core/action-core-shapes.ttl",
+      "sha256": "ef2771cc12a5754160caac3d97f1a3b1a8615b8f63980d70b26ca5f811ad3815"
+    },
+    {
+      "path": "core/knowledge-context-shapes.ttl",
+      "sha256": "cd1cdd03e45a66df440d2bc909e029689262f6b8ee037b7cf09fbf0bb3cebc09"
+    },
+    {
+      "path": "aspects/validation/aspect-shapes.ttl",
+      "sha256": "b73489f97cd4cd4200311a778c250db0f5ecbf9eaf2b13b4df0a99cf83ac90d4"
+    },
+    {
+      "path": "aspects/validation/causal-physical-shapes.ttl",
+      "sha256": "7a4eb0b4b520b7d239517e9b1f3f463376d26587d239749cfad683255cd9dfd5"
+    },
+    {
+      "path": "aspects/validation/contract-shapes.ttl",
+      "sha256": "c56505b17777dcbe084bed86bf506854de72f12c6c8ab407ea4a5287bf8eb04e"
+    },
+    {
+      "path": "aspects/validation/control-shapes.ttl",
+      "sha256": "f65eea15e5690a35d10eb96de80ec3155798cccd84649b237d8d5289bce380d0"
+    },
+    {
+      "path": "aspects/validation/frame-shapes.ttl",
+      "sha256": "84866ac7e69a6c37d2fdec422e0b5ebef7e513ffb35e0dc1c09c2bd017ef22c0"
+    },
+    {
+      "path": "aspects/validation/remaining-aspect-shapes.ttl",
+      "sha256": "0db6ffeb741a04e29b60d0492c4ba4a8edeb1850bfae783c08d3e8b5a4fd4992"
+    },
+    {
+      "path": "aspects/validation/strategy-failure-shapes.ttl",
+      "sha256": "a84c8aa5b1b6723977a2768b4540b9db7b018038cd73c949deb4bf94f0d5538a"
+    },
+    {
+      "path": "aspects/validation/temporal-shapes.ttl",
+      "sha256": "5c47af6a08a9ac3fad124aa9c6c9306abe7717f664ecde89642360fc15ba6392"
+    },
+    {
+      "path": "domains/robot-motion-shapes.ttl",
+      "sha256": "4f96ca9ab2007e7ae1d18ec79b0c21bed5c1a95b82deaf90db3232a73f53339f"
+    },
+    {
+      "path": "domains/object-manipulation-shapes.ttl",
+      "sha256": "9250bfdcce2c6e72c4219b357a3c6248cd3d46a60523f7833490331c927af1d2"
+    },
+    {
+      "path": "domains/tool-transfer-shapes.ttl",
+      "sha256": "cdb5f46f9ed46c75b6dca8848154907f3e5898d510bc799cebbf60f941ae6ae1"
+    }
+  ],
+  "boundaries": [
+    "No world data, scalar physical defaults or observations",
+    "No duplicate pouring class or action kind",
+    "Imports expose vocabulary without requiring pickup/contact/every aspect",
+    "SHACL is structural coverage, not all application/domain/evidence validation",
+    "No full JSON output schema, LLM transport, physical model validation or execution"
+  ],
+  "generated": {
+    "context/GENERATION_INSTRUCTIONS.md": "f5188244fdbd5a9a11207360cb0dbe951ae550f78485c57deedc539fa6561ffc",
+    "context/pouring-complete.ttl": "dd427908dec2f5327f7e6e1d014527ac14bf8676bfe8e4ebdedf0be719776308",
+    "context/pouring-context.md": "2299a875282cee1f18082f11dfcb7ef698e490d771738cdd9d05d6500c559486",
+    "context/pouring-template.json": "376ada29f2bfc094fd41e61662b4581f26e877c210dc74f9c94dbd27fb27fb45",
+    "pouring.ttl": "14d268d366a6998e5ef8895712237cc387cc54d70b48659e5f92afdbd5cf69e8",
+    "validation/pouring-shapes.ttl": "db58a834769ebcd85c0e90f21907bb32e1a4c8aae117be2679709b52e5116480"
+  }
+}

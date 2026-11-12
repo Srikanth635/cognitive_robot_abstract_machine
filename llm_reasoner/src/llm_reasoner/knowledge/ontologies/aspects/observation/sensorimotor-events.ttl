@@ -1,0 +1,113 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix asp: <http://aicor.knowledge/ontologies/sensorimotor-events.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/sensorimotor-events.owl> a owl:Ontology ;
+    rdfs:label "Sensorimotor events"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.10.0" .
+
+asp:Auditory a asp:SensoryModality,
+        owl:NamedIndividual ;
+    rdfs:label "Auditory"@en .
+
+asp:ForceTorque a asp:SensoryModality,
+        owl:NamedIndividual ;
+    rdfs:label "Force Torque"@en .
+
+asp:Proprioceptive a asp:SensoryModality,
+        owl:NamedIndividual ;
+    rdfs:label "Proprioceptive"@en .
+
+asp:Tactile a asp:SensoryModality,
+        owl:NamedIndividual ;
+    rdfs:label "Tactile"@en .
+
+asp:Visual a asp:SensoryModality,
+        owl:NamedIndividual ;
+    rdfs:label "Visual"@en .
+
+asp:afterPhase a owl:ObjectProperty ;
+    rdfs:label "After Phase"@en ;
+    rdfs:domain asp:EventBoundarySpecification ;
+    rdfs:range ac:PhaseSpecification .
+
+asp:atBoundary a owl:ObjectProperty ;
+    rdfs:label "At Boundary"@en ;
+    rdfs:domain asp:ControlPointSpecification ;
+    rdfs:range asp:EventBoundarySpecification .
+
+asp:beforePhase a owl:ObjectProperty ;
+    rdfs:label "Before Phase"@en ;
+    rdfs:domain asp:EventBoundarySpecification ;
+    rdfs:range ac:PhaseSpecification .
+
+asp:boundaryCondition a owl:ObjectProperty ;
+    rdfs:label "Boundary Condition"@en ;
+    rdfs:domain asp:EventBoundarySpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+asp:discrepancyCondition a owl:ObjectProperty ;
+    rdfs:label "Discrepancy Condition"@en ;
+    rdfs:domain asp:MismatchSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+asp:expectedCondition a owl:ObjectProperty ;
+    rdfs:label "Expected Condition"@en ;
+    rdfs:domain asp:SensoryExpectation ;
+    rdfs:range ac:ConditionSpecification .
+
+asp:hasExpectation a owl:ObjectProperty ;
+    rdfs:label "Has Expectation"@en ;
+    rdfs:domain asp:ControlPointSpecification ;
+    rdfs:range asp:SensoryExpectation .
+
+asp:mismatchCriterion a owl:ObjectProperty ;
+    rdfs:label "Mismatch Criterion"@en ;
+    rdfs:domain asp:ControlPointSpecification ;
+    rdfs:range asp:MismatchSpecification .
+
+asp:modality a owl:ObjectProperty ;
+    rdfs:label "Modality"@en ;
+    rdfs:domain asp:SensoryExpectation ;
+    rdfs:range asp:SensoryModality .
+
+asp:observationRequirement a owl:ObjectProperty ;
+    rdfs:label "Observation Requirement"@en ;
+    rdfs:domain asp:ControlPointSpecification ;
+    rdfs:range ac:CapabilityRequirement ;
+    rdfs:subPropertyOf ac:requiresCapability .
+
+asp:requiresCapability a owl:ObjectProperty ;
+    rdfs:label "Requires Capability"@en ;
+    rdfs:domain asp:SensoryExpectation ;
+    rdfs:range ac:CapabilityRequirement ;
+    rdfs:subPropertyOf ac:requiresCapability .
+
+asp:MismatchSpecification a owl:Class ;
+    rdfs:label "Mismatch Specification"@en ;
+    rdfs:comment "Proposed criterion for discrepancy between expected and supplied evidence."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:ControlPointSpecification a owl:Class ;
+    rdfs:label "Control Point Specification"@en ;
+    rdfs:comment "Point where expected and observed sensory conditions can be compared."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:EventBoundarySpecification a owl:Class ;
+    rdfs:label "Event Boundary Specification"@en ;
+    rdfs:comment "Described phase-boundary condition, not an event occurrence."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:SensoryExpectation a owl:Class ;
+    rdfs:label "Sensory Expectation"@en ;
+    rdfs:comment "Predicted sensory condition and modality; not an observation."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+asp:SensoryModality a owl:Class ;
+    rdfs:label "Sensory Modality"@en ;
+    rdfs:comment "Abstract modality independent of sensor implementation."@en ;
+    rdfs:subClassOf dul:Concept .
+

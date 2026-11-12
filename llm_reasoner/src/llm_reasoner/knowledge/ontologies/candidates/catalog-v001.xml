@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="public">
+  <uri name="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl" uri="../DUL.owl" />
+ <uri name="http://aicor.knowledge/ontologies/mobility-navigation.owl" uri="../domains/mobility-navigation.ttl" />
+ <uri name="http://aicor.knowledge/ontologies/perception-attention.owl" uri="../domains/perception-attention.ttl" />
+ <uri name="http://aicor.knowledge/ontologies/tool-interaction.owl" uri="../domains/tool-interaction.ttl" />
+ <uri name="http://aicor.knowledge/ontologies/material-transfer.owl" uri="../domains/material-transfer.ttl" />
+ <uri name="http://aicor.knowledge/ontologies/pouring-tool-bridge.owl" uri="../integrations/pouring-tool-bridge.ttl" />
+<uri name="http://aicor.knowledge/ontologies/articulated-mechanisms.owl" uri="../domains/articulated-mechanisms.ttl" /><uri name="http://aicor.knowledge/ontologies/transport-carrying.owl" uri="../compositions/transport-carrying.ttl" /><uri name="http://aicor.knowledge/ontologies/specialized-tool-interactions.owl" uri="../refinements/specialized-tool-interactions.ttl" /><uri name="http://aicor.knowledge/ontologies/action-recipes.owl" uri="../compositions/action-recipes.ttl" /></catalog>

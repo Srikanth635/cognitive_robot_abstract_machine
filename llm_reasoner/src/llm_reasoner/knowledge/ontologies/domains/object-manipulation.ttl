@@ -1,0 +1,357 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix om: <http://aicor.knowledge/ontologies/object-manipulation.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pr: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/object-manipulation.owl> a owl:Ontology ;
+    rdfs:label "Object manipulation domain"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/knowledge-context.owl>,
+        <http://aicor.knowledge/ontologies/monitoring-requirements.owl>,
+        <http://aicor.knowledge/ontologies/phases-transitions.owl>,
+        <http://aicor.knowledge/ontologies/robot-motion.owl> ;
+    owl:versionInfo "0.22.0" .
+
+om:AtTarget a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "At target"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:AtTargetArgument1,
+        om:AtTargetArgument2 ;
+    rdfs:comment "Entity is within the intended region under an explicitly supplied tolerance/frame interpretation."@en .
+
+om:ClearOfSupport a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Clear of support"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:ClearOfSupportArgument1,
+        om:ClearOfSupportArgument2 ;
+    rdfs:comment "Object has cleared the specified support under a supplied clearance criterion."@en .
+
+om:Fixating a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Fixating"@en .
+
+om:GraspAcquisition a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Grasp acquisition"@en .
+
+om:GraspAcquisitionDescription a owl:Class ;
+    rdfs:label "Grasp acquisition description"@en ;
+    rdfs:comment "Acquire an explicitly assessed hold and contact; no lifting is implied."@en ;
+    rdfs:subClassOf om:ObjectManipulationDescription .
+
+om:GraspFailed a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Grasp failed"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:GraspFailedArgument1,
+        om:GraspFailedArgument2 ;
+    rdfs:comment "Grasp attempt is explicitly reported failed; absence of success evidence is insufficient."@en .
+
+om:HoldLost a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Hold lost"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:HoldLostArgument1,
+        om:HoldLostArgument2 ;
+    rdfs:comment "An expected hold was lost during the supplied evaluation interval."@en .
+
+om:HoldMaintained a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Hold maintained"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:HoldMaintainedArgument1,
+        om:HoldMaintainedArgument2 ;
+    rdfs:comment "Hold was maintained throughout the supplied evaluation interval, not merely at its endpoint."@en .
+
+om:Holding a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Holding"@en .
+
+om:HoldingDescription a owl:Class ;
+    rdfs:label "Holding description"@en ;
+    rdfs:comment "Maintain a hold over an explicit externally evaluated interval."@en ;
+    rdfs:subClassOf om:ObjectManipulationDescription .
+
+om:Holds a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Holds"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:HoldsArgument1,
+        om:HoldsArgument2 ;
+    rdfs:comment "Manipulator has an assessed hold on the object under the supplied context; gripper closure alone is insufficient."@en .
+
+om:ManipulatorClear a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Manipulator clear"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:ManipulatorClearArgument1,
+        om:ManipulatorClearArgument2 ;
+    rdfs:comment "Manipulator is clear of the object after a placement under a supplied clearance criterion."@en .
+
+om:PickingUp a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Picking up"@en .
+
+om:Placing a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Placing"@en .
+
+om:PoseMaintained a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Pose maintained"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:PoseMaintainedArgument1,
+        om:PoseMaintainedArgument2 ;
+    rdfs:comment "Object pose was maintained relative to the specified frame throughout the evaluation interval."@en .
+
+om:Reaching a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Reaching"@en .
+
+om:ReachingDescription a owl:Class ;
+    rdfs:label "Reaching description"@en ;
+    rdfs:comment "Reach an intended target region; establishes no grasp."@en ;
+    rdfs:subClassOf om:ObjectManipulationDescription .
+
+om:ReleaseBlocked a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Release blocked"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:ReleaseBlockedArgument1,
+        om:ReleaseBlockedArgument2 ;
+    rdfs:comment "Release attempt is explicitly reported blocked."@en .
+
+om:ReleaseDescription a owl:Class ;
+    rdfs:label "Release description"@en ;
+    rdfs:comment "Cease holding; support or placement is not implied."@en ;
+    rdfs:subClassOf om:ObjectManipulationDescription .
+
+om:Releasing a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Releasing"@en .
+
+om:StableOnSupport a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Stable on support"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:StableOnSupportArgument1,
+        om:StableOnSupportArgument2 ;
+    rdfs:comment "Object is assessed as stably supported by the specified support; mere contact is insufficient."@en .
+
+om:SupportUnstable a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Support unstable"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:SupportUnstableArgument1,
+        om:SupportUnstableArgument2 ;
+    rdfs:comment "Object/support instability is explicitly reported."@en .
+
+om:UnexpectedContact a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Unexpected contact"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition om:UnexpectedContactArgument1,
+        om:UnexpectedContactArgument2 ;
+    rdfs:comment "Unexpected manipulator/object contact is reported under the supplied contact policy."@en .
+
+om:anchorFrame a owl:ObjectProperty ;
+    rdfs:label "Anchor frame"@en ;
+    rdfs:domain om:FixationDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+om:destinationSupport a owl:ObjectProperty ;
+    rdfs:label "Destination support"@en ;
+    rdfs:domain om:PlacementDescription ;
+    rdfs:range ac:EntitySpecification .
+
+om:evaluationContext a owl:ObjectProperty ;
+    rdfs:label "Evaluation context"@en ;
+    rdfs:domain om:ObjectManipulationDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> .
+
+om:initialSupport a owl:ObjectProperty ;
+    rdfs:label "Initial support"@en ;
+    rdfs:domain om:PickupDescription ;
+    rdfs:range ac:EntitySpecification .
+
+om:manipulator a owl:ObjectProperty ;
+    rdfs:label "Manipulator"@en ;
+    rdfs:domain om:ObjectManipulationDescription ;
+    rdfs:range ac:EntitySpecification .
+
+om:motionControlledEntity a owl:ObjectProperty ;
+    rdfs:label "Motion controlled entity"@en ;
+    rdfs:domain om:ManipulationMotionRequirement ;
+    rdfs:range ac:EntitySpecification .
+
+om:motionKind a owl:ObjectProperty ;
+    rdfs:label "Motion kind"@en ;
+    rdfs:domain om:ManipulationMotionRequirement ;
+    rdfs:range ac:ActionKind .
+
+om:motionTarget a owl:ObjectProperty ;
+    rdfs:label "Motion target"@en ;
+    rdfs:domain om:ManipulationMotionRequirement ;
+    rdfs:range om:TargetRegionSpecification .
+
+om:object a owl:ObjectProperty ;
+    rdfs:label "Object"@en ;
+    rdfs:domain om:ObjectManipulationDescription ;
+    rdfs:range ac:EntitySpecification .
+
+om:poseSpecification a owl:ObjectProperty ;
+    rdfs:label "Pose specification"@en ;
+    rdfs:domain om:TargetRegionSpecification ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#PoseTarget> .
+
+om:requiresMotion a owl:ObjectProperty ;
+    rdfs:label "Requires motion"@en ;
+    rdfs:domain om:ObjectManipulationDescription ;
+    rdfs:range om:ManipulationMotionRequirement ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+om:targetRegion a owl:ObjectProperty ;
+    rdfs:label "Target region"@en ;
+    rdfs:domain om:ObjectManipulationDescription ;
+    rdfs:range om:TargetRegionSpecification .
+
+om:AtTargetArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "entity"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:AtTargetArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "target region"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:ClearOfSupportArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:ClearOfSupportArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "initial support"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:FixationDescription a owl:Class ;
+    rdfs:label "Fixation description"@en ;
+    rdfs:comment "Maintain holding and an object pose constraint over an evaluation interval."@en ;
+    rdfs:subClassOf om:ObjectManipulationDescription .
+
+om:GraspFailedArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "manipulator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:GraspFailedArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:HoldLostArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "manipulator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:HoldLostArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:HoldMaintainedArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "manipulator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:HoldMaintainedArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:HoldsArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "manipulator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:HoldsArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:ManipulatorClearArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "manipulator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:ManipulatorClearArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:PickupDescription a owl:Class ;
+    rdfs:label "Pickup description"@en ;
+    rdfs:comment "Acquire or retain a hold and lift clear of an initial support."@en ;
+    rdfs:subClassOf om:ObjectManipulationDescription .
+
+om:PlacementDescription a owl:Class ;
+    rdfs:label "Placement description"@en ;
+    rdfs:comment "Place at a target with stable support, release and manipulator clearance."@en ;
+    rdfs:subClassOf om:ObjectManipulationDescription .
+
+om:PoseMaintainedArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:PoseMaintainedArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "reference frame"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:ReleaseBlockedArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "manipulator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:ReleaseBlockedArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:StableOnSupportArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:StableOnSupportArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "destination support"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:SupportUnstableArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:SupportUnstableArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "support"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:UnexpectedContactArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "manipulator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+om:UnexpectedContactArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "object"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+om:TargetRegionSpecification a owl:Class ;
+    rdfs:label "Target region specification"@en ;
+    rdfs:comment "Described target region, optionally specified by a robot-motion pose target."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+om:ManipulationMotionRequirement a owl:Class ;
+    rdfs:label "Manipulation motion requirement"@en ;
+    rdfs:comment "Abstract motion kind and controlled entity required by manipulation; no provider binding or motion execution."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+om:ObjectManipulationDescription a owl:Class ;
+    rdfs:label "Object manipulation description"@en ;
+    rdfs:comment "Intended interaction with a described object; no occurring action, object or robot asserted."@en ;
+    rdfs:subClassOf ac:ActionDescription .
+
+
+# Primary-action consistency hardening 0.22.0
+@prefix focus: <http://aicor.knowledge/ontologies/object-manipulation.owl#> .
+focus:ObjectManipulationDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:manipulator ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:ObjectManipulationDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:object ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:ObjectManipulationDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:evaluationContext ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:PickupDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:initialSupport ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:PlacementDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:destinationSupport ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:PlacementDescription rdfs:subClassOf [ a owl:Restriction ; owl:onProperty focus:targetRegion ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+focus:PickupDescription rdfs:comment "Bounded supported pickup profile: pre-state graspability and initial support must reference the intended object. Success requires a hold, separation from initial support, and clearance; the declared conjunctive goal must follow from these success conditions. Current hold-loss evidence references the same manipulator/object. A hold alone is not pickup; missing support evidence is not separation."@en .
+focus:PlacementDescription rdfs:comment "Bounded supported-place-and-clear profile: pre-state holding references the intended manipulator/object. Success requires stable destination support, target-region arrival, explicit release and manipulator clearance; the declared conjunctive goal must follow from these success conditions. Current support-instability evidence references this object/destination support. Release alone is not placement."@en .

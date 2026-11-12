@@ -1,0 +1,69 @@
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/l2-ontology.owl> a owl:Ontology .
+
+aicor:dul_Action a owl:Class ;
+    rdfs:label "dul:Action"^^xsd:string ;
+    rdfs:subClassOf owl:Thing .
+
+aicor:dul_Agent a owl:Class ;
+    rdfs:label "dul:Agent"^^xsd:string ;
+    rdfs:subClassOf owl:Thing .
+
+aicor:dul_Concept a owl:Class ;
+    rdfs:label "dul:Concept"^^xsd:string ;
+    rdfs:subClassOf aicor:AbstractEntity,
+        owl:Thing .
+
+aicor:dul_Description a owl:Class ;
+    rdfs:label "dul:Description"^^xsd:string ;
+    rdfs:subClassOf aicor:AbstractEntity,
+        owl:Thing .
+
+aicor:dul_Entity a owl:Class ;
+    rdfs:label "dul:Entity"^^xsd:string ;
+    rdfs:subClassOf owl:Thing .
+
+aicor:dul_Event a owl:Class ;
+    rdfs:label "dul:Event"^^xsd:string ;
+    rdfs:subClassOf owl:Thing .
+
+aicor:dul_InformationObject a owl:Class ;
+    rdfs:label "dul:InformationObject"^^xsd:string ;
+    rdfs:subClassOf aicor:AbstractEntity,
+        owl:Thing .
+
+aicor:dul_PhysicalAgent a owl:Class ;
+    rdfs:label "dul:PhysicalAgent"^^xsd:string ;
+    rdfs:subClassOf aicor:PhysicalEntity,
+        owl:Thing .
+
+aicor:dul_PhysicalObject a owl:Class ;
+    rdfs:label "dul:PhysicalObject"^^xsd:string ;
+    rdfs:subClassOf aicor:PhysicalEntity,
+        owl:Thing .
+
+aicor:dul_Process a owl:Class ;
+    rdfs:label "dul:Process"^^xsd:string ;
+    rdfs:subClassOf owl:Thing .
+
+aicor:dul_Quality a owl:Class ;
+    rdfs:label "dul:Quality"^^xsd:string ;
+    rdfs:subClassOf owl:Thing .
+
+aicor:dul_Region a owl:Class ;
+    rdfs:label "dul:Region"^^xsd:string ;
+    rdfs:subClassOf aicor:AbstractEntity,
+        owl:Thing .
+
+aicor:dul_Relation a owl:Class ;
+    rdfs:label "dul:Relation"^^xsd:string ;
+    rdfs:subClassOf owl:Thing .
+
+aicor:dul_Situation a owl:Class ;
+    rdfs:label "dul:Situation"^^xsd:string ;
+    rdfs:subClassOf owl:Thing .
+

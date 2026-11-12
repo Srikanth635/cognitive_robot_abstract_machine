@@ -1,0 +1,11 @@
+# Bind ?record explicitly. Returned guards do not authorize transitions.
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX pt: <http://aicor.knowledge/ontologies/phases-transitions.owl#>
+PREFIX am: <http://aicor.knowledge/ontologies/articulated-mechanisms.owl#>
+SELECT ?action ?transition ?source ?destination ?guard
+WHERE {
+  ?record ac:expressesDescription ?action .
+  ?action am:mechanism ?mechanism ; pt:hasPhaseStructure ?structure .
+  ?structure pt:hasTransition ?transition .
+  ?transition pt:fromPhase ?source ; pt:toPhase ?destination ; pt:guardCondition ?guard .
+}

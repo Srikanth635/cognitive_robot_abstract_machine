@@ -1,0 +1,120 @@
+{
+  "release": "0.22.0",
+  "results": [
+    {
+      "consistent": true,
+      "unsatisfiable_classes": [],
+      "ontology": "http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "imports": [
+        "http://aicor.knowledge/ontologies/action-description-core.owl",
+        "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+        "http://aicor.knowledge/ontologies/dynamics-control.owl",
+        "http://aicor.knowledge/ontologies/knowledge-context.owl",
+        "http://aicor.knowledge/ontologies/model-contracts.owl",
+        "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+        "http://aicor.knowledge/ontologies/object-manipulation.owl",
+        "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+        "http://aicor.knowledge/ontologies/participants-relations.owl",
+        "http://aicor.knowledge/ontologies/phases-transitions.owl",
+        "http://aicor.knowledge/ontologies/physical-models.owl",
+        "http://aicor.knowledge/ontologies/robot-motion.owl",
+        "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+      ],
+      "status": "passed"
+    },
+    {
+      "consistent": true,
+      "unsatisfiable_classes": [],
+      "ontology": "http://aicor.knowledge/ontologies/material-transfer.owl",
+      "imports": [
+        "http://aicor.knowledge/ontologies/action-description-core.owl",
+        "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+        "http://aicor.knowledge/ontologies/knowledge-context.owl",
+        "http://aicor.knowledge/ontologies/material-transfer.owl",
+        "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+        "http://aicor.knowledge/ontologies/participants-relations.owl",
+        "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+        "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+      ],
+      "status": "passed"
+    },
+    {
+      "consistent": true,
+      "unsatisfiable_classes": [],
+      "ontology": "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+      "imports": [
+        "http://aicor.knowledge/ontologies/action-description-core.owl",
+        "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+        "http://aicor.knowledge/ontologies/dynamics-control.owl",
+        "http://aicor.knowledge/ontologies/knowledge-context.owl",
+        "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+        "http://aicor.knowledge/ontologies/model-contracts.owl",
+        "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+        "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+        "http://aicor.knowledge/ontologies/participants-relations.owl",
+        "http://aicor.knowledge/ontologies/phases-transitions.owl",
+        "http://aicor.knowledge/ontologies/physical-models.owl",
+        "http://aicor.knowledge/ontologies/robot-motion.owl",
+        "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+      ],
+      "status": "passed"
+    },
+    {
+      "consistent": true,
+      "unsatisfiable_classes": [],
+      "ontology": "http://aicor.knowledge/ontologies/all-action-knowledge.owl",
+      "imports": [
+        "http://aicor.knowledge/ontologies/action-description-core.owl",
+        "http://aicor.knowledge/ontologies/action-recipes.owl",
+        "http://aicor.knowledge/ontologies/all-action-aspects.owl",
+        "http://aicor.knowledge/ontologies/all-action-knowledge.owl",
+        "http://aicor.knowledge/ontologies/articulated-mechanisms.owl",
+        "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+        "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+        "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+        "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+        "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+        "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+        "http://aicor.knowledge/ontologies/dynamics-control.owl",
+        "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+        "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+        "http://aicor.knowledge/ontologies/force-dynamics.owl",
+        "http://aicor.knowledge/ontologies/frame-perspective.owl",
+        "http://aicor.knowledge/ontologies/image-schemas.owl",
+        "http://aicor.knowledge/ontologies/knowledge-context.owl",
+        "http://aicor.knowledge/ontologies/material-transfer.owl",
+        "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+        "http://aicor.knowledge/ontologies/model-contracts.owl",
+        "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+        "http://aicor.knowledge/ontologies/object-manipulation.owl",
+        "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+        "http://aicor.knowledge/ontologies/participants-relations.owl",
+        "http://aicor.knowledge/ontologies/perception-attention.owl",
+        "http://aicor.knowledge/ontologies/phases-transitions.owl",
+        "http://aicor.knowledge/ontologies/physical-models.owl",
+        "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+        "http://aicor.knowledge/ontologies/pouring-tool-bridge.owl",
+        "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+        "http://aicor.knowledge/ontologies/robot-motion.owl",
+        "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+        "http://aicor.knowledge/ontologies/specialized-tool-interactions.owl",
+        "http://aicor.knowledge/ontologies/tool-interaction.owl",
+        "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+        "http://aicor.knowledge/ontologies/transport-carrying.owl",
+        "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+      ],
+      "status": "passed"
+    },
+    {
+      "scope": "Combined generic knowledge + all examples + fictional demo",
+      "status": "passed",
+      "returncode": 0,
+      "stdout": "http://www.w3.org/2002/07/owl#Thing is satisfiable.\n",
+      "stderr": "",
+      "java_heap_mb": 7168,
+      "timeout_seconds": 180
+    }
+  ],
+  "optional_AICOR": "Not attempted; unchanged legacy module and unresolved historical compatibility boundary.",
+  "scope": "OWL classification and generic consistency; not physical validation, evidence acceptance or execution."
+}

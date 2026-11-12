@@ -1,0 +1,45 @@
+{
+  "release": "0.18.0",
+  "registered_ontologies": 37,
+  "implemented_domains": 7,
+  "new_domain": "articulated-mechanisms",
+  "profiles": [
+    "Revolute configuration change",
+    "Prismatic configuration change",
+    "Revolute opening",
+    "Prismatic opening",
+    "Revolute closing",
+    "Prismatic closing",
+    "Latch release",
+    "Latch securing"
+  ],
+  "validation": {
+    "new_domain_checks": 185,
+    "scoped_query_cases": 26,
+    "import_catalog_checks": 57,
+    "robot_motion_regressions": 58,
+    "object_manipulation_regressions": 102,
+    "tool_transfer_regressions": 81,
+    "historical_competency_assertions": 93,
+    "domain_and_assembly_classification": "passed, no unsatisfiable named classes",
+    "generic_examples_and_demo_consistency": "passed",
+    "optional_aicor_consistency": "blocked"
+  },
+  "preservation": {
+    "baseline": "0.17.0",
+    "priorRdfFiles": 75,
+    "byteIdentical": 74,
+    "changed": [
+      "integrations/all-action-knowledge.ttl"
+    ],
+    "missing": []
+  },
+  "runtime_refactor": "Finite condition signature moved to shared condition_signatures.py; tool_material_transfer re-exports it compatibly and its 81 checks passed.",
+  "limitations": [
+    "Synthetic Proposed specification records; no numerical physical defaults or accepted observations",
+    "Bounded single revolute/prismatic coordinate, one latch at most; multiple/coupled/continuous-coordinate models require explicit extensions",
+    "External coordinate-error, clearance and engagement evidence; no kinematic/contact/force solver or evidence acceptance",
+    "No calibrated geometry, controller, runtime world binding, execution adapter or new working projection",
+    "Optional AICOR integration blocked by the pre-existing SceneNode DisjointClasses normalization issue; root cause unresolved, original inputs preserved"
+  ]
+}

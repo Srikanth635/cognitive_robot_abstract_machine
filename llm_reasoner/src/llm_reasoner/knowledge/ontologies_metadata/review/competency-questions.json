@@ -1,0 +1,170 @@
+[
+  {
+    "id": "CQ01",
+    "question": "Which action kind, participant roles and entity specifications are described?",
+    "query": "queries/competency/cq01.rq",
+    "category": "retrieval",
+    "interpretation": "Role fillers are specifications, not grounded objects."
+  },
+  {
+    "id": "CQ02",
+    "question": "Which goals, preconditions, success and failure criteria have formal expressions?",
+    "query": "queries/competency/cq02.rq",
+    "category": "retrieval",
+    "interpretation": "Unbound expression means no expression supplied, not an unsatisfiable condition."
+  },
+  {
+    "id": "CQ03",
+    "question": "Which scoped facts or quantities does each action-level condition depend on?",
+    "query": "queries/competency/cq03.rq",
+    "category": "retrieval",
+    "interpretation": "State labels are relative scopes; episode/time identity is not encoded here."
+  },
+  {
+    "id": "CQ04",
+    "question": "Which directly attached action parameters lack an explicit scalar value?",
+    "query": "queries/competency/cq04.rq",
+    "category": "missing-data",
+    "interpretation": "Bounded inventory of direct action parameters only; absence is unspecified, never zero. Nested model/controller parameters appear in CQ08/CQ11."
+  },
+  {
+    "id": "CQ05",
+    "question": "Which guarded phase transitions belong to this description?",
+    "query": "queries/competency/cq05.rq",
+    "category": "retrieval",
+    "interpretation": "Topology and declared guards; no transition execution or termination proof."
+  },
+  {
+    "id": "CQ06",
+    "question": "What must be observed and what response is specified for unknown evidence?",
+    "query": "queries/competency/cq06.rq",
+    "category": "retrieval",
+    "interpretation": "Declared monitoring dependencies; no sensor readings."
+  },
+  {
+    "id": "CQ07",
+    "question": "Which causal links, mechanisms and enabling conditions are proposed?",
+    "query": "queries/competency/cq07.rq",
+    "category": "retrieval",
+    "interpretation": "Candidate explanatory structure; no learned causal probability or established law."
+  },
+  {
+    "id": "CQ08",
+    "question": "Which equations, variables, parameters and validity scopes describe the physical models?",
+    "query": "queries/competency/cq08.rq",
+    "category": "retrieval",
+    "interpretation": "Equation text and bindings are retrievable; symbolic correctness is not checked. Equation/variable columns are independent inventories, not usesVariable assertions."
+  },
+  {
+    "id": "CQ09",
+    "question": "Which model-validation evidence is explicitly included by a claim in this record?",
+    "query": "queries/competency/cq09.rq",
+    "category": "missing-data",
+    "interpretation": "Empty in current examples: no recorded validation evidence. A proposed simulation study is not a validation result."
+  },
+  {
+    "id": "CQ10",
+    "question": "What objective policy, priorities and hard constraints are declared?",
+    "query": "queries/competency/cq10.rq",
+    "category": "retrieval",
+    "interpretation": "Priorities are descriptions, not a solved optimum."
+  },
+  {
+    "id": "CQ11",
+    "question": "Which control-model roles, dimensions and timing parameters are specified?",
+    "query": "queries/competency/cq11.rq",
+    "category": "retrieval",
+    "interpretation": "Dimensions are representation sizes; missing sampling values or dynamics prevent interpreting this as a working controller."
+  },
+  {
+    "id": "CQ12",
+    "question": "Which capabilities are required across profiles, recovery, affordances and sensing?",
+    "query": "queries/competency/cq12.rq",
+    "category": "retrieval",
+    "interpretation": "One shared requirement relation, retaining each specialized owner and property. This enumerates declared routes, not recursive requirements of arbitrary future subactions."
+  },
+  {
+    "id": "CQ13",
+    "question": "Which strategy steps and abstract process interfaces are declared?",
+    "query": "queries/competency/cq13.rq",
+    "category": "retrieval",
+    "interpretation": "An interface intended to fulfill a requirement is not a matched implementation."
+  },
+  {
+    "id": "CQ14",
+    "question": "Which failures and candidate diagnostic causes are described?",
+    "query": "queries/competency/cq14.rq",
+    "category": "retrieval",
+    "interpretation": "Candidate diagnosis; this does not identify an actual root cause."
+  },
+  {
+    "id": "CQ15",
+    "question": "Which recovery options, guards, intended effects and retry budgets are described?",
+    "query": "queries/competency/cq15.rq",
+    "category": "retrieval",
+    "interpretation": "An absent retry value is not permission for unlimited retry; recovery is descriptive."
+  },
+  {
+    "id": "CQ16",
+    "question": "Is a frame projection already derived from this exact record?",
+    "query": "queries/competency/cq16.rq",
+    "category": "missing-data",
+    "interpretation": "Current V7 has none; existing V6 artifacts must not silently be presented as V7. This review creates no projections."
+  },
+  {
+    "id": "CQ17",
+    "question": "What qualitative force roles, tendencies and relative strength are supplied?",
+    "query": "queries/competency/cq17.rq",
+    "category": "retrieval",
+    "interpretation": "UnknownStrength/Tendency/Result are explicit unknowns, not a physical prediction."
+  },
+  {
+    "id": "CQ18",
+    "question": "Which image-schema structures refer to the shared entity specifications?",
+    "query": "queries/competency/cq18.rq",
+    "category": "retrieval",
+    "interpretation": "Structural image-schema links only; no inferred spatial facts."
+  },
+  {
+    "id": "CQ19",
+    "question": "Which entity facets, material states and geometry descriptions belong to this action record?",
+    "query": "queries/competency/cq19.rq",
+    "category": "retrieval",
+    "interpretation": "Action-specific facets share entity identities; unspecified material and geometry stay unspecified."
+  },
+  {
+    "id": "CQ20",
+    "question": "Under which conditions and capability requirements is an affordance described?",
+    "query": "queries/competency/cq20.rq",
+    "category": "retrieval",
+    "interpretation": "An affordance specification is conditional, not an assertion that this robot can act now."
+  },
+  {
+    "id": "CQ21",
+    "question": "How do sensorimotor boundaries connect phases, expected conditions and modalities?",
+    "query": "queries/competency/cq21.rq",
+    "category": "retrieval",
+    "interpretation": "Expected evidence is separate from observed evidence."
+  },
+  {
+    "id": "CQ22",
+    "question": "What status, exact statement and source accompany claims included in this record?",
+    "query": "queries/competency/cq22.rq",
+    "category": "retrieval",
+    "interpretation": "Status is workflow metadata; proposed template claims do not become true through query retrieval."
+  },
+  {
+    "id": "CQ23",
+    "question": "Which direct description links lack exact statement-level provenance in this record?",
+    "query": "queries/competency/cq23.rq",
+    "category": "provenance-gap",
+    "interpretation": "A bounded provenance-coverage audit of direct action triples. Missing a claim is not evidence that a triple is false."
+  },
+  {
+    "id": "CQ24",
+    "question": "Which entities and parameter objects are reused across goals, models and perspectives?",
+    "query": "queries/competency/cq24.rq",
+    "category": "retrieval",
+    "interpretation": "Identity joins demonstrate reuse; they do not establish physical identity in a world."
+  }
+]

@@ -1,0 +1,215 @@
+[
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV4",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#pourActionV4",
+    "causalModels": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourCausalModel",
+        "links": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourCausalLink",
+            "antecedent": "http://aicor.knowledge/ontologies/action-examples.owl#pourCauseCondition",
+            "consequent": "http://aicor.knowledge/ontologies/action-examples.owl#pourEffectCondition",
+            "mechanism": "http://aicor.knowledge/ontologies/action-examples.owl#pourMechanism",
+            "phase": "http://aicor.knowledge/ontologies/action-examples.owl#pourTransfer"
+          }
+        ]
+      }
+    ],
+    "physicalModels": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourPhysicalModel",
+        "assumptions": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourModelAssumption"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourModelScope"
+        ],
+        "mechanisms": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourMechanism"
+        ],
+        "variables": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVariable_V_delivered",
+            "symbol": "V_delivered",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#deliveredAmount"
+          },
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVariable_V_before",
+            "symbol": "V_before",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#sourceBefore"
+          },
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVariable_V_after",
+            "symbol": "V_after",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#sourceAfter"
+          },
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVariable_V_spilled",
+            "symbol": "V_spilled",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillAmount"
+          },
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVariable_rho",
+            "symbol": "rho",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#pourPropertyParameter"
+          }
+        ],
+        "equations": [
+          {
+            "text": "V_after = V_before - V_delivered - V_spilled",
+            "language": "mathematical-text",
+            "variables": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#pourVariable_V_after",
+              "http://aicor.knowledge/ontologies/action-examples.owl#pourVariable_V_before",
+              "http://aicor.knowledge/ontologies/action-examples.owl#pourVariable_V_delivered",
+              "http://aicor.knowledge/ontologies/action-examples.owl#pourVariable_V_spilled"
+            ]
+          }
+        ]
+      }
+    ],
+    "properties": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourProperty",
+        "entity": "http://aicor.knowledge/ontologies/action-examples.owl#transferableSubstance",
+        "kind": "http://aicor.knowledge/ontologies/physical-models.owl#Density",
+        "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#pourPropertyParameter",
+        "value": null
+      }
+    ],
+    "claims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourPhysicalClaim1",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourModelScope"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourPhysicalClaim3",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourModelScope"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourPhysicalClaim2",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourModelScope"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourPhysicalClaim0",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourModelScope"
+        ]
+      }
+    ]
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV4",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#graspActionV4",
+    "causalModels": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspCausalModel",
+        "links": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspCausalLink",
+            "antecedent": "http://aicor.knowledge/ontologies/action-examples.owl#graspCauseCondition",
+            "consequent": "http://aicor.knowledge/ontologies/action-examples.owl#graspEffectCondition",
+            "mechanism": "http://aicor.knowledge/ontologies/action-examples.owl#graspMechanism",
+            "phase": "http://aicor.knowledge/ontologies/action-examples.owl#graspEstablish"
+          }
+        ]
+      }
+    ],
+    "physicalModels": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspPhysicalModel",
+        "assumptions": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspModelAssumption"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspModelScope"
+        ],
+        "mechanisms": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspMechanism"
+        ],
+        "variables": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspVariable_mu",
+            "symbol": "mu",
+            "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#graspPropertyParameter"
+          }
+        ],
+        "equations": []
+      }
+    ],
+    "properties": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspProperty",
+        "entity": "http://aicor.knowledge/ontologies/action-examples.owl#graspableObject",
+        "kind": "http://aicor.knowledge/ontologies/physical-models.owl#FrictionCoefficient",
+        "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#graspPropertyParameter",
+        "value": null
+      }
+    ],
+    "claims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspPhysicalClaim3",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspModelScope"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspPhysicalClaim1",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspModelScope"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspPhysicalClaim2",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspModelScope"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspPhysicalClaim0",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ],
+        "applicability": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspModelScope"
+        ]
+      }
+    ]
+  }
+]

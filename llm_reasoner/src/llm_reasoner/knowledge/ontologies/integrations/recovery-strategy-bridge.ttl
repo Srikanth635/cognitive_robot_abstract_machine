@@ -1,0 +1,17 @@
+@prefix cs: <http://aicor.knowledge/ontologies/capabilities-strategies.owl#> .
+@prefix fd: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+fd:usesStrategy a owl:ObjectProperty ;
+    rdfs:label "Uses Strategy"@en ;
+    rdfs:comment "Optional recovery strategy binding, without importing strategies into the base failure module."@en ;
+    rdfs:domain fd:RecoveryOption ;
+    rdfs:range cs:ExecutionStrategy .
+
+<http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl> a owl:Ontology ;
+    rdfs:label "Recovery strategy bridge"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/capabilities-strategies.owl>,
+        <http://aicor.knowledge/ontologies/failure-diagnosis.owl> ;
+    owl:versionInfo "0.7.0" .
+

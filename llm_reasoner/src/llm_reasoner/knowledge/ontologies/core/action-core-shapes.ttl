@@ -1,0 +1,73 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+ac:RecordShape a sh:NodeShape; sh:targetClass ac:KnowledgeRecord;
+ sh:property [sh:path ac:expressesDescription; sh:minCount 1; sh:maxCount 1; sh:class ac:ActionDescription];
+ sh:property [sh:path ac:recordVersion; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path ac:hasClaim; sh:class ac:KnowledgeClaim];
+ sh:property [sh:path ac:hasAnnotation; sh:class ac:AnnotationRecord];
+ sh:property [sh:path ac:hasBinding; sh:class ac:BindingRecord].
+ac:ActionShape a sh:NodeShape; sh:targetClass ac:ActionDescription;
+ sh:property [sh:path ac:hasActionKind; sh:minCount 1; sh:maxCount 1; sh:class ac:ActionKind];
+ sh:property [sh:path ac:hasComponent; sh:class ac:ActionComponent].
+ac:RoleShape a sh:NodeShape; sh:targetClass ac:RoleSpecification;
+ sh:property [sh:path ac:specifiesRole; sh:minCount 1; sh:maxCount 1; sh:class ac:ParticipantRole];
+ sh:property [sh:path ac:hasEntitySpecification; sh:minCount 1; sh:maxCount 1; sh:class ac:EntitySpecification].
+ac:ClaimShape a sh:NodeShape; sh:targetClass ac:KnowledgeClaim;
+ sh:property [sh:path ac:hasStatus; sh:minCount 1; sh:maxCount 1; sh:in (ac:Proposed ac:Supported ac:Disputed ac:Rejected ac:Unknown)];
+ sh:property [sh:path ac:hasStatement; sh:minCount 1; sh:maxCount 1; sh:class ac:Statement];
+ sh:property [sh:path ac:aboutComponent; sh:minCount 1; sh:class ac:ActionComponent];
+ sh:property [sh:path ac:hasEvidence; sh:class ac:EvidenceRecord];
+ sh:or (
+  [sh:property [sh:path ac:hasStatus; sh:in (ac:Proposed ac:Disputed ac:Rejected ac:Unknown)]]
+  [sh:property [sh:path ac:hasEvidence; sh:minCount 1]]
+ ).
+ac:StatementShape a sh:NodeShape; sh:targetClass ac:Statement;
+ sh:property [sh:path ac:statementSubject; sh:minCount 1; sh:maxCount 1; sh:nodeKind sh:IRI];
+ sh:property [sh:path ac:statementPredicateIRI; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:anyURI; sh:pattern "^[A-Za-z][A-Za-z0-9+.-]*:"];
+ sh:xone (
+  [sh:property [sh:path ac:statementObject; sh:minCount 1; sh:maxCount 1; sh:nodeKind sh:IRI]; sh:property [sh:path ac:statementLiteral; sh:maxCount 0]]
+  [sh:property [sh:path ac:statementLiteral; sh:minCount 1; sh:maxCount 1; sh:nodeKind sh:Literal]; sh:property [sh:path ac:statementObject; sh:maxCount 0]]
+ ).
+ac:EvidenceShape a sh:NodeShape; sh:targetClass ac:EvidenceRecord;
+ sh:property [sh:path ac:evidenceKind; sh:minCount 1; sh:maxCount 1; sh:class ac:EvidenceKind];
+ sh:or ([sh:property [sh:path ac:sourceIRI; sh:minCount 1; sh:datatype xsd:anyURI]] [sh:property [sh:path ac:evidenceText; sh:minCount 1; sh:datatype xsd:string]]).
+ac:AnnotationShape a sh:NodeShape; sh:targetClass ac:AnnotationRecord;
+ sh:property [sh:path ac:producerIdentifier; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path ac:annotatesDescription; sh:minCount 1; sh:maxCount 1; sh:class ac:ActionDescription];
+ sh:property [sh:path ac:contributesClaim; sh:minCount 1; sh:class ac:KnowledgeClaim];
+ sh:property [sh:path ac:createdAt; sh:maxCount 1; sh:datatype xsd:dateTime].
+ac:ProjectionShape a sh:NodeShape; sh:targetClass ac:ProjectionArtifact;
+ sh:property [sh:path ac:derivedFromRecord; sh:minCount 1; sh:maxCount 1; sh:class ac:KnowledgeRecord];
+ sh:property [sh:path ac:conformsToSpecification; sh:minCount 1; sh:maxCount 1; sh:class ac:ProjectionSpecification];
+ sh:property [sh:path ac:includesClaim; sh:class ac:KnowledgeClaim];
+ sh:sparql [sh:message "A projection may include only claims present in its source record."; sh:select """
+ PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+ SELECT $this WHERE { $this ac:derivedFromRecord ?r; ac:includesClaim ?c . FILTER NOT EXISTS { ?r ac:hasClaim ?c } }
+ """].
+ac:ProjectionSpecificationShape a sh:NodeShape; sh:targetClass ac:ProjectionSpecification;
+ sh:property [sh:path ac:projectionKey; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path ac:missingInformationPolicy; sh:minCount 1; sh:maxCount 1; sh:in ("omit-and-report" "reject" "retain-unknown")].
+ac:ParameterShape a sh:NodeShape; sh:targetClass ac:ParameterSpecification;
+ sh:property [sh:path ac:parameterKey; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string];
+ sh:property [sh:path ac:numericValue; sh:maxCount 1; sh:datatype xsd:decimal];
+ sh:property [sh:path ac:lowerBound; sh:maxCount 1; sh:datatype xsd:decimal; sh:lessThanOrEquals ac:upperBound];
+ sh:property [sh:path ac:upperBound; sh:maxCount 1; sh:datatype xsd:decimal];
+ sh:property [sh:path ac:unitIRI; sh:maxCount 1; sh:datatype xsd:anyURI];
+ sh:or ([sh:property [sh:path ac:numericValue; sh:maxCount 0]; sh:property [sh:path ac:lowerBound; sh:maxCount 0]; sh:property [sh:path ac:upperBound; sh:maxCount 0]] [sh:property [sh:path ac:unitIRI; sh:minCount 1]]).
+ac:BindingShape a sh:NodeShape; sh:targetClass ac:BindingRecord;
+ sh:property [sh:path ac:bindsSpecification; sh:minCount 1; sh:maxCount 1; sh:class ac:EntitySpecification];
+ sh:property [sh:path ac:bindingTargetIRI; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:anyURI];
+ sh:property [sh:path ac:bindingContextIRI; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:anyURI].
+
+ac:RecordShape sh:sparql [sh:message "An annotation must target this record's description and contribute claims present in this record.";
+ sh:select """
+ PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+ SELECT $this WHERE {
+  $this ac:hasAnnotation ?a; ac:expressesDescription ?d .
+  { ?a ac:annotatesDescription ?other . FILTER (?other != ?d) }
+  UNION { ?a ac:contributesClaim ?c . FILTER NOT EXISTS { $this ac:hasClaim ?c } }
+ }
+ """].

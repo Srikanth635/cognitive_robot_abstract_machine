@@ -1,0 +1,121 @@
+CONTINUATION UPDATE: POURING, PICKUP, PLACE AND NAVIGATION
+Release 0.22.0; 2026-11-12.
+
+CURRENT USER SCOPE
+The user explicitly deferred adding new ontology modules and missing CoraPlex
+action families. Their priority is consistency and coverage improvements for
+pouring, pickup, place and navigate. Do not resume the older recommendation to
+add mixing or other recipes without a new user request. Working projections,
+robot/world bindings, EQL/SDT adapters and executor development remain deferred.
+
+READ FIRST
+START_HERE.md; domains/PRIMARY_ACTION_GENERATION_GUIDE.md;
+reports/release-0.22.0.json; reports/primary-action-validation.json;
+reports/primary-generation-validation.json; reports/primary-action-reasoning.json.
+The 0.21 coverage review/matrices remain historical assessment artifacts.
+
+WHAT CHANGED
+Three existing domain ontologies now have content version 0.22.0:
+ domains/object-manipulation.ttl (pickup and placement)
+ domains/material-transfer.ttl (pouring)
+ domains/mobility-navigation.ttl (navigation and existing inherited variants).
+Their existing three shape files were strengthened. There are still 40
+registered ontology documents; ontology-registry and imports are unchanged.
+No new domain, aspect, bridge, composition, refinement or action family exists.
+
+OWL adds maximum cardinality one for principal bindings and action-specific
+semantic comments, preserving partial descriptions. It does not assert all
+required bindings exist in a serialized candidate. OWL may merge equal fillers;
+SHACL required-field counts and distinct-role/context checks are separate.
+Do not claim a unique-name assumption, closed-world ontology or new physics law.
+
+SHACL additions reject manipulator/object and support/object aliases, robot/
+target/footprint aliases, collapsed transfer endpoints and portion/material
+description identities, wrong action-context bindings and unsupported quantity
+bases. Both plain RDF strings and explicitly xsd:string volume/mass terms are
+accepted. Invalid count, language-tagged and trailing-newline terms are tested.
+This string compatibility was corrected after an initial regression failure;
+the final original transfer suite passes all 81 checks.
+
+CONSISTENCY CHECKS
+object_manipulation.py validates pickup's pre-state graspability and original
+support; placement's pre-state hold; intended goal bindings; and current fault
+referents. Optional contexts on pickup/place must describe that action, while
+old context-free examples remain valid. Holding/fixation keep mandatory interval
+rules. A hold alone is not pickup; release alone is not supported placement.
+
+mobility_navigation.py keeps its existing prerequisite/frame/route/level checks,
+and now checks goal establishment, participant-role agreement and current
+NavigationFault referents. The elevator/domain variants are reused unchanged.
+
+tool_material_transfer.py checks scoped intended readiness and fault referents,
+goal establishment and conflicting concrete transfer profiles. Readiness can be
+TransferReady(source,destination,material), or the comprehensive demo's concrete
+pre-state material containment plus destination accessibility. A fault can be
+current TransferFault(source,destination) or explicit post-state spill greater
+than the bound tolerance. Partial transfer does not require source emptiness.
+The canonical pouring checker remains a bounded partial-pouring profile.
+
+Goals need not equal success. In the supported conjunction/atomic/comparison
+profile, each declared goal conjunct must be present in the success signature.
+Success may impose stricter clearance/support/spill requirements than the goal.
+This is bounded syntactic entailment, not a general DL/FOL/temporal solver.
+
+condition_signatures.py now rejects an atom and its negation with identical
+scope and arguments, and exact complementary comparison pairs with identical
+operand/scoping signatures. PreState held and PostState released remain valid.
+condition_atoms.py delegates its existing atomic-only API to that shared checker.
+Unsupported expressions and malformed profiles may raise ValueError: a candidate
+needs repair/abstention, not publication as an observed failure.
+
+SUPPLIED-INPUT ASSESSMENT
+The existing action inspectors retain success and precondition/fault fields.
+They add criteriaSatisfied = precondition AND success AND NOT fault, using
+True/False/Unknown. Missing fault evidence is not an explicit no-fault result.
+Success can remain True while combined criteria are False or Unknown.
+The transfer inspector retains fault and adds failure as a compatible alias.
+All report acceptedObservations=0, worldUpdated=False, executionReadinessAssessed
+=False, executed=False; success/fault coexistence remains visible. These fields
+do not freeze storage, accept evidence, validate a physical outcome or execute.
+
+GENERATION AIDS
+generation/primary-action-templates.json provides four symbolic templates from
+the unchanged canonical fixtures. build_primary_action_templates.py regenerates
+them with entity/parameter roles, units, scoped atoms/comparisons, source record
+versions and imported-ontology hashes. It supplies no scalar physical defaults.
+The root_expression_type distinguishes atomic roots from conjunctions; a single
+atomic condition must not become a one-operand Conjunction. all-clauses is a
+logical description. Entity roles include specification/frame bindings and need
+not all be physical participants. Template null defaults are metadata, never
+literal numeric values in RDF. A new record needs appropriate fresh identities
+and explicit reuse, unless reusing a reviewed shared immutable specification.
+These aids are not a complete output schema, transport/provider implementation
+or projection engine. No LLM API was called and no source-backed facts acquired.
+
+PRESERVATION AND VALIDATION
+All 87 prior RDF/OWL files were compared to the 0.21 cumulative ZIP: 81 are
+byte-identical; exactly the three domain ontologies and three shape files changed.
+No old non-version ontology triple was removed: 13, 41 and 26 additive triples
+were introduced in material transfer, mobility/navigation and manipulation.
+All example/demo RDF, claims, DUL, AICOR candidates and input ontologies remain
+unchanged; no synthetic values were relabelled as sourced/measured knowledge.
+
+New primary consistency checks and generation/template checks pass. Original
+manipulation, mobility, transfer, carrying, recipes, articulated mechanisms,
+perception, import and historical V7 competency regressions pass. The release
+index records exact counts and fresh report hashes rather than relabelling
+historical assertions as current real-world competence.
+
+Fresh HermiT classification passed for all three modified domains and combined
+generic assembly with no unsatisfiable named classes. All generic examples and
+fictional demo passed consistency. Optional AICOR was not attempted: its earlier
+normalization issue and timeout are unresolved; the legacy inputs were unchanged.
+No physical simulation, calibrated model validation or robot execution occurred.
+
+NEXT WORK WITHIN THE CURRENT SCOPE
+Improve source-backed knowledge for these four actions and choose competency
+questions requiring deeper modeling. Quantitative stability, grasp geometry,
+capacity/flow/foam, continuous evidence coverage, dynamic-obstacle behavior and
+trust/freshness remain explicit external or future contracts. Do not infer them
+from current success predicates or fill them with LLM numerical guesses.
+Stay within existing modules unless the user changes this scope.

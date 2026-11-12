@@ -1,0 +1,94 @@
+CONTINUATION UPDATE: TRANSPORT/CARRYING COMPOSITION
+Release 0.19.0; completed 2026-11-12.
+
+The user requested the remaining compositions/refinements, starting with
+transport/carrying. This release adds the first composition module in a new
+compositions/ directory. There are still seven primitive reusable domains;
+transport/carrying is a composition, not an eighth primitive domain. The registry
+now contains 38 ontology documents. The generic aspect assembly is unchanged.
+
+Read compositions/TRANSPORT_CARRYING.md, tools/transport_carrying.py and
+reports/release-0.19.0.json before continuing. The earlier handoff and 0.18.0
+update retain their dated scope; this file describes the new increment.
+
+Four synthetic fixtures cover destination carrying, route carrying, and each
+with an optional orientation requirement. Two concrete action kinds/classes are
+used. A broad TransportDescription remains an extension point; grasped carrying
+does not define every transport technique. Pickup, release and placement are
+separate actions. Cart, supported, pushed, dragged, multiple-grasp and handover
+techniques require explicitly designed profiles rather than weakening this one.
+
+The composition reuses cloned holding/navigation descriptions, their participant
+identities, roles, parameters, capabilities and exact condition expressions.
+It binds the same load, manipulator, carrier and destination consistently.
+The navigation footprint must identify both carrier and load. Carrier arrival
+alone is insufficient: the load must also be reported in the destination.
+
+Success requires maintained holding, navigation success, interval load support
+and envelope preservation, and load arrival. Route variants also need route
+compliance. Orientation variants use interval maximum angular deviation from an
+explicit quaternion target/frame, not endpoint orientation and not a full pose
+fixed to the world. This first orientation profile constrains full orientation;
+tilt-only upright constraints with free yaw remain extensions.
+
+Parent, holding and mobility use distinct scoped contexts. Each supplied child
+dictionary must name its expected context. Parent and both children must
+explicitly bind exactly the same time window. Missing child intervals are not
+copied from the parent. Unqualified interval evidence is withheld. Time metadata
+only scopes evidence; it does not verify continuous sensing or accept beliefs.
+
+Use the composition-specific assess API; do not flatten child input dictionaries
+and run the parent condition through the generic evaluator. That would bypass
+component context/interval policies. Each child is evaluated separately with its
+existing domain inspector, then the results are combined under three-valued
+conjunction/disjunction. Preconditions, success and explicit faults remain
+separate; concurrent success/fault reports remain visible.
+
+A parent-context monitor attaches to the cloned mobility execution phase and
+checks current hold, borne load and loaded-envelope clearance. False/Unknown
+declares suspension, but no monitor response or controller is executed. Child
+phase graphs remain descriptive. This is not a concurrent execution scheduler,
+resource allocator, terminating plan, physical solver or readiness certificate.
+
+All new claims are Proposed and synthetic. There are no numerical physical
+defaults, accepted observations, world bindings or generated safe thresholds.
+The four records have exact statement coverage for their reachable descriptive
+links. The builder only regenerates the new examples and was checked for graph
+equality against its previous output. Original fixtures are preserved.
+
+New principal files:
+  compositions/transport-carrying.ttl
+  compositions/transport-carrying-shapes.ttl
+  compositions/TRANSPORT_CARRYING.md
+  compositions/README.md
+  examples/transport-carrying-profiles.ttl
+  tools/transport_carrying.py
+  tools/build_transport_examples.py
+  tools/validate_transport_carrying.py
+  tools/validate_transport_queries.py
+  tools/reason_transport_carrying.py
+  queries/transport-components.rq
+  queries/transport-orientation.rq
+
+Validation and counts are indexed in reports/release-0.19.0.json. Composition
+and combined generic ontology classification and combined generic examples/demo
+consistency passed. The initial 2 GB HermiT example-consistency attempt exhausted
+its heap; that failed resource-bound attempt is retained separately. Repeating
+the check with a bounded 6144 MB heap passed. The script allows 180 seconds per
+combined consistency subprocess; run it on a suitably provisioned machine.
+The existing optional AICOR SceneNode normalization issue remains blocked.
+Full AICOR named-class satisfiability is not established.
+
+Preservation against 0.18.0: 77 of 78 prior RDF files are byte-identical. Only
+integrations/all-action-knowledge.ttl gains the new import/version. Registry,
+catalog and entry-point documentation updates are additional changes. The
+fictional comprehensive pouring demo is unchanged. This standalone work is not
+established as pushed or migrated into GitHub llm_reasoner.
+
+Next useful composition work is a pickup-carry-place recipe with explicit
+sequential boundaries around this coextensive carry window. That should preserve
+the distinction between acquisition, sustained transport, stable placement and
+release. Source-backed geometry, capabilities, interval evidence coverage,
+contents-sensitive dynamics and accepted observation policies remain unfinished.
+Working projections and CoraPlex execution integration remain deferred unless the
+user explicitly chooses that development stage.

@@ -1,0 +1,9 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX db: <http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl#>
+PREFIX cm: <http://aicor.knowledge/ontologies/causal-mechanisms.owl#>
+SELECT ?association ?hypothesis ?cause ?link ?effect ?mechanism ?scope
+WHERE {
+ ?record ac:expressesDescription/ac:hasComponent ?association .
+ ?association db:hypothesis ?hypothesis; db:causeCondition ?cause; db:causalLink ?link; db:applicability ?scope .
+ ?link cm:antecedent ?cause; cm:consequent ?effect; cm:mechanism ?mechanism .
+}

@@ -24,7 +24,7 @@ from llm_reasoner.knowledge.generation.schema import (
     type_schema_for,
 )
 from llm_reasoner.knowledge.generation.wire import DecodingResult, FragmentDecoder
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     ActionCoreAnnotation,
     ActionPerspectiveFile,
 )
@@ -33,17 +33,17 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
     pouring_frame,
 )
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.vocabulary.terms import (
     DescriptionEntity,
     OpenValuePartition,
 )
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
-from llm_reasoner.knowledge.ontology_translation.exceptions import (
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
+from llm_reasoner.knowledge.vocabulary.translation.exceptions import (
     MembersNotStatedDistinct,
     PartitionClosureConflict,
 )
-from llm_reasoner.knowledge.ontology_translation.reading import OntologyReader
-from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
+from llm_reasoner.knowledge.vocabulary.translation.reading import OntologyReader
+from llm_reasoner.knowledge.vocabulary.translation.writing import VocabularyWriter
 
 from .open_partition_modules import OpenPartitionModuleFile
 

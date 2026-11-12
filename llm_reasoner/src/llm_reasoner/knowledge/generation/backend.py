@@ -2,9 +2,8 @@
 Generating a hypothesis about an action with a language model, as a krrood generative
 backend.
 
-The query is an underspecified match on a vocabulary class, such as
-``the(PouringPhaseStructure)(decomposes_task=ConceptReference(...))``: the fields it fixes
-are stated to the model as fixed values, everything else is for the model to fill. The
+The query is an underspecified match on a vocabulary class: the fields it fixes are
+stated to the model as fixed values, everything else is for the model to fill. The
 backend answers from the store when it holds a hypothesis for the request; otherwise a
 :class:`~llm_reasoner.knowledge.generation.dialogue.GenerationDialogue` asks the model,
 judging each answer and returning a rejected one for repair, and a
@@ -22,7 +21,7 @@ from typing_extensions import Iterable, Optional, TypeVar
 
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
-from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
+from llm_reasoner.knowledge.acceptance.suite import ontology_rules_suite
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
 from llm_reasoner.knowledge.generation.assessment import HypothesisAssessor
 from llm_reasoner.knowledge.generation.dialogue import (
@@ -32,7 +31,7 @@ from llm_reasoner.knowledge.generation.dialogue import (
 from llm_reasoner.knowledge.generation.prompts import GenerationPrompt
 from llm_reasoner.knowledge.generation.recording import HypothesisRecorder
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
-from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
+from llm_reasoner.knowledge.vocabulary.linked import LinkedOntologyTerms
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
 from llm_reasoner.observation.events import HypothesisRequested, HypothesisServed
@@ -84,7 +83,7 @@ class HypothesisBackend(GenerativeBackend):
     The type being generated when empty.
     """
 
-    suite: AcceptanceSuite = field(default_factory=predictive_manipulation_suite)
+    suite: AcceptanceSuite = field(default_factory=ontology_rules_suite)
     """
     The acceptance rules an answer must pass.
     """
@@ -94,7 +93,7 @@ class HypothesisBackend(GenerativeBackend):
     How many times a rejected answer is returned to the model for correction.
     """
 
-    prompt: GenerationPrompt = field(default_factory=GenerationPrompt)
+    prompt: GenerationPrompt = field(kw_only=True)
     """
     Builds the prompts.
     """
@@ -106,11 +105,11 @@ class HypothesisBackend(GenerativeBackend):
     """
 
     linked_terms: LinkedOntologyTerms = field(
-        kw_only=True, default_factory=LinkedOntologyTerms.pinned
+        kw_only=True, default_factory=LinkedOntologyTerms
     )
     """
-    The classes CRAM-AICOR and DUL declare, which concepts named in their namespaces
-    must be among.
+    The classes the linked ontologies declare, which concepts named in their namespaces
+    must be among; no linked ontology by default.
     """
 
     store: Optional[HypothesisStore] = field(kw_only=True, default=None)

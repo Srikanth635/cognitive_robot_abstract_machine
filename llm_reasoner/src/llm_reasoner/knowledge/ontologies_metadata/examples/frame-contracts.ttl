@@ -1,0 +1,77 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/action-examples.owl#> .
+@prefix fr: <http://aicor.knowledge/ontologies/frame-perspective.owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:GraspingFrameContract a fr:FrameProjectionSpecification ;
+    ac:missingInformationPolicy "omit-and-report" ;
+    ac:projectionKey "grasping-frame" ;
+    fr:evidencePolicy "retain-with-status" ;
+    fr:frameDefinition ex:GraspingFrame .
+
+ex:PouringFrameContract a fr:FrameProjectionSpecification ;
+    ac:missingInformationPolicy "omit-and-report" ;
+    ac:projectionKey "pouring-frame" ;
+    fr:evidencePolicy "retain-with-status" ;
+    fr:frameDefinition ex:PouringFrame .
+
+ex:GraspingFrame a fr:FrameDefinition ;
+    fr:parentFrame ex:GenericActionFrame .
+
+ex:PouringFrame a fr:FrameDefinition ;
+    fr:hasOverride ex:pourDefaultException ;
+    fr:parentFrame ex:GenericActionFrame .
+
+ex:goalMapping a fr:SlotMapping ;
+    fr:hasPathStep ex:goalPath .
+
+ex:goalPath a fr:PathStep ;
+    fr:position "1"^^xsd:positiveInteger ;
+    fr:predicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal"^^xsd:anyURI .
+
+ex:goalSlot a fr:SlotDefinition ;
+    fr:hasMapping ex:goalMapping ;
+    fr:minimumCount "1"^^xsd:nonNegativeInteger ;
+    fr:slotKey "goals" .
+
+ex:kindMapping a fr:SlotMapping ;
+    fr:hasPathStep ex:kindPath .
+
+ex:kindPath a fr:PathStep ;
+    fr:position "1"^^xsd:positiveInteger ;
+    fr:predicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasActionKind"^^xsd:anyURI .
+
+ex:kindSlot a fr:SlotDefinition ;
+    fr:hasMapping ex:kindMapping ;
+    fr:maximumCount "1"^^xsd:nonNegativeInteger ;
+    fr:minimumCount "1"^^xsd:nonNegativeInteger ;
+    fr:slotKey "action-kind" .
+
+ex:pourDefaultException a fr:SlotOverride ;
+    fr:overridesSlot ex:diagnosticPolicySlot ;
+    fr:suppressDefault true .
+
+ex:roleMapping a fr:SlotMapping ;
+    fr:hasPathStep ex:rolePath .
+
+ex:rolePath a fr:PathStep ;
+    fr:position "1"^^xsd:positiveInteger ;
+    fr:predicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasRoleSpecification"^^xsd:anyURI .
+
+ex:roleSlot a fr:SlotDefinition ;
+    fr:hasMapping ex:roleMapping ;
+    fr:minimumCount "1"^^xsd:nonNegativeInteger ;
+    fr:slotKey "participants" .
+
+ex:GenericActionFrame a fr:FrameDefinition ;
+    fr:hasSlot ex:diagnosticPolicySlot,
+        ex:goalSlot,
+        ex:kindSlot,
+        ex:roleSlot .
+
+ex:diagnosticPolicySlot a fr:SlotDefinition ;
+    fr:defaultLiteral "request-evidence" ;
+    fr:maximumCount "1"^^xsd:nonNegativeInteger ;
+    fr:minimumCount "0"^^xsd:nonNegativeInteger ;
+    fr:slotKey "exploration-policy" .
+

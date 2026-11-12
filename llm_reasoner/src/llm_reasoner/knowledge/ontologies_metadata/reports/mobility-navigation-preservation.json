@@ -1,0 +1,254 @@
+[
+  {
+    "file": "DUL.owl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/causality/causal-mechanisms.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/entities-transfer/entities-materials-affordances.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/entities-transfer/transfer-contracts.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/observation/monitoring-requirements.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/observation/sensorimotor-events.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/perspectives/force-dynamics.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/perspectives/frame-perspective.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/perspectives/image-schemas.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/physics-control/dynamics-control.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/physics-control/model-contracts.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/physics-control/physical-models.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/planning/capabilities-strategies.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/planning/failure-diagnosis.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/planning/objectives-tradeoffs.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/structure/conditions-outcomes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/structure/participants-relations.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/structure/phases-transitions.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/validation/aspect-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/validation/causal-physical-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/validation/contract-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/validation/control-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/validation/frame-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/validation/remaining-aspect-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/validation/strategy-failure-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "aspects/validation/temporal-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "candidates/aicor-unified-dul-offline.owl",
+    "byte_identical": true
+  },
+  {
+    "file": "candidates/aicor-unified-dul.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "candidates/aicor-unified-preserved.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "core/action-core-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "core/action-description-core.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "core/cram-action-bridge.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "core/knowledge-context-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "core/knowledge-context.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "domains/object-manipulation-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "domains/object-manipulation.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "domains/robot-motion-shapes.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "domains/robot-motion.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/aspect-actions.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/causal-physical-actions.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/control-actions.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/frame-contracts.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/frame-projection-artifacts.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/object-manipulation-profiles.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/phase-actions.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/pouring-contracts-v8.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/projection-artifacts.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/remaining-aspect-knowledge.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/robot-motion-profiles.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/stereotypical-actions.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "examples/strategy-failure-actions.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "integrations/all-action-aspects.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "integrations/all-action-knowledge.ttl",
+    "byte_identical": false
+  },
+  {
+    "file": "integrations/causal-outcome-bridge.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "integrations/causal-physical-bridge.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "integrations/diagnostic-causal-bridge.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "integrations/physical-outcome-bridge.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "integrations/recovery-strategy-bridge.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "reports/removed_dul_parent_axioms.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "reports/replaced_source_metadata.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "review/fixtures/context-provenance.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "sources/aicor-ontology.ttl",
+    "byte_identical": true
+  },
+  {
+    "file": "sources/cram-aicor-ontology.ttl",
+    "byte_identical": true
+  }
+]

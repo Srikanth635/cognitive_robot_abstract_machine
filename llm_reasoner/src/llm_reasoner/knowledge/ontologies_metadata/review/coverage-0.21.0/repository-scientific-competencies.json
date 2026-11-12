@@ -1,0 +1,522 @@
+[
+  {
+    "id": "REPO-CQ-001",
+    "question": "What participant roles does this manipulation require?",
+    "status": "partial-structural",
+    "relevant_modules": "participants-relations; phases-transitions; conditions-outcomes; knowledge-context",
+    "gap_or_acceptance_step": "Generic phase/goal/guard and state scopes exist. Initial-state optional-phase selection and verified boundary execution need a task-specific profile and runtime contract.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-002",
+    "question": "What phases are possible or required for this task variant?",
+    "status": "partial-structural",
+    "relevant_modules": "participants-relations; phases-transitions; conditions-outcomes; knowledge-context",
+    "gap_or_acceptance_step": "Generic phase/goal/guard and state scopes exist. Initial-state optional-phase selection and verified boundary execution need a task-specific profile and runtime contract.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-003",
+    "question": "What subgoal does each phase pursue?",
+    "status": "partial-structural",
+    "relevant_modules": "participants-relations; phases-transitions; conditions-outcomes; knowledge-context",
+    "gap_or_acceptance_step": "Generic phase/goal/guard and state scopes exist. Initial-state optional-phase selection and verified boundary execution need a task-specific profile and runtime contract.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-004",
+    "question": "What physical event or verified condition normally ends each phase?",
+    "status": "partial-structural",
+    "relevant_modules": "participants-relations; phases-transitions; conditions-outcomes; knowledge-context",
+    "gap_or_acceptance_step": "Generic phase/goal/guard and state scopes exist. Initial-state optional-phase selection and verified boundary execution need a task-specific profile and runtime contract.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-005",
+    "question": "Which contacts are established or broken by a boundary event?",
+    "status": "partial-structural",
+    "relevant_modules": "participants-relations; phases-transitions; conditions-outcomes; knowledge-context",
+    "gap_or_acceptance_step": "Generic phase/goal/guard and state scopes exist. Initial-state optional-phase selection and verified boundary execution need a task-specific profile and runtime contract.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-006",
+    "question": "Which phase may follow a successfully verified control point?",
+    "status": "partial-structural",
+    "relevant_modules": "participants-relations; phases-transitions; conditions-outcomes; knowledge-context",
+    "gap_or_acceptance_step": "Generic phase/goal/guard and state scopes exist. Initial-state optional-phase selection and verified boundary execution need a task-specific profile and runtime contract.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-007",
+    "question": "Which phases are optional because the initial or desired state already satisfies their subgoal?",
+    "status": "partial-structural",
+    "relevant_modules": "participants-relations; phases-transitions; conditions-outcomes; knowledge-context",
+    "gap_or_acceptance_step": "Generic phase/goal/guard and state scopes exist. Initial-state optional-phase selection and verified boundary execution need a task-specific profile and runtime contract.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-008",
+    "question": "Which conditions are entry requirements, invariants, exit outcomes, or world assumptions?",
+    "status": "partial-structural",
+    "relevant_modules": "participants-relations; phases-transitions; conditions-outcomes; knowledge-context",
+    "gap_or_acceptance_step": "Generic phase/goal/guard and state scopes exist. Initial-state optional-phase selection and verified boundary execution need a task-specific profile and runtime contract.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-009",
+    "question": "What sensory events are predicted at a control point?",
+    "status": "partial-structural",
+    "relevant_modules": "sensorimotor-events; monitoring-requirements; failure-diagnosis; capabilities-strategies",
+    "gap_or_acceptance_step": "Expected observations, boundaries and recovery descriptions exist. Five-dimensional prediction-error matching and typed repeat/continue/replan semantics are not established end to end.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-010",
+    "question": "In which modalities, locations, participants, and timing windows are they predicted?",
+    "status": "partial-structural",
+    "relevant_modules": "sensorimotor-events; monitoring-requirements; failure-diagnosis; capabilities-strategies",
+    "gap_or_acceptance_step": "Expected observations, boundaries and recovery descriptions exist. Five-dimensional prediction-error matching and typed repeat/continue/replan semantics are not established end to end.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-011",
+    "question": "What actual observation type is compared with each prediction?",
+    "status": "partial-structural",
+    "relevant_modules": "sensorimotor-events; monitoring-requirements; failure-diagnosis; capabilities-strategies",
+    "gap_or_acceptance_step": "Expected observations, boundaries and recovery descriptions exist. Five-dimensional prediction-error matching and typed repeat/continue/replan semantics are not established end to end.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-012",
+    "question": "Did the event match in occurrence, timing, location, magnitude, and direction?",
+    "status": "partial-structural",
+    "relevant_modules": "sensorimotor-events; monitoring-requirements; failure-diagnosis; capabilities-strategies",
+    "gap_or_acceptance_step": "Expected observations, boundaries and recovery descriptions exist. Five-dimensional prediction-error matching and typed repeat/continue/replan semantics are not established end to end.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-013",
+    "question": "What prediction-error kind describes a mismatch?",
+    "status": "partial-structural",
+    "relevant_modules": "sensorimotor-events; monitoring-requirements; failure-diagnosis; capabilities-strategies",
+    "gap_or_acceptance_step": "Expected observations, boundaries and recovery descriptions exist. Five-dimensional prediction-error matching and typed repeat/continue/replan semantics are not established end to end.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-014",
+    "question": "What immediate corrective action follows that error?",
+    "status": "partial-structural",
+    "relevant_modules": "sensorimotor-events; monitoring-requirements; failure-diagnosis; capabilities-strategies",
+    "gap_or_acceptance_step": "Expected observations, boundaries and recovery descriptions exist. Five-dimensional prediction-error matching and typed repeat/continue/replan semantics are not established end to end.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-015",
+    "question": "Which motor setpoint or action phase does the correction modify?",
+    "status": "partial-structural",
+    "relevant_modules": "sensorimotor-events; monitoring-requirements; failure-diagnosis; capabilities-strategies",
+    "gap_or_acceptance_step": "Expected observations, boundaries and recovery descriptions exist. Five-dimensional prediction-error matching and typed repeat/continue/replan semantics are not established end to end.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-016",
+    "question": "Does the controller repeat, continue, terminate, or replan the phase?",
+    "status": "partial-structural",
+    "relevant_modules": "sensorimotor-events; monitoring-requirements; failure-diagnosis; capabilities-strategies",
+    "gap_or_acceptance_step": "Expected observations, boundaries and recovery descriptions exist. Five-dimensional prediction-error matching and typed repeat/continue/replan semantics are not established end to end.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-017",
+    "question": "What representation or estimate is updated for future actions?",
+    "status": "generic-extension-point",
+    "relevant_modules": "dynamics-control; physical-models; knowledge-context",
+    "gap_or_acceptance_step": "No dedicated full estimation-memory/efference-copy/update-rule model. Generic equations and parameter links must not be counted as scientific implementation.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-018",
+    "question": "What initial-state estimate is supplied to the next phase?",
+    "status": "generic-extension-point",
+    "relevant_modules": "dynamics-control; physical-models; knowledge-context",
+    "gap_or_acceptance_step": "No dedicated full estimation-memory/efference-copy/update-rule model. Generic equations and parameter links must not be counted as scientific implementation.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-019",
+    "question": "What continuous sensory trajectory is predicted within a phase?",
+    "status": "generic-extension-point",
+    "relevant_modules": "dynamics-control; physical-models; knowledge-context",
+    "gap_or_acceptance_step": "No dedicated full estimation-memory/efference-copy/update-rule model. Generic equations and parameter links must not be counted as scientific implementation.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-020",
+    "question": "What signal, tolerance, controlled variable, and model define that continuous comparison?",
+    "status": "generic-extension-point",
+    "relevant_modules": "dynamics-control; physical-models; knowledge-context",
+    "gap_or_acceptance_step": "No dedicated full estimation-memory/efference-copy/update-rule model. Generic equations and parameter links must not be counted as scientific implementation.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-021",
+    "question": "Which cues and memories support an object-property or dynamics estimate?",
+    "status": "generic-extension-point",
+    "relevant_modules": "dynamics-control; physical-models; knowledge-context",
+    "gap_or_acceptance_step": "No dedicated full estimation-memory/efference-copy/update-rule model. Generic equations and parameter links must not be counted as scientific implementation.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-022",
+    "question": "Which motor setpoints are scaled by each estimate?",
+    "status": "generic-extension-point",
+    "relevant_modules": "dynamics-control; physical-models; knowledge-context",
+    "gap_or_acceptance_step": "No dedicated full estimation-memory/efference-copy/update-rule model. Generic equations and parameter links must not be counted as scientific implementation.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-023",
+    "question": "How do an efference copy and dynamics model produce a predicted load?",
+    "status": "generic-extension-point",
+    "relevant_modules": "dynamics-control; physical-models; knowledge-context",
+    "gap_or_acceptance_step": "No dedicated full estimation-memory/efference-copy/update-rule model. Generic equations and parameter links must not be counted as scientific implementation.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-024",
+    "question": "Is a load represented as acting on the object, the limb, or both?",
+    "status": "generic-extension-point",
+    "relevant_modules": "physical-models; robot-motion; knowledge-context",
+    "gap_or_acceptance_step": "Frames/context can qualify representations. Object-vs-limb load ontology, perceptual-vs-sensorimotor estimates and grasp-conditional model activation need explicit reviewed semantics.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-025",
+    "question": "Which coordinate frame does a representation use?",
+    "status": "generic-extension-point",
+    "relevant_modules": "physical-models; robot-motion; knowledge-context",
+    "gap_or_acceptance_step": "Frames/context can qualify representations. Object-vs-limb load ontology, perceptual-vs-sensorimotor estimates and grasp-conditional model activation need explicit reviewed semantics.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-026",
+    "question": "Is the representation used for sensorimotor control or perceptual judgment?",
+    "status": "generic-extension-point",
+    "relevant_modules": "physical-models; robot-motion; knowledge-context",
+    "gap_or_acceptance_step": "Frames/context can qualify representations. Object-vs-limb load ontology, perceptual-vs-sensorimotor estimates and grasp-conditional model activation need explicit reviewed semantics.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-027",
+    "question": "Can perceptual and sensorimotor estimates disagree without invalidating either representation?",
+    "status": "generic-extension-point",
+    "relevant_modules": "physical-models; robot-motion; knowledge-context",
+    "gap_or_acceptance_step": "Frames/context can qualify representations. Object-vs-limb load ontology, perceptual-vs-sensorimotor estimates and grasp-conditional model activation need explicit reviewed semantics.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-028",
+    "question": "Is the model active only while a particular object is grasped?",
+    "status": "generic-extension-point",
+    "relevant_modules": "physical-models; robot-motion; knowledge-context",
+    "gap_or_acceptance_step": "Frames/context can qualify representations. Object-vs-limb load ontology, perceptual-vs-sensorimotor estimates and grasp-conditional model activation need explicit reviewed semantics.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-029",
+    "question": "Is learning discovering a new mapping or adapting an existing one?",
+    "status": "dedicated-semantics-gap",
+    "relevant_modules": "dynamics-control",
+    "gap_or_acceptance_step": "New-mapping vs adaptation, cue/trial-conditioned update rate and learning state need a bounded learning/estimation contract if these CQs remain in scope.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-030",
+    "question": "What trial, cue condition, or error controls the update rate?",
+    "status": "dedicated-semantics-gap",
+    "relevant_modules": "dynamics-control",
+    "gap_or_acceptance_step": "New-mapping vs adaptation, cue/trial-conditioned update rate and learning state need a bounded learning/estimation contract if these CQs remain in scope.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-031",
+    "question": "What grip force, load force, friction estimate, and safety margin define grasp stability?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; sensorimotor-events; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Grasp/support/contact and controller structures exist. Grip-load temporal coupling, unexpected-weight profiles and predictive impact control need source-backed models and executable comparison rules.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-032",
+    "question": "How are grip force and predicted load coupled in time?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; sensorimotor-events; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Grasp/support/contact and controller structures exist. Grip-load temporal coupling, unexpected-weight profiles and predictive impact control need source-backed models and executable comparison rules.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-033",
+    "question": "What physical and contact conditions constitute lift-off?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; sensorimotor-events; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Grasp/support/contact and controller structures exist. Grip-load temporal coupling, unexpected-weight profiles and predictive impact control need source-backed models and executable comparison rules.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-034",
+    "question": "What physical and contact conditions constitute touchdown?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; sensorimotor-events; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Grasp/support/contact and controller structures exist. Grip-load temporal coupling, unexpected-weight profiles and predictive impact control need source-backed models and executable comparison rules.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-035",
+    "question": "What signals indicate slip and what protective response follows?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; sensorimotor-events; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Grasp/support/contact and controller structures exist. Grip-load temporal coupling, unexpected-weight profiles and predictive impact control need source-backed models and executable comparison rules.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-036",
+    "question": "What happens when expected lift-off is absent because the object is heavier than expected?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; sensorimotor-events; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Grasp/support/contact and controller structures exist. Grip-load temporal coupling, unexpected-weight profiles and predictive impact control need source-backed models and executable comparison rules.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-037",
+    "question": "What happens when lift-off occurs earlier because the object is lighter than expected?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; sensorimotor-events; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Grasp/support/contact and controller structures exist. Grip-load temporal coupling, unexpected-weight profiles and predictive impact control need source-backed models and executable comparison rules.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-038",
+    "question": "How does grip control anticipate an externally timed impact?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; sensorimotor-events; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Grasp/support/contact and controller structures exist. Grip-load temporal coupling, unexpected-weight profiles and predictive impact control need source-backed models and executable comparison rules.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-039",
+    "question": "Does a phase remain continuously regulated even though it has a discrete boundary?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; sensorimotor-events; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Grasp/support/contact and controller structures exist. Grip-load temporal coupling, unexpected-weight profiles and predictive impact control need source-backed models and executable comparison rules.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-040",
+    "question": "What forthcoming contact location is the gaze target for a phase?",
+    "status": "generic-extension-point",
+    "relevant_modules": "perception-attention; sensorimotor-events; knowledge-context",
+    "gap_or_acceptance_step": "Attention targets are covered generically. Proactive gaze lead/termination, actor-observer modality differences and matching hypotheses lack dedicated task/scientific profiles and evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-041",
+    "question": "How far ahead of the hand or held object should gaze arrive?",
+    "status": "generic-extension-point",
+    "relevant_modules": "perception-attention; sensorimotor-events; knowledge-context",
+    "gap_or_acceptance_step": "Attention targets are covered generically. Proactive gaze lead/termination, actor-observer modality differences and matching hypotheses lack dedicated task/scientific profiles and evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-042",
+    "question": "Until which subgoal or event should fixation be maintained?",
+    "status": "generic-extension-point",
+    "relevant_modules": "perception-attention; sensorimotor-events; knowledge-context",
+    "gap_or_acceptance_step": "Attention targets are covered generically. Proactive gaze lead/termination, actor-observer modality differences and matching hypotheses lack dedicated task/scientific profiles and evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-043",
+    "question": "Which visual event is aligned with tactile, proprioceptive, or auditory evidence?",
+    "status": "generic-extension-point",
+    "relevant_modules": "perception-attention; sensorimotor-events; knowledge-context",
+    "gap_or_acceptance_step": "Attention targets are covered generically. Proactive gaze lead/termination, actor-observer modality differences and matching hypotheses lack dedicated task/scientific profiles and evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-044",
+    "question": "What contact site does an observer predict while watching an actor?",
+    "status": "generic-extension-point",
+    "relevant_modules": "perception-attention; sensorimotor-events; knowledge-context",
+    "gap_or_acceptance_step": "Attention targets are covered generically. Proactive gaze lead/termination, actor-observer modality differences and matching hypotheses lack dedicated task/scientific profiles and evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-045",
+    "question": "Which modalities are available to the actor and to the observer?",
+    "status": "generic-extension-point",
+    "relevant_modules": "perception-attention; sensorimotor-events; knowledge-context",
+    "gap_or_acceptance_step": "Attention targets are covered generically. Proactive gaze lead/termination, actor-observer modality differences and matching hypotheses lack dedicated task/scientific profiles and evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-046",
+    "question": "How does actor-hand visibility change observer gaze from proactive to reactive?",
+    "status": "generic-extension-point",
+    "relevant_modules": "perception-attention; sensorimotor-events; knowledge-context",
+    "gap_or_acceptance_step": "Attention targets are covered generically. Proactive gaze lead/termination, actor-observer modality differences and matching hypotheses lack dedicated task/scientific profiles and evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-047",
+    "question": "Is actor-observer matching an empirical finding or an author hypothesis?",
+    "status": "generic-extension-point",
+    "relevant_modules": "perception-attention; sensorimotor-events; knowledge-context",
+    "gap_or_acceptance_step": "Attention targets are covered generically. Proactive gaze lead/termination, actor-observer modality differences and matching hypotheses lack dedicated task/scientific profiles and evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-048",
+    "question": "Is the learner in exploration, skill acquisition, or skill refinement?",
+    "status": "dedicated-semantics-gap",
+    "relevant_modules": "perception-attention; sensorimotor-events; physical-models",
+    "gap_or_acceptance_step": "Exploration/acquisition/refinement, chasing/proactive gaze, self/external generation and perceptual attenuation need dedicated semantics; do not invent empirical evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-049",
+    "question": "Is gaze chasing the controlled object or proactively targeting the goal?",
+    "status": "dedicated-semantics-gap",
+    "relevant_modules": "perception-attention; sensorimotor-events; physical-models",
+    "gap_or_acceptance_step": "Exploration/acquisition/refinement, chasing/proactive gaze, self/external generation and perceptual attenuation need dedicated semantics; do not invent empirical evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-050",
+    "question": "What mapping is being discovered or adapted?",
+    "status": "dedicated-semantics-gap",
+    "relevant_modules": "perception-attention; sensorimotor-events; physical-models",
+    "gap_or_acceptance_step": "Exploration/acquisition/refinement, chasing/proactive gaze, self/external generation and perceptual attenuation need dedicated semantics; do not invent empirical evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-051",
+    "question": "Is a sensory event predicted to be self-generated or externally generated?",
+    "status": "dedicated-semantics-gap",
+    "relevant_modules": "perception-attention; sensorimotor-events; physical-models",
+    "gap_or_acceptance_step": "Exploration/acquisition/refinement, chasing/proactive gaze, self/external generation and perceptual attenuation need dedicated semantics; do not invent empirical evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-052",
+    "question": "What temporal window defines perceptual attenuation around predicted contact?",
+    "status": "dedicated-semantics-gap",
+    "relevant_modules": "perception-attention; sensorimotor-events; physical-models",
+    "gap_or_acceptance_step": "Exploration/acquisition/refinement, chasing/proactive gaze, self/external generation and perceptual attenuation need dedicated semantics; do not invent empirical evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-053",
+    "question": "Is the relationship between attenuation and action-control prediction established or unresolved?",
+    "status": "dedicated-semantics-gap",
+    "relevant_modules": "perception-attention; sensorimotor-events; physical-models",
+    "gap_or_acceptance_step": "Exploration/acquisition/refinement, chasing/proactive gaze, self/external generation and perceptual attenuation need dedicated semantics; do not invent empirical evidence.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-054",
+    "question": "Which generic prehension phases are required by this particular pouring initial state?",
+    "status": "partial-structural",
+    "relevant_modules": "object-manipulation; material-transfer; action-recipes",
+    "gap_or_acceptance_step": "Existing ordered recipe variants do not derive required prehension phases from arbitrary initial state. Add bounded pouring recipe variants before general planning.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-055",
+    "question": "Is the transferred material liquid, granular, cohesive, or otherwise modeled?",
+    "status": "partial-structural",
+    "relevant_modules": "material-transfer; transfer-contracts; physical-models; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Material specifications, transfer conditions and physics/controller slots exist. Regime-specific flow, changing COM/torque/grip coupling, feedback and termination alternatives need sourced profiles and suitable simulation/measurements.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-056",
+    "question": "What conditions produce flow onset and flow cessation for that material regime?",
+    "status": "partial-structural",
+    "relevant_modules": "material-transfer; transfer-contracts; physical-models; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Material specifications, transfer conditions and physics/controller slots exist. Regime-specific flow, changing COM/torque/grip coupling, feedback and termination alternatives need sourced profiles and suitable simulation/measurements.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-057",
+    "question": "What flow, quantity, pose, and alignment variables are continuously controlled?",
+    "status": "partial-structural",
+    "relevant_modules": "material-transfer; transfer-contracts; physical-models; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Material specifications, transfer conditions and physics/controller slots exist. Regime-specific flow, changing COM/torque/grip coupling, feedback and termination alternatives need sourced profiles and suitable simulation/measurements.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-058",
+    "question": "What sensory trajectories provide feedback during transfer?",
+    "status": "partial-structural",
+    "relevant_modules": "material-transfer; transfer-contracts; physical-models; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Material specifications, transfer conditions and physics/controller slots exist. Regime-specific flow, changing COM/torque/grip coupling, feedback and termination alternatives need sourced profiles and suitable simulation/measurements.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-059",
+    "question": "Is transfer terminated by target quantity, empty source, explicit instruction, or failure?",
+    "status": "partial-structural",
+    "relevant_modules": "material-transfer; transfer-contracts; physical-models; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Material specifications, transfer conditions and physics/controller slots exist. Regime-specific flow, changing COM/torque/grip coupling, feedback and termination alternatives need sourced profiles and suitable simulation/measurements.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-060",
+    "question": "How does changing content alter center of mass, torque, grip force, and load prediction?",
+    "status": "partial-structural",
+    "relevant_modules": "material-transfer; transfer-contracts; physical-models; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Material specifications, transfer conditions and physics/controller slots exist. Regime-specific flow, changing COM/torque/grip coupling, feedback and termination alternatives need sourced profiles and suitable simulation/measurements.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-061",
+    "question": "What constitutes a spill and what correction or recovery follows?",
+    "status": "partial-structural",
+    "relevant_modules": "material-transfer; transfer-contracts; physical-models; dynamics-control; failure-diagnosis",
+    "gap_or_acceptance_step": "Material specifications, transfer conditions and physics/controller slots exist. Regime-specific flow, changing COM/torque/grip coupling, feedback and termination alternatives need sourced profiles and suitable simulation/measurements.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-062",
+    "question": "Which source claim and evidence status support this answer?",
+    "status": "partial-structural",
+    "relevant_modules": "action-description-core; knowledge-context",
+    "gap_or_acceptance_step": "Exact claim/source/workflow status can be represented; answer-part evidence grades, source-claim alignment, occurrence-vs-hypothesis acceptance and frozen storage remain incomplete.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-063",
+    "question": "Is the answer generic knowledge, a world assumption, an actual observation, or an engineering extension?",
+    "status": "partial-structural",
+    "relevant_modules": "action-description-core; knowledge-context",
+    "gap_or_acceptance_step": "Exact claim/source/workflow status can be represented; answer-part evidence grades, source-claim alignment, occurrence-vs-hypothesis acceptance and frozen storage remain incomplete.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-064",
+    "question": "Which task capability caused the defining module to be selected?",
+    "status": "integration-deferred",
+    "relevant_modules": "capabilities-strategies; upstream llm_reasoner",
+    "gap_or_acceptance_step": "Capability requirements are described. Actual defining-module selection trace is a runtime/provider responsibility, not established by this standalone package.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  },
+  {
+    "id": "REPO-CQ-065",
+    "question": "Is this hypothesis valid for the current material, participant binding, and initial state?",
+    "status": "integration-deferred",
+    "relevant_modules": "knowledge-context; entities-materials-affordances",
+    "gap_or_acceptance_step": "Context and validity conditions are representable; actual binding/material/initial-state applicability needs accepted world facts and an adapter.",
+    "source": "https://github.com/Srikanth635/cognitive_robot_abstract_machine/blob/4cf1da42be36c752834b6ed325faa092b7f5a1b8/llm_reasoner/doc/flanagan_scientific_contract.md"
+  }
+]

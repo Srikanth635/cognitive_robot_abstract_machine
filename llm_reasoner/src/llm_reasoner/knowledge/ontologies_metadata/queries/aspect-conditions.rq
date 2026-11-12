@@ -1,0 +1,11 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#>
+SELECT ?record ?action ?conditionKind ?condition ?expression ?claim ?status
+WHERE {
+ ?record ac:expressesDescription ?action; ac:hasClaim ?claim .
+ VALUES ?conditionKind { ac:hasPrecondition ac:hasGoal ac:hasSuccessCriterion ac:hasFailureCriterion }
+ ?action ?conditionKind ?condition .
+ ?condition co:hasExpression ?expression .
+ ?claim ac:aboutComponent ?condition; ac:hasStatus ?status .
+}
+ORDER BY ?record ?conditionKind

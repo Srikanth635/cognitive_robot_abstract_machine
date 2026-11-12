@@ -3,10 +3,9 @@ Checking a hypothesis against the ontology in the open world, and locating what 
 inconsistent.
 
 The acceptance rules read a hypothesis closed-world and catch what is missing. A
-reasoner reads it open-world, together with the microworld, CRAM-AICOR and DUL, and
-catches what contradicts them, such as a lift-off said to be driven by grip force. A
-reasoner only answers yes or no, so the contradiction is located by asking it about
-parts of the hypothesis.
+reasoner reads it open-world, together with the microworld and the ontologies it links
+to, and catches what contradicts them. A reasoner only answers yes or no, so the
+contradiction is located by asking it about parts of the hypothesis.
 """
 
 from __future__ import annotations
@@ -20,7 +19,7 @@ from rdflib import OWL, RDF, Graph
 from rdflib.term import Node
 from typing_extensions import Iterable, Sequence
 
-from llm_reasoner.knowledge.ontologies import OntologyModuleFile
+from llm_reasoner.knowledge.vocabulary.ontology_modules import OntologyModuleFile
 
 
 class OpenWorldCheck(StrEnum):
@@ -30,9 +29,8 @@ class OpenWorldCheck(StrEnum):
 
     CONSISTENT_WITH_ONTOLOGY = "consistent_with_ontology"
     """
-    The hypothesis contradicts nothing the microworld, CRAM-AICOR and DUL state, such as
-    which force overcomes which at a lift-off, or what kind of thing a fragment may be
-    part of.
+    The hypothesis contradicts nothing the microworld and the ontologies it links to
+    state, such as what kind of thing a fragment may be part of.
     """
 
 

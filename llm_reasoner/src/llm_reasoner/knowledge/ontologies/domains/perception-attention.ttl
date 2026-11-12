@@ -1,0 +1,556 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pa: <http://aicor.knowledge/ontologies/perception-attention.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/perception-attention.owl> a owl:Ontology ;
+    rdfs:label "Perception and attention domain"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/knowledge-context.owl>,
+        <http://aicor.knowledge/ontologies/monitoring-requirements.owl>,
+        <http://aicor.knowledge/ontologies/phases-transitions.owl>,
+        <http://aicor.knowledge/ontologies/robot-motion.owl>,
+        <http://aicor.knowledge/ontologies/sensorimotor-events.owl> ;
+    owl:versionInfo "0.16.0" .
+
+pa:AssessingVisibility a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Assessing visibility"@en .
+
+pa:AttentionDescription a owl:Class ;
+    rdfs:label "Attention description"@en ;
+    rdfs:comment "Direct attention toward a target; visibility or detection is not implied."@en ;
+    rdfs:subClassOf pa:PerceptionAttentionDescription .
+
+pa:AttentionDirected a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Attention directed"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition pa:AttentionDirectedArgument1,
+        pa:AttentionDirectedArgument2 ;
+    rdfs:comment "Attention is directed as requested; no visibility or detection implied."@en .
+
+pa:AttentionUnknown a pa:AttentionState,
+        owl:NamedIndividual ;
+    rdfs:label "Attention unknown"@en .
+
+pa:CandidateReported a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Candidate reported"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition pa:CandidateReportedArgument1,
+        pa:CandidateReportedArgument2,
+        pa:CandidateReportedArgument3 ;
+    rdfs:comment "At least one matching candidate is reported within the selected query scope."@en .
+
+pa:Completed a pa:ResultOutcome,
+        owl:NamedIndividual ;
+    rdfs:label "Completed"@en .
+
+pa:Detecting a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Detecting"@en .
+
+pa:DetectionDescription a owl:Class ;
+    rdfs:label "Detection description"@en ;
+    rdfs:comment "Report matching candidate hypotheses within the query scope."@en ;
+    rdfs:subClassOf pa:PerceptionAttentionDescription .
+
+pa:Directed a pa:AttentionState,
+        owl:NamedIndividual ;
+    rdfs:label "Directed"@en .
+
+pa:DirectingAttention a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Directing attention"@en .
+
+pa:DoesNotMatch a pa:MatchAssessment,
+        owl:NamedIndividual ;
+    rdfs:label "Does not match"@en .
+
+pa:Failed a pa:ResultOutcome,
+        owl:NamedIndividual ;
+    rdfs:label "Failed"@en .
+
+pa:IdentificationDescription a owl:Class ;
+    rdfs:label "Identification description"@en ;
+    rdfs:comment "Resolve one matching candidate under an explicit ambiguity policy; no automatic belief write."@en ;
+    rdfs:subClassOf pa:PerceptionAttentionDescription .
+
+pa:Identifying a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Identifying"@en .
+
+pa:IdentityResolved a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Identity resolved"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition pa:IdentityResolvedArgument1,
+        pa:IdentityResolvedArgument2,
+        pa:IdentityResolvedArgument3 ;
+    rdfs:comment "One candidate is resolved under the declared match/ambiguity contract, without world-model publication."@en .
+
+pa:MatchUnknown a pa:MatchAssessment,
+        owl:NamedIndividual ;
+    rdfs:label "Match unknown"@en .
+
+pa:Matches a pa:MatchAssessment,
+        owl:NamedIndividual ;
+    rdfs:label "Matches"@en .
+
+pa:NotDirected a pa:AttentionState,
+        owl:NamedIndividual ;
+    rdfs:label "Not directed"@en .
+
+pa:ObservationReady a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Observation ready"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition pa:ObservationReadyArgument1,
+        pa:ObservationReadyArgument2,
+        pa:ObservationReadyArgument3 ;
+    rdfs:comment "The requested observation is assessed ready; geometry is externally bound."@en .
+
+pa:Occluded a pa:VisibilityState,
+        owl:NamedIndividual ;
+    rdfs:label "Occluded"@en .
+
+pa:PerceptionCapabilityAvailable a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Perception capability available"@en ;
+    ns1:arity "1"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition pa:PerceptionCapabilityAvailableArgument1 ;
+    rdfs:comment "Required perception/attention capability is assessed available in context."@en .
+
+pa:PerceptionFault a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Perception fault"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition pa:PerceptionFaultArgument1,
+        pa:PerceptionFaultArgument2 ;
+    rdfs:comment "An explicit acquisition/analysis fault report, not failure to find an object."@en .
+
+pa:SearchExhausted a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Search exhausted"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition pa:SearchExhaustedArgument1,
+        pa:SearchExhaustedArgument2,
+        pa:SearchExhaustedArgument3 ;
+    rdfs:comment "Declared views or attempt budget exhausted without a match; no global absence implied."@en .
+
+pa:SearchSucceeded a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Search succeeded"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition pa:SearchSucceededArgument1,
+        pa:SearchSucceededArgument2,
+        pa:SearchSucceededArgument3 ;
+    rdfs:comment "A matching candidate was found by the bounded declared search."@en .
+
+pa:Searching a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Searching"@en .
+
+pa:Undetermined a pa:ResultOutcome,
+        owl:NamedIndividual ;
+    rdfs:label "Undetermined"@en .
+
+pa:VisibilityAssessmentDescription a owl:Class ;
+    rdfs:label "Visibility assessment description"@en ;
+    rdfs:comment "Resolve visibility within a scoped query; occlusion can be a successful assessment."@en ;
+    rdfs:subClassOf pa:PerceptionAttentionDescription .
+
+pa:VisibilityResolved a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Visibility resolved"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition pa:VisibilityResolvedArgument1,
+        pa:VisibilityResolvedArgument2,
+        pa:VisibilityResolvedArgument3 ;
+    rdfs:comment "Visibility assessment is known in the requested scope; occluded is a valid known answer."@en .
+
+pa:VisibilityUnknown a pa:VisibilityState,
+        owl:NamedIndividual ;
+    rdfs:label "Visibility unknown"@en .
+
+pa:Visible a pa:VisibilityState,
+        owl:NamedIndividual ;
+    rdfs:label "Visible"@en .
+
+pa:answersQuery a owl:ObjectProperty ;
+    rdfs:label "Answers query"@en ;
+    rdfs:domain pa:PerceptionResultRecord ;
+    rdfs:range pa:ObservationQuery .
+
+pa:attemptBudget a owl:ObjectProperty ;
+    rdfs:label "Attempt budget"@en ;
+    rdfs:domain pa:SearchSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+pa:attentionState a owl:ObjectProperty ;
+    rdfs:label "Attention state"@en ;
+    rdfs:domain pa:PerceptionResultRecord ;
+    rdfs:range pa:AttentionState .
+
+pa:basedOnResult a owl:ObjectProperty ;
+    rdfs:label "Based on result"@en ;
+    rdfs:domain pa:BeliefUpdateProposal ;
+    rdfs:range pa:PerceptionResultRecord .
+
+pa:candidateEntity a owl:ObjectProperty ;
+    rdfs:label "Candidate entity"@en ;
+    rdfs:domain pa:CandidateHypothesis ;
+    rdfs:range ac:EntitySpecification .
+
+pa:estimateFrame a owl:ObjectProperty ;
+    rdfs:label "Estimate frame"@en ;
+    rdfs:domain pa:PoseEstimate ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+pa:evaluationContext a owl:ObjectProperty ;
+    rdfs:label "Evaluation context"@en ;
+    rdfs:domain pa:PerceptionAttentionDescription ;
+    rdfs:range kc:KnowledgeContext .
+
+pa:forView a owl:ObjectProperty ;
+    rdfs:label "For view"@en ;
+    rdfs:domain pa:PerceptionResultRecord ;
+    rdfs:range pa:ObservationView .
+
+pa:hasCandidate a owl:ObjectProperty ;
+    rdfs:label "Has candidate"@en ;
+    rdfs:domain pa:PerceptionResultRecord ;
+    rdfs:range pa:CandidateHypothesis .
+
+pa:hasView a owl:ObjectProperty ;
+    rdfs:label "Has view"@en ;
+    rdfs:domain pa:SearchSpecification ;
+    rdfs:range pa:ObservationView .
+
+pa:inContext a owl:ObjectProperty ;
+    rdfs:label "In context"@en ;
+    rdfs:domain pa:PerceptionResultRecord ;
+    rdfs:range kc:KnowledgeContext .
+
+pa:inRecord a owl:ObjectProperty ;
+    rdfs:label "In record"@en ;
+    rdfs:domain pa:PerceptionResultRecord ;
+    rdfs:range ac:KnowledgeRecord .
+
+pa:matchAssessment a owl:ObjectProperty ;
+    rdfs:label "Match assessment"@en ;
+    rdfs:domain pa:CandidateHypothesis ;
+    rdfs:range pa:MatchAssessment .
+
+pa:modality a owl:ObjectProperty ;
+    rdfs:label "Modality"@en ;
+    rdfs:domain pa:ObservationQuery ;
+    rdfs:range <http://aicor.knowledge/ontologies/sensorimotor-events.owl#SensoryModality> .
+
+pa:observer a owl:ObjectProperty ;
+    rdfs:label "Observer"@en ;
+    rdfs:domain pa:PerceptionAttentionDescription ;
+    rdfs:range ac:EntitySpecification .
+
+pa:orientationEstimate a owl:ObjectProperty ;
+    rdfs:label "Orientation estimate"@en ;
+    rdfs:domain pa:PoseEstimate ;
+    rdfs:range pa:OrientationEstimate .
+
+pa:outcome a owl:ObjectProperty ;
+    rdfs:label "Outcome"@en ;
+    rdfs:domain pa:PerceptionResultRecord ;
+    rdfs:range pa:ResultOutcome .
+
+pa:poseEstimate a owl:ObjectProperty ;
+    rdfs:label "Pose estimate"@en ;
+    rdfs:domain pa:CandidateHypothesis ;
+    rdfs:range pa:PoseEstimate .
+
+pa:positionIndex a owl:DatatypeProperty ;
+    rdfs:label "Position index"@en ;
+    rdfs:domain pa:ObservationView ;
+    rdfs:range xsd:positiveInteger .
+
+pa:proposalContext a owl:ObjectProperty ;
+    rdfs:label "Proposal context"@en ;
+    rdfs:domain pa:BeliefUpdateProposal ;
+    rdfs:range kc:KnowledgeContext .
+
+pa:proposalRecord a owl:ObjectProperty ;
+    rdfs:label "Proposal record"@en ;
+    rdfs:domain pa:BeliefUpdateProposal ;
+    rdfs:range ac:KnowledgeRecord .
+
+pa:proposedClaim a owl:ObjectProperty ;
+    rdfs:label "Proposed claim"@en ;
+    rdfs:domain pa:BeliefUpdateProposal ;
+    rdfs:range ac:KnowledgeClaim .
+
+pa:query a owl:ObjectProperty ;
+    rdfs:label "Query"@en ;
+    rdfs:domain pa:PerceptionAttentionDescription ;
+    rdfs:range pa:ObservationQuery ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+pa:queryFrame a owl:ObjectProperty ;
+    rdfs:label "Query frame"@en ;
+    rdfs:domain pa:ObservationQuery ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+pa:queryRegion a owl:ObjectProperty ;
+    rdfs:label "Query region"@en ;
+    rdfs:domain pa:ObservationQuery ;
+    rdfs:range ac:EntitySpecification .
+
+pa:queryTarget a owl:ObjectProperty ;
+    rdfs:label "Query target"@en ;
+    rdfs:domain pa:ObservationQuery ;
+    rdfs:range ac:EntitySpecification .
+
+pa:qwParameter a owl:ObjectProperty ;
+    rdfs:label "Qw parameter"@en ;
+    rdfs:domain pa:OrientationEstimate ;
+    rdfs:range ac:ParameterSpecification .
+
+pa:qxParameter a owl:ObjectProperty ;
+    rdfs:label "Qx parameter"@en ;
+    rdfs:domain pa:OrientationEstimate ;
+    rdfs:range ac:ParameterSpecification .
+
+pa:qyParameter a owl:ObjectProperty ;
+    rdfs:label "Qy parameter"@en ;
+    rdfs:domain pa:OrientationEstimate ;
+    rdfs:range ac:ParameterSpecification .
+
+pa:qzParameter a owl:ObjectProperty ;
+    rdfs:label "Qz parameter"@en ;
+    rdfs:domain pa:OrientationEstimate ;
+    rdfs:range ac:ParameterSpecification .
+
+pa:referenceFrame a owl:ObjectProperty ;
+    rdfs:label "Reference frame"@en ;
+    rdfs:domain pa:PerceptionAttentionDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+pa:region a owl:ObjectProperty ;
+    rdfs:label "Region"@en ;
+    rdfs:domain pa:PerceptionAttentionDescription ;
+    rdfs:range ac:EntitySpecification .
+
+pa:resultFrame a owl:ObjectProperty ;
+    rdfs:label "Result frame"@en ;
+    rdfs:domain pa:PerceptionResultRecord ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+pa:searchSpecification a owl:ObjectProperty ;
+    rdfs:label "Search specification"@en ;
+    rdfs:domain pa:SearchDescription ;
+    rdfs:range pa:SearchSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+pa:target a owl:ObjectProperty ;
+    rdfs:label "Target"@en ;
+    rdfs:domain pa:PerceptionAttentionDescription ;
+    rdfs:range ac:EntitySpecification .
+
+pa:viewFrame a owl:ObjectProperty ;
+    rdfs:label "View frame"@en ;
+    rdfs:domain pa:ObservationView ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+pa:viewRegion a owl:ObjectProperty ;
+    rdfs:label "View region"@en ;
+    rdfs:domain pa:ObservationView ;
+    rdfs:range ac:EntitySpecification .
+
+pa:viewpoint a owl:ObjectProperty ;
+    rdfs:label "Viewpoint"@en ;
+    rdfs:domain pa:ObservationView ;
+    rdfs:range ac:EntitySpecification .
+
+pa:visibilityState a owl:ObjectProperty ;
+    rdfs:label "Visibility state"@en ;
+    rdfs:domain pa:PerceptionResultRecord ;
+    rdfs:range pa:VisibilityState .
+
+pa:xParameter a owl:ObjectProperty ;
+    rdfs:label "X parameter"@en ;
+    rdfs:domain pa:PoseEstimate ;
+    rdfs:range ac:ParameterSpecification .
+
+pa:yParameter a owl:ObjectProperty ;
+    rdfs:label "Y parameter"@en ;
+    rdfs:domain pa:PoseEstimate ;
+    rdfs:range ac:ParameterSpecification .
+
+pa:zParameter a owl:ObjectProperty ;
+    rdfs:label "Z parameter"@en ;
+    rdfs:domain pa:PoseEstimate ;
+    rdfs:range ac:ParameterSpecification .
+
+pa:AttentionDirectedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "observer"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+pa:AttentionDirectedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+pa:CandidateReportedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "observer"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+pa:CandidateReportedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+pa:CandidateReportedArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "region"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+pa:IdentityResolvedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "observer"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+pa:IdentityResolvedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+pa:IdentityResolvedArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "region"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+pa:ObservationReadyArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "observer"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+pa:ObservationReadyArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+pa:ObservationReadyArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "region"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+pa:PerceptionCapabilityAvailableArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "observer"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+pa:PerceptionFaultArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "observer"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+pa:PerceptionFaultArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+pa:SearchDescription a owl:Class ;
+    rdfs:label "Search description"@en ;
+    rdfs:comment "Bounded, ordered observation-view search; exhaustion is local to the declared scope."@en ;
+    rdfs:subClassOf pa:PerceptionAttentionDescription .
+
+pa:SearchExhaustedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "observer"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+pa:SearchExhaustedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+pa:SearchExhaustedArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "region"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+pa:SearchSucceededArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "observer"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+pa:SearchSucceededArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+pa:SearchSucceededArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "region"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+pa:VisibilityResolvedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "observer"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+pa:VisibilityResolvedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+pa:VisibilityResolvedArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "region"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+pa:SearchSpecification a owl:Class ;
+    rdfs:label "Search specification"@en ;
+    rdfs:comment "Ordered observation views and an explicit attempt budget."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pa:AttentionState a owl:Class ;
+    rdfs:label "Attention state"@en ;
+    rdfs:comment "Reported attention state, independent of target detection."@en ;
+    rdfs:subClassOf <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Concept> .
+
+pa:BeliefUpdateProposal a owl:Class ;
+    rdfs:label "Belief update proposal"@en ;
+    rdfs:comment "Proposed exact claim based on a result; acceptance and publication are separate operations."@en ;
+    rdfs:subClassOf <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject> .
+
+pa:CandidateHypothesis a owl:Class ;
+    rdfs:label "Candidate hypothesis"@en ;
+    rdfs:comment "Candidate description and target-match assessment; not an identified physical object."@en ;
+    rdfs:subClassOf <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#InformationObject> .
+
+pa:MatchAssessment a owl:Class ;
+    rdfs:label "Match assessment"@en ;
+    rdfs:comment "Externally supplied candidate/target match classification."@en ;
+    rdfs:subClassOf <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Concept> .
+
+pa:ResultOutcome a owl:Class ;
+    rdfs:label "Result outcome"@en ;
+    rdfs:comment "Completion outcome of the acquisition/analysis operation."@en ;
+    rdfs:subClassOf <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Concept> .
+
+pa:VisibilityState a owl:Class ;
+    rdfs:label "Visibility state"@en ;
+    rdfs:comment "Reported visibility state, independent of object existence."@en ;
+    rdfs:subClassOf <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Concept> .
+
+pa:OrientationEstimate a owl:Class ;
+    rdfs:label "Orientation estimate"@en ;
+    rdfs:comment "Quaternion XYZW estimate description; normalization and uncertainty validation are external."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pa:ObservationQuery a owl:Class ;
+    rdfs:label "Observation query"@en ;
+    rdfs:comment "Target, region, frame and modality describing a scoped observation request."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pa:ObservationView a owl:Class ;
+    rdfs:label "Observation view"@en ;
+    rdfs:comment "One indexed observation viewpoint; movement is a separate requirement."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pa:PoseEstimate a owl:Class ;
+    rdfs:label "Pose estimate"@en ;
+    rdfs:comment "Description of an estimated pose; separate from a desired robot-motion pose target and from an accepted world pose."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pa:PerceptionResultRecord a owl:Class ;
+    rdfs:label "Perception result record"@en ;
+    rdfs:comment "Externally supplied, timestamped result record; not a physical event or accepted belief."@en ;
+    rdfs:subClassOf kc:ObservationEvidence .
+
+pa:PerceptionAttentionDescription a owl:Class ;
+    rdfs:label "Perception attention description"@en ;
+    rdfs:comment "Description of intended attention/perception, independent of a sensing backend."@en ;
+    rdfs:subClassOf ac:ActionDescription .
+

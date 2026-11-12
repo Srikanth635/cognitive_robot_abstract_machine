@@ -1,0 +1,24 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix bridge: <http://aicor.knowledge/ontologies/cram-action-bridge.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/cram-action-bridge.owl> a owl:Ontology ;
+    rdfs:label "CRAM action bridge"@en ;
+    rdfs:comment "Optional adapter vocabulary. No blanket equivalence between generic descriptions and CRAM classes. No executable runtime mapping is implemented." ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl>,
+        <urn:gpt-cram-ontologies:aicor-unified> ;
+    owl:versionInfo "0.1.1" .
+
+bridge:describesCRAMDesignator a owl:ObjectProperty ;
+    rdfs:label "Describes CRAM Designator"@en ;
+    rdfs:comment "Optional relation to an independently constructed CRAM designator. Creating this link activates all existing AICOR restrictions on that designator." ;
+    rdfs:domain bridge:CRAMProjectionArtifact ;
+    rdfs:range aicor:ActionDesignator .
+
+bridge:CRAMProjectionArtifact a owl:Class ;
+    rdfs:label "CRAM Projection Artifact"@en ;
+    rdfs:comment "Artifact intended for CRAM integration. This classification does not establish execution readiness." ;
+    rdfs:subClassOf ac:ProjectionArtifact .
+

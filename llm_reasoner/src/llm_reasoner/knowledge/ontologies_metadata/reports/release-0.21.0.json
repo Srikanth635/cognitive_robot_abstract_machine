@@ -1,0 +1,87 @@
+{
+  "release": "0.21.0",
+  "date": "2026-11-12",
+  "type": "coverage and consolidation review; queries and documentation only",
+  "ontology_baseline": "0.20.0",
+  "registered_ontologies": 40,
+  "new_ontologies": 0,
+  "review_coverage": {
+    "original_objectives": 8,
+    "local_competency_questions": 30,
+    "separate_repository_scientific_questions": 65,
+    "modules": 40,
+    "static_action_candidates": 28,
+    "static_motion_candidates": 13,
+    "verified_upstream_source_blobs": 31
+  },
+  "pinned_upstream_commit": "4cf1da42be36c752834b6ed325faa092b7f5a1b8",
+  "fresh_validation": {
+    "current_record_review": {
+      "passed": 59,
+      "checks": 59,
+      "report": "reports/current-coverage-review.json",
+      "report_sha256": "c6ce82c32e27e1994087673828bd4bb93924cf94a8185061f87d38ce29f76860"
+    },
+    "historical_V7_competency_regressions": {
+      "passed": 93,
+      "checks": 93,
+      "report": "reports/competency-review.json",
+      "report_sha256": "0eb9d4ded35c0e632d638cb3c363708089da66417d7995539e630b78aa073b42"
+    },
+    "recipe_query_regressions": {
+      "passed": 23,
+      "checks": 23,
+      "report": "reports/recipe-tool-query-validation.json",
+      "report_sha256": "f39524913ad0e054a395324aab223af20d78267243f6cb8c21095ad6e16dabcd"
+    },
+    "offline_import_catalog_checks": {
+      "passed": 62,
+      "checks": 62,
+      "report": "reports/import-validation.json",
+      "report_sha256": "1da4f90ca014b1d912ab9a68f7932dddfc5430bdc1ca07939dc549d4b6bdd690"
+    },
+    "pouring_V8_contract_regressions": {
+      "passed": 31,
+      "checks": 31,
+      "report": "reports/pouring-contract-validation.json",
+      "report_sha256": "a8f9c43a3cdc2a220718432464752ff6b9729d1c6e0f3f84157d41071680e1f2"
+    }
+  },
+  "fresh_assertions_total": 268,
+  "additional_artifact_checks": [
+    "CSV and JSON rows agree",
+    "Static candidate names exactly covered by mapping",
+    "New Python tools compile",
+    "31 inspected source bytes match upstream Git blob SHA",
+    "87 prior RDF/OWL files remain byte-identical"
+  ],
+  "preservation": {
+    "baseline": "0.20.0",
+    "prior_rdf_files": 87,
+    "byte_identical": 87,
+    "changed_or_missing": [],
+    "new_registered_ontologies": 0
+  },
+  "inherited_reasoning": {
+    "baseline": "reports/release-0.20.0.json",
+    "fresh_OWL_run": false,
+    "reason": "No RDF/OWL input changed",
+    "generic": "Prior classification and generic consistency passed",
+    "optional_AICOR": "Prior optional combined check timed out; historical normalization problem unresolved; full class satisfiability unverified"
+  },
+  "report": "review/coverage-0.21.0/REVIEW_REPORT.md",
+  "next_priorities": [
+    "Mixing refinement and exact recipe variants",
+    "Current competency registry with fixture/evaluator/evidence contracts",
+    "Answer-part evidence grades, source acceptance and immutable storage policy",
+    "Small source-backed knowledge slice",
+    "Selected scientific aspect extensions justified by required questions"
+  ],
+  "boundaries": [
+    "Scientific competency matrix is semantic review, not 65 implemented answers",
+    "Static class inventory is not runtime eligibility or upstream test execution",
+    "No new working projection, EQL/SDT adapter or GitHub push",
+    "No acquired observations, accepted world beliefs, solver/simulator run or robot execution",
+    "Provenance completeness and logical consistency do not establish physical truth"
+  ]
+}

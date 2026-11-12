@@ -1,0 +1,400 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dc1: <http://aicor.knowledge/ontologies/dynamics-control.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/action-examples.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix ns2: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix ns3: <http://aicor.knowledge/ontologies/phases-transitions.owl#> .
+@prefix ot: <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#> .
+@prefix pm: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:graspRecordV5 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:graspActionV5 ;
+    ac:hasAnnotation ex:graspControlAnnotation ;
+    ac:hasClaim ex:graspControlClaim0,
+        ex:graspControlClaim1,
+        ex:graspControlClaim2,
+        ex:graspControlClaim3,
+        ex:graspPhysicalClaim0,
+        ex:graspPhysicalClaim1,
+        ex:graspPhysicalClaim2,
+        ex:graspPhysicalClaim3,
+        ex:graspRecordV2Claim0,
+        ex:graspRecordV2Claim1,
+        ex:graspRecordV2Claim2,
+        ex:graspRecordV2Claim3,
+        ex:graspTemporalClaim0,
+        ex:graspTemporalClaim1,
+        ex:graspTemporalClaim10,
+        ex:graspTemporalClaim2,
+        ex:graspTemporalClaim3,
+        ex:graspTemporalClaim4,
+        ex:graspTemporalClaim5,
+        ex:graspTemporalClaim6,
+        ex:graspTemporalClaim7,
+        ex:graspTemporalClaim8,
+        ex:graspTemporalClaim9 ;
+    ac:previousVersion ex:graspRecordV4 ;
+    ac:recordVersion "5" .
+
+ex:pourRecordV5 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:pourActionV5 ;
+    ac:hasAnnotation ex:pourControlAnnotation ;
+    ac:hasClaim ex:pourControlClaim0,
+        ex:pourControlClaim1,
+        ex:pourControlClaim2,
+        ex:pourControlClaim3,
+        ex:pourPhysicalClaim0,
+        ex:pourPhysicalClaim1,
+        ex:pourPhysicalClaim2,
+        ex:pourPhysicalClaim3,
+        ex:pourRecordV2Claim0,
+        ex:pourRecordV2Claim1,
+        ex:pourRecordV2Claim2,
+        ex:pourRecordV2Claim3,
+        ex:pourTemporalClaim0,
+        ex:pourTemporalClaim1,
+        ex:pourTemporalClaim10,
+        ex:pourTemporalClaim2,
+        ex:pourTemporalClaim3,
+        ex:pourTemporalClaim4,
+        ex:pourTemporalClaim5,
+        ex:pourTemporalClaim6,
+        ex:pourTemporalClaim7,
+        ex:pourTemporalClaim8,
+        ex:pourTemporalClaim9 ;
+    ac:previousVersion ex:pourRecordV4 ;
+    ac:recordVersion "5" .
+
+ex:graspAdaptation a dc1:AdaptationSpecification ;
+    dc1:updatesParameter ex:graspPropertyParameter ;
+    dc1:validWhen ex:graspModelAssumption .
+
+ex:graspCommand a ac:ParameterSpecification ;
+    ac:parameterKey "abstract-hold-command" .
+
+ex:graspControlAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:graspActionV5 ;
+    ac:contributesClaim ex:graspControlClaim0,
+        ex:graspControlClaim1,
+        ex:graspControlClaim2,
+        ex:graspControlClaim3 ;
+    ac:producerIdentifier "curated-dynamics-objective-schema-example" .
+
+ex:graspControlEffort a ac:ParameterSpecification ;
+    ac:parameterKey "control-effort" .
+
+ex:graspControlStatement0 a ac:Statement ;
+    ac:statementObject ex:graspDynamics ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/dynamics-control.owl#controlsModel"^^xsd:anyURI ;
+    ac:statementSubject ex:graspController .
+
+ex:graspControlStatement1 a ac:Statement ;
+    ac:statementObject ex:graspObjectives ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/dynamics-control.owl#objectiveSet"^^xsd:anyURI ;
+    ac:statementSubject ex:graspController .
+
+ex:graspControlStatement2 a ac:Statement ;
+    ac:statementObject ex:graspPhysicalModel ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/dynamics-control.owl#describesPlant"^^xsd:anyURI ;
+    ac:statementSubject ex:graspDynamics .
+
+ex:graspControlStatement3 a ac:Statement ;
+    ac:statementObject ot:WeightedSum ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#aggregationPolicy"^^xsd:anyURI ;
+    ac:statementSubject ex:graspObjectives .
+
+ex:graspInputAssignment a dc1:VariableAssignment ;
+    dc1:dimension "1"^^xsd:positiveInteger ;
+    dc1:position "1"^^xsd:positiveInteger ;
+    dc1:role dc1:Input ;
+    dc1:variable ex:graspInputVariable .
+
+ex:graspNormalization_effort a ot:NormalizationSpecification ;
+    ot:scaleParameter ex:graspScale_effort .
+
+ex:graspNormalization_hold a ot:NormalizationSpecification ;
+    ot:scaleParameter ex:graspScale_hold .
+
+ex:graspObjective_effort a ot:ObjectiveTerm ;
+    ot:direction ot:Minimize ;
+    ot:metricParameter ex:graspControlEffort ;
+    ot:normalizedBy ex:graspNormalization_effort ;
+    ot:weightParameter ex:graspWeight_effort .
+
+ex:graspObjective_hold a ot:ObjectiveTerm ;
+    ot:direction ot:Maximize ;
+    ot:metricParameter ex:graspHoldMetric ;
+    ot:normalizedBy ex:graspNormalization_hold ;
+    ot:weightParameter ex:graspWeight_hold .
+
+ex:graspOutputAssignment a dc1:VariableAssignment ;
+    dc1:dimension "1"^^xsd:positiveInteger ;
+    dc1:position "1"^^xsd:positiveInteger ;
+    dc1:role dc1:Output ;
+    dc1:variable ex:graspHoldStateVariable .
+
+ex:graspSamplingPeriod a ac:ParameterSpecification ;
+    ac:parameterKey "sampling-period" .
+
+ex:graspScale_effort a ac:ParameterSpecification ;
+    ac:parameterKey "normalization-scale-effort" .
+
+ex:graspScale_hold a ac:ParameterSpecification ;
+    ac:parameterKey "normalization-scale-hold" .
+
+ex:graspStateAssignment a dc1:VariableAssignment ;
+    dc1:dimension "1"^^xsd:positiveInteger ;
+    dc1:position "1"^^xsd:positiveInteger ;
+    dc1:role dc1:State ;
+    dc1:variable ex:graspHoldStateVariable .
+
+ex:graspWeight_effort a ac:ParameterSpecification ;
+    ac:parameterKey "objective-weight-effort" .
+
+ex:graspWeight_hold a ac:ParameterSpecification ;
+    ac:parameterKey "objective-weight-hold" .
+
+ex:pourAdaptation a dc1:AdaptationSpecification ;
+    dc1:updatesParameter ex:pourPropertyParameter ;
+    dc1:validWhen ex:pourModelAssumption .
+
+ex:pourCommand a ac:ParameterSpecification ;
+    ac:parameterKey "abstract-transfer-command" .
+
+ex:pourCompletionTime a ac:ParameterSpecification ;
+    ac:parameterKey "completion-time" .
+
+ex:pourControlAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:pourActionV5 ;
+    ac:contributesClaim ex:pourControlClaim0,
+        ex:pourControlClaim1,
+        ex:pourControlClaim2,
+        ex:pourControlClaim3 ;
+    ac:producerIdentifier "curated-dynamics-objective-schema-example" .
+
+ex:pourControlStatement0 a ac:Statement ;
+    ac:statementObject ex:pourDynamics ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/dynamics-control.owl#controlsModel"^^xsd:anyURI ;
+    ac:statementSubject ex:pourController .
+
+ex:pourControlStatement1 a ac:Statement ;
+    ac:statementObject ex:pourObjectives ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/dynamics-control.owl#objectiveSet"^^xsd:anyURI ;
+    ac:statementSubject ex:pourController .
+
+ex:pourControlStatement2 a ac:Statement ;
+    ac:statementObject ex:pourPhysicalModel ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/dynamics-control.owl#describesPlant"^^xsd:anyURI ;
+    ac:statementSubject ex:pourDynamics .
+
+ex:pourControlStatement3 a ac:Statement ;
+    ac:statementObject ot:Lexicographic ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#aggregationPolicy"^^xsd:anyURI ;
+    ac:statementSubject ex:pourObjectives .
+
+ex:pourInputAssignment a dc1:VariableAssignment ;
+    dc1:dimension "1"^^xsd:positiveInteger ;
+    dc1:position "1"^^xsd:positiveInteger ;
+    dc1:role dc1:Input ;
+    dc1:variable ex:pourInputVariable .
+
+ex:pourObjective_spill a ot:ObjectiveTerm ;
+    ot:direction ot:Minimize ;
+    ot:metricParameter ex:spillAmount ;
+    ot:rank "0"^^xsd:nonNegativeInteger .
+
+ex:pourObjective_time a ot:ObjectiveTerm ;
+    ot:direction ot:Minimize ;
+    ot:metricParameter ex:pourCompletionTime ;
+    ot:rank "1"^^xsd:nonNegativeInteger .
+
+ex:pourOutputAssignment a dc1:VariableAssignment ;
+    dc1:dimension "1"^^xsd:positiveInteger ;
+    dc1:position "1"^^xsd:positiveInteger ;
+    dc1:role dc1:Output ;
+    dc1:variable ex:pourVariable_V_delivered .
+
+ex:pourSamplingPeriod a ac:ParameterSpecification ;
+    ac:parameterKey "sampling-period" .
+
+ex:pourStateAssignment a dc1:VariableAssignment ;
+    dc1:dimension "1"^^xsd:positiveInteger ;
+    dc1:position "1"^^xsd:positiveInteger ;
+    dc1:role dc1:State ;
+    dc1:variable ex:pourVariable_V_delivered .
+
+ex:graspActionV5 a ac:ActionDescription ;
+    ac:hasActionKind ex:Grasping ;
+    ac:hasCausalModel ex:graspCausalModel ;
+    ac:hasControl ex:graspController ;
+    ac:hasFailureCriterion ex:graspControlFailure ;
+    ac:hasGoal ex:graspControlledGoal ;
+    ac:hasPhase ex:graspAbort,
+        ex:graspComplete,
+        ex:graspEstablish,
+        ex:graspPrepare,
+        ex:graspRecover,
+        ex:graspVerify ;
+    ac:hasPhysicalModel ex:graspDynamics,
+        ex:graspPhysicalModel ;
+    ac:hasPrecondition ex:graspPrecondition ;
+    ac:hasRoleSpecification ex:effectorRoleSpec,
+        ex:graspedRoleSpec ;
+    ac:hasSuccessCriterion ex:graspControlledSuccess ;
+    ns1:hasOutcome ex:graspOutcome ;
+    ot:hasObjectiveSet ex:graspObjectives ;
+    ns2:hasRelationPattern ex:controlledHoldPattern,
+        ex:graspContactPattern,
+        ex:graspablePattern ;
+    ns3:hasPhaseStructure ex:graspPhaseStructure ;
+    pm:hasPhysicalProperty ex:graspProperty .
+
+ex:graspControlClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspController ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspControlStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspControlClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspController ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspControlStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspControlClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspDynamics ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspControlStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspControlClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspObjectives ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspControlStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspHoldMetric a ac:ParameterSpecification ;
+    ac:parameterKey "hold-metric" .
+
+ex:graspInputVariable a pm:ModelVariable ;
+    pm:parameter ex:graspCommand ;
+    pm:symbol "hold_command" .
+
+ex:pourActionV5 a ac:ActionDescription ;
+    ac:hasActionKind ex:Pouring ;
+    ac:hasCausalModel ex:pourCausalModel ;
+    ac:hasControl ex:pourController ;
+    ac:hasFailureCriterion ex:pourSpillFailure ;
+    ac:hasGoal ex:pourAmountGoal ;
+    ac:hasParameter ex:deliveredAmount,
+        ex:spillAmount,
+        ex:spillTolerance,
+        ex:targetAmount ;
+    ac:hasPhase ex:pourAbort,
+        ex:pourComplete,
+        ex:pourPrepare,
+        ex:pourTransfer,
+        ex:pourVerify ;
+    ac:hasPhysicalModel ex:pourDynamics,
+        ex:pourPhysicalModel ;
+    ac:hasPrecondition ex:pourPrecondition ;
+    ac:hasRoleSpecification ex:destinationRoleSpec,
+        ex:sourceRoleSpec,
+        ex:substanceRoleSpec ;
+    ac:hasSuccessCriterion ex:pourAmountSuccess ;
+    ns1:hasOutcome ex:pourOutcome ;
+    ot:hasObjectiveSet ex:pourObjectives ;
+    ns2:hasRelationPattern ex:destinationAccessiblePattern,
+        ex:sourceContainmentPattern ;
+    ns3:hasPhaseStructure ex:pourPhaseStructure ;
+    pm:hasPhysicalProperty ex:pourProperty .
+
+ex:pourControlClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourController ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourControlStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourControlClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourController ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourControlStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourControlClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourDynamics ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourControlStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourControlClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourObjectives ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourControlStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourInputVariable a pm:ModelVariable ;
+    pm:parameter ex:pourCommand ;
+    pm:symbol "transfer_command" .
+
+ex:graspHoldStateVariable a pm:ModelVariable ;
+    pm:parameter ex:graspHoldMetric ;
+    pm:symbol "hold_metric" .
+
+ex:graspController a dc1:ControllerSpecification ;
+    rdfs:label "Proposed controller specification; numerical settings unresolved"@en ;
+    dc1:controllerKind dc1:FeedbackControl ;
+    dc1:controlsModel ex:graspDynamics ;
+    dc1:hasAdaptation ex:graspAdaptation ;
+    dc1:objectiveSet ex:graspObjectives ;
+    dc1:samplingPeriod ex:graspSamplingPeriod .
+
+ex:graspDynamics a dc1:DynamicalModelSpecification ;
+    rdfs:label "Partial sampled-state description; evolution equation unspecified"@en ;
+    dc1:describesPlant ex:graspPhysicalModel ;
+    dc1:hasAssignment ex:graspInputAssignment,
+        ex:graspOutputAssignment,
+        ex:graspStateAssignment ;
+    pm:applicability ex:graspModelScope ;
+    pm:assumption ex:graspModelAssumption ;
+    pm:hasVariable ex:graspHoldStateVariable,
+        ex:graspInputVariable .
+
+ex:graspObjectives a ot:ObjectiveSet ;
+    ot:aggregationPolicy ot:WeightedSum ;
+    ot:hasTerm ex:graspObjective_effort,
+        ex:graspObjective_hold .
+
+ex:pourController a dc1:ControllerSpecification ;
+    rdfs:label "Proposed controller specification; numerical settings unresolved"@en ;
+    dc1:controllerKind dc1:FeedbackControl ;
+    dc1:controlsModel ex:pourDynamics ;
+    dc1:hasAdaptation ex:pourAdaptation ;
+    dc1:objectiveSet ex:pourObjectives ;
+    dc1:samplingPeriod ex:pourSamplingPeriod .
+
+ex:pourDynamics a dc1:DynamicalModelSpecification ;
+    rdfs:label "Partial sampled-state description; evolution equation unspecified"@en ;
+    dc1:describesPlant ex:pourPhysicalModel ;
+    dc1:hasAssignment ex:pourInputAssignment,
+        ex:pourOutputAssignment,
+        ex:pourStateAssignment ;
+    pm:applicability ex:pourModelScope ;
+    pm:assumption ex:pourModelAssumption ;
+    pm:hasVariable ex:pourInputVariable,
+        ex:pourVariable_V_delivered .
+
+ex:pourObjectives a ot:ObjectiveSet ;
+    ot:aggregationPolicy ot:Lexicographic ;
+    ot:hasTerm ex:pourObjective_spill,
+        ex:pourObjective_time .
+
+
+@prefix dc: <http://aicor.knowledge/ontologies/dynamics-control.owl#> .
+@prefix co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+ex:pourSpillConstraint a ac:ConstraintSpecification;
+ co:hasExpression ex:pourNoExcessSpillExpression .
+ex:pourObjectives ot:hardConstraint ex:pourSpillConstraint .
+ex:pourController dc:stateConstraint ex:pourSpillConstraint .

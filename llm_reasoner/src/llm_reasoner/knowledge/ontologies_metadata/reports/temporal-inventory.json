@@ -1,0 +1,28 @@
+{
+  "phases-transitions": {
+    "Class": 9,
+    "ObjectProperty": 11,
+    "DatatypeProperty": 0,
+    "NamedIndividual": 0,
+    "all_entities_labeled": true
+  },
+  "monitoring-requirements": {
+    "Class": 6,
+    "ObjectProperty": 11,
+    "DatatypeProperty": 0,
+    "NamedIndividual": 11,
+    "all_entities_labeled": true
+  },
+  "prior_maintained_files_unchanged": [
+    "DUL.owl",
+    "candidates/aicor-unified-dul.ttl",
+    "core/action-description-core.ttl",
+    "core/cram-action-bridge.ttl",
+    "core/action-core-shapes.ttl",
+    "aspects/participants-relations.ttl",
+    "aspects/conditions-outcomes.ttl",
+    "aspects/aspect-shapes.ttl",
+    "examples/stereotypical-actions.ttl",
+    "examples/aspect-actions.ttl"
+  ]
+}

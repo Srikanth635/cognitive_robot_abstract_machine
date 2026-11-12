@@ -1,0 +1,165 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix rm: <http://aicor.knowledge/ontologies/robot-motion.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+rm:CartesianMotionDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class rm:PoseTarget ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:poseTarget ] ;
+    sh:targetClass rm:CartesianMotionDescription .
+
+rm:ConfigurationMotionDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class rm:ConfigurationTarget ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:configurationTarget ] ;
+    sh:targetClass rm:ConfigurationMotionDescription .
+
+rm:ConfigurationTargetShape a sh:NodeShape ;
+    sh:property [ sh:class rm:CoordinateTarget ;
+            sh:minCount 1 ;
+            sh:path rm:hasCoordinateTarget ] ;
+    sh:targetClass rm:ConfigurationTarget .
+
+rm:CoordinateSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:coordinateKey ],
+        [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:coordinateKind ] ;
+    sh:targetClass rm:CoordinateSpecification .
+
+rm:CoordinateTargetShape a sh:NodeShape ;
+    sh:property [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:toleranceParameter ],
+        [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:targetParameter ],
+        [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:errorParameter ],
+        [ sh:class rm:CoordinateSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:coordinate ] ;
+    sh:targetClass rm:CoordinateTarget .
+
+rm:MotionBoundsShape a sh:NodeShape ;
+    sh:property [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path rm:speedLimit ],
+        [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path rm:accelerationLimit ] ;
+    sh:targetClass rm:MotionBounds .
+
+rm:OrientationTargetShape a sh:NodeShape ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:orientationConvention ],
+        [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:qxParameter ],
+        [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:qwParameter ],
+        [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:qyParameter ],
+        [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:qzParameter ] ;
+    sh:targetClass rm:OrientationTarget .
+
+rm:PathFollowingDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class rm:PathSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:pathTarget ] ;
+    sh:targetClass rm:PathFollowingDescription .
+
+rm:PathSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:class rm:WaypointSpecification ;
+            sh:minCount 2 ;
+            sh:path rm:hasWaypoint ] ;
+    sh:targetClass rm:PathSpecification .
+
+rm:PoseTargetShape a sh:NodeShape ;
+    sh:property [ sh:class rm:PositionTarget ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:position ],
+        [ sh:class rm:FrameSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:referenceFrame ],
+        [ sh:class rm:OrientationTarget ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path rm:orientation ] ;
+    sh:targetClass rm:PoseTarget .
+
+rm:PositionTargetShape a sh:NodeShape ;
+    sh:property [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:zParameter ],
+        [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:xParameter ],
+        [ sh:class ac:ParameterSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:yParameter ] ;
+    sh:targetClass rm:PositionTarget .
+
+rm:RobotMotionDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class ac:EntitySpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:controlledEntity ],
+        [ sh:class ac:PreconditionSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path ac:hasPrecondition ],
+        [ sh:class ac:GoalSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path ac:hasGoal ],
+        [ sh:class ac:CapabilityRequirement ;
+            sh:minCount 1 ;
+            sh:path ac:hasCapabilityRequirement ],
+        [ sh:class ac:SuccessCriterion ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path ac:hasSuccessCriterion ] ;
+    sh:targetClass rm:RobotMotionDescription .
+
+rm:WaypointSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:datatype xsd:positiveInteger ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:positionIndex ],
+        [ sh:class rm:PoseTarget ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path rm:waypointPose ] ;
+    sh:targetClass rm:WaypointSpecification .
+

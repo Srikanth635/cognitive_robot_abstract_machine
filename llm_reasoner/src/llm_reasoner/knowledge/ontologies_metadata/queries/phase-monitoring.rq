@@ -1,0 +1,12 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX pt: <http://aicor.knowledge/ontologies/phases-transitions.owl#>
+PREFIX mr: <http://aicor.knowledge/ontologies/monitoring-requirements.owl#>
+SELECT ?record ?structure ?host ?monitor ?condition ?observation ?unknownResponse
+WHERE {
+ ?record ac:expressesDescription ?action .
+ ?action pt:hasPhaseStructure ?structure .
+ { ?structure pt:hasMemberPhase ?host } UNION { ?structure pt:hasTransition ?host }
+ ?host mr:hasMonitoringRequirement ?monitor .
+ ?monitor mr:monitorsCondition ?condition; mr:requiresObservation ?observation; mr:whenUnknown ?unknownResponse .
+}
+ORDER BY ?record ?monitor ?observation

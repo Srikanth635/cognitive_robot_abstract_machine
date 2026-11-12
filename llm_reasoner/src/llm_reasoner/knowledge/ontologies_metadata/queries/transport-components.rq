@@ -1,0 +1,15 @@
+# Bind ?record explicitly. Descriptions are not accepted world observations.
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX tc: <http://aicor.knowledge/ontologies/transport-carrying.owl#>
+PREFIX om: <http://aicor.knowledge/ontologies/object-manipulation.owl#>
+PREFIX mn: <http://aicor.knowledge/ontologies/mobility-navigation.owl#>
+SELECT ?action ?carrier ?load ?manipulator ?destination ?footprint ?holding ?mobility ?context ?holdingContext ?mobilityContext
+WHERE {
+ ?record ac:expressesDescription ?action .
+ ?action tc:carrier ?carrier ; tc:load ?load ; tc:manipulator ?manipulator ;
+         tc:destination ?destination ; tc:loadedFootprint ?footprint ;
+         tc:holdingRequirement ?holding ; tc:mobilityRequirement ?mobility ;
+         tc:evaluationContext ?context .
+ ?holding om:evaluationContext ?holdingContext .
+ ?mobility mn:evaluationContext ?mobilityContext .
+}

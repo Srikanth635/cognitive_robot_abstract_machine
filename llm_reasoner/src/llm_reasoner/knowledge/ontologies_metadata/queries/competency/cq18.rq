@@ -1,0 +1,21 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX pr: <http://aicor.knowledge/ontologies/participants-relations.owl#>
+PREFIX co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#>
+PREFIX pt: <http://aicor.knowledge/ontologies/phases-transitions.owl#>
+PREFIX mr: <http://aicor.knowledge/ontologies/monitoring-requirements.owl#>
+PREFIX cm: <http://aicor.knowledge/ontologies/causal-mechanisms.owl#>
+PREFIX pm: <http://aicor.knowledge/ontologies/physical-models.owl#>
+PREFIX ot: <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#>
+PREFIX dc: <http://aicor.knowledge/ontologies/dynamics-control.owl#>
+PREFIX cs: <http://aicor.knowledge/ontologies/capabilities-strategies.owl#>
+PREFIX fd: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#>
+PREFIX fr: <http://aicor.knowledge/ontologies/frame-perspective.owl#>
+PREFIX fq: <http://aicor.knowledge/ontologies/force-dynamics.owl#>
+PREFIX ims: <http://aicor.knowledge/ontologies/image-schemas.owl#>
+PREFIX ema: <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#>
+PREFIX sm: <http://aicor.knowledge/ontologies/sensorimotor-events.owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?perspective ?type ?relation ?entity WHERE {
+?record ac:expressesDescription ?action .
+?action ac:hasPerspective ?perspective . ?perspective a ?type; ?relation ?entity . VALUES ?relation {ims:container ims:content ims:source ims:goal ims:theme ims:firstContactEntity ims:secondContactEntity ims:supporter ims:supportedEntity}
+}

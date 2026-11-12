@@ -1,0 +1,9 @@
+{
+  "baseline": "0.19.0",
+  "priorRdfFiles": 81,
+  "byteIdentical": 80,
+  "changed": [
+    "integrations/all-action-knowledge.ttl"
+  ],
+  "missing": []
+}

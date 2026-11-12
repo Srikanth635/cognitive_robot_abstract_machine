@@ -4,7 +4,7 @@ its module file, what it says of an action's frame, its links to CRAM-AICOR and 
 vocabulary generated from it, and what an OWL reasoner concludes from it.
 
 As for the predictive manipulation modules, tests that need CRAM-AICOR or DUL read the
-pinned copies (:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`), and
+pinned copies (:class:`~llm_reasoner.knowledge.vocabulary.linked.LinkedOntologyFile`), and
 the test that reasons needs ``owlready2`` and a Java runtime and is slow.
 """
 
@@ -18,8 +18,8 @@ from rdflib import OWL, RDF, RDFS, BNode, Graph, Namespace, URIRef
 from rdflib.collection import Collection
 from typing_extensions import Optional, Set
 
-from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.linked import LinkedOntologyTerms
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     ACTION_PERSPECTIVES_NAMESPACE_ROOT,
     CRAM_AICOR_NAMESPACE,
     CRAM_AICOR_ONTOLOGY_IRI,
@@ -29,9 +29,9 @@ from llm_reasoner.knowledge.ontologies import (
     ActionPerspectiveFile,
 )
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
-from llm_reasoner.knowledge.ontologies.terms import local_name
-from llm_reasoner.knowledge.ontology_translation.reading import upper_snake_case
-from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
+from llm_reasoner.knowledge.vocabulary.terms import local_name
+from llm_reasoner.knowledge.vocabulary.translation.reading import upper_snake_case
+from llm_reasoner.knowledge.vocabulary.translation.writing import VocabularyWriter
 
 from .test_predictive_manipulation_ontology import (
     cram_aicor_graph,

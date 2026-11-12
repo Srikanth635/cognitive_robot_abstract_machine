@@ -1,0 +1,72 @@
+CONTINUATION UPDATE: COVERAGE AND CONSOLIDATION REVIEW
+Release 0.21.0; 2026-11-12.
+
+Read review/coverage-0.21.0/REVIEW_REPORT.md and reports/release-0.21.0.json
+first. This is a review/query/documentation increment. All 87 prior RDF/OWL
+files are byte-identical to 0.20.0, with 40 registered ontology documents.
+Ontology versionInfo values deliberately retain their content versions.
+
+The review maps the eight original user objectives, all 30 local questions,
+the separate 65 repository scientific questions, all modules and the pinned
+CoraPlex static inventory. Never conflate LOCAL-CQ01 with REPO-CQ-001.
+The scientific matrix is semantic review, not 65 passed answer tests.
+
+Upstream branch: claude/cram-aicor-domain-model in
+https://github.com/Srikanth635/cognitive_robot_abstract_machine
+Pinned commit: 4cf1da42be36c752834b6ed325faa092b7f5a1b8.
+There are 28 locally concrete action candidates and 13 motion candidates in
+the canonical inspected subtree. These are static classifications, not proof
+of runtime availability, ROS/Giskard setup or executable ontology adapters.
+The source manifest includes exact blob hashes and local SHA-256 hashes;
+the AST extraction tool can regenerate facts from the pinned source tree.
+External mixin fields and experiment-only actions are outside that extractor.
+
+Important findings:
+ - MixingAction needs a specific bounded refinement; generic tool use is
+   not full mixing semantics. No speculative ontology extension was added.
+ - PickAndPlaceAction does not require base navigation; add a no-navigation
+   recipe instead of forcing it into the current pick/carry/place family.
+ - Full TransportAction and move-and-act/face-look wrappers need reviewed
+   compositions and field mappings. Sustained carrying is narrower.
+ - Existing elevator/inter-level profiles already have cabin/door guards,
+   entry/ride/exit and final exit criteria. Reuse them; map source reference
+   reattachment and add bounded monitor/timeout/recovery contracts as needed.
+ - Pouring/wiping/cutting path completion is not evidence of the stronger
+   ontology physical outcomes. Keep code completion, task outcome and evidence
+   acceptance separate. Broader repo measurement components may add evidence.
+ - Generic action schemas do not implement every specialized scientific CQ:
+   estimator memory/efference copies, learning-stage/adaptation distinctions,
+   grip/load coupling, proactive gaze and attenuation need selected extensions.
+ - The standalone ontology package is not established as integrated with the
+   repo's existing LLM/EQL/storage/measurement components or pushed to GitHub.
+
+Two new descriptive queries expose descendant-action conditions (including
+lexical recipe contracts) and direct/profile capability requirements. They
+retain action identities. The capability query enumerates eight reviewed
+requirement predicates, not arbitrary future properties or all specialized
+owner routes. The test wrapper validates one existing root, binds its exact
+record/root, and uses a descriptive view without reified claim metadata.
+Full original data is separately used for exact statement/provenance audits.
+No belief or evidence is accepted and no projection/executor was added.
+
+Historical V7 tests intentionally still assert their old limitations. V8
+destination and diagnostic association improvements supersede those structural
+gaps for V8; they do not change V7 meaning or supply physical observations.
+Prior projection artifacts must not be relabelled as current-record outputs.
+
+Next ontology-first priorities: mixing plus exact recipe variants; then a
+current question/fixture/evaluator/evidence registry, explicit answer-part
+grades and source acceptance/storage contracts, and a small sourced knowledge
+slice. Add only justified scientific details. Working projections remain
+deferred by the user's explicit preference.
+
+Preserve Proposed vs accepted evidence and workflow status vs evidence grade.
+Preserve temporal scopes, handoffs and injected-world boundaries. Existing
+perception freshness policies are bounded implementations, not a general trust
+system. Generic consistency does not establish physical truth. Optional AICOR
+compatibility remains unresolved after the earlier normalization problem and
+latest 0.20.0 timeout; no new expensive OWL run was needed for unchanged RDF.
+
+The cumulative release contains detailed JSON/CSV matrices and fresh review
+reports. Inspect reports/release-0.21.0.json for actual fresh check results;
+do not turn historical reports into newly performed runtime validation.

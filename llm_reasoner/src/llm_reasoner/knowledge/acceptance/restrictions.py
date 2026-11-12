@@ -26,7 +26,7 @@ from rdflib import XSD
 from typing_extensions import Any, Iterable, Sequence
 
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.vocabulary.terms import (
     ClassExpression,
     ComplementOf,
     ConceptReference,
@@ -40,7 +40,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     UnionOf,
     python_attribute_name,
 )
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
 
 # %% exceptions
 

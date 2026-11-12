@@ -1,0 +1,207 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pr: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/conditions-outcomes.owl> a owl:Ontology ;
+    rdfs:label "Conditions and outcomes"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/participants-relations.owl> ;
+    owl:versionInfo "0.6.0" .
+
+co:CurrentState a co:StateScope,
+        owl:NamedIndividual ;
+    rdfs:label "Current State"@en .
+
+co:Equal a co:ComparisonOperator,
+        owl:NamedIndividual ;
+    rdfs:label "Equal"@en .
+
+co:GreaterOrEqual a co:ComparisonOperator,
+        owl:NamedIndividual ;
+    rdfs:label "Greater Or Equal"@en .
+
+co:GreaterThan a co:ComparisonOperator,
+        owl:NamedIndividual ;
+    rdfs:label "Greater Than"@en .
+
+co:LessOrEqual a co:ComparisonOperator,
+        owl:NamedIndividual ;
+    rdfs:label "Less Or Equal"@en .
+
+co:LessThan a co:ComparisonOperator,
+        owl:NamedIndividual ;
+    rdfs:label "Less Than"@en .
+
+co:NotEqual a co:ComparisonOperator,
+        owl:NamedIndividual ;
+    rdfs:label "Not Equal"@en .
+
+co:PostState a co:StateScope,
+        owl:NamedIndividual ;
+    rdfs:label "Post State"@en .
+
+co:PreState a co:StateScope,
+        owl:NamedIndividual ;
+    rdfs:label "Pre State"@en .
+
+co:TaskContext a co:StateScope,
+        owl:NamedIndividual ;
+    rdfs:label "Task Context"@en .
+
+co:afterCondition a owl:ObjectProperty ;
+    rdfs:label "After Condition"@en ;
+    rdfs:comment "Condition after the described transition."@en ;
+    rdfs:domain co:OutcomeSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+co:beforeCondition a owl:ObjectProperty ;
+    rdfs:label "Before Condition"@en ;
+    rdfs:comment "Condition before the described transition."@en ;
+    rdfs:domain co:OutcomeSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+co:decimalValue a owl:DatatypeProperty ;
+    rdfs:label "Decimal Value"@en ;
+    rdfs:comment "Constant decimal value."@en ;
+    rdfs:domain co:QuantityConstant ;
+    rdfs:range xsd:decimal .
+
+co:hasExpression a owl:ObjectProperty ;
+    rdfs:label "Has Expression"@en ;
+    rdfs:comment "Root expression for a condition specification."@en ;
+    rdfs:domain ac:ConditionSpecification ;
+    rdfs:range co:BooleanExpression .
+
+co:hasOperand a owl:ObjectProperty ;
+    rdfs:label "Has Operand"@en ;
+    rdfs:comment "Child expression. Arity is constrained by the concrete expression type."@en ;
+    rdfs:domain co:BooleanExpression ;
+    rdfs:range co:BooleanExpression .
+
+co:hasOutcome a owl:ObjectProperty ;
+    rdfs:label "Has Outcome"@en ;
+    rdfs:comment "Transition specification for an action."@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range co:OutcomeSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+co:hasPattern a owl:ObjectProperty ;
+    rdfs:label "Has Pattern"@en ;
+    rdfs:comment "Relation pattern whose truth is requested."@en ;
+    rdfs:domain co:AtomicCondition ;
+    rdfs:range pr:RelationPattern .
+
+co:inScope a owl:ObjectProperty ;
+    rdfs:label "In Scope"@en ;
+    rdfs:comment "Scope of an atomic condition or parameter reference."@en ;
+    rdfs:domain co:Expression ;
+    rdfs:range co:StateScope .
+
+co:leftOperand a owl:ObjectProperty ;
+    rdfs:label "Left Operand"@en ;
+    rdfs:comment "Left-hand numeric expression."@en ;
+    rdfs:domain co:Comparison ;
+    rdfs:range co:ValueExpression .
+
+co:operator a owl:ObjectProperty ;
+    rdfs:label "Operator"@en ;
+    rdfs:comment "Numeric comparison operator."@en ;
+    rdfs:domain co:Comparison ;
+    rdfs:range co:ComparisonOperator .
+
+co:parameter a owl:ObjectProperty ;
+    rdfs:label "Parameter"@en ;
+    rdfs:comment "Referenced parameter specification."@en ;
+    rdfs:domain co:ParameterReference ;
+    rdfs:range ac:ParameterSpecification .
+
+co:rightOperand a owl:ObjectProperty ;
+    rdfs:label "Right Operand"@en ;
+    rdfs:comment "Right-hand numeric expression."@en ;
+    rdfs:domain co:Comparison ;
+    rdfs:range co:ValueExpression .
+
+co:unitIRI a owl:DatatypeProperty ;
+    rdfs:label "Unit IRI"@en ;
+    rdfs:comment "Unit identifier. No implicit conversion."@en ;
+    rdfs:domain co:QuantityConstant ;
+    rdfs:range xsd:anyURI .
+
+co:Conjunction a owl:Class ;
+    rdfs:label "Conjunction"@en ;
+    rdfs:comment "Logical AND of two or more operands under strong Kleene three-valued logic."@en ;
+    rdfs:subClassOf co:BooleanExpression .
+
+co:Disjunction a owl:Class ;
+    rdfs:label "Disjunction"@en ;
+    rdfs:comment "Logical OR of two or more operands under strong Kleene three-valued logic."@en ;
+    rdfs:subClassOf co:BooleanExpression .
+
+co:Negation a owl:Class ;
+    rdfs:label "Negation"@en ;
+    rdfs:comment "Logical NOT of one operand; unknown remains unknown. Not negation-as-failure."@en ;
+    rdfs:subClassOf co:BooleanExpression .
+
+co:AtomicCondition a owl:Class ;
+    rdfs:label "Atomic Condition"@en ;
+    rdfs:comment "Truth of a relation pattern in an explicit state scope."@en ;
+    rdfs:subClassOf co:BooleanExpression .
+
+co:ParameterReference a owl:Class ;
+    rdfs:label "Parameter Reference"@en ;
+    rdfs:comment "Reference to an unspecified or externally supplied parameter in a particular state."@en ;
+    rdfs:subClassOf co:ValueExpression .
+
+co:Expression a owl:Class ;
+    rdfs:label "Expression"@en ;
+    rdfs:comment "A symbolic expression. Expressions are not physical events or truth assertions."@en ;
+    rdfs:subClassOf dul:Description .
+
+co:OutcomeSpecification a owl:Class ;
+    rdfs:label "Outcome Specification"@en ;
+    rdfs:comment "Desired or expected transition between conditions. Does not assert that it occurred."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+co:QuantityConstant a owl:Class ;
+    rdfs:label "Quantity Constant"@en ;
+    rdfs:comment "Explicit decimal quantity and unit, including dimensionless quantities with an explicit unit identifier."@en ;
+    rdfs:subClassOf co:ValueExpression .
+
+co:Comparison a owl:Class ;
+    rdfs:label "Comparison"@en ;
+    rdfs:comment "Numeric comparison of two value expressions. Incompatible or absent units yield unknown."@en ;
+    rdfs:subClassOf co:BooleanExpression .
+
+co:StateScope a owl:Class ;
+    rdfs:label "State Scope"@en ;
+    rdfs:comment "Symbolic evaluation scope. It is not an observed world state."@en ;
+    rdfs:subClassOf dul:Concept .
+
+co:ValueExpression a owl:Class ;
+    rdfs:label "Value Expression"@en ;
+    rdfs:comment "Quantity expression with a unit identifier."@en ;
+    rdfs:subClassOf co:Expression .
+
+co:ComparisonOperator a owl:Class ;
+    rdfs:label "Comparison Operator"@en ;
+    rdfs:comment "A supported decimal comparison operator."@en ;
+    rdfs:subClassOf dul:Concept .
+
+co:BooleanExpression a owl:Class ;
+    rdfs:label "Boolean Expression"@en ;
+    rdfs:comment "An expression evaluated as true, false or unknown under explicit external inputs."@en ;
+    rdfs:subClassOf co:Expression .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( co:BooleanExpression co:ValueExpression ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( co:ParameterReference co:QuantityConstant ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( co:AtomicCondition co:Conjunction co:Disjunction co:Negation co:Comparison ) .
+

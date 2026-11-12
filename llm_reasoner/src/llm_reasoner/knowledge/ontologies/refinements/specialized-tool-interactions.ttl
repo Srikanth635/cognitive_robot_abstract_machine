@@ -1,0 +1,189 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix specialized: <http://aicor.knowledge/ontologies/specialized-tool-interactions.owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/specialized-tool-interactions.owl> a owl:Ontology ;
+    rdfs:label "Specialized tool interactions"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/knowledge-context.owl>,
+        <http://aicor.knowledge/ontologies/tool-interaction.owl> ;
+    owl:versionInfo "0.20.0" .
+
+specialized:AxisAlignmentSatisfied a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Requested axis alignment satisfied"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition specialized:AxisAlignmentSatisfiedArgument1,
+        specialized:AxisAlignmentSatisfiedArgument2 .
+
+specialized:Cutting a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Cutting"@en .
+
+specialized:CuttingDescription a owl:Class ;
+    rdfs:label "Specified-separation cutting"@en ;
+    rdfs:comment "Bounded cutting-to-requested-separation profile; contact alone is insufficient."@en ;
+    rdfs:subClassOf <http://aicor.knowledge/ontologies/tool-interaction.owl#ToolUseDescription> .
+
+specialized:Inserting a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Insertion to seat"@en .
+
+specialized:Pressing a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Maintained pressing"@en .
+
+specialized:PressingDescription a owl:Class ;
+    rdfs:label "Maintained-contact pressing"@en ;
+    rdfs:comment "Tool remains in contact at the assessed actuation state; momentary/released-button variants are separate."@en ;
+    rdfs:subClassOf <http://aicor.knowledge/ontologies/tool-interaction.owl#ToolUseDescription> .
+
+specialized:SpecifiedActuationAchieved a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Specified actuation achieved"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition specialized:SpecifiedActuationAchievedArgument1,
+        specialized:SpecifiedActuationAchievedArgument2 .
+
+specialized:SpecifiedSeatingAchieved a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Specified seating achieved"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition specialized:SpecifiedSeatingAchievedArgument1,
+        specialized:SpecifiedSeatingAchievedArgument2,
+        specialized:SpecifiedSeatingAchievedArgument3 .
+
+specialized:SpecifiedSeparationAchieved a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Specified separation achieved"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition specialized:SpecifiedSeparationAchievedArgument1,
+        specialized:SpecifiedSeparationAchievedArgument2 .
+
+specialized:SpecifiedSurfaceEffectAchieved a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Specified surface effect achieved"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition specialized:SpecifiedSurfaceEffectAchievedArgument1,
+        specialized:SpecifiedSurfaceEffectAchievedArgument2 .
+
+specialized:SweepCoverageMaintained a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Requested sweep coverage maintained"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition specialized:SweepCoverageMaintainedArgument1,
+        specialized:SweepCoverageMaintainedArgument2 .
+
+specialized:TechniqueReady a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Technique readiness"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition specialized:TechniqueReadyArgument1,
+        specialized:TechniqueReadyArgument2,
+        specialized:TechniqueReadyArgument3 .
+
+specialized:Wiping a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Wiping"@en .
+
+specialized:WipingDescription a owl:Class ;
+    rdfs:label "Specified-effect wiping"@en ;
+    rdfs:comment "Interval-qualified sweep and requested surface effect, not a sterility or contamination guarantee."@en ;
+    rdfs:subClassOf <http://aicor.knowledge/ontologies/tool-interaction.owl#ToolUseDescription> .
+
+specialized:depthError a owl:ObjectProperty ;
+    rdfs:label "Absolute insertion depth error"@en ;
+    rdfs:domain specialized:InsertionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+specialized:depthErrorFrame a owl:ObjectProperty ;
+    rdfs:label "Depth error measurement frame"@en ;
+    rdfs:domain ac:ParameterSpecification ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+specialized:depthErrorTarget a owl:ObjectProperty ;
+    rdfs:label "Depth error reference target"@en ;
+    rdfs:domain ac:ParameterSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+specialized:depthTolerance a owl:ObjectProperty ;
+    rdfs:label "Insertion depth tolerance"@en ;
+    rdfs:domain specialized:InsertionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+specialized:targetDepth a owl:ObjectProperty ;
+    rdfs:label "Requested insertion depth"@en ;
+    rdfs:domain specialized:InsertionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+specialized:AxisAlignmentSatisfiedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "working part"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+specialized:AxisAlignmentSatisfiedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+specialized:SpecifiedActuationAchievedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+specialized:SpecifiedActuationAchievedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "effect"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+specialized:SpecifiedSeatingAchievedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "tool"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+specialized:SpecifiedSeatingAchievedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+specialized:SpecifiedSeatingAchievedArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "effect"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+specialized:SpecifiedSeparationAchievedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+specialized:SpecifiedSeparationAchievedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "effect"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+specialized:SpecifiedSurfaceEffectAchievedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+specialized:SpecifiedSurfaceEffectAchievedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "effect"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+specialized:SweepCoverageMaintainedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "tool"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+specialized:SweepCoverageMaintainedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+specialized:TechniqueReadyArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "tool"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+specialized:TechniqueReadyArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "target"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+specialized:TechniqueReadyArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "effect"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+specialized:InsertionDescription a owl:Class ;
+    rdfs:label "Insertion-to-seat"@en ;
+    rdfs:comment "Aligned insertion to the requested seated condition with an explicit depth-error criterion."@en ;
+    rdfs:subClassOf <http://aicor.knowledge/ontologies/tool-interaction.owl#ToolUseDescription> .
+

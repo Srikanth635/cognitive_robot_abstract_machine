@@ -1,0 +1,112 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix cm: <http://aicor.knowledge/ontologies/causal-mechanisms.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/causal-mechanisms.owl> a owl:Ontology ;
+    rdfs:label "Causal and mechanistic knowledge"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.6.0" .
+
+cm:antecedent a owl:ObjectProperty ;
+    rdfs:label "Antecedent"@en ;
+    rdfs:comment "Described cause condition."@en ;
+    rdfs:domain cm:CausalLink ;
+    rdfs:range ac:ConditionSpecification .
+
+cm:applicability a owl:ObjectProperty ;
+    rdfs:label "Applicability"@en ;
+    rdfs:comment "Domain of applicability, not a universal guarantee."@en ;
+    rdfs:domain cm:MechanismSpecification ;
+    rdfs:range ac:ApplicabilitySpecification .
+
+cm:appliesDuring a owl:ObjectProperty ;
+    rdfs:label "Applies During"@en ;
+    rdfs:comment "Optional phase context."@en ;
+    rdfs:domain cm:CausalLink ;
+    rdfs:range ac:PhaseSpecification .
+
+cm:assumption a owl:ObjectProperty ;
+    rdfs:label "Assumption"@en ;
+    rdfs:comment "Assumption of this mechanism."@en ;
+    rdfs:domain cm:MechanismSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+cm:consequent a owl:ObjectProperty ;
+    rdfs:label "Consequent"@en ;
+    rdfs:comment "Described effect condition."@en ;
+    rdfs:domain cm:CausalLink ;
+    rdfs:range ac:ConditionSpecification .
+
+cm:enablingCondition a owl:ObjectProperty ;
+    rdfs:label "Enabling Condition"@en ;
+    rdfs:comment "Explicit enabling conditions."@en ;
+    rdfs:domain cm:CausalLink ;
+    rdfs:range cm:EnablingCondition .
+
+cm:hasLink a owl:ObjectProperty ;
+    rdfs:label "Has Link"@en ;
+    rdfs:comment "Links belonging to this proposed model."@en ;
+    rdfs:domain cm:CausalModel ;
+    rdfs:range cm:CausalLink .
+
+cm:hasSuppression a owl:ObjectProperty ;
+    rdfs:label "Has Suppression"@en ;
+    rdfs:comment "Suppression hypotheses in the model."@en ;
+    rdfs:domain cm:CausalModel ;
+    rdfs:range cm:SuppressionSpecification .
+
+cm:intervention a owl:ObjectProperty ;
+    rdfs:label "Intervention"@en ;
+    rdfs:comment "Proposed suppressing intervention."@en ;
+    rdfs:domain cm:SuppressionSpecification ;
+    rdfs:range cm:InterventionSpecification .
+
+cm:mechanism a owl:ObjectProperty ;
+    rdfs:label "Mechanism"@en ;
+    rdfs:comment "Proposed explanatory mechanism."@en ;
+    rdfs:domain cm:CausalLink ;
+    rdfs:range cm:MechanismSpecification .
+
+cm:precedesLink a owl:ObjectProperty ;
+    rdfs:label "Precedes Link"@en ;
+    rdfs:comment "Explanatory chain order; does not entail transitive causation."@en ;
+    rdfs:domain cm:CausalLink ;
+    rdfs:range cm:CausalLink .
+
+cm:suppressedLink a owl:ObjectProperty ;
+    rdfs:label "Suppressed Link"@en ;
+    rdfs:comment "Target causal hypothesis."@en ;
+    rdfs:domain cm:SuppressionSpecification ;
+    rdfs:range cm:CausalLink .
+
+cm:EnablingCondition a owl:Class ;
+    rdfs:label "Enabling Condition"@en ;
+    rdfs:comment "Condition enabling a proposed mechanism; not automatically sufficient."@en ;
+    rdfs:subClassOf ac:ConditionSpecification .
+
+cm:InterventionSpecification a owl:Class ;
+    rdfs:label "Intervention Specification"@en ;
+    rdfs:comment "Proposed intervention described by an intended outcome. Does not establish an interventional effect."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+cm:CausalModel a owl:Class ;
+    rdfs:label "Causal Model"@en ;
+    rdfs:comment "Description of proposed causal relationships, not an identified causal system."@en ;
+    rdfs:subClassOf ac:CausalSpecification .
+
+cm:MechanismSpecification a owl:Class ;
+    rdfs:label "Mechanism Specification"@en ;
+    rdfs:comment "Explanatory mechanism description, with explicit assumptions and applicability."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+cm:SuppressionSpecification a owl:Class ;
+    rdfs:label "Suppression Specification"@en ;
+    rdfs:comment "Hypothesis that an intervention suppresses a specified causal link."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+cm:CausalLink a owl:Class ;
+    rdfs:label "Causal Link"@en ;
+    rdfs:comment "Reified causal hypothesis connecting antecedent and consequent conditions through a mechanism."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+

@@ -1,0 +1,94 @@
+[
+  {
+    "case": "valid-two-strategy-diagnosis-examples",
+    "passed": true
+  },
+  {
+    "case": "reject-cyclic-step-order",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-step-order",
+    "passed": true
+  },
+  {
+    "case": "reject-shared-step-owner",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-process",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-action",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-interface",
+    "passed": true
+  },
+  {
+    "case": "reject-unlisted-capability",
+    "passed": true
+  },
+  {
+    "case": "reject-unsupported-met-assessment",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-assessment-context",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-diagnostic-failure",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-recovery-failure",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-candidate-cause",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-detection-criterion",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-recovery-guard",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-recovery-goal",
+    "passed": true
+  },
+  {
+    "case": "reject-negative-retry-budget",
+    "passed": true
+  },
+  {
+    "case": "reject-fractional-retry-budget",
+    "passed": true
+  },
+  {
+    "case": "zero-retries-is-valid-explicit-policy",
+    "passed": true
+  },
+  {
+    "case": "conflicting-evidence-retained-without-decision",
+    "passed": true
+  },
+  {
+    "case": "precedence-does-not-execute",
+    "passed": true
+  },
+  {
+    "case": "capability-remains-undetermined",
+    "passed": true
+  },
+  {
+    "case": "claims-remain-proposed",
+    "passed": true
+  }
+]

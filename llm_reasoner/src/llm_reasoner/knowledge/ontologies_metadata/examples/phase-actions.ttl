@@ -1,0 +1,723 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/action-examples.owl#> .
+@prefix mr: <http://aicor.knowledge/ontologies/monitoring-requirements.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix pt: <http://aicor.knowledge/ontologies/phases-transitions.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:graspRecordV3 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:graspActionV3 ;
+    ac:hasAnnotation ex:graspPhaseAnnotation ;
+    ac:hasClaim ex:graspRecordV2Claim0,
+        ex:graspRecordV2Claim1,
+        ex:graspRecordV2Claim2,
+        ex:graspRecordV2Claim3,
+        ex:graspTemporalClaim0,
+        ex:graspTemporalClaim1,
+        ex:graspTemporalClaim10,
+        ex:graspTemporalClaim2,
+        ex:graspTemporalClaim3,
+        ex:graspTemporalClaim4,
+        ex:graspTemporalClaim5,
+        ex:graspTemporalClaim6,
+        ex:graspTemporalClaim7,
+        ex:graspTemporalClaim8,
+        ex:graspTemporalClaim9 ;
+    ac:previousVersion ex:graspRecordV2 ;
+    ac:recordVersion "3" .
+
+ex:pourRecordV3 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:pourActionV3 ;
+    ac:hasAnnotation ex:pourPhaseAnnotation ;
+    ac:hasClaim ex:pourRecordV2Claim0,
+        ex:pourRecordV2Claim1,
+        ex:pourRecordV2Claim2,
+        ex:pourRecordV2Claim3,
+        ex:pourTemporalClaim0,
+        ex:pourTemporalClaim1,
+        ex:pourTemporalClaim10,
+        ex:pourTemporalClaim2,
+        ex:pourTemporalClaim3,
+        ex:pourTemporalClaim4,
+        ex:pourTemporalClaim5,
+        ex:pourTemporalClaim6,
+        ex:pourTemporalClaim7,
+        ex:pourTemporalClaim8,
+        ex:pourTemporalClaim9 ;
+    ac:previousVersion ex:pourRecordV2 ;
+    ac:recordVersion "3" .
+
+ex:graspContactCurrent a co:AtomicCondition ;
+    co:hasPattern ex:graspContactPattern ;
+    co:inScope co:CurrentState .
+
+ex:graspControlCurrent a co:AtomicCondition ;
+    co:hasPattern ex:controlledHoldPattern ;
+    co:inScope co:CurrentState .
+
+ex:graspCurrentNotGraspableExpression a co:Negation ;
+    co:hasOperand ex:graspableCurrentExpression .
+
+ex:graspHoldCurrentExpression a co:Conjunction ;
+    co:hasOperand ex:graspContactCurrent,
+        ex:graspControlCurrent .
+
+ex:graspPhaseAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:graspActionV3 ;
+    ac:contributesClaim ex:graspTemporalClaim0,
+        ex:graspTemporalClaim1,
+        ex:graspTemporalClaim10,
+        ex:graspTemporalClaim2,
+        ex:graspTemporalClaim3,
+        ex:graspTemporalClaim4,
+        ex:graspTemporalClaim5,
+        ex:graspTemporalClaim6,
+        ex:graspTemporalClaim7,
+        ex:graspTemporalClaim8,
+        ex:graspTemporalClaim9 ;
+    ac:producerIdentifier "curated-phase-monitoring-schema-example" .
+
+ex:graspPreconditionFalseExpression a co:Negation ;
+    co:hasOperand ex:graspablePre .
+
+ex:graspTemporalStatement0 a ac:Statement ;
+    ac:statementObject ex:graspPrepare ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#initialPhase"^^xsd:anyURI ;
+    ac:statementSubject ex:graspPhaseStructure .
+
+ex:graspTemporalStatement1 a ac:Statement ;
+    ac:statementObject ex:graspPrecondition ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspBegin .
+
+ex:graspTemporalStatement10 a ac:Statement ;
+    ac:statementObject ex:graspCurrentGraspable ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/monitoring-requirements.owl#monitorsCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspRecoveryMonitor .
+
+ex:graspTemporalStatement2 a ac:Statement ;
+    ac:statementObject ex:graspPreconditionFalse ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspCannotBegin .
+
+ex:graspTemporalStatement3 a ac:Statement ;
+    ac:statementObject ex:graspCurrentHold ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspAdvanceToVerify .
+
+ex:graspTemporalStatement4 a ac:Statement ;
+    ac:statementObject ex:graspControlledSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspVerified .
+
+ex:graspTemporalStatement5 a ac:Statement ;
+    ac:statementObject ex:graspVerificationFalse ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspNeedRecovery .
+
+ex:graspTemporalStatement6 a ac:Statement ;
+    ac:statementObject ex:graspCurrentGraspable ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspRetry .
+
+ex:graspTemporalStatement7 a ac:Statement ;
+    ac:statementObject ex:graspCurrentNotGraspable ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspRecoveryFailed .
+
+ex:graspTemporalStatement8 a ac:Statement ;
+    ac:statementObject ex:graspCurrentHold ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/monitoring-requirements.owl#monitorsCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspHoldMonitor .
+
+ex:graspTemporalStatement9 a ac:Statement ;
+    ac:statementObject ex:graspControlledSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/monitoring-requirements.owl#monitorsCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:graspVerificationMonitor .
+
+ex:graspVerificationFalseExpression a co:Negation ;
+    co:hasOperand ex:graspSuccessExpression .
+
+ex:observe_quantity_deliveredAmount_PostState a mr:QuantityObservation ;
+    mr:inScope co:PostState ;
+    mr:observesParameter ex:deliveredAmount ;
+    mr:requiresCapability ex:quantityEstimationCapability .
+
+ex:observe_quantity_spillAmount_PostState a mr:QuantityObservation ;
+    mr:inScope co:PostState ;
+    mr:observesParameter ex:spillAmount ;
+    mr:requiresCapability ex:quantityEstimationCapability .
+
+ex:observe_relation_controlledHoldPattern_CurrentState a mr:RelationObservation ;
+    mr:inScope co:CurrentState ;
+    mr:observesPattern ex:controlledHoldPattern ;
+    mr:requiresCapability ex:relationAssessmentCapability .
+
+ex:observe_relation_controlledHoldPattern_PostState a mr:RelationObservation ;
+    mr:inScope co:PostState ;
+    mr:observesPattern ex:controlledHoldPattern ;
+    mr:requiresCapability ex:relationAssessmentCapability .
+
+ex:observe_relation_graspContactPattern_CurrentState a mr:RelationObservation ;
+    mr:inScope co:CurrentState ;
+    mr:observesPattern ex:graspContactPattern ;
+    mr:requiresCapability ex:relationAssessmentCapability .
+
+ex:observe_relation_graspContactPattern_PostState a mr:RelationObservation ;
+    mr:inScope co:PostState ;
+    mr:observesPattern ex:graspContactPattern ;
+    mr:requiresCapability ex:relationAssessmentCapability .
+
+ex:observe_relation_graspablePattern_CurrentState a mr:RelationObservation ;
+    mr:inScope co:CurrentState ;
+    mr:observesPattern ex:graspablePattern ;
+    mr:requiresCapability ex:relationAssessmentCapability .
+
+ex:pourAmountCurrent a co:ParameterReference ;
+    co:inScope co:CurrentState ;
+    co:parameter ex:deliveredAmount .
+
+ex:pourCurrentAmountExpression a co:Comparison ;
+    co:leftOperand ex:pourAmountCurrent ;
+    co:operator co:GreaterOrEqual ;
+    co:rightOperand ex:targetAmountContext .
+
+ex:pourPhaseAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:pourActionV3 ;
+    ac:contributesClaim ex:pourTemporalClaim0,
+        ex:pourTemporalClaim1,
+        ex:pourTemporalClaim10,
+        ex:pourTemporalClaim2,
+        ex:pourTemporalClaim3,
+        ex:pourTemporalClaim4,
+        ex:pourTemporalClaim5,
+        ex:pourTemporalClaim6,
+        ex:pourTemporalClaim7,
+        ex:pourTemporalClaim8,
+        ex:pourTemporalClaim9 ;
+    ac:producerIdentifier "curated-phase-monitoring-schema-example" .
+
+ex:pourPreconditionFalseExpression a co:Negation ;
+    co:hasOperand ex:pourPreExpression .
+
+ex:pourReadyExpression a co:Conjunction ;
+    co:hasOperand ex:pourCurrentAmountExpression,
+        ex:pourNoExcessSpillExpression .
+
+ex:pourSpillCurrent a co:ParameterReference ;
+    co:inScope co:CurrentState ;
+    co:parameter ex:spillAmount .
+
+ex:pourTemporalStatement0 a ac:Statement ;
+    ac:statementObject ex:pourPrepare ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#initialPhase"^^xsd:anyURI ;
+    ac:statementSubject ex:pourPhaseStructure .
+
+ex:pourTemporalStatement1 a ac:Statement ;
+    ac:statementObject ex:pourPrecondition ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourBegin .
+
+ex:pourTemporalStatement10 a ac:Statement ;
+    ac:statementObject ex:pourReadyToVerify ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/monitoring-requirements.owl#monitorsCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourTransitionMonitor .
+
+ex:pourTemporalStatement2 a ac:Statement ;
+    ac:statementObject ex:pourPreconditionFalse ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourCannotBegin .
+
+ex:pourTemporalStatement3 a ac:Statement ;
+    ac:statementObject ex:pourReadyToVerify ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourAdvanceToVerify .
+
+ex:pourTemporalStatement4 a ac:Statement ;
+    ac:statementObject ex:pourExcessSpillCurrent ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourSpillAbort .
+
+ex:pourTemporalStatement5 a ac:Statement ;
+    ac:statementObject ex:pourAmountSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourVerified .
+
+ex:pourTemporalStatement6 a ac:Statement ;
+    ac:statementObject ex:pourVerificationFalse ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/phases-transitions.owl#guardCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourVerificationFailed .
+
+ex:pourTemporalStatement7 a ac:Statement ;
+    ac:statementObject ex:pourSpillInvariant ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/monitoring-requirements.owl#monitorsCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourSpillMonitor .
+
+ex:pourTemporalStatement8 a ac:Statement ;
+    ac:statementObject ex:pourReadyToVerify ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/monitoring-requirements.owl#monitorsCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourReadinessMonitor .
+
+ex:pourTemporalStatement9 a ac:Statement ;
+    ac:statementObject ex:pourAmountSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/monitoring-requirements.owl#monitorsCondition"^^xsd:anyURI ;
+    ac:statementSubject ex:pourVerificationMonitor .
+
+ex:pourVerificationFalseExpression a co:Negation ;
+    co:hasOperand ex:pourSuccessExpression .
+
+ex:graspActionV3 a ac:ActionDescription ;
+    ac:hasActionKind ex:Grasping ;
+    ac:hasFailureCriterion ex:graspControlFailure ;
+    ac:hasGoal ex:graspControlledGoal ;
+    ac:hasPhase ex:graspAbort,
+        ex:graspComplete,
+        ex:graspEstablish,
+        ex:graspPrepare,
+        ex:graspRecover,
+        ex:graspVerify ;
+    ac:hasPrecondition ex:graspPrecondition ;
+    ac:hasRoleSpecification ex:effectorRoleSpec,
+        ex:graspedRoleSpec ;
+    ac:hasSuccessCriterion ex:graspControlledSuccess ;
+    co:hasOutcome ex:graspOutcome ;
+    ns1:hasRelationPattern ex:controlledHoldPattern,
+        ex:graspContactPattern,
+        ex:graspablePattern ;
+    pt:hasPhaseStructure ex:graspPhaseStructure .
+
+ex:graspCurrentNotGraspable a ac:ConditionSpecification ;
+    co:hasExpression ex:graspCurrentNotGraspableExpression .
+
+ex:graspPreconditionFalse a ac:ConditionSpecification ;
+    co:hasExpression ex:graspPreconditionFalseExpression .
+
+ex:graspTemporalClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspPhaseStructure ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspBegin ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim10 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspRecoveryMonitor ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement10 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspCannotBegin ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspAdvanceToVerify ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim4 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspVerified ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement4 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim5 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspNeedRecovery ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement5 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim6 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspRetry ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement6 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim7 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspRecoveryFailed ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement7 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim8 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspHoldMonitor ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement8 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspTemporalClaim9 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspVerificationMonitor ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspTemporalStatement9 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspVerificationFalse a ac:ConditionSpecification ;
+    co:hasExpression ex:graspVerificationFalseExpression .
+
+ex:graspableCurrentExpression a co:AtomicCondition ;
+    co:hasPattern ex:graspablePattern ;
+    co:inScope co:CurrentState .
+
+ex:observe_quantity_deliveredAmount_CurrentState a mr:QuantityObservation ;
+    mr:inScope co:CurrentState ;
+    mr:observesParameter ex:deliveredAmount ;
+    mr:requiresCapability ex:quantityEstimationCapability .
+
+ex:pourActionV3 a ac:ActionDescription ;
+    ac:hasActionKind ex:Pouring ;
+    ac:hasFailureCriterion ex:pourSpillFailure ;
+    ac:hasGoal ex:pourAmountGoal ;
+    ac:hasParameter ex:deliveredAmount,
+        ex:spillAmount,
+        ex:spillTolerance,
+        ex:targetAmount ;
+    ac:hasPhase ex:pourAbort,
+        ex:pourComplete,
+        ex:pourPrepare,
+        ex:pourTransfer,
+        ex:pourVerify ;
+    ac:hasPrecondition ex:pourPrecondition ;
+    ac:hasRoleSpecification ex:destinationRoleSpec,
+        ex:sourceRoleSpec,
+        ex:substanceRoleSpec ;
+    ac:hasSuccessCriterion ex:pourAmountSuccess ;
+    co:hasOutcome ex:pourOutcome ;
+    ns1:hasRelationPattern ex:destinationAccessiblePattern,
+        ex:sourceContainmentPattern ;
+    pt:hasPhaseStructure ex:pourPhaseStructure .
+
+ex:pourCurrentSpillExpression a co:Comparison ;
+    co:leftOperand ex:pourSpillCurrent ;
+    co:operator co:GreaterThan ;
+    co:rightOperand ex:toleranceContext .
+
+ex:pourExcessSpillCurrent a ac:ConditionSpecification ;
+    co:hasExpression ex:pourCurrentSpillExpression .
+
+ex:pourNoExcessSpillExpression a co:Negation ;
+    co:hasOperand ex:pourCurrentSpillExpression .
+
+ex:pourPreconditionFalse a ac:ConditionSpecification ;
+    co:hasExpression ex:pourPreconditionFalseExpression .
+
+ex:pourTemporalClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourPhaseStructure ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourBegin ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim10 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourTransitionMonitor ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement10 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourCannotBegin ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourAdvanceToVerify ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim4 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourSpillAbort ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement4 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim5 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourVerified ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement5 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim6 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourVerificationFailed ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement6 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim7 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourSpillMonitor ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement7 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim8 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourReadinessMonitor ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement8 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourTemporalClaim9 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourVerificationMonitor ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourTemporalStatement9 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourVerificationFalse a ac:ConditionSpecification ;
+    co:hasExpression ex:pourVerificationFalseExpression .
+
+ex:graspAdvanceToVerify a pt:OrdinaryTransition ;
+    pt:fromPhase ex:graspEstablish ;
+    pt:guardCondition ex:graspCurrentHold ;
+    pt:toPhase ex:graspVerify .
+
+ex:graspBegin a pt:OrdinaryTransition ;
+    pt:fromPhase ex:graspPrepare ;
+    pt:guardCondition ex:graspPrecondition ;
+    pt:toPhase ex:graspEstablish .
+
+ex:graspCannotBegin a pt:FailureTransition ;
+    pt:fromPhase ex:graspPrepare ;
+    pt:guardCondition ex:graspPreconditionFalse ;
+    pt:toPhase ex:graspAbort .
+
+ex:graspComplete a pt:SuccessfulTerminalPhase ;
+    rdfs:label "Successful completion"@en .
+
+ex:graspHoldMonitor a mr:MonitoringRequirement ;
+    mr:atPoint mr:DuringPhase ;
+    mr:monitorsCondition ex:graspCurrentHold ;
+    mr:requiresObservation ex:observe_relation_controlledHoldPattern_CurrentState,
+        ex:observe_relation_graspContactPattern_CurrentState ;
+    mr:whenFalse mr:RequestEvidence ;
+    mr:whenTrue mr:ReportSatisfied ;
+    mr:whenUnknown mr:RequestEvidence .
+
+ex:graspNeedRecovery a pt:RecoveryTransition ;
+    pt:fromPhase ex:graspVerify ;
+    pt:guardCondition ex:graspVerificationFalse ;
+    pt:toPhase ex:graspRecover .
+
+ex:graspPhaseStructure a pt:PhaseStructure ;
+    pt:hasMemberPhase ex:graspAbort,
+        ex:graspComplete,
+        ex:graspEstablish,
+        ex:graspPrepare,
+        ex:graspRecover,
+        ex:graspVerify ;
+    pt:hasTransition ex:graspAdvanceToVerify,
+        ex:graspBegin,
+        ex:graspCannotBegin,
+        ex:graspNeedRecovery,
+        ex:graspRecoveryFailed,
+        ex:graspRetry,
+        ex:graspVerified ;
+    pt:initialPhase ex:graspPrepare .
+
+ex:graspRecoveryFailed a pt:FailureTransition ;
+    pt:fromPhase ex:graspRecover ;
+    pt:guardCondition ex:graspCurrentNotGraspable ;
+    pt:toPhase ex:graspAbort .
+
+ex:graspRecoveryMonitor a mr:MonitoringRequirement ;
+    mr:atPoint mr:PhaseExit ;
+    mr:monitorsCondition ex:graspCurrentGraspable ;
+    mr:requiresObservation ex:observe_relation_graspablePattern_CurrentState ;
+    mr:whenFalse mr:RequestSuspension ;
+    mr:whenTrue mr:ReportSatisfied ;
+    mr:whenUnknown mr:RequestEvidence .
+
+ex:graspRetry a pt:RecoveryTransition ;
+    pt:fromPhase ex:graspRecover ;
+    pt:guardCondition ex:graspCurrentGraspable ;
+    pt:toPhase ex:graspEstablish .
+
+ex:graspVerificationMonitor a mr:MonitoringRequirement ;
+    mr:atPoint mr:PhaseExit ;
+    mr:monitorsCondition ex:graspControlledSuccess ;
+    mr:requiresObservation ex:observe_relation_controlledHoldPattern_PostState,
+        ex:observe_relation_graspContactPattern_PostState ;
+    mr:whenFalse mr:RequestRecovery ;
+    mr:whenTrue mr:ReportSatisfied ;
+    mr:whenUnknown mr:RequestEvidence .
+
+ex:graspVerified a pt:OrdinaryTransition ;
+    pt:fromPhase ex:graspVerify ;
+    pt:guardCondition ex:graspControlledSuccess ;
+    pt:toPhase ex:graspComplete .
+
+ex:observe_quantity_spillAmount_CurrentState a mr:QuantityObservation ;
+    mr:inScope co:CurrentState ;
+    mr:observesParameter ex:spillAmount ;
+    mr:requiresCapability ex:quantityEstimationCapability .
+
+ex:observe_quantity_targetAmount_TaskContext a mr:QuantityObservation ;
+    mr:inScope co:TaskContext ;
+    mr:observesParameter ex:targetAmount ;
+    mr:requiresCapability ex:quantityEstimationCapability .
+
+ex:pourAdvanceToVerify a pt:OrdinaryTransition ;
+    mr:hasMonitoringRequirement ex:pourTransitionMonitor ;
+    pt:fromPhase ex:pourTransfer ;
+    pt:guardCondition ex:pourReadyToVerify ;
+    pt:toPhase ex:pourVerify .
+
+ex:pourBegin a pt:OrdinaryTransition ;
+    pt:fromPhase ex:pourPrepare ;
+    pt:guardCondition ex:pourPrecondition ;
+    pt:toPhase ex:pourTransfer .
+
+ex:pourCannotBegin a pt:FailureTransition ;
+    pt:fromPhase ex:pourPrepare ;
+    pt:guardCondition ex:pourPreconditionFalse ;
+    pt:toPhase ex:pourAbort .
+
+ex:pourComplete a pt:SuccessfulTerminalPhase ;
+    rdfs:label "Successful completion"@en .
+
+ex:pourPhaseStructure a pt:PhaseStructure ;
+    pt:hasMemberPhase ex:pourAbort,
+        ex:pourComplete,
+        ex:pourPrepare,
+        ex:pourTransfer,
+        ex:pourVerify ;
+    pt:hasTransition ex:pourAdvanceToVerify,
+        ex:pourBegin,
+        ex:pourCannotBegin,
+        ex:pourSpillAbort,
+        ex:pourVerificationFailed,
+        ex:pourVerified ;
+    pt:initialPhase ex:pourPrepare .
+
+ex:pourReadinessMonitor a mr:MonitoringRequirement ;
+    mr:atPoint mr:DuringPhase ;
+    mr:monitorsCondition ex:pourReadyToVerify ;
+    mr:requiresObservation ex:observe_quantity_deliveredAmount_CurrentState,
+        ex:observe_quantity_spillAmount_CurrentState,
+        ex:observe_quantity_spillTolerance_TaskContext,
+        ex:observe_quantity_targetAmount_TaskContext ;
+    mr:whenFalse mr:ReportUnsatisfied ;
+    mr:whenTrue mr:ReportSatisfied ;
+    mr:whenUnknown mr:RequestEvidence .
+
+ex:pourSpillAbort a pt:FailureTransition ;
+    pt:fromPhase ex:pourTransfer ;
+    pt:guardCondition ex:pourExcessSpillCurrent ;
+    pt:toPhase ex:pourAbort .
+
+ex:pourSpillInvariant a ac:ConditionSpecification ;
+    co:hasExpression ex:pourNoExcessSpillExpression .
+
+ex:pourSpillMonitor a mr:MonitoringRequirement ;
+    mr:atPoint mr:DuringPhase ;
+    mr:monitorsCondition ex:pourSpillInvariant ;
+    mr:requiresObservation ex:observe_quantity_spillAmount_CurrentState,
+        ex:observe_quantity_spillTolerance_TaskContext ;
+    mr:whenFalse mr:RequestSuspension ;
+    mr:whenTrue mr:ReportSatisfied ;
+    mr:whenUnknown mr:RequestEvidence .
+
+ex:pourTransitionMonitor a mr:MonitoringRequirement ;
+    mr:atPoint mr:TransitionCheck ;
+    mr:monitorsCondition ex:pourReadyToVerify ;
+    mr:requiresObservation ex:observe_quantity_deliveredAmount_CurrentState,
+        ex:observe_quantity_spillAmount_CurrentState,
+        ex:observe_quantity_spillTolerance_TaskContext,
+        ex:observe_quantity_targetAmount_TaskContext ;
+    mr:whenFalse mr:RequestEvidence ;
+    mr:whenTrue mr:ReportSatisfied ;
+    mr:whenUnknown mr:RequestEvidence .
+
+ex:pourVerificationFailed a pt:FailureTransition ;
+    pt:fromPhase ex:pourVerify ;
+    pt:guardCondition ex:pourVerificationFalse ;
+    pt:toPhase ex:pourAbort .
+
+ex:pourVerificationMonitor a mr:MonitoringRequirement ;
+    mr:atPoint mr:PhaseExit ;
+    mr:monitorsCondition ex:pourAmountSuccess ;
+    mr:requiresObservation ex:observe_quantity_deliveredAmount_PostState,
+        ex:observe_quantity_spillAmount_PostState,
+        ex:observe_quantity_spillTolerance_TaskContext,
+        ex:observe_quantity_targetAmount_TaskContext ;
+    mr:whenFalse mr:RequestSuspension ;
+    mr:whenTrue mr:ReportSatisfied ;
+    mr:whenUnknown mr:RequestEvidence .
+
+ex:pourVerified a pt:OrdinaryTransition ;
+    pt:fromPhase ex:pourVerify ;
+    pt:guardCondition ex:pourAmountSuccess ;
+    pt:toPhase ex:pourComplete .
+
+ex:graspAbort a pt:FailedTerminalPhase ;
+    rdfs:label "Failed completion"@en .
+
+ex:observe_quantity_spillTolerance_TaskContext a mr:QuantityObservation ;
+    mr:inScope co:TaskContext ;
+    mr:observesParameter ex:spillTolerance ;
+    mr:requiresCapability ex:quantityEstimationCapability .
+
+ex:graspCurrentGraspable a ac:ConditionSpecification ;
+    co:hasExpression ex:graspableCurrentExpression .
+
+ex:graspCurrentHold a ac:ConditionSpecification ;
+    co:hasExpression ex:graspHoldCurrentExpression .
+
+ex:graspEstablish a ac:PhaseSpecification ;
+    rdfs:label "Establish controlled hold"@en ;
+    mr:hasMonitoringRequirement ex:graspHoldMonitor ;
+    pt:entryCondition ex:graspCurrentGraspable ;
+    pt:exitCondition ex:graspCurrentHold ;
+    pt:expectedOutcome ex:graspOutcome .
+
+ex:graspRecover a pt:RecoveryPhase ;
+    rdfs:label "Reassess grasp conditions"@en ;
+    mr:hasMonitoringRequirement ex:graspRecoveryMonitor .
+
+ex:graspVerify a ac:PhaseSpecification ;
+    rdfs:label "Verify controlled hold"@en ;
+    mr:hasMonitoringRequirement ex:graspVerificationMonitor ;
+    pt:exitCondition ex:graspControlledSuccess .
+
+ex:pourAbort a pt:FailedTerminalPhase ;
+    rdfs:label "Failed completion"@en .
+
+ex:pourTransfer a ac:PhaseSpecification ;
+    rdfs:label "Transfer material"@en ;
+    mr:hasMonitoringRequirement ex:pourReadinessMonitor,
+        ex:pourSpillMonitor ;
+    pt:exitCondition ex:pourReadyToVerify ;
+    pt:expectedOutcome ex:pourOutcome ;
+    pt:invariantCondition ex:pourSpillInvariant .
+
+ex:pourVerify a ac:PhaseSpecification ;
+    rdfs:label "Verify outcome"@en ;
+    mr:hasMonitoringRequirement ex:pourVerificationMonitor ;
+    pt:exitCondition ex:pourAmountSuccess .
+
+ex:relationAssessmentCapability a ac:CapabilityRequirement .
+
+ex:graspPrepare a ac:PhaseSpecification ;
+    rdfs:label "Prepare grasp"@en .
+
+ex:pourPrepare a ac:PhaseSpecification ;
+    rdfs:label "Prepare transfer"@en ;
+    pt:entryCondition ex:pourPrecondition .
+
+ex:quantityEstimationCapability a ac:CapabilityRequirement .
+
+ex:pourReadyToVerify a ac:ConditionSpecification ;
+    co:hasExpression ex:pourReadyExpression .
+

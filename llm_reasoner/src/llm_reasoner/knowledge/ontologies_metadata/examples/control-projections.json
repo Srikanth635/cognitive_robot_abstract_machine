@@ -1,0 +1,142 @@
+[
+  {
+    "controller": "http://aicor.knowledge/ontologies/action-examples.owl#pourController",
+    "model": "http://aicor.knowledge/ontologies/action-examples.owl#pourDynamics",
+    "vectorDimensions": {
+      "State": 1,
+      "Input": 1,
+      "Output": 1
+    },
+    "unresolved": [
+      "output equation",
+      "state evolution equation",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#pourSamplingPeriod"
+    ],
+    "executionReadinessAssessed": false,
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV5",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#pourActionV5",
+    "aggregationPolicy": "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#Lexicographic",
+    "hardConstraints": [
+      "http://aicor.knowledge/ontologies/action-examples.owl#pourSpillConstraint"
+    ],
+    "objectives": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourObjective_spill",
+        "metric": "http://aicor.knowledge/ontologies/action-examples.owl#spillAmount",
+        "direction": "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#Minimize",
+        "rank": "0",
+        "weightParameter": null,
+        "normalization": null
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourObjective_time",
+        "metric": "http://aicor.knowledge/ontologies/action-examples.owl#pourCompletionTime",
+        "direction": "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#Minimize",
+        "rank": "1",
+        "weightParameter": null,
+        "normalization": null
+      }
+    ],
+    "claims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourControlClaim1",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourControlClaim0",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourControlClaim2",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourControlClaim3",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      }
+    ]
+  },
+  {
+    "controller": "http://aicor.knowledge/ontologies/action-examples.owl#graspController",
+    "model": "http://aicor.knowledge/ontologies/action-examples.owl#graspDynamics",
+    "vectorDimensions": {
+      "State": 1,
+      "Output": 1,
+      "Input": 1
+    },
+    "unresolved": [
+      "output equation",
+      "state evolution equation",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspSamplingPeriod",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspScale_effort",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspScale_hold",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspWeight_effort",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspWeight_hold"
+    ],
+    "executionReadinessAssessed": false,
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV5",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#graspActionV5",
+    "aggregationPolicy": "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#WeightedSum",
+    "hardConstraints": [],
+    "objectives": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspObjective_effort",
+        "metric": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlEffort",
+        "direction": "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#Minimize",
+        "rank": null,
+        "weightParameter": "http://aicor.knowledge/ontologies/action-examples.owl#graspWeight_effort",
+        "normalization": "http://aicor.knowledge/ontologies/action-examples.owl#graspNormalization_effort"
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspObjective_hold",
+        "metric": "http://aicor.knowledge/ontologies/action-examples.owl#graspHoldMetric",
+        "direction": "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#Maximize",
+        "rank": null,
+        "weightParameter": "http://aicor.knowledge/ontologies/action-examples.owl#graspWeight_hold",
+        "normalization": "http://aicor.knowledge/ontologies/action-examples.owl#graspNormalization_hold"
+      }
+    ],
+    "claims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlClaim2",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlClaim1",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlClaim0",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlClaim3",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      }
+    ]
+  }
+]

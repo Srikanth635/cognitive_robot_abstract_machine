@@ -1,0 +1,392 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix am: <http://aicor.knowledge/ontologies/articulated-mechanisms.owl#> .
+@prefix om: <http://aicor.knowledge/ontologies/object-manipulation.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pr: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rm: <http://aicor.knowledge/ontologies/robot-motion.owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/articulated-mechanisms.owl> a owl:Ontology ;
+    rdfs:label "Articulated mechanisms"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/knowledge-context.owl>,
+        <http://aicor.knowledge/ontologies/monitoring-requirements.owl>,
+        <http://aicor.knowledge/ontologies/object-manipulation.owl> ;
+    owl:versionInfo "0.18.0" .
+
+am:ActuationEngaged a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Actuation Engaged"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition am:ActuationEngagedArgument1,
+        am:ActuationEngagedArgument2 ;
+    rdfs:comment "Externally assessed condition in the explicitly selected action/context; no observation or guarantee inferred."@en .
+
+am:ClosedConfiguration a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Closed Configuration"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition am:ClosedConfigurationArgument1,
+        am:ClosedConfigurationArgument2 ;
+    rdfs:comment "Externally assessed condition in the explicitly selected action/context; no observation or guarantee inferred."@en .
+
+am:ClosingDescription a owl:Class ;
+    rdfs:label "Mechanism closing description"@en ;
+    rdfs:comment "Reach the declared closed configuration; does not entail latch securing or locking."@en ;
+    rdfs:subClassOf am:ConfigurationChangeDescription .
+
+am:ClosingMechanism a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Closing mechanism"@en .
+
+am:ConfiguringMechanism a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Configuring mechanism"@en .
+
+am:LatchReleaseDescription a owl:Class ;
+    rdfs:label "Latch release description"@en ;
+    rdfs:comment "Establish positive released-latch evidence; no panel movement is implied."@en ;
+    rdfs:subClassOf am:ArticulatedMechanismDescription .
+
+am:LatchReleased a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Latch Released"@en ;
+    pr:arity "1"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition am:LatchReleasedArgument1 ;
+    rdfs:comment "Externally assessed condition in the explicitly selected action/context; no observation or guarantee inferred."@en .
+
+am:LatchSecured a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Latch Secured"@en ;
+    pr:arity "1"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition am:LatchSecuredArgument1 ;
+    rdfs:comment "Externally assessed condition in the explicitly selected action/context; no observation or guarantee inferred."@en .
+
+am:LatchSecuringDescription a owl:Class ;
+    rdfs:label "Latch securing description"@en ;
+    rdfs:comment "Establish positive secured-latch evidence with an explicit closed-configuration precondition; no security rating or lock authorization implied."@en ;
+    rdfs:subClassOf am:ArticulatedMechanismDescription .
+
+am:MechanismFault a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Mechanism Fault"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition am:MechanismFaultArgument1,
+        am:MechanismFaultArgument2 ;
+    rdfs:comment "Externally assessed condition in the explicitly selected action/context; no observation or guarantee inferred."@en .
+
+am:MechanismReady a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Mechanism Ready"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition am:MechanismReadyArgument1,
+        am:MechanismReadyArgument2 ;
+    rdfs:comment "Externally assessed condition in the explicitly selected action/context; no observation or guarantee inferred."@en .
+
+am:OpenConfiguration a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Open Configuration"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition am:OpenConfigurationArgument1,
+        am:OpenConfigurationArgument2 ;
+    rdfs:comment "Externally assessed condition in the explicitly selected action/context; no observation or guarantee inferred."@en .
+
+am:OpeningDescription a owl:Class ;
+    rdfs:label "Mechanism opening description"@en ;
+    rdfs:comment "Reach the declared open configuration, which need not be the positive direction or a hard limit."@en ;
+    rdfs:subClassOf am:ConfigurationChangeDescription .
+
+am:OpeningMechanism a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Opening mechanism"@en .
+
+am:PathClear a pr:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Path Clear"@en ;
+    pr:arity "2"^^xsd:positiveInteger ;
+    pr:hasArgumentDefinition am:PathClearArgument1,
+        am:PathClearArgument2 ;
+    rdfs:comment "Externally assessed condition in the explicitly selected action/context; no observation or guarantee inferred."@en .
+
+am:Prismatic a am:JointKind,
+        owl:NamedIndividual ;
+    rdfs:label "Prismatic joint"@en .
+
+am:ReleasingLatch a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Releasing latch"@en .
+
+am:Revolute a am:JointKind,
+        owl:NamedIndividual ;
+    rdfs:label "Revolute joint"@en .
+
+am:SecuringLatch a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Securing latch"@en .
+
+am:actuationPhase a owl:ObjectProperty ;
+    rdfs:label "Actuation phase"@en ;
+    rdfs:domain am:ArticulatedMechanismDescription ;
+    rdfs:range ac:PhaseSpecification .
+
+am:axis a owl:ObjectProperty ;
+    rdfs:label "Axis"@en ;
+    rdfs:domain am:JointSpecification ;
+    rdfs:range am:AxisSpecification .
+
+am:axisFrame a owl:ObjectProperty ;
+    rdfs:label "Axis frame"@en ;
+    rdfs:domain am:AxisSpecification ;
+    rdfs:range rm:FrameSpecification .
+
+am:axisOrigin a owl:ObjectProperty ;
+    rdfs:label "Axis origin"@en ;
+    rdfs:domain am:AxisSpecification ;
+    rdfs:range rm:PositionTarget .
+
+am:closedCoordinate a owl:ObjectProperty ;
+    rdfs:label "Closed coordinate"@en ;
+    rdfs:domain am:JointSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+am:coordinate a owl:ObjectProperty ;
+    rdfs:label "Coordinate"@en ;
+    rdfs:domain am:JointSpecification ;
+    rdfs:range rm:CoordinateSpecification .
+
+am:describesAssembly a owl:ObjectProperty ;
+    rdfs:label "Describes assembly"@en ;
+    rdfs:domain am:MechanismSpecification ;
+    rdfs:range ac:EntitySpecification .
+
+am:engagementDescription a owl:ObjectProperty ;
+    rdfs:label "Engagement manipulation description"@en ;
+    rdfs:domain am:ArticulatedMechanismDescription ;
+    rdfs:range om:ObjectManipulationDescription .
+
+am:engagementPhase a owl:ObjectProperty ;
+    rdfs:label "Engagement phase"@en ;
+    rdfs:domain am:ConfigurationChangeDescription ;
+    rdfs:range ac:PhaseSpecification .
+
+am:errorCoordinate a owl:ObjectProperty ;
+    rdfs:label "Error coordinate"@en ;
+    rdfs:domain ac:ParameterSpecification ;
+    rdfs:range rm:CoordinateSpecification .
+
+am:errorParameter a owl:ObjectProperty ;
+    rdfs:label "Absolute target error parameter"@en ;
+    rdfs:domain am:ConfigurationChangeDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+am:errorTarget a owl:ObjectProperty ;
+    rdfs:label "Error reference target"@en ;
+    rdfs:domain ac:ParameterSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+am:evaluationContext a owl:ObjectProperty ;
+    rdfs:label "Evaluation context"@en ;
+    rdfs:domain am:ArticulatedMechanismDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> .
+
+am:fixedPart a owl:ObjectProperty ;
+    rdfs:label "Fixed part"@en ;
+    rdfs:domain am:MechanismSpecification ;
+    rdfs:range ac:EntitySpecification .
+
+am:handle a owl:ObjectProperty ;
+    rdfs:label "Handle"@en ;
+    rdfs:domain am:MechanismSpecification ;
+    rdfs:range ac:EntitySpecification .
+
+am:handleOf a owl:ObjectProperty ;
+    rdfs:label "Handle of"@en ;
+    rdfs:domain ac:EntitySpecification ;
+    rdfs:range ac:EntitySpecification .
+
+am:joint a owl:ObjectProperty ;
+    rdfs:label "Joint"@en ;
+    rdfs:domain am:MechanismSpecification ;
+    rdfs:range am:JointSpecification .
+
+am:jointKind a owl:ObjectProperty ;
+    rdfs:label "Joint kind"@en ;
+    rdfs:domain am:JointSpecification ;
+    rdfs:range am:JointKind .
+
+am:latch a owl:ObjectProperty ;
+    rdfs:label "Latch"@en ;
+    rdfs:domain am:MechanismSpecification ;
+    rdfs:range am:LatchSpecification .
+
+am:latchOf a owl:ObjectProperty ;
+    rdfs:label "Latch of"@en ;
+    rdfs:domain am:LatchSpecification ;
+    rdfs:range am:MechanismSpecification .
+
+am:latchReleaseRequired a owl:DatatypeProperty ;
+    rdfs:label "Latch release required for this motion"@en ;
+    rdfs:domain am:ConfigurationChangeDescription ;
+    rdfs:range xsd:boolean .
+
+am:lowerLimit a owl:ObjectProperty ;
+    rdfs:label "Lower coordinate limit"@en ;
+    rdfs:domain am:JointSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+am:mechanism a owl:ObjectProperty ;
+    rdfs:label "Mechanism"@en ;
+    rdfs:domain am:ArticulatedMechanismDescription ;
+    rdfs:range am:MechanismSpecification .
+
+am:movingPart a owl:ObjectProperty ;
+    rdfs:label "Moving part"@en ;
+    rdfs:domain am:MechanismSpecification ;
+    rdfs:range ac:EntitySpecification .
+
+am:openCoordinate a owl:ObjectProperty ;
+    rdfs:label "Open coordinate"@en ;
+    rdfs:domain am:JointSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+am:openingDirection a owl:DatatypeProperty ;
+    rdfs:label "Opening coordinate direction"@en ;
+    rdfs:domain am:JointSpecification ;
+    rdfs:range xsd:integer .
+
+am:operator a owl:ObjectProperty ;
+    rdfs:label "Operator"@en ;
+    rdfs:domain am:ArticulatedMechanismDescription ;
+    rdfs:range ac:EntitySpecification .
+
+am:referenceFrame a owl:ObjectProperty ;
+    rdfs:label "Reference frame"@en ;
+    rdfs:domain am:MechanismSpecification ;
+    rdfs:range rm:FrameSpecification .
+
+am:targetParameter a owl:ObjectProperty ;
+    rdfs:label "Target coordinate parameter"@en ;
+    rdfs:domain am:ConfigurationChangeDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+am:toleranceParameter a owl:ObjectProperty ;
+    rdfs:label "Coordinate tolerance parameter"@en ;
+    rdfs:domain am:ConfigurationChangeDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+am:upperLimit a owl:ObjectProperty ;
+    rdfs:label "Upper coordinate limit"@en ;
+    rdfs:domain am:JointSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+am:verificationPhase a owl:ObjectProperty ;
+    rdfs:label "Verification phase"@en ;
+    rdfs:domain am:ArticulatedMechanismDescription ;
+    rdfs:range ac:PhaseSpecification .
+
+am:xAxisParameter a owl:ObjectProperty ;
+    rdfs:label "X axis component"@en ;
+    rdfs:domain am:AxisSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+am:yAxisParameter a owl:ObjectProperty ;
+    rdfs:label "Y axis component"@en ;
+    rdfs:domain am:AxisSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+am:zAxisParameter a owl:ObjectProperty ;
+    rdfs:label "Z axis component"@en ;
+    rdfs:domain am:AxisSpecification ;
+    rdfs:range ac:ParameterSpecification .
+
+am:ActuationEngagedArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "operator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+am:ActuationEngagedArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "assembly"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+am:ClosedConfigurationArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "assembly"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+am:ClosedConfigurationArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "moving part"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+am:LatchReleasedArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "latch"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+am:LatchSecuredArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "latch"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+am:MechanismFaultArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "operator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+am:MechanismFaultArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "assembly"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+am:MechanismReadyArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "operator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+am:MechanismReadyArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "assembly"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+am:OpenConfigurationArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "assembly"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+am:OpenConfigurationArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "moving part"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+am:PathClearArgument1 a pr:ArgumentDefinition ;
+    rdfs:label "operator"@en ;
+    pr:argumentPosition "1"^^xsd:positiveInteger .
+
+am:PathClearArgument2 a pr:ArgumentDefinition ;
+    rdfs:label "assembly"@en ;
+    pr:argumentPosition "2"^^xsd:positiveInteger .
+
+am:LatchSpecification a owl:Class ;
+    rdfs:label "Latch specification"@en ;
+    rdfs:comment "Describes a latch belonging to a mechanism. Released and secured require separate positive evidence."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+am:JointKind a owl:Class ;
+    rdfs:label "Joint kind"@en ;
+    rdfs:comment "Joint model category; this first engineering profile supports bounded revolute and prismatic coordinates."@en ;
+    rdfs:subClassOf <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Concept> .
+
+am:AxisSpecification a owl:Class ;
+    rdfs:label "Axis specification"@en ;
+    rdfs:comment "An oriented axis expressed in the mechanism reference frame; optional numeric components require normalization checking."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+am:ConfigurationChangeDescription a owl:Class ;
+    rdfs:label "Mechanism configuration change description"@en ;
+    rdfs:comment "Reach an explicitly requested bounded joint coordinate; endpoint evidence does not prove safe path traversal."@en ;
+    rdfs:subClassOf am:ArticulatedMechanismDescription .
+
+am:ArticulatedMechanismDescription a owl:Class ;
+    rdfs:label "Articulated mechanism action description"@en ;
+    rdfs:comment "World-independent requirements for a mechanism action; no actuation or execution authorization."@en ;
+    rdfs:subClassOf ac:ActionDescription .
+
+am:JointSpecification a owl:Class ;
+    rdfs:label "Joint specification"@en ;
+    rdfs:comment "A descriptive bounded revolute or prismatic joint with explicit coordinate convention, origin, axis and limits."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+am:MechanismSpecification a owl:Class ;
+    rdfs:label "Mechanism specification"@en ;
+    rdfs:comment "Describes a bounded single-coordinate articulated assembly, not a physical assembly or kinematic solver."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+

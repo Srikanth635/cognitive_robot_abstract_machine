@@ -14,8 +14,8 @@ from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.generation.exceptions import MeasurementIsNotGenerated
 from llm_reasoner.knowledge.generation.prompts import written_value
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
-from llm_reasoner.knowledge.ontologies import OntologyModuleFile
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.vocabulary.ontology_modules import OntologyModuleFile
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
 from llm_reasoner.knowledge.storage.citation import Citation
 
 

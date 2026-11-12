@@ -1,0 +1,165 @@
+"""
+{{ module.comment | docstring }}
+
+Generated from ``{{ module.source_file }}`` by ``python -m llm_reasoner.knowledge.vocabulary.translation``. Regenerate rather than edit.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+{% if module.value_partitions | rejectattr("is_open") | list %}
+from enum import StrEnum
+{% endif %}
+
+from typing_extensions import ClassVar, List, Optional
+
+{% for statement in module_file_imports() %}
+{{ statement }}
+{% endfor %}
+{% for referenced in module.referenced_modules %}
+from {{ packages[referenced] }} import {{ referenced }}
+{% endfor %}
+{% if module.descriptors %}
+from llm_reasoner.knowledge.vocabulary.properties import ObjectPropertyDescriptor
+{% endif %}
+from llm_reasoner.knowledge.vocabulary.terms import (
+    ClassTerm,
+    ComplementOf,
+    ConceptReference,
+    DescriptionEntity,
+    EnumeratedClass,
+    IntersectionOf,
+    NamedClass,
+{% if module.value_partitions | selectattr("is_open") | list %}
+    OpenValuePartition,
+{% endif %}
+    PropertyRestriction,
+    PropertyTerm,
+    Quantifier,
+    UnionOf,
+)
+{% if module.value_partitions %}
+
+# %% value partitions
+{% for partition in module.value_partitions %}
+
+
+class {{ partition.python_name.name }}({{ "OpenValuePartition" if partition.is_open else "StrEnum" }}):
+    """
+    {{ partition.comment | docstring }}
+    """
+{% for member in partition.members %}
+
+    {{ member.name }} = {{ member.iri | python_string }}
+    """
+    {{ member.comment | docstring }}
+    """
+{% endfor %}
+{% for member_property in partition.member_properties %}
+
+    @property
+{% if member_property.functional %}
+    def {{ member_property.name }}(self) -> {{ reference(member_property.value_type) }}:
+{% else %}
+    def {{ member_property.name }}(self) -> tuple[{{ reference(member_property.value_type) }}, ...]:
+{% endif %}
+        """
+        {{ member_property.comment | docstring }}
+        """
+        return {
+{% for value in member_property.values %}
+{% if member_property.functional %}
+            {{ partition.python_name.name }}.{{ value.member }}: {{ reference(value.values[0]) }},
+{% else %}
+            {{ partition.python_name.name }}.{{ value.member }}: ({% for held in value.values %}{{ reference(held) }}, {% endfor %}),
+{% endif %}
+{% endfor %}
+        }[self]
+{% endfor %}
+{% if partition.is_open %}
+
+    @property
+    def declaring_module(self) -> {{ class_reference(module_file_class) }}:
+        return {
+{% for member in partition.members %}
+            {{ partition.python_name.name }}.{{ member.name }}: {{ module_file_reference(member.declaring_module) }},
+{% endfor %}
+        }[self]
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if module.classes %}
+
+# %% classes
+{% for cls in module.classes %}
+
+
+@dataclass(eq=False)
+class {{ cls.python_name.name }}({{ bases(cls) }}):
+    """
+    {{ cls.comment | docstring }}
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri={{ cls.iri | python_string }},
+        linked_terms={{ cls.linked_terms | python_tuple }},
+        restrictions={{ cls.restrictions | expression_tuple }},
+        definition={{ cls.definition | optional_expression }},
+    )
+    """
+    The ontology class this class stands for.
+    """
+{% for declared in cls.fields %}
+
+    {{ declared.name }}: {{ annotation(declared) }} = field(
+        {{ default(declared) }},
+        metadata=PropertyTerm(
+            iri={{ declared.property_iri | python_string }},
+            functional={{ declared.functional }},
+{% if declared.range_iri %}
+            range={{ declared.range_iri | python_string }},
+{% endif %}
+{% if declared.linked_range_iri %}
+            linked_range={{ declared.linked_range_iri | python_string }},
+{% endif %}
+{% if declared.datatype_iri %}
+            datatype={{ declared.datatype_iri | python_string }},
+{% endif %}
+        ).as_dict(),
+    )
+    """
+    {{ declared.comment | docstring }}
+    """
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if module.descriptors %}
+
+# %% property descriptors
+{% for descriptor in module.descriptors %}
+
+
+@dataclass
+class {{ descriptor.python_name.name }}({{ super_descriptors(descriptor) }}):
+    """
+    {{ descriptor.comment | docstring }}
+    """
+{% if descriptor.symmetric %}
+
+    symmetric: ClassVar[bool] = True
+    """
+    The property is symmetric, so a value's field holds the instance in turn.
+    """
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if module.attachments %}
+
+# %% descriptor attachments
+
+{% for attachment in module.attachments %}
+{{ reference(attachment.host) }}.{{ attachment.field_name }} = {{ reference(attachment.descriptor) }}(
+    {{ reference(attachment.host) }}, {{ attachment.field_name | python_string }}
+)
+{% endfor %}
+{% endif %}

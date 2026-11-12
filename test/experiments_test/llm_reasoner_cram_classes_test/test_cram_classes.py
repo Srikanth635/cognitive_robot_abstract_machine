@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import llm_reasoner.knowledge.ontologies
+import llm_reasoner.knowledge.vocabulary.ontology_modules
 from rdflib import Graph
 from rdflib.compare import graph_diff, isomorphic, to_isomorphic
 

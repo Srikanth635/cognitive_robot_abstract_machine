@@ -23,12 +23,10 @@ Where the resolver's modules are.
 """
 
 LAYERS = [
-    "ontologies",
-    "ontology_translation",
+    "vocabulary",
     "representation",
     "acceptance",
     "admission",
-    "vocabulary_proposal",
     "storage",
     "generation",
     "hypotheses",

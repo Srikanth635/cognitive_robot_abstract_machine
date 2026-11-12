@@ -1,0 +1,242 @@
+[
+  {
+    "ontology_iri": "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl",
+    "file": "DUL.owl",
+    "role": "foundation",
+    "recommended_improvement": "Keep the copied foundation unchanged; test alignment and imports rather than redefining DUL terms."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/action-description-core.owl",
+    "file": "core/action-description-core.ttl",
+    "role": "core",
+    "recommended_improvement": "Keep exact statement identity and shared descriptions; define separate answer evidence grades and immutable record closure outside workflow status."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/cram-action-bridge.owl",
+    "file": "core/cram-action-bridge.ttl",
+    "role": "core",
+    "recommended_improvement": "Keep optional dependency boundary; review explicit adapter mappings rather than assume OWL bridge executes CRAM actions."
+  },
+  {
+    "ontology_iri": "urn:gpt-cram-ontologies:aicor-unified",
+    "file": "candidates/aicor-unified-dul.ttl",
+    "role": "candidates",
+    "recommended_improvement": "Optional legacy/domain ontology: isolate SceneNode normalization/timeout, establish class satisfiability before compatibility claims."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+    "file": "aspects/observation/monitoring-requirements.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Define modality/time/location/units qualification and unknown handling in injected observation interfaces."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+    "file": "aspects/structure/conditions-outcomes.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Register expression/lexical-contract evaluator dispatch; preserve unknown, scope and evidence boundaries."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/phases-transitions.owl",
+    "file": "aspects/structure/phases-transitions.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Add initial-state-conditioned optional phases and observed boundary contracts before claiming phase selection."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/dynamics-control.owl",
+    "file": "aspects/physics-control/dynamics-control.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Add bounded estimator/model-activation/update semantics only where scientific CQs justify them; no uncalibrated control defaults."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+    "file": "aspects/causality/causal-mechanisms.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Source mechanism claims and distinguish proposed associations from experimentally identified causal effects."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+    "file": "aspects/planning/objectives-tradeoffs.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Define unit-normalized policy/weight selection externally; qualitative priorities alone do not derive numerical weights."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/physical-models.owl",
+    "file": "aspects/physics-control/physical-models.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Validate equation binding, dimensions, model assumptions and validity regime; references alone are not solved models."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/participants-relations.owl",
+    "file": "aspects/structure/participants-relations.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Review participant identity and referents across every adapter and stage; preserve specification vs grounded-object distinction."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+    "file": "integrations/causal-outcome-bridge.ttl",
+    "role": "integrations",
+    "recommended_improvement": "Test exact condition identity between cause/effect and outcome claims; association is not causal validation."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+    "file": "integrations/causal-physical-bridge.ttl",
+    "role": "integrations",
+    "recommended_improvement": "Match mechanisms to model assumptions and evidence; verify valid regime before using a physical explanation."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/all-action-aspects.owl",
+    "file": "integrations/all-action-aspects.ttl",
+    "role": "integrations",
+    "recommended_improvement": "Keep generic assembly stable and world-independent; avoid importing Cora/SDT provider implementations."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+    "file": "integrations/physical-outcome-bridge.ttl",
+    "role": "integrations",
+    "recommended_improvement": "Tie physical result evidence to exact quantity, destination, context and interval."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+    "file": "aspects/planning/capabilities-strategies.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Consolidate scoped nested requirement discovery and provider selection traces; interfaces are not matched providers."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+    "file": "aspects/planning/failure-diagnosis.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Keep hypotheses, evidence, alternatives and cause association explicit; do not label a candidate as established root cause."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+    "file": "integrations/recovery-strategy-bridge.ttl",
+    "role": "integrations",
+    "recommended_improvement": "Keep guard, failure, intended recovery effect and retry policy scoped; missing budget is not unlimited retries."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/frame-perspective.owl",
+    "file": "aspects/perspectives/frame-perspective.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Document exact record/version and projection dependencies; future frames must reuse existing identities."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/force-dynamics.owl",
+    "file": "aspects/perspectives/force-dynamics.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Keep qualitative tendencies separate from measured force, probabilities and control feasibility."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/image-schemas.owl",
+    "file": "aspects/perspectives/image-schemas.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Preserve qualitative spatial meaning and frame identity; avoid treating schema membership as collision checking."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+    "file": "aspects/entities-transfer/entities-materials-affordances.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Build source-backed material/property profiles and applicability; avoid universal numerical limits."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+    "file": "aspects/observation/sensorimotor-events.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Review prediction-error taxonomy, grip-load coupling, proactive gaze and continuous comparison against the 65 scientific CQs."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/knowledge-context.owl",
+    "file": "core/knowledge-context.ttl",
+    "role": "core",
+    "recommended_improvement": "Specify binding identity, validity/freshness and conflict policies; test concurrent occurrences and shared descriptions without cross-context evidence promotion."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+    "file": "aspects/entities-transfer/transfer-contracts.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Add source-backed material-regime and termination variants; retain intended destination, quantity and interval referents."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/model-contracts.owl",
+    "file": "aspects/physics-control/model-contracts.ttl",
+    "role": "aspects",
+    "recommended_improvement": "Define acceptance of simulation/measurement results and fidelity/coverage; do not equate study specification with validation."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+    "file": "integrations/diagnostic-causal-bridge.ttl",
+    "role": "integrations",
+    "recommended_improvement": "Retain explicit V8 association and provenance; verify independently sourced causal support."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/robot-motion.owl",
+    "file": "domains/robot-motion.ttl",
+    "role": "domains",
+    "recommended_improvement": "Map joint/TCP/waypoint/alignment/body presets and inherited tolerance fields; keep frame/units/provider mappings explicit."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/all-action-knowledge.owl",
+    "file": "integrations/all-action-knowledge.ttl",
+    "role": "integrations",
+    "recommended_improvement": "Keep domains/compositions/refinements layered; no new umbrella ontology needed for this review."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/object-manipulation.owl",
+    "file": "domains/object-manipulation.ttl",
+    "role": "domains",
+    "recommended_improvement": "Review grasp candidate policies, open/release thresholds, lift-off/touchdown and no-navigation pick/place variants."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+    "file": "domains/mobility-navigation.ttl",
+    "role": "domains",
+    "recommended_improvement": "Map existing route/inter-level/elevator profiles to source floor/path assumptions, reattachment and monitor conventions; add bounded recovery/timeouts and retain dynamic-obstacle limits."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/perception-attention.owl",
+    "file": "domains/perception-attention.ttl",
+    "role": "domains",
+    "recommended_improvement": "Map detection policies and face/look recipe; review fine-grained gaze/observer CQs separately from generic attention."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/tool-interaction.owl",
+    "file": "domains/tool-interaction.ttl",
+    "role": "domains",
+    "recommended_improvement": "Add mixing refinement and tool-path parameter mapping; generic effect slots are not mixing knowledge."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/material-transfer.owl",
+    "file": "domains/material-transfer.ttl",
+    "role": "domains",
+    "recommended_improvement": "Add bounded source/target/material-specific pouring recipes; match measured physical outcomes to source motion behavior."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/pouring-tool-bridge.owl",
+    "file": "integrations/pouring-tool-bridge.ttl",
+    "role": "integrations",
+    "recommended_improvement": "Map source-container working opening, target and material identities; keep optional bridge separate from universal tool requirement."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/articulated-mechanisms.owl",
+    "file": "domains/articulated-mechanisms.ttl",
+    "role": "domains",
+    "recommended_improvement": "Add grasp-open/close-release-retreat recipes and provider coordinate conventions; do not universalize position thresholds."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/transport-carrying.owl",
+    "file": "compositions/transport-carrying.ttl",
+    "role": "compositions",
+    "recommended_improvement": "Do not equate carry with full Cora TransportAction; preserve coextensive hold/mobility and handoff scopes."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/specialized-tool-interactions.owl",
+    "file": "refinements/specialized-tool-interactions.ttl",
+    "role": "refinements",
+    "recommended_improvement": "Add mixing; review cutting/wiping outcome vs source path completion. Pressing/insertion are extensions without named canonical source actions in inspected scope."
+  },
+  {
+    "ontology_iri": "http://aicor.knowledge/ontologies/action-recipes.owl",
+    "file": "compositions/action-recipes.ttl",
+    "role": "compositions",
+    "recommended_improvement": "Add no-navigation pick/place, move-and-act, face/look and pouring variants; reuse existing mobility elevator phases for cross-domain recipes. Branch/retry/scheduling remain future work."
+  }
+]

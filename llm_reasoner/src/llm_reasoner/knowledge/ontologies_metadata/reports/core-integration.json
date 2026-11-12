@@ -1,0 +1,14 @@
+{
+  "scope": [
+    "DUL.owl",
+    "candidates/aicor-unified-dul.ttl",
+    "core/action-description-core.ttl",
+    "core/cram-action-bridge.ttl",
+    "examples/stereotypical-actions.ttl",
+    "examples/projection-artifacts.ttl"
+  ],
+  "returncode": 0,
+  "stdout": "http://www.w3.org/2002/07/owl#Thing is satisfiable.\n",
+  "stderr": "",
+  "limitation": "Consistency only; not full classification of combined AICOR model."
+}

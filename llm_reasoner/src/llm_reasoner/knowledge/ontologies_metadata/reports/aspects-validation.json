@@ -1,0 +1,194 @@
+[
+  {
+    "case": "valid-two-action-aspect-examples",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-relation-argument",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-signature-argument",
+    "passed": true
+  },
+  {
+    "case": "reject-duplicate-argument-position",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-state-scope",
+    "passed": true
+  },
+  {
+    "case": "reject-negation-two-operands",
+    "passed": true
+  },
+  {
+    "case": "reject-cyclic-expression",
+    "passed": true
+  },
+  {
+    "case": "reject-wrong-comparison-operand-type",
+    "passed": true
+  },
+  {
+    "case": "reject-unknown-comparison-operator",
+    "passed": true
+  },
+  {
+    "case": "reject-quantity-without-unit",
+    "passed": true
+  },
+  {
+    "case": "reject-outcome-without-after-condition",
+    "passed": true
+  },
+  {
+    "case": "reject-extraneous-expression-field",
+    "passed": true
+  },
+  {
+    "case": "Conjunction-True-True",
+    "passed": true
+  },
+  {
+    "case": "Conjunction-True-False",
+    "passed": true
+  },
+  {
+    "case": "Conjunction-True-None",
+    "passed": true
+  },
+  {
+    "case": "Conjunction-False-True",
+    "passed": true
+  },
+  {
+    "case": "Conjunction-False-False",
+    "passed": true
+  },
+  {
+    "case": "Conjunction-False-None",
+    "passed": true
+  },
+  {
+    "case": "Conjunction-None-True",
+    "passed": true
+  },
+  {
+    "case": "Conjunction-None-False",
+    "passed": true
+  },
+  {
+    "case": "Conjunction-None-None",
+    "passed": true
+  },
+  {
+    "case": "Disjunction-True-True",
+    "passed": true
+  },
+  {
+    "case": "Disjunction-True-False",
+    "passed": true
+  },
+  {
+    "case": "Disjunction-True-None",
+    "passed": true
+  },
+  {
+    "case": "Disjunction-False-True",
+    "passed": true
+  },
+  {
+    "case": "Disjunction-False-False",
+    "passed": true
+  },
+  {
+    "case": "Disjunction-False-None",
+    "passed": true
+  },
+  {
+    "case": "Disjunction-None-True",
+    "passed": true
+  },
+  {
+    "case": "Disjunction-None-False",
+    "passed": true
+  },
+  {
+    "case": "Disjunction-None-None",
+    "passed": true
+  },
+  {
+    "case": "Negation-True",
+    "passed": true
+  },
+  {
+    "case": "Negation-False",
+    "passed": true
+  },
+  {
+    "case": "Negation-None",
+    "passed": true
+  },
+  {
+    "case": "unknown-missing-quantity",
+    "passed": true
+  },
+  {
+    "case": "unknown-unit-mismatch",
+    "passed": true
+  },
+  {
+    "case": "partial-transfer-can-satisfy-goal",
+    "passed": true
+  },
+  {
+    "case": "insufficient-delivery-fails-goal",
+    "passed": true
+  },
+  {
+    "case": "success-unknown-without-spill-data",
+    "passed": true
+  },
+  {
+    "case": "success-false-on-excessive-spill",
+    "passed": true
+  },
+  {
+    "case": "success-true-with-acceptable-spill",
+    "passed": true
+  },
+  {
+    "case": "pre-and-post-inputs-distinct",
+    "passed": true
+  },
+  {
+    "case": "no-world-relation-materialized",
+    "passed": true
+  },
+  {
+    "case": "operator-Equal",
+    "passed": true
+  },
+  {
+    "case": "operator-NotEqual",
+    "passed": true
+  },
+  {
+    "case": "operator-LessThan",
+    "passed": true
+  },
+  {
+    "case": "operator-LessOrEqual",
+    "passed": true
+  },
+  {
+    "case": "operator-GreaterThan",
+    "passed": true
+  },
+  {
+    "case": "operator-GreaterOrEqual",
+    "passed": true
+  }
+]

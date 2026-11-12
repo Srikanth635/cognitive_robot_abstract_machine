@@ -1,0 +1,74 @@
+[
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/object-manipulation.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ]
+  },
+  {
+    "consistent": true,
+    "unsatisfiable_classes": [],
+    "ontology": "http://aicor.knowledge/ontologies/all-action-knowledge.owl",
+    "imports": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/all-action-aspects.owl",
+      "http://aicor.knowledge/ontologies/all-action-knowledge.owl",
+      "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://aicor.knowledge/ontologies/force-dynamics.owl",
+      "http://aicor.knowledge/ontologies/frame-perspective.owl",
+      "http://aicor.knowledge/ontologies/image-schemas.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ]
+  },
+  {
+    "scope": "All action knowledge + all examples",
+    "status": "passed",
+    "returncode": 0,
+    "stdout": "http://www.w3.org/2002/07/owl#Thing is satisfiable.\n",
+    "stderr": "",
+    "limitation": "Consistency only, not full AICOR classification."
+  },
+  {
+    "scope": "All action knowledge + all examples + optional CRAM bridge",
+    "status": "blocked",
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Exception in thread \"main\" java.lang.IllegalArgumentException: Error: Parsed DisjointClasses(<http://aicor.knowledge/l2-ontology.owl#SceneNode>). A DisjointClasses axiom in OWL 2 DL must have at least two classes as parameters. \n\tat org.semanticweb.HermiT.structural.OWLNormalization$AxiomVisitor.visit(Unknown Source)\n\tat uk.ac.manchester.cs.owl.owlapi.OWLDisjointClassesAxiomImpl.accept(OWLDisjointClassesAxiomImpl.java:92)\n\tat org.semanticweb.HermiT.structural.OWLNormalization.processAxioms(Unknown Source)\n\tat org.semanticweb.HermiT.structural.OWLNormalization.processOntology(Unknown Source)\n\tat org.semanticweb.HermiT.structural.OWLClausification.preprocessAndClausify(Unknown Source)\n\tat org.semanticweb.HermiT.Reasoner.loadOntology(Reasoner.java:117)\n\tat org.semanticweb.HermiT.Reasoner.<init>(Reasoner.java:108)\n\tat org.semanticweb.HermiT.Reasoner.<init>(Reasoner.java:86)\n\tat org.semanticweb.HermiT.cli.CommandLine.main(CommandLine.java:830)\n",
+    "limitation": "Consistency only, not full AICOR classification."
+  }
+]

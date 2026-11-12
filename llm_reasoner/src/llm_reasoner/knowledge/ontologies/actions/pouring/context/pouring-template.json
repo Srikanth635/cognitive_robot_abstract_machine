@@ -1,0 +1,151 @@
+{
+  "bundle_version": "0.23.0",
+  "source_template_version": "0.22.0",
+  "focus_description_class": "http://aicor.knowledge/ontologies/material-transfer.owl#PouringDescription",
+  "artifact_kind": "symbolic generation aid",
+  "complete_output_schema": false,
+  "new_record_identity_policy": "Use a fresh record and mutable annotation/context identities; reuse immutable descriptions/specifications only through an explicit versioned sharing policy.",
+  "unknown_value_policy": "Leave physical values unspecified; scalar_default null is template metadata, never an RDF numeric literal.",
+  "epistemic_policy": "Generated claims remain Proposed; no observations, world bindings or accepted beliefs are produced.",
+  "template": {
+    "action": "pour",
+    "action_kind": "http://aicor.knowledge/ontologies/material-transfer.owl#Pouring",
+    "entity_roles": [
+      "destination",
+      "material",
+      "source",
+      "transferred_portion"
+    ],
+    "parameters": {
+      "delivered_amount": {
+        "unit_iri": "http://qudt.org/vocab/unit/M3",
+        "scalar_default": null
+      },
+      "target_amount": {
+        "unit_iri": "http://qudt.org/vocab/unit/M3",
+        "scalar_default": null
+      },
+      "spill_amount": {
+        "unit_iri": "http://qudt.org/vocab/unit/M3",
+        "scalar_default": null
+      },
+      "spill_tolerance": {
+        "unit_iri": "http://qudt.org/vocab/unit/M3",
+        "scalar_default": null
+      }
+    },
+    "conditions": {
+      "precondition": {
+        "combination": "all-clauses",
+        "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#AtomicCondition",
+        "atoms": [
+          {
+            "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PreState",
+            "relation": "http://aicor.knowledge/ontologies/material-transfer.owl#TransferReady",
+            "arguments": [
+              "entity:source",
+              "entity:destination",
+              "entity:material"
+            ],
+            "negated": false
+          }
+        ],
+        "comparisons": []
+      },
+      "goal": {
+        "combination": "all-clauses",
+        "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+        "atoms": [
+          {
+            "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+            "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#ContainedIn",
+            "arguments": [
+              "entity:transferred_portion",
+              "entity:destination"
+            ],
+            "negated": false
+          }
+        ],
+        "comparisons": [
+          {
+            "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#GreaterOrEqual",
+            "left": {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "parameter": "parameter:delivered_amount"
+            },
+            "right": {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+              "parameter": "parameter:target_amount"
+            }
+          },
+          {
+            "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#LessOrEqual",
+            "left": {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "parameter": "parameter:spill_amount"
+            },
+            "right": {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+              "parameter": "parameter:spill_tolerance"
+            }
+          }
+        ]
+      },
+      "success": {
+        "combination": "all-clauses",
+        "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#Conjunction",
+        "atoms": [
+          {
+            "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+            "relation": "http://aicor.knowledge/ontologies/participants-relations.owl#ContainedIn",
+            "arguments": [
+              "entity:transferred_portion",
+              "entity:destination"
+            ],
+            "negated": false
+          }
+        ],
+        "comparisons": [
+          {
+            "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#GreaterOrEqual",
+            "left": {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "parameter": "parameter:delivered_amount"
+            },
+            "right": {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+              "parameter": "parameter:target_amount"
+            }
+          },
+          {
+            "operator": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#LessOrEqual",
+            "left": {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+              "parameter": "parameter:spill_amount"
+            },
+            "right": {
+              "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+              "parameter": "parameter:spill_tolerance"
+            }
+          }
+        ]
+      },
+      "fault": {
+        "combination": "all-clauses",
+        "root_expression_type": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#AtomicCondition",
+        "atoms": [
+          {
+            "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+            "relation": "http://aicor.knowledge/ontologies/material-transfer.owl#TransferFault",
+            "arguments": [
+              "entity:source",
+              "entity:destination"
+            ],
+            "negated": false
+          }
+        ],
+        "comparisons": []
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX pa: <http://aicor.knowledge/ontologies/perception-attention.owl#>
+SELECT ?specification ?view ?index ?viewpoint ?region ?frame ?budget ?value
+WHERE {
+ ?record ac:expressesDescription/pa:searchSpecification ?specification .
+ ?specification pa:hasView ?view; pa:attemptBudget ?budget .
+ ?view pa:positionIndex ?index; pa:viewpoint ?viewpoint; pa:viewRegion ?region; pa:viewFrame ?frame .
+ OPTIONAL {?budget ac:numericValue ?value}
+}
+ORDER BY ?index

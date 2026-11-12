@@ -15,7 +15,7 @@ from krrood.utils import resolve_class_from_full_name
 from rdflib import Graph
 from typing_extensions import Callable, Iterable, List, Mapping, Optional
 
-from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
+from llm_reasoner.knowledge.vocabulary.terms import DescriptionEntity
 from llm_reasoner.knowledge.representation.hypothesis import GivenFragments
 from llm_reasoner.knowledge.representation.rdf import GraphReader, ReadHypothesis
 from llm_reasoner.knowledge.storage.citation import Citation

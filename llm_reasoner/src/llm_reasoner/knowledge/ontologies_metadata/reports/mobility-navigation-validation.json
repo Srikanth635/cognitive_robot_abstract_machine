@@ -1,0 +1,437 @@
+{
+  "release": "0.15.0",
+  "checks": [
+    {
+      "case": "five-profile-shapes",
+      "passed": true
+    },
+    {
+      "case": "condition-and-relation-integrity",
+      "passed": true
+    },
+    {
+      "case": "phase-and-monitor-dependencies",
+      "passed": true
+    },
+    {
+      "case": "mobility-contracts",
+      "passed": true
+    },
+    {
+      "case": "navigation:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "navigation:required-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "navigation:preconditions-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "navigation:fault-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "navigation:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "navigation:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "navigation:missing-metric-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "navigation:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "navigation:wrong-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:required-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:preconditions-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:fault-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:missing-metric-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:wrong-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "facing:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "facing:required-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "facing:preconditions-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "facing:fault-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "facing:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "facing:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "facing:missing-metric-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "facing:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "facing:wrong-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:required-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:preconditions-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:fault-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:missing-metric-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:wrong-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:unknown-without-evidence",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:required-state-satisfies",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:preconditions-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:fault-not-assumed",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:not-execution-approval",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:out-of-tolerance-fails",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:missing-metric-is-unknown",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:negative-error-rejected",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:wrong-unit-rejected",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:no-interval-no-aggregate-success",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:reject-wrong-context",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:reject-empty-interval",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:reject-naive-time",
+      "passed": true
+    },
+    {
+      "case": "facing:no-interval-no-aggregate-success",
+      "passed": true
+    },
+    {
+      "case": "facing:reject-wrong-context",
+      "passed": true
+    },
+    {
+      "case": "facing:reject-empty-interval",
+      "passed": true
+    },
+    {
+      "case": "facing:reject-naive-time",
+      "passed": true
+    },
+    {
+      "case": "endpoint-alone-not-route-completion",
+      "passed": true
+    },
+    {
+      "case": "correct-heading-with-excess-drift-fails",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:wrong-level-not-arrival",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:wrong-level-not-arrival",
+      "passed": true
+    },
+    {
+      "case": "still-in-cabin-is-not-complete",
+      "passed": true
+    },
+    {
+      "case": "Wait:required-guard-reported-true",
+      "passed": true
+    },
+    {
+      "case": "Wait:no-automatic-transition",
+      "passed": true
+    },
+    {
+      "case": "Wait:missing-guard-evidence-remains-incomplete",
+      "passed": true
+    },
+    {
+      "case": "Enter:required-guard-reported-true",
+      "passed": true
+    },
+    {
+      "case": "Enter:no-automatic-transition",
+      "passed": true
+    },
+    {
+      "case": "Enter:missing-guard-evidence-remains-incomplete",
+      "passed": true
+    },
+    {
+      "case": "Ride:required-guard-reported-true",
+      "passed": true
+    },
+    {
+      "case": "Ride:no-automatic-transition",
+      "passed": true
+    },
+    {
+      "case": "Ride:missing-guard-evidence-remains-incomplete",
+      "passed": true
+    },
+    {
+      "case": "not-open-does-not-prove-closed",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-target-pose",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-robot",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-footprint",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-context",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-segment-destination",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-map-version",
+      "passed": true
+    },
+    {
+      "case": "reject-missing-elevator-cabin",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-target-frame",
+      "passed": true
+    },
+    {
+      "case": "reject-duplicate-route-index",
+      "passed": true
+    },
+    {
+      "case": "reject-disconnected-route",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-route-destination",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-route-frame",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-level-binding",
+      "passed": true
+    },
+    {
+      "case": "reject-collapsed-levels",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-context",
+      "passed": true
+    },
+    {
+      "case": "reject-foreign-cabin-facility",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-heading-unit",
+      "passed": true
+    },
+    {
+      "case": "reject-wrong-exit-door",
+      "passed": true
+    },
+    {
+      "case": "reject-negative-clearance",
+      "passed": true
+    },
+    {
+      "case": "reject-angular-clearance-unit",
+      "passed": true
+    },
+    {
+      "case": "reject-shared-indexed-segment-occurrence",
+      "passed": true
+    },
+    {
+      "case": "mixed-family-contract-not-silently-ignored",
+      "passed": true
+    },
+    {
+      "case": "stage-checks-independent-of-phase-IRI",
+      "passed": true
+    },
+    {
+      "case": "simultaneous-success-and-fault-reported",
+      "passed": true
+    },
+    {
+      "case": "navigation:exact-provenance-coverage",
+      "passed": true
+    },
+    {
+      "case": "routeNavigation:exact-provenance-coverage",
+      "passed": true
+    },
+    {
+      "case": "facing:exact-provenance-coverage",
+      "passed": true
+    },
+    {
+      "case": "levelNavigation:exact-provenance-coverage",
+      "passed": true
+    },
+    {
+      "case": "elevatorNavigation:exact-provenance-coverage",
+      "passed": true
+    },
+    {
+      "case": "proposed-example-claims-only",
+      "passed": true
+    },
+    {
+      "case": "no-world-binding",
+      "passed": true
+    },
+    {
+      "case": "independent-of-object-manipulation-and-execution-framework",
+      "passed": true
+    }
+  ],
+  "imports": [
+    "http://aicor.knowledge/ontologies/action-description-core.owl",
+    "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+    "http://aicor.knowledge/ontologies/dynamics-control.owl",
+    "http://aicor.knowledge/ontologies/knowledge-context.owl",
+    "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+    "http://aicor.knowledge/ontologies/model-contracts.owl",
+    "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+    "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+    "http://aicor.knowledge/ontologies/participants-relations.owl",
+    "http://aicor.knowledge/ontologies/phases-transitions.owl",
+    "http://aicor.knowledge/ontologies/physical-models.owl",
+    "http://aicor.knowledge/ontologies/robot-motion.owl",
+    "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+  ],
+  "scope": "Five hypothetical mobility profiles; externally supplied evidence/metrics, no planner, localization, collision checker, elevator controller or execution."
+}

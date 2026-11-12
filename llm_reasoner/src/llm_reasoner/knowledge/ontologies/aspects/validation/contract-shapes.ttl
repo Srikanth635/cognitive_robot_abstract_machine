@@ -1,0 +1,44 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix tc: <http://aicor.knowledge/ontologies/transfer-contracts.owl#> .
+@prefix mc: <http://aicor.knowledge/ontologies/model-contracts.owl#> .
+@prefix db: <http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl#> .
+@prefix pm: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix cm: <http://aicor.knowledge/ontologies/causal-mechanisms.owl#> .
+@prefix fd: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+tc:Shape a sh:NodeShape; sh:targetClass tc:TransferContract;
+ sh:property [sh:path tc:source; sh:minCount 1; sh:maxCount 1; sh:class ac:EntitySpecification];
+ sh:property [sh:path tc:destination; sh:minCount 1; sh:maxCount 1; sh:class ac:EntitySpecification];
+ sh:property [sh:path tc:substance; sh:minCount 1; sh:maxCount 1; sh:class ac:EntitySpecification];
+ sh:property [sh:path tc:transferredPortion; sh:minCount 1; sh:maxCount 1; sh:class ac:EntitySpecification];
+ sh:property [sh:path tc:successCriterion; sh:minCount 1; sh:maxCount 1; sh:class ac:SuccessCriterion];
+ sh:property [sh:path tc:deliveredAmount; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path tc:targetAmount; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path tc:spillAmount; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path tc:spillTolerance; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path tc:transferMode; sh:minCount 1; sh:maxCount 1; sh:in ("partial"^^xsd:string "complete"^^xsd:string)].
+mc:QuantityShape a sh:NodeShape; sh:targetClass mc:QuantityContract;
+ sh:property [sh:path mc:parameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path mc:dimensionVector; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:string; sh:pattern "^-?[0-9]+( -?[0-9]+){6}$"];
+ sh:property [sh:path mc:unitIRI; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:anyURI].
+mc:EquationShape a sh:NodeShape; sh:targetClass mc:AdditiveEquationContract;
+ sh:property [sh:path mc:equation; sh:minCount 1; sh:maxCount 1; sh:class pm:ModelEquation];
+ sh:property [sh:path mc:scope; sh:minCount 1; sh:maxCount 1; sh:class ac:ApplicabilitySpecification];
+ sh:property [sh:path mc:resultParameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path mc:hasTerm; sh:minCount 1; sh:class mc:EquationTerm].
+mc:TermShape a sh:NodeShape; sh:targetClass mc:EquationTerm;
+ sh:property [sh:path mc:termParameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path mc:coefficient; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:decimal].
+db:Shape a sh:NodeShape; sh:targetClass db:DiagnosticCausalAssociation;
+ sh:property [sh:path db:hypothesis; sh:minCount 1; sh:maxCount 1; sh:class fd:DiagnosticHypothesis];
+ sh:property [sh:path db:causalLink; sh:minCount 1; sh:maxCount 1; sh:class cm:CausalLink];
+ sh:property [sh:path db:causeCondition; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path db:applicability; sh:minCount 1; sh:maxCount 1; sh:class ac:ApplicabilitySpecification];
+ sh:sparql [sh:message "Association cause must match both diagnostic candidate and causal antecedent."; sh:select """
+ PREFIX db: <http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl#>
+ PREFIX fd: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#>
+ PREFIX cm: <http://aicor.knowledge/ontologies/causal-mechanisms.owl#>
+ SELECT $this WHERE {$this db:hypothesis ?h; db:causalLink ?l; db:causeCondition ?c .
+ FILTER NOT EXISTS {?h fd:candidateCause ?c . ?l cm:antecedent ?c}}
+ """].

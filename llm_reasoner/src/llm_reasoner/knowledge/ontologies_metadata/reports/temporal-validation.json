@@ -1,0 +1,138 @@
+[
+  {
+    "case": "valid-pouring-and-grasping-with-recovery-cycle",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-initial-phase",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-transition-target",
+    "passed": true
+  },
+  {
+    "case": "reject-outgoing-terminal-transition",
+    "passed": true
+  },
+  {
+    "case": "reject-unreachable-phase",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-transition-target",
+    "passed": true
+  },
+  {
+    "case": "reject-nonterminal-dead-end",
+    "passed": true
+  },
+  {
+    "case": "reject-no-terminal-phases",
+    "passed": true
+  },
+  {
+    "case": "reject-shared-transition-ownership",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-guard",
+    "passed": true
+  },
+  {
+    "case": "reject-guard-without-expression",
+    "passed": true
+  },
+  {
+    "case": "reject-contradictory-terminal-types",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-observation",
+    "passed": true
+  },
+  {
+    "case": "reject-wrong-observation-scope",
+    "passed": true
+  },
+  {
+    "case": "reject-duplicate-observation",
+    "passed": true
+  },
+  {
+    "case": "reject-missing-unknown-response",
+    "passed": true
+  },
+  {
+    "case": "reject-unknown-treated-as-satisfied",
+    "passed": true
+  },
+  {
+    "case": "reject-wrong-monitor-attachment",
+    "passed": true
+  },
+  {
+    "case": "reject-unattached-monitor",
+    "passed": true
+  },
+  {
+    "case": "one-true-guard-is-not-execution",
+    "passed": true
+  },
+  {
+    "case": "sufficient-transfer-guard",
+    "passed": true
+  },
+  {
+    "case": "spill-failure-guard",
+    "passed": true
+  },
+  {
+    "case": "false-guards-do-not-advance",
+    "passed": true
+  },
+  {
+    "case": "readiness-false-is-not-unknown",
+    "passed": true
+  },
+  {
+    "case": "missing-data-does-not-select",
+    "passed": true
+  },
+  {
+    "case": "terminal-has-no-next-transition",
+    "passed": true
+  },
+  {
+    "case": "multiple-true-guards-ambiguous",
+    "passed": true
+  },
+  {
+    "case": "true-plus-unknown-is-incomplete",
+    "passed": true
+  },
+  {
+    "case": "unknown-requests-evidence",
+    "passed": true
+  },
+  {
+    "case": "monitor-does-not-execute-response",
+    "passed": true
+  },
+  {
+    "case": "spill-violation-requests-suspension",
+    "passed": true
+  },
+  {
+    "case": "safe-spill-reports-satisfied",
+    "passed": true
+  },
+  {
+    "case": "recovery-loop-described-not-executed",
+    "passed": true
+  },
+  {
+    "case": "explicit-negative-can-abort-recovery",
+    "passed": true
+  }
+]

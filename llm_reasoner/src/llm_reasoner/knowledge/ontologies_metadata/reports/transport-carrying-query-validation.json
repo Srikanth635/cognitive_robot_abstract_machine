@@ -1,0 +1,61 @@
+{
+  "checks": [
+    {
+      "case": "carrying:selected-components",
+      "passed": true
+    },
+    {
+      "case": "carrying:contexts-remain-distinct",
+      "passed": true
+    },
+    {
+      "case": "carrying:orientation-not-fabricated",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:selected-components",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:contexts-remain-distinct",
+      "passed": true
+    },
+    {
+      "case": "routeCarrying:orientation-not-fabricated",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:selected-components",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:contexts-remain-distinct",
+      "passed": true
+    },
+    {
+      "case": "orientationCarrying:orientation-not-fabricated",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:selected-components",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:contexts-remain-distinct",
+      "passed": true
+    },
+    {
+      "case": "routeOrientationCarrying:orientation-not-fabricated",
+      "passed": true
+    },
+    {
+      "case": "components:unknown-record-empty",
+      "passed": true
+    },
+    {
+      "case": "orientation:unknown-record-empty",
+      "passed": true
+    }
+  ],
+  "scope": "Selected descriptive records only"
+}

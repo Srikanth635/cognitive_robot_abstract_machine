@@ -1,0 +1,47 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix pr: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+pr:RelationShape a sh:NodeShape; sh:targetClass pr:RelationDefinition;
+ sh:property [sh:path pr:arity; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:positiveInteger];
+ sh:property [sh:path pr:hasArgumentDefinition; sh:minCount 1; sh:class pr:ArgumentDefinition].
+pr:ArgumentShape a sh:NodeShape; sh:targetClass pr:ArgumentDefinition;
+ sh:property [sh:path pr:argumentPosition; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:positiveInteger].
+pr:PatternShape a sh:NodeShape; sh:targetClass pr:RelationPattern;
+ sh:property [sh:path pr:usesRelation; sh:minCount 1; sh:maxCount 1; sh:class pr:RelationDefinition];
+ sh:property [sh:path pr:hasArgumentBinding; sh:minCount 1; sh:class pr:ArgumentBinding].
+pr:BindingShape a sh:NodeShape; sh:targetClass pr:ArgumentBinding;
+ sh:property [sh:path pr:bindsArgument; sh:minCount 1; sh:maxCount 1; sh:class pr:ArgumentDefinition];
+ sh:property [sh:path pr:bindsEntity; sh:minCount 1; sh:maxCount 1; sh:class ac:EntitySpecification].
+co:ConditionShape a sh:NodeShape; sh:targetSubjectsOf co:hasExpression;
+ sh:property [sh:path co:hasExpression; sh:minCount 1; sh:maxCount 1; sh:class co:BooleanExpression].
+co:ExpressionShape a sh:NodeShape; sh:targetClass co:Expression;
+ sh:xone ([sh:class co:AtomicCondition] [sh:class co:Conjunction] [sh:class co:Disjunction] [sh:class co:Negation] [sh:class co:Comparison] [sh:class co:ParameterReference] [sh:class co:QuantityConstant]).
+co:AtomicShape a sh:NodeShape; sh:targetClass co:AtomicCondition;
+ sh:property [sh:path co:hasPattern; sh:minCount 1; sh:maxCount 1; sh:class pr:RelationPattern];
+ sh:property [sh:path co:inScope; sh:minCount 1; sh:maxCount 1; sh:in (co:PreState co:PostState co:CurrentState co:TaskContext)].
+co:NaryShape a sh:NodeShape; sh:targetClass co:Conjunction, co:Disjunction;
+ sh:property [sh:path co:hasOperand; sh:minCount 2; sh:class co:BooleanExpression].
+co:NegationShape a sh:NodeShape; sh:targetClass co:Negation;
+ sh:property [sh:path co:hasOperand; sh:minCount 1; sh:maxCount 1; sh:class co:BooleanExpression].
+co:ComparisonShape a sh:NodeShape; sh:targetClass co:Comparison;
+ sh:property [sh:path co:leftOperand; sh:minCount 1; sh:maxCount 1; sh:class co:ValueExpression];
+ sh:property [sh:path co:rightOperand; sh:minCount 1; sh:maxCount 1; sh:class co:ValueExpression];
+ sh:property [sh:path co:operator; sh:minCount 1; sh:maxCount 1; sh:in (co:Equal co:NotEqual co:LessThan co:LessOrEqual co:GreaterThan co:GreaterOrEqual)].
+co:ParameterShape a sh:NodeShape; sh:targetClass co:ParameterReference;
+ sh:property [sh:path co:parameter; sh:minCount 1; sh:maxCount 1; sh:class ac:ParameterSpecification];
+ sh:property [sh:path co:inScope; sh:minCount 1; sh:maxCount 1; sh:in (co:PreState co:PostState co:CurrentState co:TaskContext)].
+co:ConstantShape a sh:NodeShape; sh:targetClass co:QuantityConstant;
+ sh:property [sh:path co:decimalValue; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:decimal];
+ sh:property [sh:path co:unitIRI; sh:minCount 1; sh:maxCount 1; sh:datatype xsd:anyURI; sh:pattern "^[A-Za-z][A-Za-z0-9+.-]*:"].
+co:OutcomeShape a sh:NodeShape; sh:targetClass co:OutcomeSpecification;
+ sh:property [sh:path co:beforeCondition; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification];
+ sh:property [sh:path co:afterCondition; sh:minCount 1; sh:maxCount 1; sh:class ac:ConditionSpecification].
+
+# RDFS range inference can otherwise hide a boolean supplied as a numeric operand.
+co:BooleanTypeShape a sh:NodeShape; sh:targetClass co:BooleanExpression;
+ sh:not [sh:class co:ValueExpression].
+co:ValueTypeShape a sh:NodeShape; sh:targetClass co:ValueExpression;
+ sh:not [sh:class co:BooleanExpression].

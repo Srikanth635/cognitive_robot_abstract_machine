@@ -18,14 +18,14 @@ from rdflib.term import Node
 from typing_extensions import Any, Mapping, Optional, Sequence
 
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.knowledge.ontologies import HYPOTHESIS_CONCEPT_NAMESPACE
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import HYPOTHESIS_CONCEPT_NAMESPACE
+from llm_reasoner.knowledge.vocabulary.terms import (
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,
     is_inferred,
 )
-from llm_reasoner.knowledge.ontologies.vocabulary import (
+from llm_reasoner.knowledge.vocabulary.lookup import (
     Vocabulary,
     declared_value_types,
 )

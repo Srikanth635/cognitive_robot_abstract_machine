@@ -1,0 +1,38 @@
+[
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV1",
+    "version": "1",
+    "projection": "goal-view",
+    "claims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourGoalClaim",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "subject": "http://aicor.knowledge/ontologies/action-examples.owl#transferGoal",
+        "predicate": "http://aicor.knowledge/ontologies/action-examples.owl#recipientSpecification",
+        "object": "http://aicor.knowledge/ontologies/action-examples.owl#receivingContainer",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV1",
+    "version": "1",
+    "projection": "phase-view",
+    "claims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourPhaseClaim",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "subject": "http://aicor.knowledge/ontologies/action-examples.owl#transferPhase",
+        "predicate": "http://aicor.knowledge/ontologies/action-examples.owl#transfersSpecification",
+        "object": "http://aicor.knowledge/ontologies/action-examples.owl#transferableSubstance",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      }
+    ],
+    "missing": []
+  }
+]

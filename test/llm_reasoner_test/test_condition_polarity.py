@@ -11,7 +11,7 @@ from rdflib import OWL, RDF, RDFS, Graph, URIRef
 from rdflib.collection import Collection
 from typing_extensions import Optional, get_type_hints
 
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     ActionPerspectiveFile,
     PredictiveManipulationOntologyFile,
@@ -22,7 +22,7 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
     failures,
 )
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
-from llm_reasoner.knowledge.ontologies.terms import PropertyTerm
+from llm_reasoner.knowledge.vocabulary.terms import PropertyTerm
 
 POLARITY = URIRef(ActionPerspectiveFile.ACTION_CORE.namespace + "ConditionPolarity")
 """

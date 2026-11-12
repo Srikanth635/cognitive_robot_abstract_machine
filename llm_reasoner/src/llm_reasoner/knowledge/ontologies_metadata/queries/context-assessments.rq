@@ -1,0 +1,16 @@
+PREFIX kc: <http://aicor.knowledge/ontologies/knowledge-context.owl#>
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+# Bind ?record and ?context explicitly. This retrieves declared assessments;
+# interval filtering, freshness inspection and acceptance policy are separate.
+SELECT ?assessment ?claim ?status ?statement ?evidence ?snapshot ?source ?version ?selector
+WHERE {
+ ?assessment kc:inRecord ?record; kc:inContext ?context;
+   kc:assessesClaim ?claim; kc:assessedStatus ?status .
+ ?record ac:hasClaim ?claim; ac:expressesDescription ?description .
+ ?context kc:scopedDescription ?description .
+ ?claim ac:hasStatement ?statement .
+ OPTIONAL { ?assessment kc:usesEvidence ?evidence .
+  OPTIONAL { ?evidence kc:sourceSnapshot ?snapshot .
+   ?snapshot kc:sourceIRI ?source; kc:sourceVersion ?version; kc:selector ?selector . }
+ }
+}

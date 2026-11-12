@@ -1,0 +1,232 @@
+@prefix pa: <http://aicor.knowledge/ontologies/perception-attention.owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+pa:BeliefUpdateProposalShape a sh:NodeShape ;
+    sh:property [ sh:class pa:PerceptionResultRecord ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:basedOnResult ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#KnowledgeRecord> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:proposalRecord ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:proposalContext ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#KnowledgeClaim> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:proposedClaim ] ;
+    sh:targetClass pa:BeliefUpdateProposal .
+
+pa:CandidateHypothesisShape a sh:NodeShape ;
+    sh:property [ sh:class pa:PoseEstimate ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path pa:poseEstimate ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:candidateEntity ],
+        [ sh:class pa:MatchAssessment ;
+            sh:in ( pa:Matches pa:DoesNotMatch pa:MatchUnknown ) ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:matchAssessment ] ;
+    sh:targetClass pa:CandidateHypothesis .
+
+pa:ObservationQueryShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:queryTarget ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:queryFrame ],
+        [ sh:class <http://aicor.knowledge/ontologies/sensorimotor-events.owl#SensoryModality> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:modality ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:queryRegion ] ;
+    sh:targetClass pa:ObservationQuery .
+
+pa:ObservationViewShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:viewFrame ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:viewpoint ],
+        [ sh:datatype xsd:positiveInteger ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:positionIndex ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:viewRegion ] ;
+    sh:targetClass pa:ObservationView .
+
+pa:OrientationEstimateShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:qyParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:qzParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:qwParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:qxParameter ] ;
+    sh:targetClass pa:OrientationEstimate .
+
+pa:PerceptionAttentionDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PreconditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition> ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:referenceFrame ],
+        [ sh:class pa:ObservationQuery ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:query ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#GoalSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:observer ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:region ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:target ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#FailureCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasFailureCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#SuccessCriterion> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#CapabilityRequirement> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement> ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:evaluationContext ] ;
+    sh:targetClass pa:PerceptionAttentionDescription .
+
+pa:PerceptionResultRecordShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:resultFrame ],
+        [ sh:class pa:ObservationView ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path pa:forView ],
+        [ sh:class pa:CandidateHypothesis ;
+            sh:minCount 0 ;
+            sh:path pa:hasCandidate ],
+        [ sh:class pa:ResultOutcome ;
+            sh:in ( pa:Completed pa:Failed pa:Undetermined ) ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:outcome ],
+        [ sh:datatype xsd:dateTime ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/knowledge-context.owl#observedAt> ],
+        [ sh:class pa:AttentionState ;
+            sh:in ( pa:Directed pa:NotDirected pa:AttentionUnknown ) ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path pa:attentionState ],
+        [ sh:datatype xsd:anyURI ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/action-description-core.owl#sourceIRI> ],
+        [ sh:class <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:inContext ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#KnowledgeRecord> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:inRecord ],
+        [ sh:class pa:ObservationQuery ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:answersQuery ],
+        [ sh:class pa:VisibilityState ;
+            sh:in ( pa:Visible pa:Occluded pa:VisibilityUnknown ) ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path pa:visibilityState ] ;
+    sh:targetClass pa:PerceptionResultRecord .
+
+pa:PoseEstimateShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:yParameter ],
+        [ sh:class pa:OrientationEstimate ;
+            sh:maxCount 1 ;
+            sh:minCount 0 ;
+            sh:path pa:orientationEstimate ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:zParameter ],
+        [ sh:class <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:estimateFrame ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:xParameter ] ;
+    sh:targetClass pa:PoseEstimate .
+
+pa:SearchDescriptionShape a sh:NodeShape ;
+    sh:property [ sh:class pa:SearchSpecification ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:searchSpecification ] ;
+    sh:targetClass pa:SearchDescription .
+
+pa:SearchSpecificationShape a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path pa:attemptBudget ],
+        [ sh:class pa:ObservationView ;
+            sh:minCount 1 ;
+            sh:path pa:hasView ] ;
+    sh:targetClass pa:SearchSpecification .
+

@@ -1,0 +1,13 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/action-examples.owl#> .
+
+ex:pour-goal-view a ac:ProjectionArtifact ;
+    ac:conformsToSpecification ex:goalView ;
+    ac:derivedFromRecord ex:pourRecordV1 ;
+    ac:includesClaim ex:pourGoalClaim .
+
+ex:pour-phase-view a ac:ProjectionArtifact ;
+    ac:conformsToSpecification ex:phaseView ;
+    ac:derivedFromRecord ex:pourRecordV1 ;
+    ac:includesClaim ex:pourPhaseClaim .
+

@@ -1,0 +1,267 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix tc: <http://aicor.knowledge/ontologies/transport-carrying.owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/transport-carrying.owl> a owl:Ontology ;
+    rdfs:label "Transport and carrying composition"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/knowledge-context.owl>,
+        <http://aicor.knowledge/ontologies/mobility-navigation.owl>,
+        <http://aicor.knowledge/ontologies/object-manipulation.owl> ;
+    owl:versionInfo "0.19.0" .
+
+tc:Carrying a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Carrying transport"@en .
+
+tc:LoadBorneBy a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Load Borne By"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition tc:LoadBorneByArgument1,
+        tc:LoadBorneByArgument2 .
+
+tc:LoadBorneThroughout a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Load Borne Throughout"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition tc:LoadBorneThroughoutArgument1,
+        tc:LoadBorneThroughoutArgument2 .
+
+tc:LoadEnvelopeClear a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Load Envelope Clear"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition tc:LoadEnvelopeClearArgument1,
+        tc:LoadEnvelopeClearArgument2,
+        tc:LoadEnvelopeClearArgument3 .
+
+tc:LoadEnvelopeMaintained a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Load Envelope Maintained"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition tc:LoadEnvelopeMaintainedArgument1,
+        tc:LoadEnvelopeMaintainedArgument2,
+        tc:LoadEnvelopeMaintainedArgument3 .
+
+tc:LoadTransportFault a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Load Transport Fault"@en ;
+    ns1:arity "2"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition tc:LoadTransportFaultArgument1,
+        tc:LoadTransportFaultArgument2 .
+
+tc:LoadedEnvelopeQualified a ns1:RelationDefinition,
+        owl:NamedIndividual ;
+    rdfs:label "Loaded Envelope Qualified"@en ;
+    ns1:arity "3"^^xsd:positiveInteger ;
+    ns1:hasArgumentDefinition tc:LoadedEnvelopeQualifiedArgument1,
+        tc:LoadedEnvelopeQualifiedArgument2,
+        tc:LoadedEnvelopeQualifiedArgument3 .
+
+tc:RouteCarrying a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Route carrying transport"@en .
+
+tc:RouteCarryingDescription a owl:Class ;
+    rdfs:label "Route carrying description"@en ;
+    rdfs:comment "Grasped carrying with interval-qualified compliance to the explicitly requested route."@en ;
+    rdfs:subClassOf tc:CarryingDescription .
+
+tc:carrier a owl:ObjectProperty ;
+    rdfs:label "Carrier"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range ac:EntitySpecification .
+
+tc:destination a owl:ObjectProperty ;
+    rdfs:label "Destination region"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/mobility-navigation.owl#RegionSpecification> .
+
+tc:deviationTolerance a owl:ObjectProperty ;
+    rdfs:label "Angular deviation tolerance"@en ;
+    rdfs:domain tc:OrientationRequirement ;
+    rdfs:range ac:ParameterSpecification .
+
+tc:evaluationContext a owl:ObjectProperty ;
+    rdfs:label "Evaluation context"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> .
+
+tc:footprintCarrier a owl:ObjectProperty ;
+    rdfs:label "Footprint carrier"@en ;
+    rdfs:domain tc:LoadedFootprintSpecification ;
+    rdfs:range ac:EntitySpecification .
+
+tc:footprintLoad a owl:ObjectProperty ;
+    rdfs:label "Footprint load"@en ;
+    rdfs:domain tc:LoadedFootprintSpecification ;
+    rdfs:range ac:EntitySpecification .
+
+tc:holdingRequirement a owl:ObjectProperty ;
+    rdfs:label "Holding requirement"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/object-manipulation.owl#HoldingDescription> .
+
+tc:intervalPolicy a owl:DatatypeProperty ;
+    rdfs:label "Interval policy"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range xsd:string .
+
+tc:load a owl:ObjectProperty ;
+    rdfs:label "Carried load"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range ac:EntitySpecification .
+
+tc:loadedFootprint a owl:ObjectProperty ;
+    rdfs:label "Loaded footprint"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range tc:LoadedFootprintSpecification .
+
+tc:localFailure a owl:ObjectProperty ;
+    rdfs:label "Composition-local failure"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range ac:ConditionSpecification .
+
+tc:localPrecondition a owl:ObjectProperty ;
+    rdfs:label "Composition-local precondition"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range ac:ConditionSpecification .
+
+tc:localSuccess a owl:ObjectProperty ;
+    rdfs:label "Composition-local success"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range ac:ConditionSpecification .
+
+tc:manipulator a owl:ObjectProperty ;
+    rdfs:label "Holding manipulator"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range ac:EntitySpecification .
+
+tc:manipulatorOf a owl:ObjectProperty ;
+    rdfs:label "Manipulator of carrier"@en ;
+    rdfs:domain ac:EntitySpecification ;
+    rdfs:range ac:EntitySpecification .
+
+tc:maximumDeviation a owl:ObjectProperty ;
+    rdfs:label "Interval maximum angular deviation"@en ;
+    rdfs:domain tc:OrientationRequirement ;
+    rdfs:range ac:ParameterSpecification .
+
+tc:mobilityRequirement a owl:ObjectProperty ;
+    rdfs:label "Mobility requirement"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range <http://aicor.knowledge/ontologies/mobility-navigation.owl#NavigationDescription> .
+
+tc:monitorContext a owl:ObjectProperty ;
+    rdfs:label "Monitor context"@en ;
+    rdfs:domain <http://aicor.knowledge/ontologies/monitoring-requirements.owl#MonitoringRequirement> ;
+    rdfs:range <http://aicor.knowledge/ontologies/knowledge-context.owl#KnowledgeContext> .
+
+tc:motionPhase a owl:ObjectProperty ;
+    rdfs:label "Monitored mobility phase"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range ac:PhaseSpecification .
+
+tc:orientationFrame a owl:ObjectProperty ;
+    rdfs:label "Orientation reference frame"@en ;
+    rdfs:domain tc:OrientationRequirement ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#FrameSpecification> .
+
+tc:orientationRequirement a owl:ObjectProperty ;
+    rdfs:label "Orientation requirement"@en ;
+    rdfs:domain tc:CarryingDescription ;
+    rdfs:range tc:OrientationRequirement .
+
+tc:orientationTarget a owl:ObjectProperty ;
+    rdfs:label "Orientation target"@en ;
+    rdfs:domain tc:OrientationRequirement ;
+    rdfs:range <http://aicor.knowledge/ontologies/robot-motion.owl#OrientationTarget> .
+
+tc:orientedLoad a owl:ObjectProperty ;
+    rdfs:label "Oriented load"@en ;
+    rdfs:domain tc:OrientationRequirement ;
+    rdfs:range ac:EntitySpecification .
+
+tc:LoadBorneByArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "carrier"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+tc:LoadBorneByArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "load"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+tc:LoadBorneThroughoutArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "carrier"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+tc:LoadBorneThroughoutArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "load"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+tc:LoadEnvelopeClearArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "carrier"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+tc:LoadEnvelopeClearArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "load"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+tc:LoadEnvelopeClearArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "loaded footprint"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+tc:LoadEnvelopeMaintainedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "carrier"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+tc:LoadEnvelopeMaintainedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "load"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+tc:LoadEnvelopeMaintainedArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "loaded footprint"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+tc:LoadTransportFaultArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "carrier"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+tc:LoadTransportFaultArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "load"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+tc:LoadedEnvelopeQualifiedArgument1 a ns1:ArgumentDefinition ;
+    rdfs:label "carrier"@en ;
+    ns1:argumentPosition "1"^^xsd:positiveInteger .
+
+tc:LoadedEnvelopeQualifiedArgument2 a ns1:ArgumentDefinition ;
+    rdfs:label "load"@en ;
+    ns1:argumentPosition "2"^^xsd:positiveInteger .
+
+tc:LoadedEnvelopeQualifiedArgument3 a ns1:ArgumentDefinition ;
+    rdfs:label "loaded footprint"@en ;
+    ns1:argumentPosition "3"^^xsd:positiveInteger .
+
+tc:TransportDescription a owl:Class ;
+    rdfs:label "Transport description"@en ;
+    rdfs:comment "Generic extension point for relocation of a load; no particular transport technique is universally required."@en ;
+    rdfs:subClassOf ac:ActionDescription .
+
+tc:LoadedFootprintSpecification a owl:Class ;
+    rdfs:label "Loaded footprint specification"@en ;
+    rdfs:comment "Description of a carrier/load swept-envelope requirement; geometry and adequacy are externally assessed, never calculated here."@en ;
+    rdfs:subClassOf <http://aicor.knowledge/ontologies/mobility-navigation.owl#FootprintSpecification> .
+
+tc:OrientationRequirement a owl:Class ;
+    rdfs:label "Carried orientation requirement"@en ;
+    rdfs:comment "Orientation target in an explicit frame plus interval maximum-deviation metric and tolerance; no fixed world position is required."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+tc:CarryingDescription a owl:Class ;
+    rdfs:label "Grasped carrying description"@en ;
+    rdfs:comment "Composes maintained holding and mobility over one coextensive evaluation interval; release and placement are separate actions."@en ;
+    rdfs:subClassOf tc:TransportDescription .
+

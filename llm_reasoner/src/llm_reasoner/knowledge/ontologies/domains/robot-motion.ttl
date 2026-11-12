@@ -1,0 +1,281 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rm: <http://aicor.knowledge/ontologies/robot-motion.owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/robot-motion.owl> a owl:Ontology ;
+    rdfs:label "Robot motion domain"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/conditions-outcomes.owl>,
+        <http://aicor.knowledge/ontologies/model-contracts.owl>,
+        <http://aicor.knowledge/ontologies/monitoring-requirements.owl> ;
+    owl:versionInfo "0.13.0" .
+
+rm:CartesianPositioning a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Cartesian positioning"@en .
+
+rm:GripperApertureChange a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Gripper aperture change"@en .
+
+rm:GripperConfigurationChange a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Gripper configuration change"@en .
+
+rm:JointRepositioning a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Joint repositioning"@en .
+
+rm:PosePathFollowing a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Pose path following"@en .
+
+rm:Stowing a ac:ActionKind,
+        owl:NamedIndividual ;
+    rdfs:label "Stowing"@en .
+
+rm:accelerationLimit a owl:ObjectProperty ;
+    rdfs:label "Acceleration limit"@en ;
+    rdfs:domain rm:MotionBounds ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:bounds a owl:ObjectProperty ;
+    rdfs:label "Bounds"@en ;
+    rdfs:domain rm:RobotMotionDescription ;
+    rdfs:range rm:MotionBounds ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+rm:configurationTarget a owl:ObjectProperty ;
+    rdfs:label "Configuration target"@en ;
+    rdfs:domain rm:ConfigurationMotionDescription ;
+    rdfs:range rm:ConfigurationTarget ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+rm:controlledEntity a owl:ObjectProperty ;
+    rdfs:label "Controlled entity"@en ;
+    rdfs:domain rm:RobotMotionDescription ;
+    rdfs:range ac:EntitySpecification .
+
+rm:coordinate a owl:ObjectProperty ;
+    rdfs:label "Coordinate"@en ;
+    rdfs:domain rm:CoordinateTarget ;
+    rdfs:range rm:CoordinateSpecification .
+
+rm:coordinateKey a owl:DatatypeProperty ;
+    rdfs:label "Coordinate key"@en ;
+    rdfs:domain rm:CoordinateSpecification ;
+    rdfs:range xsd:string .
+
+rm:coordinateKind a owl:DatatypeProperty ;
+    rdfs:label "Coordinate kind"@en ;
+    rdfs:domain rm:CoordinateSpecification ;
+    rdfs:range xsd:string .
+
+rm:endpointErrorParameter a owl:ObjectProperty ;
+    rdfs:label "Endpoint error parameter"@en ;
+    rdfs:domain rm:RobotMotionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:endpointToleranceParameter a owl:ObjectProperty ;
+    rdfs:label "Endpoint tolerance parameter"@en ;
+    rdfs:domain rm:RobotMotionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:errorParameter a owl:ObjectProperty ;
+    rdfs:label "Error parameter"@en ;
+    rdfs:domain rm:CoordinateTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:hasCoordinateTarget a owl:ObjectProperty ;
+    rdfs:label "Has coordinate target"@en ;
+    rdfs:domain rm:ConfigurationTarget ;
+    rdfs:range rm:CoordinateTarget .
+
+rm:hasWaypoint a owl:ObjectProperty ;
+    rdfs:label "Has waypoint"@en ;
+    rdfs:domain rm:PathSpecification ;
+    rdfs:range rm:WaypointSpecification .
+
+rm:orientation a owl:ObjectProperty ;
+    rdfs:label "Orientation"@en ;
+    rdfs:domain rm:PoseTarget ;
+    rdfs:range rm:OrientationTarget .
+
+rm:orientationConvention a owl:DatatypeProperty ;
+    rdfs:label "Orientation convention"@en ;
+    rdfs:domain rm:OrientationTarget ;
+    rdfs:range xsd:string .
+
+rm:orientationErrorParameter a owl:ObjectProperty ;
+    rdfs:label "Orientation error parameter"@en ;
+    rdfs:domain rm:RobotMotionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:orientationToleranceParameter a owl:ObjectProperty ;
+    rdfs:label "Orientation tolerance parameter"@en ;
+    rdfs:domain rm:RobotMotionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:pathTarget a owl:ObjectProperty ;
+    rdfs:label "Path target"@en ;
+    rdfs:domain rm:PathFollowingDescription ;
+    rdfs:range rm:PathSpecification ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+rm:poseTarget a owl:ObjectProperty ;
+    rdfs:label "Pose target"@en ;
+    rdfs:domain rm:CartesianMotionDescription ;
+    rdfs:range rm:PoseTarget ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+rm:position a owl:ObjectProperty ;
+    rdfs:label "Position"@en ;
+    rdfs:domain rm:PoseTarget ;
+    rdfs:range rm:PositionTarget .
+
+rm:positionIndex a owl:DatatypeProperty ;
+    rdfs:label "Position index"@en ;
+    rdfs:domain rm:WaypointSpecification ;
+    rdfs:range xsd:positiveInteger .
+
+rm:qwParameter a owl:ObjectProperty ;
+    rdfs:label "Qw parameter"@en ;
+    rdfs:domain rm:OrientationTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:qxParameter a owl:ObjectProperty ;
+    rdfs:label "Qx parameter"@en ;
+    rdfs:domain rm:OrientationTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:qyParameter a owl:ObjectProperty ;
+    rdfs:label "Qy parameter"@en ;
+    rdfs:domain rm:OrientationTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:qzParameter a owl:ObjectProperty ;
+    rdfs:label "Qz parameter"@en ;
+    rdfs:domain rm:OrientationTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:referenceFrame a owl:ObjectProperty ;
+    rdfs:label "Reference frame"@en ;
+    rdfs:domain rm:PoseTarget ;
+    rdfs:range rm:FrameSpecification .
+
+rm:speedLimit a owl:ObjectProperty ;
+    rdfs:label "Speed limit"@en ;
+    rdfs:domain rm:MotionBounds ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:targetParameter a owl:ObjectProperty ;
+    rdfs:label "Target parameter"@en ;
+    rdfs:domain rm:CoordinateTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:toleranceParameter a owl:ObjectProperty ;
+    rdfs:label "Tolerance parameter"@en ;
+    rdfs:domain rm:CoordinateTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:trackingErrorParameter a owl:ObjectProperty ;
+    rdfs:label "Tracking error parameter"@en ;
+    rdfs:domain rm:RobotMotionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:trackingToleranceParameter a owl:ObjectProperty ;
+    rdfs:label "Tracking tolerance parameter"@en ;
+    rdfs:domain rm:RobotMotionDescription ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:waypointPose a owl:ObjectProperty ;
+    rdfs:label "Waypoint pose"@en ;
+    rdfs:domain rm:WaypointSpecification ;
+    rdfs:range rm:PoseTarget .
+
+rm:xParameter a owl:ObjectProperty ;
+    rdfs:label "X parameter"@en ;
+    rdfs:domain rm:PositionTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:yParameter a owl:ObjectProperty ;
+    rdfs:label "Y parameter"@en ;
+    rdfs:domain rm:PositionTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:zParameter a owl:ObjectProperty ;
+    rdfs:label "Z parameter"@en ;
+    rdfs:domain rm:PositionTarget ;
+    rdfs:range ac:ParameterSpecification .
+
+rm:CartesianMotionDescription a owl:Class ;
+    rdfs:label "Cartesian motion description"@en ;
+    rdfs:comment "Motion toward a pose specification in an explicit reference frame."@en ;
+    rdfs:subClassOf rm:RobotMotionDescription .
+
+rm:ConfigurationMotionDescription a owl:Class ;
+    rdfs:label "Configuration motion description"@en ;
+    rdfs:comment "Motion toward a configuration of explicitly identified coordinates."@en ;
+    rdfs:subClassOf rm:RobotMotionDescription .
+
+rm:FrameSpecification a owl:Class ;
+    rdfs:label "Frame specification"@en ;
+    rdfs:comment "Description of a reference frame; no world transform is asserted."@en ;
+    rdfs:subClassOf ac:EntitySpecification .
+
+rm:PathFollowingDescription a owl:Class ;
+    rdfs:label "Path following description"@en ;
+    rdfs:comment "Motion following ordered pose waypoints; endpoint arrival alone does not establish tracking."@en ;
+    rdfs:subClassOf rm:RobotMotionDescription .
+
+rm:ConfigurationTarget a owl:Class ;
+    rdfs:label "Configuration target"@en ;
+    rdfs:comment "Descriptive configuration entries, without actual robot joint references."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+rm:PathSpecification a owl:Class ;
+    rdfs:label "Path specification"@en ;
+    rdfs:comment "Ordered waypoint specifications without a timing or interpolation default."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+rm:CoordinateSpecification a owl:Class ;
+    rdfs:label "Coordinate specification"@en ;
+    rdfs:comment "Abstract coordinate identity and linear or angular kind; grounding is injected."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+rm:MotionBounds a owl:Class ;
+    rdfs:label "Motion bounds"@en ;
+    rdfs:comment "Descriptive speed and acceleration bounds, not proof of trajectory feasibility."@en ;
+    rdfs:subClassOf ac:ConstraintSpecification .
+
+rm:WaypointSpecification a owl:Class ;
+    rdfs:label "Waypoint specification"@en ;
+    rdfs:comment "An indexed pose target in a path."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+rm:PositionTarget a owl:Class ;
+    rdfs:label "Position target"@en ;
+    rdfs:comment "Three scalar position parameters in the containing pose reference frame."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+rm:CoordinateTarget a owl:Class ;
+    rdfs:label "Coordinate target"@en ;
+    rdfs:comment "Target parameter and error/tolerance parameters for one coordinate."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+rm:PoseTarget a owl:Class ;
+    rdfs:label "Pose target"@en ;
+    rdfs:comment "Desired position and optional orientation, relative to an explicit frame specification."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+rm:OrientationTarget a owl:Class ;
+    rdfs:label "Orientation target"@en ;
+    rdfs:comment "Quaternion XYZW parameter descriptions; no actual orientation measurement."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+rm:RobotMotionDescription a owl:Class ;
+    rdfs:label "Robot motion description"@en ;
+    rdfs:comment "Intended robot-part motion; no occurring motion or robot model asserted."@en ;
+    rdfs:subClassOf ac:ActionDescription .
+

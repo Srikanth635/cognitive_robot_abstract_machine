@@ -1,0 +1,72 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix asp: <http://aicor.knowledge/ontologies/transfer-contracts.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/transfer-contracts.owl> a owl:Ontology ;
+    rdfs:label "Transfer Contracts"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/conditions-outcomes.owl> ;
+    owl:versionInfo "0.12.0" .
+
+asp:deliveredAmount a owl:ObjectProperty ;
+    rdfs:label "Delivered amount"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range ac:ParameterSpecification .
+
+asp:destination a owl:ObjectProperty ;
+    rdfs:label "Destination"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range ac:EntitySpecification .
+
+asp:hasTransferContract a owl:ObjectProperty ;
+    rdfs:label "Has transfer contract"@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range asp:TransferContract ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+asp:source a owl:ObjectProperty ;
+    rdfs:label "Source"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range ac:EntitySpecification .
+
+asp:spillAmount a owl:ObjectProperty ;
+    rdfs:label "Spill amount"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range ac:ParameterSpecification .
+
+asp:spillTolerance a owl:ObjectProperty ;
+    rdfs:label "Spill tolerance"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range ac:ParameterSpecification .
+
+asp:substance a owl:ObjectProperty ;
+    rdfs:label "Substance"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range ac:EntitySpecification .
+
+asp:successCriterion a owl:ObjectProperty ;
+    rdfs:label "Success criterion"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range ac:SuccessCriterion .
+
+asp:targetAmount a owl:ObjectProperty ;
+    rdfs:label "Target amount"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range ac:ParameterSpecification .
+
+asp:transferMode a owl:DatatypeProperty ;
+    rdfs:label "Transfer mode"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range xsd:string .
+
+asp:transferredPortion a owl:ObjectProperty ;
+    rdfs:label "Transferred portion"@en ;
+    rdfs:domain asp:TransferContract ;
+    rdfs:range ac:EntitySpecification .
+
+asp:TransferContract a owl:Class ;
+    rdfs:label "Transfer Contract"@en ;
+    rdfs:comment "Binds transfer quantities to a particular source, destination and substance; intended transfer only."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+

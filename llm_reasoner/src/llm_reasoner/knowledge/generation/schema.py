@@ -16,12 +16,12 @@ from rdflib import SH, Graph
 from typing_extensions import Any, Optional
 
 from llm_reasoner.attribute_docstrings import attribute_docstrings
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     KNOWLEDGE_ONTOLOGY_MODULES,
     OntologyModuleFile,
 )
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
+from llm_reasoner.knowledge.vocabulary.terms import (
     is_inferred,
     ConceptReference,
     DescriptionEntity,
@@ -78,7 +78,7 @@ class FieldKind(StrEnum):
 
     CONCEPT = "concept"
     """
-    A term of a linked ontology, written as a prefixed name such as ``aicor:Pouring``.
+    A term of a linked ontology, written as a prefixed name.
     """
 
     NUMBER = "number"
@@ -213,10 +213,9 @@ class GenerationSchema:
     def for_root(cls, root: type[DescriptionEntity]) -> GenerationSchema:
         """
         :return: The schema of every type reachable from the root through fields,
-            including the component fields a model does not fill, together with every
-            subclass of those types, as far as the root's module may use them.
+            together with every subclass of those types, as far as the root's module
+            may use them.
         """
-        vocabulary = Vocabulary()
         scope = TypeScope.of_root(root)
         schema = cls(root=root)
         frontier = [root]
@@ -232,7 +231,6 @@ class GenerationSchema:
                     for field_schema in type_schema.fields
                     if field_schema.kind == FieldKind.FRAGMENT
                 )
-                frontier.extend(vocabulary.component_fields(candidate).values())
         return schema
 
     def module_files(self) -> set[OntologyModuleFile]:
@@ -482,11 +480,7 @@ def type_schema_for(
     for wrapped in WrappedClass(python_type).fields:
         name = wrapped.field.name
         term = PropertyTerm.of_field(python_type, name)
-        if name != LABEL_FIELD and (
-            term is None
-            or is_inferred(python_type, name)
-            or name in vocabulary.component_fields(python_type)
-        ):
+        if name != LABEL_FIELD and (term is None or is_inferred(python_type, name)):
             continue
         many = term is not None and not term.functional
         fields.append(

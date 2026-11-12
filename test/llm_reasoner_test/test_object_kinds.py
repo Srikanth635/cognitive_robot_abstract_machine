@@ -3,7 +3,7 @@ Tests of what the ontology says of kinds of object: a container has an opening, 
 which of the code's classes are containers.
 
 Tests that need CRAM-AICOR or DUL read the pinned copies
-(:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`), and the test that
+(:class:`~llm_reasoner.knowledge.vocabulary.linked.LinkedOntologyFile`), and the test that
 reasons needs ``owlready2`` and a Java runtime and is slow.
 """
 
@@ -15,7 +15,7 @@ from types import ModuleType
 import pytest
 from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, Literal, URIRef
 
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     CRAM_AICOR_NAMESPACE,
     CRAM_AICOR_ONTOLOGY_IRI,
     DUL_NAMESPACE,

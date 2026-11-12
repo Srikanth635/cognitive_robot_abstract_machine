@@ -1,0 +1,97 @@
+{
+  "checks": [
+    {
+      "case": "pickCarryPlace:owned-ordered-stages",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:stage-contexts-distinct",
+      "passed": true
+    },
+    {
+      "case": "pickCarryPlace:adjacent-handoff-inventory",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:owned-ordered-stages",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:stage-contexts-distinct",
+      "passed": true
+    },
+    {
+      "case": "routeOrientedPickCarryPlace:adjacent-handoff-inventory",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:owned-ordered-stages",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:stage-contexts-distinct",
+      "passed": true
+    },
+    {
+      "case": "cuttingCycle:adjacent-handoff-inventory",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:owned-ordered-stages",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:stage-contexts-distinct",
+      "passed": true
+    },
+    {
+      "case": "wipingCycle:adjacent-handoff-inventory",
+      "passed": true
+    },
+    {
+      "case": "cutting:selected-technique",
+      "passed": true
+    },
+    {
+      "case": "cutting:depth-only-when-declared",
+      "passed": true
+    },
+    {
+      "case": "wiping:selected-technique",
+      "passed": true
+    },
+    {
+      "case": "wiping:depth-only-when-declared",
+      "passed": true
+    },
+    {
+      "case": "pressing:selected-technique",
+      "passed": true
+    },
+    {
+      "case": "pressing:depth-only-when-declared",
+      "passed": true
+    },
+    {
+      "case": "insertion:selected-technique",
+      "passed": true
+    },
+    {
+      "case": "insertion:depth-only-when-declared",
+      "passed": true
+    },
+    {
+      "case": "recipe-stages:foreign-record-empty",
+      "passed": true
+    },
+    {
+      "case": "recipe-handoffs:foreign-record-empty",
+      "passed": true
+    },
+    {
+      "case": "specialized-tool-targets:foreign-record-empty",
+      "passed": true
+    }
+  ],
+  "scope": "Selected descriptive records, not accepted observations"
+}

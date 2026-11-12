@@ -1,0 +1,195 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#discrepancyCondition> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/sensorimotor-events.owl#MismatchSpecification> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#location> ],
+        [ sh:datatype xsd:positiveInteger ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#position> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/image-schemas.owl#PathElement> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/image-schemas.owl#PathElement> ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#hasPathElement> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#goal> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#source> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#theme> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/image-schemas.owl#SourcePathGoalSchema> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#supporter> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#supported> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/image-schemas.owl#SupportSchema> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#content> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#container> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/image-schemas.owl#ContainmentSchema> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#MaterialState> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#materialState> ],
+        [ sh:class <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#MaterialSpecification> ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#constituent> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#MaterialSpecification> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/sensorimotor-events.owl#EventBoundarySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#atBoundary> ],
+        [ sh:class <http://aicor.knowledge/ontologies/sensorimotor-events.owl#MismatchSpecification> ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#mismatchCriterion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/sensorimotor-events.owl#SensoryExpectation> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#hasExpectation> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#CapabilityRequirement> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#observationRequirement> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/sensorimotor-events.owl#ControlPointSpecification> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#assetVersion> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ParameterSpecification> ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#dimensionParameter> ],
+        [ sh:datatype xsd:anyURI ;
+            sh:maxCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#assetIRI> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#GeometrySpecification> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/sensorimotor-events.owl#SensoryModality> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#modality> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#CapabilityRequirement> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#requiresCapability> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#expectedCondition> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/sensorimotor-events.owl#SensoryExpectation> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/force-dynamics.owl#entity> ],
+        [ sh:class <http://aicor.knowledge/ontologies/force-dynamics.owl#Tendency> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/force-dynamics.owl#tendency> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/force-dynamics.owl#ForceParticipant> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#validWhen> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ActionKind> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#affordsActionKind> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#CapabilityRequirement> ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#requiresCapability> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#AffordanceSpecification> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#beforePhase> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ConditionSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#boundaryCondition> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/sensorimotor-events.owl#afterPhase> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/sensorimotor-events.owl#EventBoundarySpecification> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/force-dynamics.owl#ForceParticipant> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/force-dynamics.owl#agonist> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#ApplicabilitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/force-dynamics.owl#applicability> ],
+        [ sh:class <http://aicor.knowledge/ontologies/force-dynamics.owl#StrengthRelation> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/force-dynamics.owl#relativeStrength> ],
+        [ sh:class <http://aicor.knowledge/ontologies/force-dynamics.owl#ForceParticipant> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/force-dynamics.owl#antagonist> ],
+        [ sh:class <http://aicor.knowledge/ontologies/force-dynamics.owl#Resultant> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/force-dynamics.owl#describedResult> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/force-dynamics.owl#ForceDynamicDescription> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#AffordanceSpecification> ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#hasAffordance> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#describesEntity> ],
+        [ sh:class <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#GeometrySpecification> ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#hasGeometry> ],
+        [ sh:class <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#MaterialSpecification> ;
+            sh:path <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#hasMaterial> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#EntityDescription> .
+
+[] a sh:NodeShape ;
+    sh:property [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#secondContactEntity> ],
+        [ sh:class <http://aicor.knowledge/ontologies/action-description-core.owl#EntitySpecification> ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path <http://aicor.knowledge/ontologies/image-schemas.owl#firstContactEntity> ] ;
+    sh:targetClass <http://aicor.knowledge/ontologies/image-schemas.owl#ContactSchema> .
+

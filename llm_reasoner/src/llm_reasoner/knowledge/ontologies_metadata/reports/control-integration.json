@@ -1,0 +1,30 @@
+{
+  "scope": [
+    "DUL.owl",
+    "candidates/aicor-unified-dul.ttl",
+    "core/action-description-core.ttl",
+    "core/cram-action-bridge.ttl",
+    "examples/stereotypical-actions.ttl",
+    "examples/projection-artifacts.ttl",
+    "aspects/participants-relations.ttl",
+    "aspects/conditions-outcomes.ttl",
+    "examples/aspect-actions.ttl",
+    "aspects/phases-transitions.ttl",
+    "aspects/monitoring-requirements.ttl",
+    "examples/phase-actions.ttl",
+    "aspects/causal-mechanisms.ttl",
+    "aspects/physical-models.ttl",
+    "examples/causal-physical-actions.ttl",
+    "aspects/objectives-tradeoffs.ttl",
+    "aspects/dynamics-control.ttl",
+    "examples/control-actions.ttl",
+    "integrations/all-action-aspects.ttl",
+    "integrations/causal-outcome-bridge.ttl",
+    "integrations/causal-physical-bridge.ttl",
+    "integrations/physical-outcome-bridge.ttl"
+  ],
+  "returncode": 0,
+  "stdout": "http://www.w3.org/2002/07/owl#Thing is satisfiable.\n",
+  "stderr": "",
+  "limitation": "Consistency only; not full classification of combined AICOR model."
+}

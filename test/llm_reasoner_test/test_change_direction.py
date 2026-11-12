@@ -12,7 +12,7 @@ from rdflib import OWL, RDF, RDFS, Graph, Namespace, URIRef
 from typing_extensions import Optional, get_type_hints
 
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     DUL_NAMESPACE,
     KNOWLEDGE_ONTOLOGY_MODULES,
     ActionPerspectiveFile,
@@ -28,8 +28,8 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.vocabulary.terms import DescriptionEntity, PropertyTerm
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
 from llm_reasoner.knowledge.representation.rdf import GraphReader
 
 DUL = Namespace(DUL_NAMESPACE)

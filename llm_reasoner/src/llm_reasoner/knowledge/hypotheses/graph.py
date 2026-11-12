@@ -13,9 +13,9 @@ import rustworkx as rx
 from typing_extensions import Any, Optional, Sequence
 
 from llm_reasoner.knowledge.storage.citation import Citation
-from llm_reasoner.knowledge.ontologies.terms import is_inferred
+from llm_reasoner.knowledge.vocabulary.terms import is_inferred
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView
-from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
+from llm_reasoner.knowledge.vocabulary.terms import DescriptionEntity, PropertyTerm
 
 GROUPED_FIELD_PREFIXES = ("defines_", "has_")
 """
@@ -227,8 +227,8 @@ class HypothesisGraphProjector:
     ) -> HypothesisGraph:
         """
         :param views: The hypotheses drawn in one graph, the first giving the
-            instruction; a fragment one states of another's fragment, such as a
-            perspective of the core's slot, links the node of that fragment itself.
+            instruction; a fragment one states of another's fragment links the node of
+            that fragment itself.
         :return: The graph of every fragment of every hypothesis, the instruction
             describing the root of each, with a link for every value a fragment states
             of an ontology property, leaving out properties the ontology infers from

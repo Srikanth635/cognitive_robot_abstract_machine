@@ -1,0 +1,3249 @@
+[
+  {
+    "name": "ActionDescription",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/base.py",
+    "line": 36,
+    "source_sha256": "d6296076c61874f97cc344c812b9282e4698e06f1d8309f9c3cded2e12bc0175",
+    "bases": [
+      "Designator"
+    ],
+    "methods": {
+      "world": false,
+      "perform": false,
+      "action_plan": false,
+      "_action_plan": true,
+      "expand": false,
+      "execute": false,
+      "pre_condition": false,
+      "post_condition": false,
+      "bound_variables": false,
+      "_create_variables": false,
+      "add_subplan": false
+    },
+    "declared_fields": [],
+    "local_calls": [
+      "ActionNode",
+      "ConditionNode",
+      "ContextIsUnavailable",
+      "copy",
+      "getattr",
+      "logger.info",
+      "self._create_variables",
+      "self.add_subplan",
+      "self.evaluate_pre_condition",
+      "self.execute",
+      "self.plan._migrate_nodes_from_plan",
+      "self.plan.add_edge",
+      "self.plan.simplify",
+      "self.post_condition",
+      "self.pre_condition",
+      "sub_plan_root.plan.add_edge",
+      "type",
+      "variable"
+    ],
+    "family_member": false,
+    "unimplemented_local_abstract_methods": [
+      "_action_plan"
+    ],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": []
+  },
+  {
+    "name": "FaceAndLookAtAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/facing.py",
+    "line": 12,
+    "source_sha256": "b60b8dc203fe2bbbed14f12c30852d6cbc1e44c505d1b70704b9c774b8eff46c",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "face_at",
+        "annotation": "FaceAtAction",
+        "default_source": null
+      },
+      {
+        "name": "look_at",
+        "annotation": "LookAtAction",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "sequential"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "face_at",
+        "annotation": "FaceAtAction",
+        "default_source": null
+      },
+      {
+        "name": "look_at",
+        "annotation": "LookAtAction",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "FullBodyControlledAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_based.py",
+    "line": 57,
+    "source_sha256": "640573d326d6ce53038266b725d22755854c6815b4a0a05ffff1f23dcad12cdb",
+    "bases": [
+      "ActionDescription",
+      "ABC"
+    ],
+    "methods": {
+      "execute": false,
+      "_perform_plan": false,
+      "_enable_full_body_control": false,
+      "_restore_full_body_control": false
+    },
+    "declared_fields": [],
+    "local_calls": [
+      "dataclass",
+      "isinstance",
+      "self._enable_full_body_control",
+      "self._perform_plan",
+      "self._restore_full_body_control",
+      "self.add_subplan",
+      "self.add_subplan(self.action_plan).perform"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [
+      "_action_plan"
+    ],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": []
+  },
+  {
+    "name": "ToolMotionAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_based.py",
+    "line": 102,
+    "source_sha256": "640573d326d6ce53038266b725d22755854c6815b4a0a05ffff1f23dcad12cdb",
+    "bases": [
+      "FullBodyControlledAction",
+      "ABC",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_build_tool_path": true,
+      "_path_frame": true,
+      "_alignment_target": true,
+      "_waypoints": false,
+      "_alignment_pairs": false,
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "tool",
+        "annotation": "Tool",
+        "default_source": null
+      },
+      {
+        "name": "pointer_stride",
+        "annotation": "int",
+        "default_source": "1"
+      }
+    ],
+    "local_calls": [
+      "MissingWaypoints",
+      "MoveTCPWaypointsAlignedMotion",
+      "Point3",
+      "dataclass",
+      "int",
+      "max",
+      "self._build_tool_path",
+      "self._build_tool_path().sample",
+      "self._path_frame",
+      "self.tool.get_tool_frame",
+      "self.tool.tool_alignment",
+      "sequential"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [
+      "_alignment_target",
+      "_build_tool_path",
+      "_path_frame"
+    ],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "tool",
+        "annotation": "Tool",
+        "default_source": null
+      },
+      {
+        "name": "pointer_stride",
+        "annotation": "int",
+        "default_source": "1"
+      }
+    ]
+  },
+  {
+    "name": "MixingAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_based.py",
+    "line": 190,
+    "source_sha256": "640573d326d6ce53038266b725d22755854c6815b4a0a05ffff1f23dcad12cdb",
+    "bases": [
+      "ToolMotionAction"
+    ],
+    "methods": {
+      "_build_tool_path": false,
+      "_path_frame": false,
+      "_alignment_target": false
+    },
+    "declared_fields": [
+      {
+        "name": "container",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "mix_duration",
+        "annotation": "float",
+        "default_source": "0.0"
+      }
+    ],
+    "local_calls": [
+      "build_container_path",
+      "dataclass"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "tool",
+        "annotation": "Tool",
+        "default_source": null
+      },
+      {
+        "name": "pointer_stride",
+        "annotation": "int",
+        "default_source": "1"
+      },
+      {
+        "name": "container",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "mix_duration",
+        "annotation": "float",
+        "default_source": "0.0"
+      }
+    ]
+  },
+  {
+    "name": "CuttingAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_based.py",
+    "line": 225,
+    "source_sha256": "640573d326d6ce53038266b725d22755854c6815b4a0a05ffff1f23dcad12cdb",
+    "bases": [
+      "ToolMotionAction"
+    ],
+    "methods": {
+      "_build_tool_path": false,
+      "_path_frame": false,
+      "_alignment_target": false
+    },
+    "declared_fields": [
+      {
+        "name": "object_to_cut",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "technique",
+        "annotation": "CuttingTechnique",
+        "default_source": "CuttingTechnique.SAW"
+      },
+      {
+        "name": "slice_thickness",
+        "annotation": "Optional[float]",
+        "default_source": "None"
+      },
+      {
+        "name": "number_of_cuts_on_local_x_axis",
+        "annotation": "Optional[int]",
+        "default_source": "None"
+      },
+      {
+        "name": "slicing_priority",
+        "annotation": "SlicingPriority",
+        "default_source": "SlicingPriority.THICKNESS"
+      }
+    ],
+    "local_calls": [
+      "build_cutting_path",
+      "dataclass"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "tool",
+        "annotation": "Tool",
+        "default_source": null
+      },
+      {
+        "name": "pointer_stride",
+        "annotation": "int",
+        "default_source": "1"
+      },
+      {
+        "name": "object_to_cut",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "technique",
+        "annotation": "CuttingTechnique",
+        "default_source": "CuttingTechnique.SAW"
+      },
+      {
+        "name": "slice_thickness",
+        "annotation": "Optional[float]",
+        "default_source": "None"
+      },
+      {
+        "name": "number_of_cuts_on_local_x_axis",
+        "annotation": "Optional[int]",
+        "default_source": "None"
+      },
+      {
+        "name": "slicing_priority",
+        "annotation": "SlicingPriority",
+        "default_source": "SlicingPriority.THICKNESS"
+      }
+    ]
+  },
+  {
+    "name": "WipingAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_based.py",
+    "line": 278,
+    "source_sha256": "640573d326d6ce53038266b725d22755854c6815b4a0a05ffff1f23dcad12cdb",
+    "bases": [
+      "ToolMotionAction"
+    ],
+    "methods": {
+      "__post_init__": false,
+      "_build_tool_path": false,
+      "_path_frame": false,
+      "_alignment_target": false,
+      "_perform_plan": false,
+      "_tool_reached_final_waypoint": false
+    },
+    "declared_fields": [
+      {
+        "name": "surface",
+        "annotation": "Optional[Body]",
+        "default_source": "None"
+      },
+      {
+        "name": "target_pose",
+        "annotation": "Optional[Pose]",
+        "default_source": "None"
+      },
+      {
+        "name": "technique",
+        "annotation": "WipingTechnique",
+        "default_source": "WipingTechnique.WIPE"
+      },
+      {
+        "name": "length",
+        "annotation": "float",
+        "default_source": "0.2"
+      },
+      {
+        "name": "cycles",
+        "annotation": "float",
+        "default_source": "1.0"
+      },
+      {
+        "name": "final_waypoint_success_tolerance",
+        "annotation": "float",
+        "default_source": "0.08"
+      }
+    ],
+    "local_calls": [
+      "ToolPath",
+      "ToolPathSegment",
+      "WipingTargetMissing",
+      "build_surface_path",
+      "dataclass",
+      "float",
+      "goal_point.to_np",
+      "max",
+      "np.asarray",
+      "np.asarray(goal_point.to_np(), dtype=float).reshape",
+      "np.asarray(tool_point.to_np(), dtype=float).reshape",
+      "np.linalg.norm",
+      "planar_spiral_xy",
+      "planar_sweep_x",
+      "self._tool_reached_final_waypoint",
+      "self.add_subplan",
+      "self.world.transform",
+      "subplan.perform",
+      "tool_point.to_np"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "tool",
+        "annotation": "Tool",
+        "default_source": null
+      },
+      {
+        "name": "pointer_stride",
+        "annotation": "int",
+        "default_source": "1"
+      },
+      {
+        "name": "surface",
+        "annotation": "Optional[Body]",
+        "default_source": "None"
+      },
+      {
+        "name": "target_pose",
+        "annotation": "Optional[Pose]",
+        "default_source": "None"
+      },
+      {
+        "name": "technique",
+        "annotation": "WipingTechnique",
+        "default_source": "WipingTechnique.WIPE"
+      },
+      {
+        "name": "length",
+        "annotation": "float",
+        "default_source": "0.2"
+      },
+      {
+        "name": "cycles",
+        "annotation": "float",
+        "default_source": "1.0"
+      },
+      {
+        "name": "final_waypoint_success_tolerance",
+        "annotation": "float",
+        "default_source": "0.08"
+      }
+    ]
+  },
+  {
+    "name": "PouringAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_based.py",
+    "line": 395,
+    "source_sha256": "640573d326d6ce53038266b725d22755854c6815b4a0a05ffff1f23dcad12cdb",
+    "bases": [
+      "FullBodyControlledAction",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_effective_pour_side": false,
+      "_mouth_height_above_tool_frame": false,
+      "_approach_direction": false,
+      "_pour_poses": false,
+      "_pose_from_rotation": false,
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "target_container",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "source_container",
+        "annotation": "Tool",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "tilt_angle",
+        "annotation": "float",
+        "default_source": "1.85"
+      },
+      {
+        "name": "pour_side",
+        "annotation": "Optional[PouringSide]",
+        "default_source": "None"
+      },
+      {
+        "name": "pour_side_offset",
+        "annotation": "float",
+        "default_source": "0.0"
+      },
+      {
+        "name": "pour_approach_offset",
+        "annotation": "float",
+        "default_source": "0.0"
+      },
+      {
+        "name": "pour_height",
+        "annotation": "float",
+        "default_source": "0.13"
+      }
+    ],
+    "local_calls": [
+      "MoveToolCenterPointMotion",
+      "Pose.from_xyz_quaternion",
+      "Rotation.from_euler",
+      "Rotation.from_quat",
+      "dataclass",
+      "float",
+      "int",
+      "math.atan2",
+      "math.hypot",
+      "math.sin",
+      "max",
+      "np.argmax",
+      "np.array",
+      "np.dot",
+      "rotation.as_quat",
+      "self._approach_direction",
+      "self._effective_pour_side",
+      "self._mouth_height_above_tool_frame",
+      "self._pose_from_rotation",
+      "self._pour_poses",
+      "self.robot.get_right_arm_if_specified",
+      "self.source_container.root.visual.as_bounding_box_collection_in_frame",
+      "self.source_container.root.visual.as_bounding_box_collection_in_frame(self.source_container.root).bounding_box",
+      "self.world.compute_forward_kinematics_np",
+      "sequential",
+      "target_pose.quaternion.to_np",
+      "target_rotation.apply"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target_container",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "source_container",
+        "annotation": "Tool",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "tilt_angle",
+        "annotation": "float",
+        "default_source": "1.85"
+      },
+      {
+        "name": "pour_side",
+        "annotation": "Optional[PouringSide]",
+        "default_source": "None"
+      },
+      {
+        "name": "pour_side_offset",
+        "annotation": "float",
+        "default_source": "0.0"
+      },
+      {
+        "name": "pour_approach_offset",
+        "annotation": "float",
+        "default_source": "0.0"
+      },
+      {
+        "name": "pour_height",
+        "annotation": "float",
+        "default_source": "0.13"
+      }
+    ]
+  },
+  {
+    "name": "ToolPathSegment",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_paths.py",
+    "line": 37,
+    "source_sha256": "e9a1e4a1662d4211150f34e8fbe92585b2f96723ae764d789fb6b3d28d4b0d9c",
+    "bases": [],
+    "methods": {
+      "sample": false
+    },
+    "declared_fields": [
+      {
+        "name": "kind",
+        "annotation": "ToolPathSegmentKind",
+        "default_source": null
+      },
+      {
+        "name": "duration",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "local_curve",
+        "annotation": "LocalCurve",
+        "default_source": null
+      },
+      {
+        "name": "cut_index",
+        "annotation": "Optional[int]",
+        "default_source": "None"
+      }
+    ],
+    "local_calls": [
+      "float",
+      "int",
+      "max",
+      "np.array",
+      "np.array([self.local_curve(float(u)) for u in tau], dtype=float).reshape",
+      "np.asarray",
+      "np.ceil",
+      "np.linspace",
+      "self.local_curve"
+    ],
+    "family_member": false,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "kind",
+        "annotation": "ToolPathSegmentKind",
+        "default_source": null
+      },
+      {
+        "name": "duration",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "local_curve",
+        "annotation": "LocalCurve",
+        "default_source": null
+      },
+      {
+        "name": "cut_index",
+        "annotation": "Optional[int]",
+        "default_source": "None"
+      }
+    ]
+  },
+  {
+    "name": "ToolPath",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_paths.py",
+    "line": 92,
+    "source_sha256": "e9a1e4a1662d4211150f34e8fbe92585b2f96723ae764d789fb6b3d28d4b0d9c",
+    "bases": [],
+    "methods": {
+      "duration": false,
+      "sample": false
+    },
+    "declared_fields": [
+      {
+        "name": "segments",
+        "annotation": "List[ToolPathSegment]",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "all_points.append",
+      "all_segment_ids.append",
+      "all_times.append",
+      "enumerate",
+      "float",
+      "frame.to_np",
+      "len",
+      "np.concatenate",
+      "np.full",
+      "np.vstack",
+      "segment.sample",
+      "sum"
+    ],
+    "family_member": false,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "segments",
+        "annotation": "List[ToolPathSegment]",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "ShearProfile",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_paths.py",
+    "line": 207,
+    "source_sha256": "e9a1e4a1662d4211150f34e8fbe92585b2f96723ae764d789fb6b3d28d4b0d9c",
+    "bases": [],
+    "methods": {},
+    "declared_fields": [
+      {
+        "name": "depth_max",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "depth_ramp_end",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "shear_amp",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "shear_cycles",
+        "annotation": "float",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "dataclass"
+    ],
+    "family_member": false,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "depth_max",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "depth_ramp_end",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "shear_amp",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "shear_cycles",
+        "annotation": "float",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "ShearXYProfile",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_paths.py",
+    "line": 234,
+    "source_sha256": "e9a1e4a1662d4211150f34e8fbe92585b2f96723ae764d789fb6b3d28d4b0d9c",
+    "bases": [],
+    "methods": {},
+    "declared_fields": [
+      {
+        "name": "shear_amp",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "shear_cycles",
+        "annotation": "float",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "dataclass"
+    ],
+    "family_member": false,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "shear_amp",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "shear_cycles",
+        "annotation": "float",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "SliceAnchorPlacement",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/tool_paths.py",
+    "line": 678,
+    "source_sha256": "e9a1e4a1662d4211150f34e8fbe92585b2f96723ae764d789fb6b3d28d4b0d9c",
+    "bases": [],
+    "methods": {
+      "compute_anchor_positions": false,
+      "_resolve_parameters": false
+    },
+    "declared_fields": [
+      {
+        "name": "interval_start",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "interval_end",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "slice_thickness",
+        "annotation": "Optional[float]",
+        "default_source": "None"
+      },
+      {
+        "name": "number_of_cuts",
+        "annotation": "Optional[int]",
+        "default_source": "None"
+      },
+      {
+        "name": "priority",
+        "annotation": "SlicingPriority",
+        "default_source": "SlicingPriority.THICKNESS"
+      },
+      {
+        "name": "default_slice_thickness",
+        "annotation": "float",
+        "default_source": "0.03"
+      },
+      {
+        "name": "minimum_slice_thickness",
+        "annotation": "float",
+        "default_source": "0.0001"
+      }
+    ],
+    "local_calls": [
+      "float",
+      "int",
+      "max",
+      "min",
+      "range",
+      "self._resolve_parameters"
+    ],
+    "family_member": false,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "interval_start",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "interval_end",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "slice_thickness",
+        "annotation": "Optional[float]",
+        "default_source": "None"
+      },
+      {
+        "name": "number_of_cuts",
+        "annotation": "Optional[int]",
+        "default_source": "None"
+      },
+      {
+        "name": "priority",
+        "annotation": "SlicingPriority",
+        "default_source": "SlicingPriority.THICKNESS"
+      },
+      {
+        "name": "default_slice_thickness",
+        "annotation": "float",
+        "default_source": "0.03"
+      },
+      {
+        "name": "minimum_slice_thickness",
+        "annotation": "float",
+        "default_source": "0.0001"
+      }
+    ]
+  },
+  {
+    "name": "TransportAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/transporting.py",
+    "line": 33,
+    "source_sha256": "0e8a0c837182187a3a27806743c9e1a86d7bd82384ba49312f63f96b6983828b",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "from_graspable_by_closest_grasps": false,
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "pick_up",
+        "annotation": "MoveAndPickUpAction",
+        "default_source": null
+      },
+      {
+        "name": "place",
+        "annotation": "MoveAndPlaceAction",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "MoveAndPickUpAction.from_graspable_by_closest_grasps",
+      "ParkArmsAction",
+      "ReachabilityLocation",
+      "a",
+      "a(FaceAndLookAtAction)",
+      "a(FaceAtAction)",
+      "a(LookAtAction)",
+      "a(MoveAndPlaceAction)",
+      "a(NavigateAction)",
+      "a(PlaceAction)",
+      "cls",
+      "sequential",
+      "variable"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "pick_up",
+        "annotation": "MoveAndPickUpAction",
+        "default_source": null
+      },
+      {
+        "name": "place",
+        "annotation": "MoveAndPlaceAction",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "PickAndPlaceAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/transporting.py",
+    "line": 111,
+    "source_sha256": "0e8a0c837182187a3a27806743c9e1a86d7bd82384ba49312f63f96b6983828b",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "pick_up",
+        "annotation": "PickUpAction",
+        "default_source": null
+      },
+      {
+        "name": "place",
+        "annotation": "PlaceAction",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "sequential"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "pick_up",
+        "annotation": "PickUpAction",
+        "default_source": null
+      },
+      {
+        "name": "place",
+        "annotation": "PlaceAction",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "MoveAndPlaceAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/transporting.py",
+    "line": 133,
+    "source_sha256": "0e8a0c837182187a3a27806743c9e1a86d7bd82384ba49312f63f96b6983828b",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "from_standing_position": false,
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "navigate",
+        "annotation": "NavigateAction",
+        "default_source": null
+      },
+      {
+        "name": "face_and_look_at",
+        "annotation": "FaceAndLookAtAction",
+        "default_source": null
+      },
+      {
+        "name": "place",
+        "annotation": "PlaceAction",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "FaceAndLookAtAction",
+      "FaceAtAction",
+      "LookAtAction",
+      "NavigateAction",
+      "PlaceAction",
+      "cls",
+      "sequential"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "navigate",
+        "annotation": "NavigateAction",
+        "default_source": null
+      },
+      {
+        "name": "face_and_look_at",
+        "annotation": "FaceAndLookAtAction",
+        "default_source": null
+      },
+      {
+        "name": "place",
+        "annotation": "PlaceAction",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "MoveAndPickUpAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/transporting.py",
+    "line": 183,
+    "source_sha256": "0e8a0c837182187a3a27806743c9e1a86d7bd82384ba49312f63f96b6983828b",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "from_standing_position": false,
+      "from_graspable_by_closest_grasps": false,
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "navigate",
+        "annotation": "NavigateAction",
+        "default_source": null
+      },
+      {
+        "name": "face_and_look_at",
+        "annotation": "FaceAndLookAtAction",
+        "default_source": null
+      },
+      {
+        "name": "pick_up",
+        "annotation": "PickUpAction",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "FaceAndLookAtAction",
+      "FaceAtAction",
+      "IsAmongTheClosestGraspsTo",
+      "LookAtAction",
+      "NavigateAction",
+      "PickUpAction",
+      "Pose",
+      "ReachabilityLocation",
+      "a",
+      "a(FaceAndLookAtAction)",
+      "a(FaceAtAction)",
+      "a(LookAtAction)",
+      "a(NavigateAction)",
+      "a(PickUpAction)",
+      "a(cls)",
+      "cls",
+      "graspable.grasp_candidates",
+      "sequential",
+      "step.where",
+      "variable"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "navigate",
+        "annotation": "NavigateAction",
+        "default_source": null
+      },
+      {
+        "name": "face_and_look_at",
+        "annotation": "FaceAndLookAtAction",
+        "default_source": null
+      },
+      {
+        "name": "pick_up",
+        "annotation": "PickUpAction",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "MoveAndOpenAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/composite/transporting.py",
+    "line": 290,
+    "source_sha256": "0e8a0c837182187a3a27806743c9e1a86d7bd82384ba49312f63f96b6983828b",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "from_standing_position": false,
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "navigate",
+        "annotation": "NavigateAction",
+        "default_source": null
+      },
+      {
+        "name": "face_and_look_at",
+        "annotation": "FaceAndLookAtAction",
+        "default_source": null
+      },
+      {
+        "name": "open_container",
+        "annotation": "OpenAction",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "FaceAndLookAtAction",
+      "FaceAtAction",
+      "LookAtAction",
+      "NavigateAction",
+      "OpenAction",
+      "Pose",
+      "cls",
+      "sequential"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "navigate",
+        "annotation": "NavigateAction",
+        "default_source": null
+      },
+      {
+        "name": "face_and_look_at",
+        "annotation": "FaceAndLookAtAction",
+        "default_source": null
+      },
+      {
+        "name": "open_container",
+        "annotation": "OpenAction",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "ContainerAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/container.py",
+    "line": 38,
+    "source_sha256": "e899e4ecb4ae78ede1c79a4e7c6cf9225a961792c9c84956d9d99cf1f5c43aee",
+    "bases": [
+      "ActionDescription",
+      "HasApproachesGraspPoses"
+    ],
+    "methods": {
+      "_mechanism_motion": true,
+      "back_off_pose": false,
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "handle",
+        "annotation": "Handle",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "release_clearance",
+        "annotation": "float",
+        "default_source": "0.05"
+      }
+    ],
+    "local_calls": [
+      "GraspCandidate.from_body_origin",
+      "GraspingAction",
+      "MoveGripperMotion",
+      "MoveToolCenterPointMotion",
+      "self.back_off_pose",
+      "self.pre_grasp_pose",
+      "sequential"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [
+      "_mechanism_motion"
+    ],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "handle",
+        "annotation": "Handle",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "release_clearance",
+        "annotation": "float",
+        "default_source": "0.05"
+      }
+    ]
+  },
+  {
+    "name": "OpenAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/container.py",
+    "line": 108,
+    "source_sha256": "e899e4ecb4ae78ede1c79a4e7c6cf9225a961792c9c84956d9d99cf1f5c43aee",
+    "bases": [
+      "ContainerAction"
+    ],
+    "methods": {
+      "_mechanism_motion": false,
+      "pre_condition": false,
+      "post_condition": false
+    },
+    "declared_fields": [],
+    "local_calls": [
+      "GripperIsFree",
+      "OpeningMotion",
+      "kwargs['handle'].root.get_first_parent_connection_of_type",
+      "variable_from"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "handle",
+        "annotation": "Handle",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "release_clearance",
+        "annotation": "float",
+        "default_source": "0.05"
+      }
+    ]
+  },
+  {
+    "name": "CloseAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/container.py",
+    "line": 144,
+    "source_sha256": "e899e4ecb4ae78ede1c79a4e7c6cf9225a961792c9c84956d9d99cf1f5c43aee",
+    "bases": [
+      "ContainerAction"
+    ],
+    "methods": {
+      "_mechanism_motion": false,
+      "post_condition": false
+    },
+    "declared_fields": [],
+    "local_calls": [
+      "ClosingMotion",
+      "kwargs['handle'].root.get_first_parent_connection_of_type",
+      "variable_from"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "handle",
+        "annotation": "Handle",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "release_clearance",
+        "annotation": "float",
+        "default_source": "0.05"
+      }
+    ]
+  },
+  {
+    "name": "DetectAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/misc.py",
+    "line": 38,
+    "source_sha256": "139e7efd493a6633fca53164fe9e00b4e73aac58ca027f3b391cc789e5b64d99",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "_build_query": false
+    },
+    "declared_fields": [
+      {
+        "name": "technique",
+        "annotation": "DetectionTechnique",
+        "default_source": null
+      },
+      {
+        "name": "state",
+        "annotation": "Optional[DetectionState]",
+        "default_source": "None"
+      },
+      {
+        "name": "object_sem_annotation",
+        "annotation": "Type[SemanticAnnotation]",
+        "default_source": "None"
+      },
+      {
+        "name": "region",
+        "annotation": "Optional[Region]",
+        "default_source": "None"
+      },
+      {
+        "name": "trust_detected_orientation",
+        "annotation": "bool",
+        "default_source": "True"
+      },
+      {
+        "name": "accept_first_if_multiple",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ],
+    "local_calls": [
+      "AttributeError",
+      "DetectingMotion",
+      "HomogeneousTransformationMatrix",
+      "PerceptionQuery",
+      "VolumetricBoundingBox",
+      "execute_single",
+      "self._build_query",
+      "self.region.area.as_bounding_box_collection_in_frame"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "technique",
+        "annotation": "DetectionTechnique",
+        "default_source": null
+      },
+      {
+        "name": "state",
+        "annotation": "Optional[DetectionState]",
+        "default_source": "None"
+      },
+      {
+        "name": "object_sem_annotation",
+        "annotation": "Type[SemanticAnnotation]",
+        "default_source": "None"
+      },
+      {
+        "name": "region",
+        "annotation": "Optional[Region]",
+        "default_source": "None"
+      },
+      {
+        "name": "trust_detected_orientation",
+        "annotation": "bool",
+        "default_source": "True"
+      },
+      {
+        "name": "accept_first_if_multiple",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ]
+  },
+  {
+    "name": "MoveToReach",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/misc.py",
+    "line": 133,
+    "source_sha256": "139e7efd493a6633fca53164fe9e00b4e73aac58ca027f3b391cc789e5b64d99",
+    "bases": [
+      "ActionDescription",
+      "HasApproachesGraspPoses",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "standing_pose": false
+    },
+    "declared_fields": [
+      {
+        "name": "target_pose_offset_robot",
+        "annotation": "Pose2D",
+        "default_source": null
+      },
+      {
+        "name": "hip_rotation",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "reference_T_grasp",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "end_effector",
+        "annotation": "EndEffector",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "HomogeneousTransformationMatrix.from_point_rotation_matrix",
+      "MoveManipulatorAction",
+      "NavigateAction",
+      "Point3",
+      "Pose.from_xyz_rpy",
+      "RotationMatrix.from_rpy",
+      "RotationMatrix.from_vectors",
+      "Vector3",
+      "Vector3.Z",
+      "self.end_effector.tool_frame_goal_for_grasp",
+      "self.world.transform",
+      "sequential",
+      "target_V_robot.scale"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target_pose_offset_robot",
+        "annotation": "Pose2D",
+        "default_source": null
+      },
+      {
+        "name": "hip_rotation",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "reference_T_grasp",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "end_effector",
+        "annotation": "EndEffector",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "NavigateAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/navigation.py",
+    "line": 42,
+    "source_sha256": "6e29122549488972b57dae3aee1081d6f70d96b9a32df3f3c017383fe960fbce",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "pre_condition": false,
+      "post_condition": false
+    },
+    "declared_fields": [
+      {
+        "name": "target_location",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "MoveMotion",
+      "allclose",
+      "and_",
+      "context.robot.mobile_base.pose_facing",
+      "execute_single",
+      "is_pose_free_for_robot",
+      "self.robot.mobile_base.pose_facing",
+      "variable_from"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target_location",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "LookAtAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/navigation.py",
+    "line": 88,
+    "source_sha256": "6e29122549488972b57dae3aee1081d6f70d96b9a32df3f3c017383fe960fbce",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "camera",
+        "annotation": "Optional[Camera]",
+        "default_source": "None"
+      }
+    ],
+    "local_calls": [
+      "LookingMotion",
+      "execute_single",
+      "self.robot.get_default_camera"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "camera",
+        "annotation": "Optional[Camera]",
+        "default_source": "None"
+      }
+    ]
+  },
+  {
+    "name": "FaceAtAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/navigation.py",
+    "line": 110,
+    "source_sha256": "6e29122549488972b57dae3aee1081d6f70d96b9a32df3f3c017383fe960fbce",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "TurnMotion",
+      "execute_single"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "PathPlanningNavigateAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/navigation.py",
+    "line": 126,
+    "source_sha256": "6e29122549488972b57dae3aee1081d6f70d96b9a32df3f3c017383fe960fbce",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "_floor": false,
+      "_extent_of": false,
+      "_stands_on": false,
+      "_path": false,
+      "_waypoints": false
+    },
+    "declared_fields": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "HomogeneousTransformationMatrix",
+      "HomogeneousTransformationMatrix.from_point_rotation_matrix",
+      "MoveMotion",
+      "NoFloorBelowRobot",
+      "Point2.from_pose",
+      "Point3",
+      "RotationMatrix.from_vectors",
+      "Vector3",
+      "Vector3.Z",
+      "float",
+      "floor.as_bounding_box_collection_at_origin",
+      "floor.as_bounding_box_collection_at_origin(HomogeneousTransformationMatrix(reference_frame=self.world.root)).bounding_box",
+      "free_space.path_from_to",
+      "max",
+      "self._extent_of",
+      "self._floor.planar_free_space",
+      "self._path",
+      "self._stands_on",
+      "self._waypoints",
+      "self.robot.as_bounding_box_collection_in_frame",
+      "self.robot.as_bounding_box_collection_in_frame(self.robot.root).bounding_box",
+      "self.world.get_semantic_annotations_by_type",
+      "self.world.transform",
+      "sequential",
+      "zip"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "ElevatorNavigation",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/navigation.py",
+    "line": 249,
+    "source_sha256": "6e29122549488972b57dae3aee1081d6f70d96b9a32df3f3c017383fe960fbce",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "_current_floor": false,
+      "_pose_infront_of_elevator": false,
+      "_height_in_cabin": false,
+      "_elevator_open_at_floor": false
+    },
+    "declared_fields": [
+      {
+        "name": "elevator",
+        "annotation": "Elevator",
+        "default_source": null
+      },
+      {
+        "name": "target_floor",
+        "annotation": "Level",
+        "default_source": null
+      },
+      {
+        "name": "exit_clearance",
+        "annotation": "float",
+        "default_source": "field(default=0.5, kw_only=True)"
+      },
+      {
+        "name": "arrival_threshold",
+        "annotation": "float",
+        "default_source": "field(default=0.01, kw_only=True)"
+      }
+    ],
+    "local_calls": [
+      "InsideOf",
+      "InsideOf(self.robot.bodies_with_collision[0], floor.root)",
+      "JointPositionReached",
+      "MissingMovableJointError",
+      "NavigateAction",
+      "NotOnASingleLevelException",
+      "Parallel",
+      "Pose.from_xyz_rpy",
+      "ReAttachNode",
+      "field",
+      "float",
+      "len",
+      "nodes.append",
+      "pause_until",
+      "self._elevator_open_at_floor",
+      "self.elevator.drive_position_for_floor",
+      "self.world.get_semantic_annotations_by_type",
+      "self.world.transform",
+      "sequential"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "elevator",
+        "annotation": "Elevator",
+        "default_source": null
+      },
+      {
+        "name": "target_floor",
+        "annotation": "Level",
+        "default_source": null
+      },
+      {
+        "name": "exit_clearance",
+        "annotation": "float",
+        "default_source": "field(default=0.5, kw_only=True)"
+      },
+      {
+        "name": "arrival_threshold",
+        "annotation": "float",
+        "default_source": "field(default=0.01, kw_only=True)"
+      }
+    ]
+  },
+  {
+    "name": "HasGraspChoice",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/pick_up.py",
+    "line": 47,
+    "source_sha256": "4c45c637c7169299b8d23a4d851849d57340ffd2121c643375cb3d0ef3ca8455",
+    "bases": [],
+    "methods": {},
+    "declared_fields": [
+      {
+        "name": "grasp",
+        "annotation": "GraspCandidate",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      }
+    ],
+    "local_calls": [],
+    "family_member": false,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "grasp",
+        "annotation": "GraspCandidate",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "ReachAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/pick_up.py",
+    "line": 70,
+    "source_sha256": "4c45c637c7169299b8d23a4d851849d57340ffd2121c643375cb3d0ef3ca8455",
+    "bases": [
+      "ActionDescription",
+      "HasApproachesGraspPoses",
+      "ReachTuningParameters",
+      "HasGraspDetectionThreshold",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "execute": false,
+      "post_condition": false
+    },
+    "declared_fields": [
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "grasp",
+        "annotation": "GraspCandidate",
+        "default_source": null
+      },
+      {
+        "name": "reverse_reach_order",
+        "annotation": "bool",
+        "default_source": "False"
+      },
+      {
+        "name": "open_gripper_at_pre_pose",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ],
+    "local_calls": [
+      "MoveGripperMotion",
+      "MoveToolCenterPointMotion",
+      "ToolFrameIsAtGrasp",
+      "children.append",
+      "is_body_gripped",
+      "or_",
+      "self.add_subplan",
+      "self.add_subplan(self.action_plan).perform",
+      "self.grasp_pose_sequence",
+      "sequential",
+      "variable_from"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "grasp",
+        "annotation": "GraspCandidate",
+        "default_source": null
+      },
+      {
+        "name": "reverse_reach_order",
+        "annotation": "bool",
+        "default_source": "False"
+      },
+      {
+        "name": "open_gripper_at_pre_pose",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ]
+  },
+  {
+    "name": "PickUpAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/pick_up.py",
+    "line": 159,
+    "source_sha256": "4c45c637c7169299b8d23a4d851849d57340ffd2121c643375cb3d0ef3ca8455",
+    "bases": [
+      "ActionDescription",
+      "HasGraspChoice",
+      "HasApproachesGraspPoses",
+      "PickUpTuningParameters",
+      "HasGraspDetectionThreshold",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_grasp_attempt_plan": false,
+      "_action_plan": false,
+      "pre_condition": false,
+      "post_condition": false
+    },
+    "declared_fields": [
+      {
+        "name": "tolerate_grasp_stall",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ],
+    "local_calls": [
+      "GraspingAction",
+      "GripperHolds",
+      "GripperIsFree",
+      "MoveToolCenterPointMotion",
+      "ReAttachNode",
+      "is_body_gripped",
+      "or_",
+      "self._grasp_attempt_plan",
+      "self.grasp_pose_sequence",
+      "sequential",
+      "variable_from"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "grasp",
+        "annotation": "GraspCandidate",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "tolerate_grasp_stall",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ]
+  },
+  {
+    "name": "GraspingAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/pick_up.py",
+    "line": 261,
+    "source_sha256": "4c45c637c7169299b8d23a4d851849d57340ffd2121c643375cb3d0ef3ca8455",
+    "bases": [
+      "ActionDescription",
+      "HasGraspChoice",
+      "HasApproachesGraspPoses",
+      "PickUpTuningParameters",
+      "HasGraspDetectionThreshold",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "pre_condition": false,
+      "post_condition": false
+    },
+    "declared_fields": [
+      {
+        "name": "tolerate_grasp_stall",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ],
+    "local_calls": [
+      "GripperIsFree",
+      "MoveGripperMotion",
+      "ReachAction",
+      "ToolFrameIsAtGrasp",
+      "is_body_gripped",
+      "or_",
+      "sequential",
+      "variable_from"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "grasp",
+        "annotation": "GraspCandidate",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "tolerate_grasp_stall",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ]
+  },
+  {
+    "name": "PlaceAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/placing.py",
+    "line": 43,
+    "source_sha256": "7d8e2bda5ca5db40545a5d512175a50adf44913f6fcf7e9694b0010c71be8e89",
+    "bases": [
+      "ActionDescription",
+      "HasApproachesGraspPoses",
+      "PlaceTuningParameters",
+      "HasGraspDetectionThreshold",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "_holding_arm_and_grasp": false,
+      "_grasp_on_the_held_object": false,
+      "pre_condition": false,
+      "post_condition": false,
+      "_grips_of_every_arm": false
+    },
+    "declared_fields": [
+      {
+        "name": "object_designator",
+        "annotation": "HasGraspCandidates",
+        "default_source": null
+      },
+      {
+        "name": "target_location",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "grasp_release_threshold",
+        "annotation": "float",
+        "default_source": "field(default=0.1, kw_only=True)"
+      }
+    ],
+    "local_calls": [
+      "GraspCandidate",
+      "GripperHolds",
+      "GripperHolds(end_effector, object_body)",
+      "MoveGripperMotion",
+      "MoveToolCenterPointMotion",
+      "ObjectIsNotHeld",
+      "PlaceAction._grips_of_every_arm",
+      "ReAttachNode",
+      "allclose",
+      "and_",
+      "field",
+      "grasp.moved_to",
+      "is_body_gripped",
+      "not_",
+      "or_",
+      "self._holding_arm_and_grasp",
+      "self.grasp_pose_sequence",
+      "self.plan_node.get_previous_node_by_designator_type",
+      "sequential",
+      "variable_from"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "object_designator",
+        "annotation": "HasGraspCandidates",
+        "default_source": null
+      },
+      {
+        "name": "target_location",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "grasp_release_threshold",
+        "annotation": "float",
+        "default_source": "field(default=0.1, kw_only=True)"
+      }
+    ]
+  },
+  {
+    "name": "MoveTorsoAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/robot_body.py",
+    "line": 37,
+    "source_sha256": "346291d6f4ca787f56e8d4acd01dff392ad6058b5d8c5807c4d45c1a64739b2b",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "post_condition": false
+    },
+    "declared_fields": [
+      {
+        "name": "torso_state",
+        "annotation": "TorsoState",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "MoveJointsMotion",
+      "context.robot.get_torso",
+      "context.robot.get_torso().get_joint_state_by_type",
+      "execute_single",
+      "self.robot.get_torso",
+      "self.robot.get_torso().get_joint_state_by_type",
+      "variable_from",
+      "variable_from(joint_state).is_achieved"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "torso_state",
+        "annotation": "TorsoState",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "SetGripperAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/robot_body.py",
+    "line": 71,
+    "source_sha256": "346291d6f4ca787f56e8d4acd01dff392ad6058b5d8c5807c4d45c1a64739b2b",
+    "bases": [
+      "ActionDescription"
+    ],
+    "methods": {
+      "_action_plan": false
+    },
+    "declared_fields": [
+      {
+        "name": "gripper",
+        "annotation": "EndEffector",
+        "default_source": null
+      },
+      {
+        "name": "motion",
+        "annotation": "GripperState",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "MoveGripperMotion",
+      "execute_single"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "gripper",
+        "annotation": "EndEffector",
+        "default_source": null
+      },
+      {
+        "name": "motion",
+        "annotation": "GripperState",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "ParkArmsAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/robot_body.py",
+    "line": 94,
+    "source_sha256": "346291d6f4ca787f56e8d4acd01dff392ad6058b5d8c5807c4d45c1a64739b2b",
+    "bases": [
+      "ActionDescription",
+      "HasMaxJointVelocity"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "get_joint_poses": false
+    },
+    "declared_fields": [
+      {
+        "name": "arms",
+        "annotation": "List[Arm]",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "MoveJointsMotion",
+      "arm.get_joint_state_by_type",
+      "execute_single",
+      "names.extend",
+      "self.get_joint_poses",
+      "values.extend"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "arms",
+        "annotation": "List[Arm]",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "FollowToolCenterPointPathAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/robot_body.py",
+    "line": 130,
+    "source_sha256": "346291d6f4ca787f56e8d4acd01dff392ad6058b5d8c5807c4d45c1a64739b2b",
+    "bases": [
+      "ActionDescription",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "validate": false
+    },
+    "declared_fields": [
+      {
+        "name": "target_locations",
+        "annotation": "PoseTrajectory",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "MoveTCPWaypointsMotion",
+      "execute_single",
+      "list",
+      "timedelta"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target_locations",
+        "annotation": "PoseTrajectory",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "MoveManipulatorAction",
+    "category": "actions",
+    "path": "coraplex/src/coraplex/robot_plans/actions/core/robot_body.py",
+    "line": 169,
+    "source_sha256": "346291d6f4ca787f56e8d4acd01dff392ad6058b5d8c5807c4d45c1a64739b2b",
+    "bases": [
+      "ActionDescription",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_action_plan": false,
+      "post_condition": false
+    },
+    "declared_fields": [
+      {
+        "name": "target_pose",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "end_effector",
+        "annotation": "EndEffector",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "bool",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "MoveManipulatorMotion",
+      "allclose",
+      "end_effector.tool_frame.global_pose.to_np",
+      "execute_single",
+      "target_pose.to_np"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target_pose",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "end_effector",
+        "annotation": "EndEffector",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "bool",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "BaseMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/base.py",
+    "line": 29,
+    "source_sha256": "4143b9be78765347bd5d41ee72cd4aab60dde30bff7efb1ee53a3058a46b3d52",
+    "bases": [
+      "Designator"
+    ],
+    "methods": {
+      "perform": false,
+      "motion_chart": false,
+      "_motion_chart": true,
+      "get_alternative_motion": false,
+      "keep_base_still": false,
+      "_only_allow_gripper_collision_rules": false
+    },
+    "declared_fields": [],
+    "local_calls": [
+      "AllowCollisionForEndEffector",
+      "AlternativeMotion.check_for_alternative",
+      "HoldPose",
+      "UpdateTemporaryCollisionRules",
+      "alternative",
+      "getattr",
+      "isinstance",
+      "self.get_alternative_motion",
+      "signature"
+    ],
+    "family_member": false,
+    "unimplemented_local_abstract_methods": [
+      "_motion_chart"
+    ],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": []
+  },
+  {
+    "name": "OpeningMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/container.py",
+    "line": 12,
+    "source_sha256": "75fb3328b0f17fe560d1f4891fbe8b7f91ae83738c5340a899cf862dfacaaca8",
+    "bases": [
+      "BaseMotion"
+    ],
+    "methods": {
+      "perform": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "object_part",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "Open"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "object_part",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "ClosingMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/container.py",
+    "line": 40,
+    "source_sha256": "75fb3328b0f17fe560d1f4891fbe8b7f91ae83738c5340a899cf862dfacaaca8",
+    "bases": [
+      "BaseMotion"
+    ],
+    "methods": {
+      "perform": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "object_part",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "Close"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "object_part",
+        "annotation": "Body",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "MoveGripperMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/gripper.py",
+    "line": 51,
+    "source_sha256": "d089d6e82a05ca209c443684191f25f96726761fa92549300ed19d05722eb517",
+    "bases": [
+      "BaseMotion",
+      "GripperStallToleranceParameters"
+    ],
+    "methods": {
+      "perform": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "motion",
+        "annotation": "GripperState",
+        "default_source": null
+      },
+      {
+        "name": "gripper",
+        "annotation": "EndEffector",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "Optional[bool]",
+        "default_source": "None"
+      }
+    ],
+    "local_calls": [
+      "JointPositionList",
+      "JointVelocityLimit",
+      "LocalMinimumReached",
+      "Parallel",
+      "accompanying_nodes.append",
+      "accompanying_nodes.extend",
+      "list",
+      "self._only_allow_gripper_collision_rules",
+      "self.gripper.get_joint_state_by_type"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "motion",
+        "annotation": "GripperState",
+        "default_source": null
+      },
+      {
+        "name": "gripper",
+        "annotation": "EndEffector",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "Optional[bool]",
+        "default_source": "None"
+      }
+    ]
+  },
+  {
+    "name": "MoveFingersToWidthMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/gripper.py",
+    "line": 115,
+    "source_sha256": "d089d6e82a05ca209c443684191f25f96726761fa92549300ed19d05722eb517",
+    "bases": [
+      "BaseMotion"
+    ],
+    "methods": {
+      "perform": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "gripper",
+        "annotation": "HasTwoFingers",
+        "default_source": null
+      },
+      {
+        "name": "width",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "squeeze",
+        "annotation": "float",
+        "default_source": "0.0"
+      },
+      {
+        "name": "threshold",
+        "annotation": "float",
+        "default_source": "0.0005"
+      }
+    ],
+    "local_calls": [
+      "CartesianPosition",
+      "FingerWidthNeedsPhysics",
+      "fingertips.finger_P_thumb",
+      "max"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "gripper",
+        "annotation": "HasTwoFingers",
+        "default_source": null
+      },
+      {
+        "name": "width",
+        "annotation": "float",
+        "default_source": null
+      },
+      {
+        "name": "squeeze",
+        "annotation": "float",
+        "default_source": "0.0"
+      },
+      {
+        "name": "threshold",
+        "annotation": "float",
+        "default_source": "0.0005"
+      }
+    ]
+  },
+  {
+    "name": "MoveToolCenterPointMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/gripper.py",
+    "line": 176,
+    "source_sha256": "d089d6e82a05ca209c443684191f25f96726761fa92549300ed19d05722eb517",
+    "bases": [
+      "BaseMotion",
+      "CartesianVelocityLimitParameters",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "perform": false,
+      "_velocity_limit_nodes": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "Optional[bool]",
+        "default_source": "None"
+      },
+      {
+        "name": "movement_type",
+        "annotation": "Optional[MovementType]",
+        "default_source": "MovementType.CARTESIAN"
+      }
+    ],
+    "local_calls": [
+      "CartesianPose",
+      "CartesianPosition",
+      "CartesianPositionVelocityLimit",
+      "CartesianRotationVelocityLimit",
+      "Parallel",
+      "accompanying_nodes.extend",
+      "isinstance",
+      "list",
+      "nodes.append",
+      "self._only_allow_gripper_collision_rules",
+      "self._velocity_limit_nodes",
+      "self.keep_base_still",
+      "self.resolved_orientation_threshold",
+      "self.resolved_position_threshold"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "Optional[bool]",
+        "default_source": "None"
+      },
+      {
+        "name": "movement_type",
+        "annotation": "Optional[MovementType]",
+        "default_source": "MovementType.CARTESIAN"
+      }
+    ]
+  },
+  {
+    "name": "MoveTCPWaypointsMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/gripper.py",
+    "line": 276,
+    "source_sha256": "d089d6e82a05ca209c443684191f25f96726761fa92549300ed19d05722eb517",
+    "bases": [
+      "BaseMotion",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "perform": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "waypoints",
+        "annotation": "List[Pose]",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "Optional[bool]",
+        "default_source": "None"
+      },
+      {
+        "name": "movement_type",
+        "annotation": "WaypointsMovementType",
+        "default_source": "WaypointsMovementType.ENFORCE_ORIENTATION_FINAL_POINT"
+      }
+    ],
+    "local_calls": [
+      "CartesianPose",
+      "Parallel",
+      "Sequence",
+      "dict",
+      "isinstance",
+      "self.keep_base_still"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "waypoints",
+        "annotation": "List[Pose]",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "Optional[bool]",
+        "default_source": "None"
+      },
+      {
+        "name": "movement_type",
+        "annotation": "WaypointsMovementType",
+        "default_source": "WaypointsMovementType.ENFORCE_ORIENTATION_FINAL_POINT"
+      }
+    ]
+  },
+  {
+    "name": "MoveTCPWaypointsAlignedMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/gripper.py",
+    "line": 335,
+    "source_sha256": "d089d6e82a05ca209c443684191f25f96726761fa92549300ed19d05722eb517",
+    "bases": [
+      "BaseMotion",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "perform": false,
+      "_resolve_tip": false,
+      "_upright_torso_task": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "waypoints",
+        "annotation": "List[Point3]",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "alignment_pairs",
+        "annotation": "List[AlignmentPair]",
+        "default_source": "field(default_factory=list)"
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "Optional[bool]",
+        "default_source": "None"
+      },
+      {
+        "name": "tip",
+        "annotation": "Optional[Body]",
+        "default_source": "None"
+      }
+    ],
+    "local_calls": [
+      "AlignPlanes",
+      "CartesianPositionTrajectory",
+      "MissingToolFrame",
+      "MissingWaypoints",
+      "Parallel",
+      "Vector3.X",
+      "Vector3.Z",
+      "dict",
+      "field",
+      "float",
+      "isinstance",
+      "motion_statechart_nodes.append",
+      "motion_statechart_nodes.extend",
+      "self._only_allow_gripper_collision_rules",
+      "self._resolve_tip",
+      "self._upright_torso_task",
+      "self.keep_base_still",
+      "tasks.append",
+      "tasks.extend"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "waypoints",
+        "annotation": "List[Point3]",
+        "default_source": null
+      },
+      {
+        "name": "arm",
+        "annotation": "Arm",
+        "default_source": null
+      },
+      {
+        "name": "alignment_pairs",
+        "annotation": "List[AlignmentPair]",
+        "default_source": "field(default_factory=list)"
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "Optional[bool]",
+        "default_source": "None"
+      },
+      {
+        "name": "tip",
+        "annotation": "Optional[Body]",
+        "default_source": "None"
+      }
+    ]
+  },
+  {
+    "name": "MoveManipulatorMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/gripper.py",
+    "line": 443,
+    "source_sha256": "d089d6e82a05ca209c443684191f25f96726761fa92549300ed19d05722eb517",
+    "bases": [
+      "BaseMotion",
+      "HasTcpGoalThresholds"
+    ],
+    "methods": {
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "end_effector",
+        "annotation": "EndEffector",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ],
+    "local_calls": [
+      "CartesianPose",
+      "Parallel",
+      "isinstance",
+      "self.keep_base_still",
+      "self.resolved_orientation_threshold",
+      "self.resolved_position_threshold"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "end_effector",
+        "annotation": "EndEffector",
+        "default_source": null
+      },
+      {
+        "name": "allow_gripper_collision",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ]
+  },
+  {
+    "name": "PerceptionTask",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/misc.py",
+    "line": 20,
+    "source_sha256": "49c9a5f9bf003c90c8cdc8af0b52493cf6e0fa7a615e9ffb428a164f5ff2253d",
+    "bases": [
+      "Task"
+    ],
+    "methods": {
+      "build": false,
+      "on_start": false,
+      "on_tick": false
+    },
+    "declared_fields": [
+      {
+        "name": "query",
+        "annotation": "PerceptionQuery",
+        "default_source": "field(kw_only=True)"
+      },
+      {
+        "name": "execution_type",
+        "annotation": "Optional[ExecutionType]",
+        "default_source": "field(kw_only=True)"
+      },
+      {
+        "name": "perception_source",
+        "annotation": "Optional[PerceptionInterface]",
+        "default_source": "field(init=False, default=None)"
+      },
+      {
+        "name": "_detections_applied",
+        "annotation": "bool",
+        "default_source": "field(init=False, default=False, repr=False)"
+      },
+      {
+        "name": "accept_first_if_multiple",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ],
+    "local_calls": [
+      "NodeArtifacts",
+      "PerceptionInterface.for_execution_type",
+      "context.require_extension",
+      "dataclass",
+      "detection.apply_to",
+      "field",
+      "self.perception_source.detect"
+    ],
+    "family_member": false,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": false,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "query",
+        "annotation": "PerceptionQuery",
+        "default_source": "field(kw_only=True)"
+      },
+      {
+        "name": "execution_type",
+        "annotation": "Optional[ExecutionType]",
+        "default_source": "field(kw_only=True)"
+      },
+      {
+        "name": "perception_source",
+        "annotation": "Optional[PerceptionInterface]",
+        "default_source": "field(init=False, default=None)"
+      },
+      {
+        "name": "_detections_applied",
+        "annotation": "bool",
+        "default_source": "field(init=False, default=False, repr=False)"
+      },
+      {
+        "name": "accept_first_if_multiple",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ]
+  },
+  {
+    "name": "DetectingMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/misc.py",
+    "line": 92,
+    "source_sha256": "49c9a5f9bf003c90c8cdc8af0b52493cf6e0fa7a615e9ffb428a164f5ff2253d",
+    "bases": [
+      "BaseMotion"
+    ],
+    "methods": {
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "query",
+        "annotation": "PerceptionQuery",
+        "default_source": null
+      },
+      {
+        "name": "accept_first_if_multiple",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ],
+    "local_calls": [
+      "PerceptionTask"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "query",
+        "annotation": "PerceptionQuery",
+        "default_source": null
+      },
+      {
+        "name": "accept_first_if_multiple",
+        "annotation": "bool",
+        "default_source": "False"
+      }
+    ]
+  },
+  {
+    "name": "MoveMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/navigation.py",
+    "line": 24,
+    "source_sha256": "4fa18f529648bff53bac167b1ca2d27ce15c16e3360d9c6ea4c694c923502fce",
+    "bases": [
+      "BaseMotion"
+    ],
+    "methods": {
+      "perform": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "CartesianPose",
+      "SetOdometry"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "TurnMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/navigation.py",
+    "line": 54,
+    "source_sha256": "4fa18f529648bff53bac167b1ca2d27ce15c16e3360d9c6ea4c694c923502fce",
+    "bases": [
+      "BaseMotion"
+    ],
+    "methods": {
+      "perform": false,
+      "_motion_chart": false,
+      "_target_at_base_height": false
+    },
+    "declared_fields": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "CartesianPosition",
+      "Parallel",
+      "Point3",
+      "Pointing",
+      "Vector3",
+      "self._target_at_base_height",
+      "self.robot.mobile_base.forward_axis.to_np",
+      "self.world.transform"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      }
+    ]
+  },
+  {
+    "name": "MoveJointsMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/robot_body.py",
+    "line": 21,
+    "source_sha256": "f901dcc04541f6bd8469ba4fcbbd1b7c9d407bf49dfdc04a1b3420552bb44f2c",
+    "bases": [
+      "BaseMotion",
+      "HasMaxJointVelocity"
+    ],
+    "methods": {
+      "perform": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "names",
+        "annotation": "List[str]",
+        "default_source": null
+      },
+      {
+        "name": "positions",
+        "annotation": "List[float]",
+        "default_source": null
+      },
+      {
+        "name": "align",
+        "annotation": "Optional[bool]",
+        "default_source": "False"
+      },
+      {
+        "name": "tip_link",
+        "annotation": "Optional[str]",
+        "default_source": "None"
+      },
+      {
+        "name": "tip_normal",
+        "annotation": "Optional[Vector3]",
+        "default_source": "None"
+      },
+      {
+        "name": "root_link",
+        "annotation": "Optional[str]",
+        "default_source": "None"
+      },
+      {
+        "name": "root_normal",
+        "annotation": "Optional[Vector3]",
+        "default_source": "None"
+      }
+    ],
+    "local_calls": [
+      "JointPositionList",
+      "JointState.from_mapping",
+      "JointVelocityLimit",
+      "Parallel",
+      "dict",
+      "self.world.get_connection_by_name",
+      "zip"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "names",
+        "annotation": "List[str]",
+        "default_source": null
+      },
+      {
+        "name": "positions",
+        "annotation": "List[float]",
+        "default_source": null
+      },
+      {
+        "name": "align",
+        "annotation": "Optional[bool]",
+        "default_source": "False"
+      },
+      {
+        "name": "tip_link",
+        "annotation": "Optional[str]",
+        "default_source": "None"
+      },
+      {
+        "name": "tip_normal",
+        "annotation": "Optional[Vector3]",
+        "default_source": "None"
+      },
+      {
+        "name": "root_link",
+        "annotation": "Optional[str]",
+        "default_source": "None"
+      },
+      {
+        "name": "root_normal",
+        "annotation": "Optional[Vector3]",
+        "default_source": "None"
+      }
+    ]
+  },
+  {
+    "name": "LookingMotion",
+    "category": "motions",
+    "path": "coraplex/src/coraplex/robot_plans/motions/robot_body.py",
+    "line": 84,
+    "source_sha256": "f901dcc04541f6bd8469ba4fcbbd1b7c9d407bf49dfdc04a1b3420552bb44f2c",
+    "bases": [
+      "BaseMotion"
+    ],
+    "methods": {
+      "perform": false,
+      "_motion_chart": false
+    },
+    "declared_fields": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "camera",
+        "annotation": "Camera",
+        "default_source": null
+      }
+    ],
+    "local_calls": [
+      "Parallel",
+      "Pointing",
+      "self.keep_base_still",
+      "self.robot.get_torso"
+    ],
+    "family_member": true,
+    "unimplemented_local_abstract_methods": [],
+    "concrete_candidate": true,
+    "fields_in_inspected_inheritance": [
+      {
+        "name": "target",
+        "annotation": "Pose",
+        "default_source": null
+      },
+      {
+        "name": "camera",
+        "annotation": "Camera",
+        "default_source": null
+      }
+    ]
+  }
+]

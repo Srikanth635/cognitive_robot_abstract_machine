@@ -1,0 +1,165 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix cs: <http://aicor.knowledge/ontologies/capabilities-strategies.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://aicor.knowledge/ontologies/capabilities-strategies.owl> a owl:Ontology ;
+    rdfs:label "Capabilities and execution strategies"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.10.0" .
+
+cs:Met a cs:AssessmentOutcome,
+        owl:NamedIndividual ;
+    rdfs:label "Met"@en .
+
+cs:Undetermined a cs:AssessmentOutcome,
+        owl:NamedIndividual ;
+    rdfs:label "Undetermined"@en .
+
+cs:Unmet a cs:AssessmentOutcome,
+        owl:NamedIndividual ;
+    rdfs:label "Unmet"@en .
+
+cs:appliesDuring a owl:ObjectProperty ;
+    rdfs:label "Applies During"@en ;
+    rdfs:comment "Optional reference to a core phase specification."@en ;
+    rdfs:domain cs:StrategyStep ;
+    rdfs:range ac:PhaseSpecification .
+
+cs:assessesRequirement a owl:ObjectProperty ;
+    rdfs:label "Assesses Requirement"@en ;
+    rdfs:comment "Requirement under assessment."@en ;
+    rdfs:domain cs:CapabilityAssessment ;
+    rdfs:range ac:CapabilityRequirement .
+
+cs:assessmentContext a owl:ObjectProperty ;
+    rdfs:label "Assessment Context"@en ;
+    rdfs:comment "Scope of the assessment."@en ;
+    rdfs:domain cs:CapabilityAssessment ;
+    rdfs:range ac:ApplicabilitySpecification .
+
+cs:assessmentEvidence a owl:ObjectProperty ;
+    rdfs:label "Assessment Evidence"@en ;
+    rdfs:comment "Evidence for a met or unmet outcome."@en ;
+    rdfs:domain cs:CapabilityAssessment ;
+    rdfs:range ac:EvidenceRecord .
+
+cs:assessmentOutcome a owl:ObjectProperty ;
+    rdfs:label "Assessment Outcome"@en ;
+    rdfs:comment "Context-specific assessment outcome."@en ;
+    rdfs:domain cs:CapabilityAssessment ;
+    rdfs:range cs:AssessmentOutcome .
+
+cs:completionCondition a owl:ObjectProperty ;
+    rdfs:label "Completion Condition"@en ;
+    rdfs:comment "Descriptive completion requirement."@en ;
+    rdfs:domain cs:StrategyStep ;
+    rdfs:range ac:ConditionSpecification .
+
+cs:describesAction a owl:ObjectProperty ;
+    rdfs:label "Describes Action"@en ;
+    rdfs:comment "Conceptual action performed by the step."@en ;
+    rdfs:domain cs:StrategyStep ;
+    rdfs:range ac:ActionDescription .
+
+cs:fulfillsRequirement a owl:ObjectProperty ;
+    rdfs:label "Fulfills Requirement"@en ;
+    rdfs:comment "Capability requirement this interface is intended to fulfill."@en ;
+    rdfs:domain cs:ProcessModuleRequirement ;
+    rdfs:range ac:CapabilityRequirement .
+
+cs:hasCapabilityProfile a owl:ObjectProperty ;
+    rdfs:label "Has Capability Profile"@en ;
+    rdfs:comment "Capability requirements for this action."@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range cs:CapabilityProfile ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+cs:hasStep a owl:ObjectProperty ;
+    rdfs:label "Has Step"@en ;
+    rdfs:comment "Steps owned by a strategy."@en ;
+    rdfs:domain cs:ExecutionStrategy ;
+    rdfs:range cs:StrategyStep .
+
+cs:hasStrategy a owl:ObjectProperty ;
+    rdfs:label "Has Strategy"@en ;
+    rdfs:comment "Candidate strategy."@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range cs:ExecutionStrategy ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+cs:inputParameter a owl:ObjectProperty ;
+    rdfs:label "Input Parameter"@en ;
+    rdfs:comment "Required abstract input."@en ;
+    rdfs:domain cs:ProcessModuleRequirement ;
+    rdfs:range ac:ParameterSpecification .
+
+cs:interfaceKey a owl:DatatypeProperty ;
+    rdfs:label "Interface Key"@en ;
+    rdfs:comment "Stable abstract interface identifier, not a runtime endpoint."@en ;
+    rdfs:domain cs:ProcessModuleRequirement ;
+    rdfs:range xsd:string .
+
+cs:outputParameter a owl:ObjectProperty ;
+    rdfs:label "Output Parameter"@en ;
+    rdfs:comment "Declared abstract output."@en ;
+    rdfs:domain cs:ProcessModuleRequirement ;
+    rdfs:range ac:ParameterSpecification .
+
+cs:precedesStep a owl:ObjectProperty ;
+    rdfs:label "Precedes Step"@en ;
+    rdfs:comment "Partial-order precedence, not a timing guarantee."@en ;
+    rdfs:domain cs:StrategyStep ;
+    rdfs:range cs:StrategyStep .
+
+cs:precondition a owl:ObjectProperty ;
+    rdfs:label "Precondition"@en ;
+    rdfs:comment "Descriptive step precondition."@en ;
+    rdfs:domain cs:StrategyStep ;
+    rdfs:range ac:ConditionSpecification .
+
+cs:requiresCapability a owl:ObjectProperty ;
+    rdfs:label "Requires Capability"@en ;
+    rdfs:comment "Required abstract capability."@en ;
+    rdfs:domain cs:CapabilityProfile ;
+    rdfs:range ac:CapabilityRequirement ;
+    rdfs:subPropertyOf ac:requiresCapability .
+
+cs:requiresProcess a owl:ObjectProperty ;
+    rdfs:label "Requires Process"@en ;
+    rdfs:comment "Required process interface."@en ;
+    rdfs:domain cs:StrategyStep ;
+    rdfs:range cs:ProcessModuleRequirement .
+
+cs:CapabilityProfile a owl:Class ;
+    rdfs:label "Capability Profile"@en ;
+    rdfs:comment "Grouped capability requirements; no robot capability is asserted."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+cs:ExecutionStrategy a owl:Class ;
+    rdfs:label "Execution Strategy"@en ;
+    rdfs:comment "Partial-order strategy specification; no executable schedule."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+cs:AssessmentOutcome a owl:Class ;
+    rdfs:label "Assessment Outcome"@en ;
+    rdfs:comment "Met, unmet or undetermined under a stated context."@en ;
+    rdfs:subClassOf dul:Concept .
+
+cs:CapabilityAssessment a owl:Class ;
+    rdfs:label "Capability Assessment"@en ;
+    rdfs:comment "Evidence-backed contextual assessment of a requirement, not a provider or robot."@en ;
+    rdfs:subClassOf dul:InformationObject .
+
+cs:ProcessModuleRequirement a owl:Class ;
+    rdfs:label "Process Module Requirement"@en ;
+    rdfs:comment "Abstract process interface requirement, independent of a provider API."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+cs:StrategyStep a owl:Class ;
+    rdfs:label "Strategy Step"@en ;
+    rdfs:comment "Descriptive action step with abstract process requirements."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+

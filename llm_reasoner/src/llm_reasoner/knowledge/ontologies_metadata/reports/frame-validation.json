@@ -1,0 +1,122 @@
+[
+  {
+    "case": "valid-contracts-and-artifacts",
+    "passed": true
+  },
+  {
+    "case": "source-graph-unchanged",
+    "passed": true
+  },
+  {
+    "case": "inherited-goals-reuse-source-iris",
+    "passed": true
+  },
+  {
+    "case": "pouring-suppresses-inherited-default",
+    "passed": true
+  },
+  {
+    "case": "grasping-retains-marked-default",
+    "passed": true
+  },
+  {
+    "case": "unsupported-roles-marked-unassessed",
+    "passed": true
+  },
+  {
+    "case": "proposed-claims-retained",
+    "passed": true
+  },
+  {
+    "case": "claims-belong-to-source-record",
+    "passed": true
+  },
+  {
+    "case": "reject-cyclic-inheritance",
+    "passed": true
+  },
+  {
+    "case": "reject-multiple-parents",
+    "passed": true
+  },
+  {
+    "case": "reject-duplicate-slot-key",
+    "passed": true
+  },
+  {
+    "case": "reject-foreign-override",
+    "passed": true
+  },
+  {
+    "case": "reject-contradictory-override",
+    "passed": true
+  },
+  {
+    "case": "reject-noncontiguous-path",
+    "passed": true
+  },
+  {
+    "case": "reject-reversed-cardinality",
+    "passed": true
+  },
+  {
+    "case": "reject-relative-predicate",
+    "passed": true
+  },
+  {
+    "case": "reject-multiple-defaults",
+    "passed": true
+  },
+  {
+    "case": "reject-unstable-anonymous-filler",
+    "passed": true
+  },
+  {
+    "case": "reject-strict-without-status-policy",
+    "passed": true
+  },
+  {
+    "case": "strict-retains-proposed-when-explicitly-allowed",
+    "passed": true
+  },
+  {
+    "case": "strict-excludes-unassessed-content",
+    "passed": true
+  },
+  {
+    "case": "rejected-claim-vetoes-strict-value",
+    "passed": true
+  },
+  {
+    "case": "missing-required-slot-reported",
+    "passed": true
+  },
+  {
+    "case": "unknown-retained-without-invented-value",
+    "passed": true
+  },
+  {
+    "case": "reject-policy-enforced",
+    "passed": true
+  },
+  {
+    "case": "multistep-path-follows-shared-entities",
+    "passed": true
+  },
+  {
+    "case": "explicit-default-replacement",
+    "passed": true
+  },
+  {
+    "case": "strict-excludes-unverified-default",
+    "passed": true
+  },
+  {
+    "case": "maximum-cardinality-reported",
+    "passed": true
+  },
+  {
+    "case": "output-does-not-assess-execution",
+    "passed": true
+  }
+]

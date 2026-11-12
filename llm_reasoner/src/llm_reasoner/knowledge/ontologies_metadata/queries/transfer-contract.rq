@@ -1,0 +1,10 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX tc: <http://aicor.knowledge/ontologies/transfer-contracts.owl#>
+# Bind ?record explicitly. Returns intended descriptive referents, not observed transfer.
+SELECT ?contract ?source ?destination ?substance ?portion ?delivered ?target ?spill ?tolerance ?success ?mode
+WHERE {
+ ?record ac:expressesDescription ?action . ?action tc:hasTransferContract ?contract .
+ ?contract tc:source ?source; tc:destination ?destination; tc:substance ?substance;
+ tc:transferredPortion ?portion; tc:deliveredAmount ?delivered; tc:targetAmount ?target;
+ tc:spillAmount ?spill; tc:spillTolerance ?tolerance; tc:successCriterion ?success; tc:transferMode ?mode .
+}

@@ -11,11 +11,11 @@ from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     CRAM_AICOR_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,
 )
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.vocabulary.terms import (
     ClassTerm,
     ConceptReference,
     DescriptionEntity,

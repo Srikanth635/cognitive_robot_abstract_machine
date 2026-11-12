@@ -14,7 +14,7 @@ import pytest
 from rdflib import OWL, RDF, RDFS, XSD, BNode, Graph, Literal, Namespace, URIRef
 from rdflib.compare import isomorphic
 
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     CRAM_AICOR_NAMESPACE,
     ActionPerspectiveFile,
     HYPOTHESIS_CONCEPT_NAMESPACE,
@@ -27,7 +27,7 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference, PropertyTerm
+from llm_reasoner.knowledge.vocabulary.terms import ConceptReference, PropertyTerm
 from llm_reasoner.knowledge.representation.rdf import GraphReader
 from llm_reasoner.knowledge.storage.migration import (
     ConceptValueAsInstance,

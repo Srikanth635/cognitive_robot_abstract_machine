@@ -3,7 +3,7 @@
   "description": {
     "purpose": "Describe a fragment of the knowledge.",
     "returns": "Its class and what that class means, its label, what it states for each ontology property it gives a value for (the field, what the field means, and either the names of the fragments it links to or its value: an enumeration member by its name, a concept by its IRI, a list for a property taking several values), and the fragments linking to it, each with the field it links through.",
-    "use_when": "Learning what a phase, event, condition or role of the knowledge requires, expects or leads to, to ground a choice on it.",
+    "use_when": "Learning what a fragment of the knowledge states and what links to it, to ground a choice on it.",
     "avoid": "Describing every fragment; follow the links that bear on the slots being chosen."
   },
   "input_schema": {

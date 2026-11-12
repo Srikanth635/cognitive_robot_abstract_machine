@@ -1,0 +1,158 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix mr: <http://aicor.knowledge/ontologies/monitoring-requirements.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pr: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/monitoring-requirements.owl> a owl:Ontology ;
+    rdfs:label "Monitoring requirements"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/conditions-outcomes.owl> ;
+    owl:versionInfo "0.10.0" .
+
+mr:DuringPhase a mr:MonitoringPoint,
+        owl:NamedIndividual ;
+    rdfs:label "During Phase"@en .
+
+mr:PhaseEntry a mr:MonitoringPoint,
+        owl:NamedIndividual ;
+    rdfs:label "Phase Entry"@en .
+
+mr:PhaseExit a mr:MonitoringPoint,
+        owl:NamedIndividual ;
+    rdfs:label "Phase Exit"@en .
+
+mr:ReportSatisfied a mr:MonitoringResponse,
+        owl:NamedIndividual ;
+    rdfs:label "Report Satisfied"@en .
+
+mr:ReportUnknown a mr:MonitoringResponse,
+        owl:NamedIndividual ;
+    rdfs:label "Report Unknown"@en .
+
+mr:ReportUnsatisfied a mr:MonitoringResponse,
+        owl:NamedIndividual ;
+    rdfs:label "Report Unsatisfied"@en .
+
+mr:ReportViolation a mr:MonitoringResponse,
+        owl:NamedIndividual ;
+    rdfs:label "Report Violation"@en .
+
+mr:RequestEvidence a mr:MonitoringResponse,
+        owl:NamedIndividual ;
+    rdfs:label "Request Evidence"@en .
+
+mr:RequestRecovery a mr:MonitoringResponse,
+        owl:NamedIndividual ;
+    rdfs:label "Request Recovery"@en .
+
+mr:RequestSuspension a mr:MonitoringResponse,
+        owl:NamedIndividual ;
+    rdfs:label "Request Suspension"@en .
+
+mr:TransitionCheck a mr:MonitoringPoint,
+        owl:NamedIndividual ;
+    rdfs:label "Transition Check"@en .
+
+mr:atPoint a owl:ObjectProperty ;
+    rdfs:label "At Point"@en ;
+    rdfs:comment "Phase entry, during phase, phase exit or transition check."@en ;
+    rdfs:domain mr:MonitoringRequirement ;
+    rdfs:range mr:MonitoringPoint .
+
+mr:hasMonitoringRequirement a owl:ObjectProperty ;
+    rdfs:label "Has Monitoring Requirement"@en ;
+    rdfs:comment "Monitor attached to a phase or transition specification."@en ;
+    rdfs:domain ac:ActionComponent ;
+    rdfs:range mr:MonitoringRequirement .
+
+mr:inScope a owl:ObjectProperty ;
+    rdfs:label "In Scope"@en ;
+    rdfs:comment "Scope matching the referenced expression leaf."@en ;
+    rdfs:domain mr:ObservationRequirement ;
+    rdfs:range co:StateScope .
+
+mr:monitorsCondition a owl:ObjectProperty ;
+    rdfs:label "Monitors Condition"@en ;
+    rdfs:comment "Condition evaluated by this requirement."@en ;
+    rdfs:domain mr:MonitoringRequirement ;
+    rdfs:range ac:ConditionSpecification .
+
+mr:observesParameter a owl:ObjectProperty ;
+    rdfs:label "Observes Parameter"@en ;
+    rdfs:comment "Parameter whose quantity is needed."@en ;
+    rdfs:domain mr:QuantityObservation ;
+    rdfs:range ac:ParameterSpecification .
+
+mr:observesPattern a owl:ObjectProperty ;
+    rdfs:label "Observes Pattern"@en ;
+    rdfs:comment "Symbolic relation whose truth is needed."@en ;
+    rdfs:domain mr:RelationObservation ;
+    rdfs:range pr:RelationPattern .
+
+mr:requiresCapability a owl:ObjectProperty ;
+    rdfs:label "Requires Capability"@en ;
+    rdfs:comment "Optional abstract sensing/estimation capability; independent of robot or sensor APIs."@en ;
+    rdfs:domain mr:ObservationRequirement ;
+    rdfs:range ac:CapabilityRequirement ;
+    rdfs:subPropertyOf ac:requiresCapability .
+
+mr:requiresObservation a owl:ObjectProperty ;
+    rdfs:label "Requires Observation"@en ;
+    rdfs:comment "Required evidence inputs; validated against the expression dependencies."@en ;
+    rdfs:domain mr:MonitoringRequirement ;
+    rdfs:range mr:ObservationRequirement .
+
+mr:whenFalse a owl:ObjectProperty ;
+    rdfs:label "When False"@en ;
+    rdfs:comment "Response to explicitly false evaluation."@en ;
+    rdfs:domain mr:MonitoringRequirement ;
+    rdfs:range mr:MonitoringResponse .
+
+mr:whenTrue a owl:ObjectProperty ;
+    rdfs:label "When True"@en ;
+    rdfs:comment "Response to explicitly true evaluation."@en ;
+    rdfs:domain mr:MonitoringRequirement ;
+    rdfs:range mr:MonitoringResponse .
+
+mr:whenUnknown a owl:ObjectProperty ;
+    rdfs:label "When Unknown"@en ;
+    rdfs:comment "Response to missing or incompatible evidence; cannot treat unknown as a satisfied condition."@en ;
+    rdfs:domain mr:MonitoringRequirement ;
+    rdfs:range mr:MonitoringResponse .
+
+mr:QuantityObservation a owl:Class ;
+    rdfs:label "Quantity Observation"@en ;
+    rdfs:comment "Observation of a parameter in a scope; no numeric value or measurement device is implied."@en ;
+    rdfs:subClassOf mr:ObservationRequirement .
+
+mr:RelationObservation a owl:Class ;
+    rdfs:label "Relation Observation"@en ;
+    rdfs:comment "Observation of a relation pattern in a scope; an abstract requirement, not an observed fact."@en ;
+    rdfs:subClassOf mr:ObservationRequirement .
+
+mr:MonitoringPoint a owl:Class ;
+    rdfs:label "Monitoring Point"@en ;
+    rdfs:comment "Conceptual point at which checking is requested."@en ;
+    rdfs:subClassOf dul:Concept .
+
+mr:ObservationRequirement a owl:Class ;
+    rdfs:label "Observation Requirement"@en ;
+    rdfs:comment "An abstract input needed to evaluate a monitored condition."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+mr:MonitoringRequirement a owl:Class ;
+    rdfs:label "Monitoring Requirement"@en ;
+    rdfs:comment "Specification of a condition check, observation dependencies and declared responses. Does not create sensors or run monitors."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+mr:MonitoringResponse a owl:Class ;
+    rdfs:label "Monitoring Response"@en ;
+    rdfs:comment "Declared response category; not a command or executable recovery plan."@en ;
+    rdfs:subClassOf dul:Concept .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( mr:RelationObservation mr:QuantityObservation ) .
+

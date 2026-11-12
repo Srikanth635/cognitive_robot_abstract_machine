@@ -1,0 +1,393 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix ema: <http://aicor.knowledge/ontologies/entities-materials-affordances.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/action-examples.owl#> .
+@prefix fq: <http://aicor.knowledge/ontologies/force-dynamics.owl#> .
+@prefix ims: <http://aicor.knowledge/ontologies/image-schemas.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix ns2: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix ns3: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix ns4: <http://aicor.knowledge/ontologies/objectives-tradeoffs.owl#> .
+@prefix ns5: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#> .
+@prefix ns6: <http://aicor.knowledge/ontologies/capabilities-strategies.owl#> .
+@prefix ns7: <http://aicor.knowledge/ontologies/phases-transitions.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sm: <http://aicor.knowledge/ontologies/sensorimotor-events.owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:graspRecordV7 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:graspActionV7 ;
+    ac:hasAnnotation ex:graspRemainingAspectsAnnotation ;
+    ac:hasClaim ex:graspControlClaim0,
+        ex:graspControlClaim1,
+        ex:graspControlClaim2,
+        ex:graspControlClaim3,
+        ex:graspPhysicalClaim0,
+        ex:graspPhysicalClaim1,
+        ex:graspPhysicalClaim2,
+        ex:graspPhysicalClaim3,
+        ex:graspRecordV2Claim0,
+        ex:graspRecordV2Claim1,
+        ex:graspRecordV2Claim2,
+        ex:graspRecordV2Claim3,
+        ex:graspRemainingClaim0,
+        ex:graspRemainingClaim1,
+        ex:graspRemainingClaim2,
+        ex:graspRemainingClaim3,
+        ex:graspStrategyClaim0,
+        ex:graspStrategyClaim1,
+        ex:graspStrategyClaim2,
+        ex:graspStrategyClaim3,
+        ex:graspTemporalClaim0,
+        ex:graspTemporalClaim1,
+        ex:graspTemporalClaim10,
+        ex:graspTemporalClaim2,
+        ex:graspTemporalClaim3,
+        ex:graspTemporalClaim4,
+        ex:graspTemporalClaim5,
+        ex:graspTemporalClaim6,
+        ex:graspTemporalClaim7,
+        ex:graspTemporalClaim8,
+        ex:graspTemporalClaim9 ;
+    ac:previousVersion ex:graspRecordV6 ;
+    ac:recordVersion "7" .
+
+ex:pourRecordV7 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:pourActionV7 ;
+    ac:hasAnnotation ex:pourRemainingAspectsAnnotation ;
+    ac:hasClaim ex:pourControlClaim0,
+        ex:pourControlClaim1,
+        ex:pourControlClaim2,
+        ex:pourControlClaim3,
+        ex:pourPhysicalClaim0,
+        ex:pourPhysicalClaim1,
+        ex:pourPhysicalClaim2,
+        ex:pourPhysicalClaim3,
+        ex:pourRecordV2Claim0,
+        ex:pourRecordV2Claim1,
+        ex:pourRecordV2Claim2,
+        ex:pourRecordV2Claim3,
+        ex:pourRemainingClaim0,
+        ex:pourRemainingClaim1,
+        ex:pourRemainingClaim2,
+        ex:pourRemainingClaim3,
+        ex:pourStrategyClaim0,
+        ex:pourStrategyClaim1,
+        ex:pourStrategyClaim2,
+        ex:pourStrategyClaim3,
+        ex:pourTemporalClaim0,
+        ex:pourTemporalClaim1,
+        ex:pourTemporalClaim10,
+        ex:pourTemporalClaim2,
+        ex:pourTemporalClaim3,
+        ex:pourTemporalClaim4,
+        ex:pourTemporalClaim5,
+        ex:pourTemporalClaim6,
+        ex:pourTemporalClaim7,
+        ex:pourTemporalClaim8,
+        ex:pourTemporalClaim9 ;
+    ac:previousVersion ex:pourRecordV6 ;
+    ac:recordVersion "7" .
+
+ex:graspAntagonist a fq:ForceParticipant ;
+    fq:entity ex:gripperSpecification ;
+    fq:tendency fq:UnknownTendency .
+
+ex:graspDiscrepancyCondition a ac:ConditionSpecification ;
+    rdfs:label "Expected and supplied sensory evidence disagree under a separately specified comparison rule"@en .
+
+ex:graspEntityDescription a ema:EntityDescription ;
+    ema:describesEntity ex:graspableObject ;
+    ema:hasAffordance ex:graspAffordance ;
+    ema:hasGeometry ex:graspGeometry ;
+    ema:hasMaterial ex:graspMaterialSpec .
+
+ex:graspGeometry a ema:GeometrySpecification ;
+    rdfs:label "Geometry unspecified"@en .
+
+ex:graspMaterialSpec a ema:MaterialSpecification ;
+    rdfs:label "Unspecified material description"@en ;
+    ema:materialState ema:UnknownState .
+
+ex:graspMismatch a sm:MismatchSpecification ;
+    sm:discrepancyCondition ex:graspDiscrepancyCondition .
+
+ex:graspRemainingAspectsAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:graspActionV7 ;
+    ac:contributesClaim ex:graspRemainingClaim0,
+        ex:graspRemainingClaim1,
+        ex:graspRemainingClaim2,
+        ex:graspRemainingClaim3 ;
+    ac:producerIdentifier "curated-aspect-structure-example" .
+
+ex:graspRemainingStatement0 a ac:Statement ;
+    ac:statementObject ex:graspAgonist ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/force-dynamics.owl#agonist"^^xsd:anyURI ;
+    ac:statementSubject ex:graspForcePattern .
+
+ex:graspRemainingStatement1 a ac:Statement ;
+    ac:statementObject ex:graspableObject ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/image-schemas.owl#secondContactEntity"^^xsd:anyURI ;
+    ac:statementSubject ex:graspContactSchema .
+
+ex:graspRemainingStatement2 a ac:Statement ;
+    ac:statementObject ex:Grasping ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/entities-materials-affordances.owl#affordsActionKind"^^xsd:anyURI ;
+    ac:statementSubject ex:graspAffordance .
+
+ex:graspRemainingStatement3 a ac:Statement ;
+    ac:statementObject ex:graspBoundary ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/sensorimotor-events.owl#atBoundary"^^xsd:anyURI ;
+    ac:statementSubject ex:graspControlPoint .
+
+ex:graspSensoryExpectation a sm:SensoryExpectation ;
+    sm:expectedCondition ex:graspCurrentHold ;
+    sm:modality sm:Tactile ;
+    sm:requiresCapability ex:graspVerificationCapability .
+
+ex:pourAntagonist a fq:ForceParticipant ;
+    fq:entity ex:sourceContainer ;
+    fq:tendency fq:UnknownTendency .
+
+ex:pourContainmentSchema a ims:ContainmentSchema ;
+    ims:container ex:sourceContainer ;
+    ims:content ex:transferableSubstance .
+
+ex:pourDiscrepancyCondition a ac:ConditionSpecification ;
+    rdfs:label "Expected and supplied sensory evidence disagree under a separately specified comparison rule"@en .
+
+ex:pourEntityDescription a ema:EntityDescription ;
+    ema:describesEntity ex:transferableSubstance ;
+    ema:hasAffordance ex:pourAffordance ;
+    ema:hasGeometry ex:pourGeometry ;
+    ema:hasMaterial ex:pourMaterialSpec .
+
+ex:pourGeometry a ema:GeometrySpecification ;
+    rdfs:label "Geometry unspecified"@en .
+
+ex:pourMaterialSpec a ema:MaterialSpecification ;
+    rdfs:label "Unspecified material description"@en ;
+    ema:materialState ema:UnknownState .
+
+ex:pourMismatch a sm:MismatchSpecification ;
+    sm:discrepancyCondition ex:pourDiscrepancyCondition .
+
+ex:pourRemainingAspectsAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:pourActionV7 ;
+    ac:contributesClaim ex:pourRemainingClaim0,
+        ex:pourRemainingClaim1,
+        ex:pourRemainingClaim2,
+        ex:pourRemainingClaim3 ;
+    ac:producerIdentifier "curated-aspect-structure-example" .
+
+ex:pourRemainingStatement0 a ac:Statement ;
+    ac:statementObject ex:pourAgonist ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/force-dynamics.owl#agonist"^^xsd:anyURI ;
+    ac:statementSubject ex:pourForcePattern .
+
+ex:pourRemainingStatement1 a ac:Statement ;
+    ac:statementObject ex:transferableSubstance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/image-schemas.owl#theme"^^xsd:anyURI ;
+    ac:statementSubject ex:pourPathSchema .
+
+ex:pourRemainingStatement2 a ac:Statement ;
+    ac:statementObject ex:Pouring ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/entities-materials-affordances.owl#affordsActionKind"^^xsd:anyURI ;
+    ac:statementSubject ex:pourAffordance .
+
+ex:pourRemainingStatement3 a ac:Statement ;
+    ac:statementObject ex:pourBoundary ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/sensorimotor-events.owl#atBoundary"^^xsd:anyURI ;
+    ac:statementSubject ex:pourControlPoint .
+
+ex:pourSensoryExpectation a sm:SensoryExpectation ;
+    sm:expectedCondition ex:pourReadyToVerify ;
+    sm:modality sm:Visual ;
+    sm:requiresCapability ex:pourVerificationCapability .
+
+ex:graspActionV7 a ac:ActionDescription ;
+    ac:hasActionKind ex:Grasping ;
+    ac:hasCausalModel ex:graspCausalModel ;
+    ac:hasComponent ex:graspAffordance,
+        ex:graspControlPoint,
+        ex:graspEntityDescription ;
+    ac:hasControl ex:graspController ;
+    ac:hasFailureCriterion ex:graspControlFailure ;
+    ac:hasGoal ex:graspControlledGoal ;
+    ac:hasPerspective ex:graspContactSchema,
+        ex:graspForcePattern ;
+    ac:hasPhase ex:graspAbort,
+        ex:graspComplete,
+        ex:graspEstablish,
+        ex:graspPrepare,
+        ex:graspRecover,
+        ex:graspVerify ;
+    ac:hasPhysicalModel ex:graspDynamics,
+        ex:graspPhysicalModel ;
+    ac:hasPrecondition ex:graspPrecondition ;
+    ac:hasRecovery ex:graspRecoveryOption ;
+    ac:hasRoleSpecification ex:effectorRoleSpec,
+        ex:graspedRoleSpec ;
+    ac:hasSuccessCriterion ex:graspControlledSuccess ;
+    ns6:hasCapabilityProfile ex:graspCapabilityProfile ;
+    ns6:hasStrategy ex:graspExecutionStrategy ;
+    ns3:hasOutcome ex:graspOutcome ;
+    ns5:hasFailureProfile ex:graspFailureProfile ;
+    ns4:hasObjectiveSet ex:graspObjectives ;
+    ns1:hasRelationPattern ex:controlledHoldPattern,
+        ex:graspContactPattern,
+        ex:graspablePattern ;
+    ns7:hasPhaseStructure ex:graspPhaseStructure ;
+    ns2:hasPhysicalProperty ex:graspProperty .
+
+ex:graspAgonist a fq:ForceParticipant ;
+    fq:entity ex:graspableObject ;
+    fq:tendency fq:UnknownTendency .
+
+ex:graspBoundary a sm:EventBoundarySpecification ;
+    sm:afterPhase ex:graspVerify ;
+    sm:beforePhase ex:graspEstablish ;
+    sm:boundaryCondition ex:graspCurrentHold .
+
+ex:graspRemainingClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspForcePattern ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspRemainingStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspRemainingClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspContactSchema ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspRemainingStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspRemainingClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspAffordance ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspRemainingStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspRemainingClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspControlPoint ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspRemainingStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourActionV7 a ac:ActionDescription ;
+    ac:hasActionKind ex:Pouring ;
+    ac:hasCausalModel ex:pourCausalModel ;
+    ac:hasComponent ex:pourAffordance,
+        ex:pourControlPoint,
+        ex:pourEntityDescription ;
+    ac:hasControl ex:pourController ;
+    ac:hasFailureCriterion ex:pourSpillFailure ;
+    ac:hasGoal ex:pourAmountGoal ;
+    ac:hasParameter ex:deliveredAmount,
+        ex:spillAmount,
+        ex:spillTolerance,
+        ex:targetAmount ;
+    ac:hasPerspective ex:pourContainmentSchema,
+        ex:pourForcePattern,
+        ex:pourPathSchema ;
+    ac:hasPhase ex:pourAbort,
+        ex:pourComplete,
+        ex:pourPrepare,
+        ex:pourTransfer,
+        ex:pourVerify ;
+    ac:hasPhysicalModel ex:pourDynamics,
+        ex:pourPhysicalModel ;
+    ac:hasPrecondition ex:pourPrecondition ;
+    ac:hasRecovery ex:pourRecoveryOption ;
+    ac:hasRoleSpecification ex:destinationRoleSpec,
+        ex:sourceRoleSpec,
+        ex:substanceRoleSpec ;
+    ac:hasSuccessCriterion ex:pourAmountSuccess ;
+    ns6:hasCapabilityProfile ex:pourCapabilityProfile ;
+    ns6:hasStrategy ex:pourExecutionStrategy ;
+    ns3:hasOutcome ex:pourOutcome ;
+    ns5:hasFailureProfile ex:pourFailureProfile ;
+    ns4:hasObjectiveSet ex:pourObjectives ;
+    ns1:hasRelationPattern ex:destinationAccessiblePattern,
+        ex:sourceContainmentPattern ;
+    ns7:hasPhaseStructure ex:pourPhaseStructure ;
+    ns2:hasPhysicalProperty ex:pourProperty .
+
+ex:pourAgonist a fq:ForceParticipant ;
+    fq:entity ex:transferableSubstance ;
+    fq:tendency fq:UnknownTendency .
+
+ex:pourBoundary a sm:EventBoundarySpecification ;
+    sm:afterPhase ex:pourVerify ;
+    sm:beforePhase ex:pourTransfer ;
+    sm:boundaryCondition ex:pourReadyToVerify .
+
+ex:pourRemainingClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourForcePattern ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourRemainingStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourRemainingClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourPathSchema ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourRemainingStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourRemainingClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourAffordance ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourRemainingStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourRemainingClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourControlPoint ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourRemainingStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspContactSchema a ims:ContactSchema ;
+    ims:firstContactEntity ex:gripperSpecification ;
+    ims:secondContactEntity ex:graspableObject .
+
+ex:graspControlPoint a sm:ControlPointSpecification ;
+    sm:atBoundary ex:graspBoundary ;
+    sm:hasExpectation ex:graspSensoryExpectation ;
+    sm:mismatchCriterion ex:graspMismatch ;
+    sm:observationRequirement ex:graspVerificationCapability .
+
+ex:graspForcePattern a fq:ForceDynamicDescription ;
+    rdfs:label "Candidate qualitative opposition pattern"@en ;
+    fq:agonist ex:graspAgonist ;
+    fq:antagonist ex:graspAntagonist ;
+    fq:applicability ex:graspModelScope ;
+    fq:describedResult fq:UnknownResult ;
+    fq:relativeStrength fq:UnknownStrength .
+
+ex:pourControlPoint a sm:ControlPointSpecification ;
+    sm:atBoundary ex:pourBoundary ;
+    sm:hasExpectation ex:pourSensoryExpectation ;
+    sm:mismatchCriterion ex:pourMismatch ;
+    sm:observationRequirement ex:pourVerificationCapability .
+
+ex:pourForcePattern a fq:ForceDynamicDescription ;
+    rdfs:label "Candidate qualitative opposition pattern"@en ;
+    fq:agonist ex:pourAgonist ;
+    fq:antagonist ex:pourAntagonist ;
+    fq:applicability ex:pourModelScope ;
+    fq:describedResult fq:UnknownResult ;
+    fq:relativeStrength fq:UnknownStrength .
+
+ex:pourPathSchema a ims:SourcePathGoalSchema ;
+    ims:goal ex:receivingContainer ;
+    ims:source ex:sourceContainer ;
+    ims:theme ex:transferableSubstance .
+
+ex:graspAffordance a ema:AffordanceSpecification ;
+    ema:affordsActionKind ex:Grasping ;
+    ema:requiresCapability ex:graspManipulationCapability ;
+    ema:validWhen ex:graspPrecondition .
+
+ex:pourAffordance a ema:AffordanceSpecification ;
+    ema:affordsActionKind ex:Pouring ;
+    ema:requiresCapability ex:pourManipulationCapability ;
+    ema:validWhen ex:pourPrecondition .
+

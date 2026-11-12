@@ -1,26 +1,17 @@
 """
-The acceptance suite of the predictive manipulation microworld.
+The acceptance suite of the rules the ontology itself states.
 """
 
 from __future__ import annotations
 
-from llm_reasoner.knowledge.acceptance import core
 from llm_reasoner.knowledge.acceptance.derived import RangesHold, RestrictionsHold
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold
 
 
-def predictive_manipulation_suite() -> AcceptanceSuite:
+def ontology_rules_suite() -> AcceptanceSuite:
     """
-    :return: Every acceptance rule of the microworld: the restrictions and ranges the
-        ontology states, the structural rules its shapes state, and the closure of a
-        structure's components.
+    :return: The acceptance rules the ontology states: its restrictions and ranges, and
+        the structural rules of its shapes.
     """
-    return AcceptanceSuite(
-        rules=[
-            RestrictionsHold(),
-            RangesHold(),
-            ShapesHold(),
-            core.ComponentsDeclared(),
-        ]
-    )
+    return AcceptanceSuite(rules=[RestrictionsHold(), RangesHold(), ShapesHold()])

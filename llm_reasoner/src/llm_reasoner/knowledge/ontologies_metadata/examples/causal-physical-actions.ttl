@@ -1,0 +1,356 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix cm: <http://aicor.knowledge/ontologies/causal-mechanisms.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/action-examples.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix ns2: <http://aicor.knowledge/ontologies/participants-relations.owl#> .
+@prefix ns3: <http://aicor.knowledge/ontologies/phases-transitions.owl#> .
+@prefix pm: <http://aicor.knowledge/ontologies/physical-models.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:graspRecordV4 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:graspActionV4 ;
+    ac:hasAnnotation ex:graspPhysicalAnnotation ;
+    ac:hasClaim ex:graspPhysicalClaim0,
+        ex:graspPhysicalClaim1,
+        ex:graspPhysicalClaim2,
+        ex:graspPhysicalClaim3,
+        ex:graspRecordV2Claim0,
+        ex:graspRecordV2Claim1,
+        ex:graspRecordV2Claim2,
+        ex:graspRecordV2Claim3,
+        ex:graspTemporalClaim0,
+        ex:graspTemporalClaim1,
+        ex:graspTemporalClaim10,
+        ex:graspTemporalClaim2,
+        ex:graspTemporalClaim3,
+        ex:graspTemporalClaim4,
+        ex:graspTemporalClaim5,
+        ex:graspTemporalClaim6,
+        ex:graspTemporalClaim7,
+        ex:graspTemporalClaim8,
+        ex:graspTemporalClaim9 ;
+    ac:previousVersion ex:graspRecordV3 ;
+    ac:recordVersion "4" .
+
+ex:pourRecordV4 a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:pourActionV4 ;
+    ac:hasAnnotation ex:pourPhysicalAnnotation ;
+    ac:hasClaim ex:pourPhysicalClaim0,
+        ex:pourPhysicalClaim1,
+        ex:pourPhysicalClaim2,
+        ex:pourPhysicalClaim3,
+        ex:pourRecordV2Claim0,
+        ex:pourRecordV2Claim1,
+        ex:pourRecordV2Claim2,
+        ex:pourRecordV2Claim3,
+        ex:pourTemporalClaim0,
+        ex:pourTemporalClaim1,
+        ex:pourTemporalClaim10,
+        ex:pourTemporalClaim2,
+        ex:pourTemporalClaim3,
+        ex:pourTemporalClaim4,
+        ex:pourTemporalClaim5,
+        ex:pourTemporalClaim6,
+        ex:pourTemporalClaim7,
+        ex:pourTemporalClaim8,
+        ex:pourTemporalClaim9 ;
+    ac:previousVersion ex:pourRecordV3 ;
+    ac:recordVersion "4" .
+
+ex:graspCausalModel a cm:CausalModel ;
+    cm:hasLink ex:graspCausalLink .
+
+ex:graspCauseCondition a ac:ConditionSpecification ;
+    rdfs:label "Normal loading of a frictional contact"@en .
+
+ex:graspEffectCondition a ac:ConditionSpecification ;
+    rdfs:label "Contact can resist tangential slip within its validity conditions"@en .
+
+ex:graspPhysicalAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:graspActionV4 ;
+    ac:contributesClaim ex:graspPhysicalClaim0,
+        ex:graspPhysicalClaim1,
+        ex:graspPhysicalClaim2,
+        ex:graspPhysicalClaim3 ;
+    ac:producerIdentifier "curated-causal-physical-schema-example" .
+
+ex:graspPhysicalStatement0 a ac:Statement ;
+    ac:statementObject ex:graspMechanism ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/causal-mechanisms.owl#mechanism"^^xsd:anyURI ;
+    ac:statementSubject ex:graspCausalLink .
+
+ex:graspPhysicalStatement1 a ac:Statement ;
+    ac:statementObject ex:graspMechanism ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/physical-models.owl#realizesMechanism"^^xsd:anyURI ;
+    ac:statementSubject ex:graspPhysicalModel .
+
+ex:graspPhysicalStatement2 a ac:Statement ;
+    ac:statementObject ex:graspPropertyParameter ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/physical-models.owl#valueParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:graspProperty .
+
+ex:graspPhysicalStatement3 a ac:Statement ;
+    ac:statementObject ex:graspPhysicalModel ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/physical-models.owl#studiesModel"^^xsd:anyURI ;
+    ac:statementSubject ex:graspStudy .
+
+ex:graspVariable_mu a pm:ModelVariable ;
+    pm:parameter ex:graspPropertyParameter ;
+    pm:symbol "mu" .
+
+ex:pourCausalModel a cm:CausalModel ;
+    cm:hasLink ex:pourCausalLink .
+
+ex:pourCauseCondition a ac:ConditionSpecification ;
+    rdfs:label "Material exits source through the transfer process"@en .
+
+ex:pourEffectCondition a ac:ConditionSpecification ;
+    rdfs:label "Source contents decrease while delivered and spilled amounts increase"@en .
+
+ex:pourPhysicalAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:pourActionV4 ;
+    ac:contributesClaim ex:pourPhysicalClaim0,
+        ex:pourPhysicalClaim1,
+        ex:pourPhysicalClaim2,
+        ex:pourPhysicalClaim3 ;
+    ac:producerIdentifier "curated-causal-physical-schema-example" .
+
+ex:pourPhysicalStatement0 a ac:Statement ;
+    ac:statementObject ex:pourMechanism ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/causal-mechanisms.owl#mechanism"^^xsd:anyURI ;
+    ac:statementSubject ex:pourCausalLink .
+
+ex:pourPhysicalStatement1 a ac:Statement ;
+    ac:statementObject ex:pourMechanism ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/physical-models.owl#realizesMechanism"^^xsd:anyURI ;
+    ac:statementSubject ex:pourPhysicalModel .
+
+ex:pourPhysicalStatement2 a ac:Statement ;
+    ac:statementObject ex:pourPropertyParameter ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/physical-models.owl#valueParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:pourProperty .
+
+ex:pourPhysicalStatement3 a ac:Statement ;
+    ac:statementObject ex:pourPhysicalModel ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/physical-models.owl#studiesModel"^^xsd:anyURI ;
+    ac:statementSubject ex:pourStudy .
+
+ex:pourVariable_rho a pm:ModelVariable ;
+    pm:parameter ex:pourPropertyParameter ;
+    pm:symbol "rho" .
+
+ex:pourVolumeEquation a pm:ModelEquation ;
+    pm:expressionLanguage "mathematical-text" ;
+    pm:expressionText "V_after = V_before - V_delivered - V_spilled" ;
+    pm:usesVariable ex:pourVariable_V_after,
+        ex:pourVariable_V_before,
+        ex:pourVariable_V_delivered,
+        ex:pourVariable_V_spilled .
+
+ex:sourceAfter a ac:ParameterSpecification ;
+    ac:parameterKey "source-volume-after" .
+
+ex:sourceBefore a ac:ParameterSpecification ;
+    ac:parameterKey "source-volume-before" .
+
+ex:graspActionV4 a ac:ActionDescription ;
+    ac:hasActionKind ex:Grasping ;
+    ac:hasCausalModel ex:graspCausalModel ;
+    ac:hasFailureCriterion ex:graspControlFailure ;
+    ac:hasGoal ex:graspControlledGoal ;
+    ac:hasPhase ex:graspAbort,
+        ex:graspComplete,
+        ex:graspEstablish,
+        ex:graspPrepare,
+        ex:graspRecover,
+        ex:graspVerify ;
+    ac:hasPhysicalModel ex:graspPhysicalModel ;
+    ac:hasPrecondition ex:graspPrecondition ;
+    ac:hasRoleSpecification ex:effectorRoleSpec,
+        ex:graspedRoleSpec ;
+    ac:hasSuccessCriterion ex:graspControlledSuccess ;
+    ns1:hasOutcome ex:graspOutcome ;
+    ns2:hasRelationPattern ex:controlledHoldPattern,
+        ex:graspContactPattern,
+        ex:graspablePattern ;
+    ns3:hasPhaseStructure ex:graspPhaseStructure ;
+    pm:hasPhysicalProperty ex:graspProperty .
+
+ex:graspModelAssumption a ac:ConditionSpecification ;
+    rdfs:label "Quasi-static idealized contact with a frictional response; dynamic disturbances are excluded."@en .
+
+ex:graspPhysicalClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspCausalLink ;
+    ac:hasApplicability ex:graspModelScope ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspPhysicalStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspPhysicalClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspPhysicalModel ;
+    ac:hasApplicability ex:graspModelScope ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspPhysicalStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspPhysicalClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspProperty ;
+    ac:hasApplicability ex:graspModelScope ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspPhysicalStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspPhysicalClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:graspStudy ;
+    ac:hasApplicability ex:graspModelScope ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:graspPhysicalStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:graspStudy a pm:SimulationStudySpecification ;
+    rdfs:label "Proposed study; no run has been performed"@en ;
+    pm:studiesModel ex:graspPhysicalModel ;
+    pm:testsOutcome ex:graspOutcome .
+
+ex:pourActionV4 a ac:ActionDescription ;
+    ac:hasActionKind ex:Pouring ;
+    ac:hasCausalModel ex:pourCausalModel ;
+    ac:hasFailureCriterion ex:pourSpillFailure ;
+    ac:hasGoal ex:pourAmountGoal ;
+    ac:hasParameter ex:deliveredAmount,
+        ex:spillAmount,
+        ex:spillTolerance,
+        ex:targetAmount ;
+    ac:hasPhase ex:pourAbort,
+        ex:pourComplete,
+        ex:pourPrepare,
+        ex:pourTransfer,
+        ex:pourVerify ;
+    ac:hasPhysicalModel ex:pourPhysicalModel ;
+    ac:hasPrecondition ex:pourPrecondition ;
+    ac:hasRoleSpecification ex:destinationRoleSpec,
+        ex:sourceRoleSpec,
+        ex:substanceRoleSpec ;
+    ac:hasSuccessCriterion ex:pourAmountSuccess ;
+    ns1:hasOutcome ex:pourOutcome ;
+    ns2:hasRelationPattern ex:destinationAccessiblePattern,
+        ex:sourceContainmentPattern ;
+    ns3:hasPhaseStructure ex:pourPhaseStructure ;
+    pm:hasPhysicalProperty ex:pourProperty .
+
+ex:pourModelAssumption a ac:ConditionSpecification ;
+    rdfs:label "Incompressible material; all source losses accounted as delivered or spilled volume."@en .
+
+ex:pourPhysicalClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourCausalLink ;
+    ac:hasApplicability ex:pourModelScope ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourPhysicalStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourPhysicalClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourPhysicalModel ;
+    ac:hasApplicability ex:pourModelScope ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourPhysicalStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourPhysicalClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourProperty ;
+    ac:hasApplicability ex:pourModelScope ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourPhysicalStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourPhysicalClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:pourStudy ;
+    ac:hasApplicability ex:pourModelScope ;
+    ac:hasEvidence ex:exampleEvidence ;
+    ac:hasStatement ex:pourPhysicalStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:pourStudy a pm:SimulationStudySpecification ;
+    rdfs:label "Proposed study; no run has been performed"@en ;
+    pm:studiesModel ex:pourPhysicalModel ;
+    pm:testsOutcome ex:pourOutcome .
+
+ex:pourVariable_V_after a pm:ModelVariable ;
+    pm:parameter ex:sourceAfter ;
+    pm:symbol "V_after" .
+
+ex:pourVariable_V_before a pm:ModelVariable ;
+    pm:parameter ex:sourceBefore ;
+    pm:symbol "V_before" .
+
+ex:pourVariable_V_delivered a pm:ModelVariable ;
+    pm:parameter ex:deliveredAmount ;
+    pm:symbol "V_delivered" .
+
+ex:pourVariable_V_spilled a pm:ModelVariable ;
+    pm:parameter ex:spillAmount ;
+    pm:symbol "V_spilled" .
+
+ex:graspCausalLink a cm:CausalLink ;
+    cm:antecedent ex:graspCauseCondition ;
+    cm:appliesDuring ex:graspEstablish ;
+    cm:consequent ex:graspEffectCondition ;
+    cm:mechanism ex:graspMechanism .
+
+ex:graspProperty a pm:PhysicalPropertySpecification ;
+    pm:describesEntity ex:graspableObject ;
+    pm:propertyKind pm:FrictionCoefficient ;
+    pm:valueParameter ex:graspPropertyParameter .
+
+ex:graspPropertyParameter a ac:ParameterSpecification ;
+    ac:parameterKey "contact-friction-coefficient" .
+
+ex:pourCausalLink a cm:CausalLink ;
+    cm:antecedent ex:pourCauseCondition ;
+    cm:appliesDuring ex:pourTransfer ;
+    cm:consequent ex:pourEffectCondition ;
+    cm:mechanism ex:pourMechanism .
+
+ex:pourProperty a pm:PhysicalPropertySpecification ;
+    pm:describesEntity ex:transferableSubstance ;
+    pm:propertyKind pm:Density ;
+    pm:valueParameter ex:pourPropertyParameter .
+
+ex:pourPropertyParameter a ac:ParameterSpecification ;
+    ac:parameterKey "density" .
+
+ex:graspMechanism a cm:MechanismSpecification ;
+    rdfs:label "Proposed frictional resistance mechanism"@en ;
+    cm:applicability ex:graspModelScope ;
+    cm:assumption ex:graspModelAssumption .
+
+ex:pourMechanism a cm:MechanismSpecification ;
+    rdfs:label "Material-transfer accounting context"@en ;
+    cm:applicability ex:pourModelScope ;
+    cm:assumption ex:pourModelAssumption .
+
+ex:graspPhysicalModel a pm:PhysicalModelSpecification ;
+    rdfs:label "Contact-property model specification"@en ;
+    pm:applicability ex:graspModelScope ;
+    pm:assumption ex:graspModelAssumption ;
+    pm:hasVariable ex:graspVariable_mu ;
+    pm:realizesMechanism ex:graspMechanism .
+
+ex:pourPhysicalModel a pm:PhysicalModelSpecification ;
+    rdfs:label "Volume accounting model"@en ;
+    pm:applicability ex:pourModelScope ;
+    pm:assumption ex:pourModelAssumption ;
+    pm:hasEquation ex:pourVolumeEquation ;
+    pm:hasVariable ex:pourVariable_V_after,
+        ex:pourVariable_V_before,
+        ex:pourVariable_V_delivered,
+        ex:pourVariable_V_spilled,
+        ex:pourVariable_rho ;
+    pm:realizesMechanism ex:pourMechanism .
+
+ex:graspModelScope a ac:ApplicabilitySpecification ;
+    rdfs:label "Conceptual contact mechanism only; no guarantee of grasp wrench stability or actual friction."@en .
+
+ex:pourModelScope a ac:ApplicabilitySpecification ;
+    rdfs:label "Accounting boundary of the source, receiving container and spill; no evaporation, foam expansion or other streams."@en .
+

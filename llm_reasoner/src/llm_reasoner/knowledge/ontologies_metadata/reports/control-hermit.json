@@ -1,0 +1,6 @@
+{
+  "consistent": true,
+  "unsatisfiable_classes": [],
+  "scope": "TBox and controlled vocabulary: all eight aspects + core + DUL; excludes AICOR and action examples",
+  "elapsed_seconds": 3.72
+}

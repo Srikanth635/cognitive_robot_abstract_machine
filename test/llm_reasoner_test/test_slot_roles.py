@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 from rdflib import OWL, RDF, RDFS, BNode, Graph, URIRef
 
-from llm_reasoner.knowledge.ontologies import KNOWLEDGE_ONTOLOGY_MODULES
+from llm_reasoner.knowledge.vocabulary.ontology_modules import KNOWLEDGE_ONTOLOGY_MODULES
 from llm_reasoner.knowledge.ontologies.action_perspectives import action_core
 from llm_reasoner.knowledge.ontologies.described_actions import DescribedActions
 from llm_reasoner.knowledge.ontologies.exceptions import SeveralRolesFillSlot
@@ -21,7 +21,7 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.knowledge.ontologies.terms import PropertyTerm
+from llm_reasoner.knowledge.vocabulary.terms import PropertyTerm
 
 POURING_ACTION = "coraplex.robot_plans.actions.composite.tool_based.PouringAction"
 """

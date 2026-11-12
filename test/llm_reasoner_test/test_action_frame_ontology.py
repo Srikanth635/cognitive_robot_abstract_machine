@@ -4,7 +4,7 @@ structure of its module file, the vocabulary generated from it, its links to the
 CRAM-AICOR and DUL, and what an OWL reasoner concludes from it.
 
 Tests that need CRAM-AICOR or DUL read the pinned copies
-(:class:`~llm_reasoner.knowledge.ontologies.linked.LinkedOntologyFile`), and the test that
+(:class:`~llm_reasoner.knowledge.vocabulary.linked.LinkedOntologyFile`), and the test that
 reasons needs ``owlready2`` and a Java runtime and is slow.
 """
 
@@ -16,7 +16,7 @@ from types import ModuleType
 import pytest
 from rdflib import OWL, RDF, RDFS, Graph, Namespace, URIRef
 
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     ACTION_PERSPECTIVES_NAMESPACE_ROOT,
     CRAM_AICOR_NAMESPACE,
     CRAM_AICOR_ONTOLOGY_IRI,
@@ -29,7 +29,7 @@ from llm_reasoner.knowledge.ontologies.action_perspectives import (
     action_core,
     action_frame,
 )
-from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
+from llm_reasoner.knowledge.vocabulary.translation.writing import VocabularyWriter
 
 from .test_predictive_manipulation_ontology import (
     cram_aicor_graph,

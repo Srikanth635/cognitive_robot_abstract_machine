@@ -17,7 +17,7 @@ from krrood.class_diagrams.class_diagram import ClassDiagram, WrappedClass
 from krrood.symbol_graph.symbol_graph import SymbolGraph
 from typing_extensions import Any, List, Optional
 
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.vocabulary.ontology_modules import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     ActionCoreAnnotation,
@@ -33,15 +33,15 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
-from llm_reasoner.knowledge.ontology_translation.reading import (
+from llm_reasoner.knowledge.vocabulary.terms import DescriptionEntity, PropertyTerm
+from llm_reasoner.knowledge.vocabulary.lookup import Vocabulary
+from llm_reasoner.knowledge.vocabulary.translation.reading import (
     ConflictingPythonNames,
     FieldTypeOutOfReach,
     MissingPropertyRange,
     OntologyReader,
 )
-from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
+from llm_reasoner.knowledge.vocabulary.translation.writing import VocabularyWriter
 
 VOCABULARY_MODULES: dict[PredictiveManipulationOntologyFile, ModuleType] = {
     PredictiveManipulationOntologyFile.CORE: core,

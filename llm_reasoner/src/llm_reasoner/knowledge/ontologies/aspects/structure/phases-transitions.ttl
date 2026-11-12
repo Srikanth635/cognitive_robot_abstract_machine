@@ -1,0 +1,130 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix co: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pt: <http://aicor.knowledge/ontologies/phases-transitions.owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/phases-transitions.owl> a owl:Ontology ;
+    rdfs:label "Phases and transitions"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/conditions-outcomes.owl> ;
+    owl:versionInfo "0.6.0" .
+
+pt:RecoveryPhase a owl:Class ;
+    rdfs:label "Recovery Phase"@en ;
+    rdfs:comment "Phase describing recovery, without executing a recovery controller."@en ;
+    rdfs:subClassOf ac:PhaseSpecification .
+
+pt:entryCondition a owl:ObjectProperty ;
+    rdfs:label "Entry Condition"@en ;
+    rdfs:comment "Declared phase-entry requirement; guard assessment alone does not enforce it."@en ;
+    rdfs:domain ac:PhaseSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+pt:exitCondition a owl:ObjectProperty ;
+    rdfs:label "Exit Condition"@en ;
+    rdfs:comment "Declared phase-completion requirement."@en ;
+    rdfs:domain ac:PhaseSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+pt:expectedOutcome a owl:ObjectProperty ;
+    rdfs:label "Expected Outcome"@en ;
+    rdfs:comment "Intended outcome using the existing conditions/outcomes module."@en ;
+    rdfs:domain ac:PhaseSpecification ;
+    rdfs:range co:OutcomeSpecification .
+
+pt:fromPhase a owl:ObjectProperty ;
+    rdfs:label "From Phase"@en ;
+    rdfs:comment "Source phase."@en ;
+    rdfs:domain pt:PhaseTransition ;
+    rdfs:range ac:PhaseSpecification .
+
+pt:guardCondition a owl:ObjectProperty ;
+    rdfs:label "Guard Condition"@en ;
+    rdfs:comment "Condition whose truth makes this transition a candidate; no priority or execution is implied."@en ;
+    rdfs:domain pt:PhaseTransition ;
+    rdfs:range ac:ConditionSpecification .
+
+pt:hasMemberPhase a owl:ObjectProperty ;
+    rdfs:label "Has Member Phase"@en ;
+    rdfs:comment "Phases in this graph; shared phase specifications are permitted."@en ;
+    rdfs:domain pt:PhaseStructure ;
+    rdfs:range ac:PhaseSpecification .
+
+pt:hasPhaseStructure a owl:ObjectProperty ;
+    rdfs:label "Has Phase Structure"@en ;
+    rdfs:comment "Links a shared action description to a phase graph."@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range pt:PhaseStructure ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+pt:hasTransition a owl:ObjectProperty ;
+    rdfs:label "Has Transition"@en ;
+    rdfs:comment "Transitions owned by this graph."@en ;
+    rdfs:domain pt:PhaseStructure ;
+    rdfs:range pt:PhaseTransition .
+
+pt:initialPhase a owl:ObjectProperty ;
+    rdfs:label "Initial Phase"@en ;
+    rdfs:comment "Exactly one initial phase in the validation profile."@en ;
+    rdfs:domain pt:PhaseStructure ;
+    rdfs:range ac:PhaseSpecification .
+
+pt:invariantCondition a owl:ObjectProperty ;
+    rdfs:label "Invariant Condition"@en ;
+    rdfs:comment "Condition intended to hold during a phase; observations do not prove continuous validity."@en ;
+    rdfs:domain ac:PhaseSpecification ;
+    rdfs:range ac:ConditionSpecification .
+
+pt:toPhase a owl:ObjectProperty ;
+    rdfs:label "To Phase"@en ;
+    rdfs:comment "Target phase."@en ;
+    rdfs:domain pt:PhaseTransition ;
+    rdfs:range ac:PhaseSpecification .
+
+pt:FailedTerminalPhase a owl:Class ;
+    rdfs:label "Failed Terminal Phase"@en ;
+    rdfs:comment "Terminal disposition marked failed by the model; reaching it is not asserted."@en ;
+    rdfs:subClassOf pt:TerminalPhase .
+
+pt:FailureTransition a owl:Class ;
+    rdfs:label "Failure Transition"@en ;
+    rdfs:comment "Progression to a failure disposition; may depend on explicit negative evidence."@en ;
+    rdfs:subClassOf pt:PhaseTransition .
+
+pt:OrdinaryTransition a owl:Class ;
+    rdfs:label "Ordinary Transition"@en ;
+    rdfs:comment "Normal progression between phases."@en ;
+    rdfs:subClassOf pt:PhaseTransition .
+
+pt:RecoveryTransition a owl:Class ;
+    rdfs:label "Recovery Transition"@en ;
+    rdfs:comment "Recovery or retry path. No retry budget is inferred."@en ;
+    rdfs:subClassOf pt:PhaseTransition .
+
+pt:SuccessfulTerminalPhase a owl:Class ;
+    rdfs:label "Successful Terminal Phase"@en ;
+    rdfs:comment "Terminal disposition marked successful by the model; reaching it is not asserted."@en ;
+    rdfs:subClassOf pt:TerminalPhase .
+
+pt:TerminalPhase a owl:Class ;
+    rdfs:label "Terminal Phase"@en ;
+    rdfs:comment "A phase with no outgoing transitions within its phase structure."@en ;
+    rdfs:subClassOf ac:PhaseSpecification .
+
+pt:PhaseStructure a owl:Class ;
+    rdfs:label "Phase Structure"@en ;
+    rdfs:comment "A finite graph describing action phases and guarded transitions; not an execution episode or scheduler."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+pt:PhaseTransition a owl:Class ;
+    rdfs:label "Phase Transition"@en ;
+    rdfs:comment "Directed transition specification with an explicit guard. Does not assert a transition occurred."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( pt:OrdinaryTransition pt:FailureTransition pt:RecoveryTransition ) .
+
+[] a owl:AllDisjointClasses ;
+    owl:members ( pt:SuccessfulTerminalPhase pt:FailedTerminalPhase ) .
+

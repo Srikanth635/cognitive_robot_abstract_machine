@@ -1,0 +1,767 @@
+{
+  "release": "0.14.1",
+  "baseline": "gpt_cram_ontologies_object_manipulation_v0.14.0.zip",
+  "baseline_sha256": "5cb350b68c5c16183562b0a79cea089f01f4592e85b326ee79dbc6d215148a42",
+  "moved_files": {
+    "aspects/participants-relations.ttl": "aspects/structure/participants-relations.ttl",
+    "aspects/conditions-outcomes.ttl": "aspects/structure/conditions-outcomes.ttl",
+    "aspects/phases-transitions.ttl": "aspects/structure/phases-transitions.ttl",
+    "aspects/monitoring-requirements.ttl": "aspects/observation/monitoring-requirements.ttl",
+    "aspects/sensorimotor-events.ttl": "aspects/observation/sensorimotor-events.ttl",
+    "aspects/causal-mechanisms.ttl": "aspects/causality/causal-mechanisms.ttl",
+    "aspects/physical-models.ttl": "aspects/physics-control/physical-models.ttl",
+    "aspects/dynamics-control.ttl": "aspects/physics-control/dynamics-control.ttl",
+    "aspects/model-contracts.ttl": "aspects/physics-control/model-contracts.ttl",
+    "aspects/objectives-tradeoffs.ttl": "aspects/planning/objectives-tradeoffs.ttl",
+    "aspects/capabilities-strategies.ttl": "aspects/planning/capabilities-strategies.ttl",
+    "aspects/failure-diagnosis.ttl": "aspects/planning/failure-diagnosis.ttl",
+    "aspects/frame-perspective.ttl": "aspects/perspectives/frame-perspective.ttl",
+    "aspects/force-dynamics.ttl": "aspects/perspectives/force-dynamics.ttl",
+    "aspects/image-schemas.ttl": "aspects/perspectives/image-schemas.ttl",
+    "aspects/entities-materials-affordances.ttl": "aspects/entities-transfer/entities-materials-affordances.ttl",
+    "aspects/transfer-contracts.ttl": "aspects/entities-transfer/transfer-contracts.ttl",
+    "aspects/causal-physical-shapes.ttl": "aspects/validation/causal-physical-shapes.ttl",
+    "aspects/frame-shapes.ttl": "aspects/validation/frame-shapes.ttl",
+    "aspects/aspect-shapes.ttl": "aspects/validation/aspect-shapes.ttl",
+    "aspects/control-shapes.ttl": "aspects/validation/control-shapes.ttl",
+    "aspects/strategy-failure-shapes.ttl": "aspects/validation/strategy-failure-shapes.ttl",
+    "aspects/contract-shapes.ttl": "aspects/validation/contract-shapes.ttl",
+    "aspects/remaining-aspect-shapes.ttl": "aspects/validation/remaining-aspect-shapes.ttl",
+    "aspects/temporal-shapes.ttl": "aspects/validation/temporal-shapes.ttl"
+  },
+  "checks": [
+    {
+      "case": "same-ontology-IRIs",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://www.ontologydesignpatterns.org/ont/dul/DUL.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/action-description-core.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/cram-action-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:urn:gpt-cram-ontologies:aicor-unified",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/physical-models.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/participants-relations.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/all-action-aspects.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/frame-perspective.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/force-dynamics.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/image-schemas.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/model-contracts.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/robot-motion.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/all-action-knowledge.owl",
+      "passed": true
+    },
+    {
+      "case": "registry-relocation:http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:DUL.owl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/capabilities-strategies.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/causal-mechanisms.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/causal-physical-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/contract-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/control-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/dynamics-control.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/entities-materials-affordances.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/failure-diagnosis.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/force-dynamics.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/frame-perspective.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/frame-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/image-schemas.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/model-contracts.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/objectives-tradeoffs.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/physical-models.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/remaining-aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/sensorimotor-events.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/strategy-failure-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/temporal-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:aspects/transfer-contracts.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:candidates/aicor-unified-dul-offline.owl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:candidates/aicor-unified-dul.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:candidates/aicor-unified-preserved.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:core/action-core-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:core/action-description-core.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:core/cram-action-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:core/knowledge-context-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:core/knowledge-context.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:domains/object-manipulation-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:domains/object-manipulation.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:domains/robot-motion-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:domains/robot-motion.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/aspect-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/causal-physical-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/control-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/frame-contracts.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/frame-projection-artifacts.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/object-manipulation-profiles.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/phase-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/pouring-contracts-v8.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/projection-artifacts.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/remaining-aspect-knowledge.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/robot-motion-profiles.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/stereotypical-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:examples/strategy-failure-actions.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:integrations/all-action-aspects.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:integrations/all-action-knowledge.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:integrations/causal-outcome-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:integrations/causal-physical-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:integrations/diagnostic-causal-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:integrations/physical-outcome-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:integrations/recovery-strategy-bridge.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:reports/removed_dul_parent_axioms.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:reports/replaced_source_metadata.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:review/fixtures/context-provenance.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:sources/aicor-ontology.ttl",
+      "passed": true
+    },
+    {
+      "case": "identical-RDF-bytes:sources/cram-aicor-ontology.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/sensorimotor-events.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/causal-mechanisms.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/physical-models.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/dynamics-control.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/model-contracts.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/objectives-tradeoffs.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/capabilities-strategies.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/failure-diagnosis.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/frame-perspective.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/force-dynamics.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/image-schemas.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/entities-materials-affordances.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/transfer-contracts.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/causal-physical-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/frame-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/control-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/strategy-failure-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/contract-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/remaining-aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "one-copy-only:aspects/temporal-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_robot_motion.py:aspects/validation/aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_object_manipulation.py:aspects/validation/aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_object_manipulation.py:aspects/validation/temporal-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_aspect_integration.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_aspect_integration.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_temporal_integration.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_temporal_integration.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_temporal_integration.py:aspects/structure/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_temporal_integration.py:aspects/observation/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_physical_integration.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_physical_integration.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_physical_integration.py:aspects/structure/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_physical_integration.py:aspects/observation/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_physical_integration.py:aspects/causality/causal-mechanisms.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_physical_integration.py:aspects/physics-control/physical-models.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:project_aspects.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_control_integration.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_control_integration.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_control_integration.py:aspects/structure/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_control_integration.py:aspects/observation/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_control_integration.py:aspects/causality/causal-mechanisms.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_control_integration.py:aspects/physics-control/physical-models.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_control_integration.py:aspects/planning/objectives-tradeoffs.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:check_control_integration.py:aspects/physics-control/dynamics-control.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_control.py:aspects/validation/aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_control.py:aspects/validation/temporal-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_control.py:aspects/validation/causal-physical-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_control.py:aspects/validation/control-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_temporal.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_temporal.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_temporal.py:aspects/structure/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_temporal.py:aspects/observation/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_temporal.py:aspects/validation/aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_temporal.py:aspects/validation/temporal-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:review_competency.py:aspects/planning/capabilities-strategies.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_physical.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_physical.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_physical.py:aspects/structure/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_physical.py:aspects/observation/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_physical.py:aspects/causality/causal-mechanisms.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_physical.py:aspects/physics-control/physical-models.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_frames.py:aspects/validation/frame-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_aspects.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_aspects.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_aspects.py:aspects/validation/aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_physical.py:aspects/validation/aspect-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_physical.py:aspects/validation/temporal-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:validate_physical.py:aspects/validation/causal-physical-shapes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_control.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_control.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_control.py:aspects/structure/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_control.py:aspects/observation/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_control.py:aspects/causality/causal-mechanisms.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_control.py:aspects/physics-control/physical-models.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_control.py:aspects/planning/objectives-tradeoffs.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_control.py:aspects/physics-control/dynamics-control.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_temporal.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_temporal.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_temporal.py:aspects/structure/phases-transitions.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_temporal.py:aspects/observation/monitoring-requirements.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_aspects.py:aspects/structure/participants-relations.ttl",
+      "passed": true
+    },
+    {
+      "case": "tool-path:reason_aspects.py:aspects/structure/conditions-outcomes.ttl",
+      "passed": true
+    },
+    {
+      "case": "both-domains-still-imported",
+      "passed": true
+    }
+  ],
+  "passed": 183
+}

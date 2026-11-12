@@ -1,0 +1,4087 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix ex: <http://aicor.knowledge/ontologies/robot-motion-examples.owl#> .
+@prefix ns1: <http://aicor.knowledge/ontologies/conditions-outcomes.owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rm: <http://aicor.knowledge/ontologies/robot-motion.owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:cartesianPositioningRecord a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:cartesianPositioning ;
+    ac:hasAnnotation ex:cartesianPositioningAnnotation ;
+    ac:hasClaim ex:cartesianPositioningClaim0,
+        ex:cartesianPositioningClaim1,
+        ex:cartesianPositioningClaim10,
+        ex:cartesianPositioningClaim11,
+        ex:cartesianPositioningClaim12,
+        ex:cartesianPositioningClaim13,
+        ex:cartesianPositioningClaim14,
+        ex:cartesianPositioningClaim15,
+        ex:cartesianPositioningClaim16,
+        ex:cartesianPositioningClaim17,
+        ex:cartesianPositioningClaim18,
+        ex:cartesianPositioningClaim19,
+        ex:cartesianPositioningClaim2,
+        ex:cartesianPositioningClaim20,
+        ex:cartesianPositioningClaim21,
+        ex:cartesianPositioningClaim22,
+        ex:cartesianPositioningClaim23,
+        ex:cartesianPositioningClaim24,
+        ex:cartesianPositioningClaim25,
+        ex:cartesianPositioningClaim26,
+        ex:cartesianPositioningClaim27,
+        ex:cartesianPositioningClaim28,
+        ex:cartesianPositioningClaim29,
+        ex:cartesianPositioningClaim3,
+        ex:cartesianPositioningClaim30,
+        ex:cartesianPositioningClaim31,
+        ex:cartesianPositioningClaim32,
+        ex:cartesianPositioningClaim33,
+        ex:cartesianPositioningClaim34,
+        ex:cartesianPositioningClaim35,
+        ex:cartesianPositioningClaim36,
+        ex:cartesianPositioningClaim37,
+        ex:cartesianPositioningClaim38,
+        ex:cartesianPositioningClaim39,
+        ex:cartesianPositioningClaim4,
+        ex:cartesianPositioningClaim40,
+        ex:cartesianPositioningClaim5,
+        ex:cartesianPositioningClaim6,
+        ex:cartesianPositioningClaim7,
+        ex:cartesianPositioningClaim8,
+        ex:cartesianPositioningClaim9,
+        ex:cartesianPositioningendpointErrorParameterClaim,
+        ex:cartesianPositioningendpointToleranceParameterClaim ;
+    ac:recordVersion "1"^^xsd:string .
+
+ex:gripperApertureChangeRecord a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:gripperApertureChange ;
+    ac:hasAnnotation ex:gripperApertureChangeAnnotation ;
+    ac:hasClaim ex:gripperApertureChangeClaim0,
+        ex:gripperApertureChangeClaim1,
+        ex:gripperApertureChangeClaim10,
+        ex:gripperApertureChangeClaim11,
+        ex:gripperApertureChangeClaim12,
+        ex:gripperApertureChangeClaim13,
+        ex:gripperApertureChangeClaim14,
+        ex:gripperApertureChangeClaim15,
+        ex:gripperApertureChangeClaim16,
+        ex:gripperApertureChangeClaim17,
+        ex:gripperApertureChangeClaim18,
+        ex:gripperApertureChangeClaim19,
+        ex:gripperApertureChangeClaim2,
+        ex:gripperApertureChangeClaim20,
+        ex:gripperApertureChangeClaim21,
+        ex:gripperApertureChangeClaim22,
+        ex:gripperApertureChangeClaim23,
+        ex:gripperApertureChangeClaim24,
+        ex:gripperApertureChangeClaim25,
+        ex:gripperApertureChangeClaim26,
+        ex:gripperApertureChangeClaim27,
+        ex:gripperApertureChangeClaim28,
+        ex:gripperApertureChangeClaim29,
+        ex:gripperApertureChangeClaim3,
+        ex:gripperApertureChangeClaim30,
+        ex:gripperApertureChangeClaim31,
+        ex:gripperApertureChangeClaim32,
+        ex:gripperApertureChangeClaim33,
+        ex:gripperApertureChangeClaim34,
+        ex:gripperApertureChangeClaim35,
+        ex:gripperApertureChangeClaim36,
+        ex:gripperApertureChangeClaim4,
+        ex:gripperApertureChangeClaim5,
+        ex:gripperApertureChangeClaim6,
+        ex:gripperApertureChangeClaim7,
+        ex:gripperApertureChangeClaim8,
+        ex:gripperApertureChangeClaim9 ;
+    ac:recordVersion "1"^^xsd:string .
+
+ex:gripperConfigurationChangeRecord a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:gripperConfigurationChange ;
+    ac:hasAnnotation ex:gripperConfigurationChangeAnnotation ;
+    ac:hasClaim ex:gripperConfigurationChangeClaim0,
+        ex:gripperConfigurationChangeClaim1,
+        ex:gripperConfigurationChangeClaim10,
+        ex:gripperConfigurationChangeClaim11,
+        ex:gripperConfigurationChangeClaim12,
+        ex:gripperConfigurationChangeClaim13,
+        ex:gripperConfigurationChangeClaim14,
+        ex:gripperConfigurationChangeClaim15,
+        ex:gripperConfigurationChangeClaim16,
+        ex:gripperConfigurationChangeClaim17,
+        ex:gripperConfigurationChangeClaim18,
+        ex:gripperConfigurationChangeClaim19,
+        ex:gripperConfigurationChangeClaim2,
+        ex:gripperConfigurationChangeClaim20,
+        ex:gripperConfigurationChangeClaim21,
+        ex:gripperConfigurationChangeClaim22,
+        ex:gripperConfigurationChangeClaim23,
+        ex:gripperConfigurationChangeClaim24,
+        ex:gripperConfigurationChangeClaim25,
+        ex:gripperConfigurationChangeClaim26,
+        ex:gripperConfigurationChangeClaim27,
+        ex:gripperConfigurationChangeClaim28,
+        ex:gripperConfigurationChangeClaim29,
+        ex:gripperConfigurationChangeClaim3,
+        ex:gripperConfigurationChangeClaim30,
+        ex:gripperConfigurationChangeClaim31,
+        ex:gripperConfigurationChangeClaim32,
+        ex:gripperConfigurationChangeClaim33,
+        ex:gripperConfigurationChangeClaim34,
+        ex:gripperConfigurationChangeClaim35,
+        ex:gripperConfigurationChangeClaim36,
+        ex:gripperConfigurationChangeClaim4,
+        ex:gripperConfigurationChangeClaim5,
+        ex:gripperConfigurationChangeClaim6,
+        ex:gripperConfigurationChangeClaim7,
+        ex:gripperConfigurationChangeClaim8,
+        ex:gripperConfigurationChangeClaim9 ;
+    ac:recordVersion "1"^^xsd:string .
+
+ex:jointRepositioningRecord a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:jointRepositioning ;
+    ac:hasAnnotation ex:jointRepositioningAnnotation ;
+    ac:hasClaim ex:jointRepositioningClaim0,
+        ex:jointRepositioningClaim1,
+        ex:jointRepositioningClaim10,
+        ex:jointRepositioningClaim11,
+        ex:jointRepositioningClaim12,
+        ex:jointRepositioningClaim13,
+        ex:jointRepositioningClaim14,
+        ex:jointRepositioningClaim15,
+        ex:jointRepositioningClaim16,
+        ex:jointRepositioningClaim17,
+        ex:jointRepositioningClaim18,
+        ex:jointRepositioningClaim19,
+        ex:jointRepositioningClaim2,
+        ex:jointRepositioningClaim20,
+        ex:jointRepositioningClaim21,
+        ex:jointRepositioningClaim22,
+        ex:jointRepositioningClaim23,
+        ex:jointRepositioningClaim24,
+        ex:jointRepositioningClaim25,
+        ex:jointRepositioningClaim26,
+        ex:jointRepositioningClaim27,
+        ex:jointRepositioningClaim28,
+        ex:jointRepositioningClaim29,
+        ex:jointRepositioningClaim3,
+        ex:jointRepositioningClaim30,
+        ex:jointRepositioningClaim31,
+        ex:jointRepositioningClaim32,
+        ex:jointRepositioningClaim33,
+        ex:jointRepositioningClaim34,
+        ex:jointRepositioningClaim35,
+        ex:jointRepositioningClaim36,
+        ex:jointRepositioningClaim4,
+        ex:jointRepositioningClaim5,
+        ex:jointRepositioningClaim6,
+        ex:jointRepositioningClaim7,
+        ex:jointRepositioningClaim8,
+        ex:jointRepositioningClaim9 ;
+    ac:recordVersion "1"^^xsd:string .
+
+ex:posePathFollowingRecord a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:posePathFollowing ;
+    ac:hasAnnotation ex:posePathFollowingAnnotation ;
+    ac:hasClaim ex:posePathFollowingClaim0,
+        ex:posePathFollowingClaim1,
+        ex:posePathFollowingClaim10,
+        ex:posePathFollowingClaim11,
+        ex:posePathFollowingClaim12,
+        ex:posePathFollowingClaim13,
+        ex:posePathFollowingClaim14,
+        ex:posePathFollowingClaim15,
+        ex:posePathFollowingClaim16,
+        ex:posePathFollowingClaim17,
+        ex:posePathFollowingClaim18,
+        ex:posePathFollowingClaim19,
+        ex:posePathFollowingClaim2,
+        ex:posePathFollowingClaim20,
+        ex:posePathFollowingClaim21,
+        ex:posePathFollowingClaim22,
+        ex:posePathFollowingClaim23,
+        ex:posePathFollowingClaim24,
+        ex:posePathFollowingClaim25,
+        ex:posePathFollowingClaim26,
+        ex:posePathFollowingClaim27,
+        ex:posePathFollowingClaim28,
+        ex:posePathFollowingClaim29,
+        ex:posePathFollowingClaim3,
+        ex:posePathFollowingClaim30,
+        ex:posePathFollowingClaim31,
+        ex:posePathFollowingClaim32,
+        ex:posePathFollowingClaim33,
+        ex:posePathFollowingClaim34,
+        ex:posePathFollowingClaim35,
+        ex:posePathFollowingClaim36,
+        ex:posePathFollowingClaim37,
+        ex:posePathFollowingClaim38,
+        ex:posePathFollowingClaim39,
+        ex:posePathFollowingClaim4,
+        ex:posePathFollowingClaim40,
+        ex:posePathFollowingClaim41,
+        ex:posePathFollowingClaim42,
+        ex:posePathFollowingClaim43,
+        ex:posePathFollowingClaim44,
+        ex:posePathFollowingClaim45,
+        ex:posePathFollowingClaim46,
+        ex:posePathFollowingClaim47,
+        ex:posePathFollowingClaim48,
+        ex:posePathFollowingClaim49,
+        ex:posePathFollowingClaim5,
+        ex:posePathFollowingClaim50,
+        ex:posePathFollowingClaim51,
+        ex:posePathFollowingClaim52,
+        ex:posePathFollowingClaim53,
+        ex:posePathFollowingClaim54,
+        ex:posePathFollowingClaim55,
+        ex:posePathFollowingClaim56,
+        ex:posePathFollowingClaim57,
+        ex:posePathFollowingClaim58,
+        ex:posePathFollowingClaim59,
+        ex:posePathFollowingClaim6,
+        ex:posePathFollowingClaim60,
+        ex:posePathFollowingClaim61,
+        ex:posePathFollowingClaim62,
+        ex:posePathFollowingClaim63,
+        ex:posePathFollowingClaim64,
+        ex:posePathFollowingClaim65,
+        ex:posePathFollowingClaim66,
+        ex:posePathFollowingClaim67,
+        ex:posePathFollowingClaim68,
+        ex:posePathFollowingClaim69,
+        ex:posePathFollowingClaim7,
+        ex:posePathFollowingClaim70,
+        ex:posePathFollowingClaim71,
+        ex:posePathFollowingClaim72,
+        ex:posePathFollowingClaim8,
+        ex:posePathFollowingClaim9,
+        ex:posePathFollowingendpointErrorParameterClaim,
+        ex:posePathFollowingendpointToleranceParameterClaim,
+        ex:posePathFollowingtrackingErrorParameterClaim,
+        ex:posePathFollowingtrackingToleranceParameterClaim ;
+    ac:recordVersion "1"^^xsd:string .
+
+ex:stowingRecord a ac:KnowledgeRecord ;
+    ac:expressesDescription ex:stowing ;
+    ac:hasAnnotation ex:stowingAnnotation ;
+    ac:hasClaim ex:stowingClaim0,
+        ex:stowingClaim1,
+        ex:stowingClaim10,
+        ex:stowingClaim11,
+        ex:stowingClaim12,
+        ex:stowingClaim13,
+        ex:stowingClaim14,
+        ex:stowingClaim15,
+        ex:stowingClaim16,
+        ex:stowingClaim17,
+        ex:stowingClaim18,
+        ex:stowingClaim19,
+        ex:stowingClaim2,
+        ex:stowingClaim20,
+        ex:stowingClaim21,
+        ex:stowingClaim22,
+        ex:stowingClaim23,
+        ex:stowingClaim24,
+        ex:stowingClaim25,
+        ex:stowingClaim26,
+        ex:stowingClaim27,
+        ex:stowingClaim28,
+        ex:stowingClaim29,
+        ex:stowingClaim3,
+        ex:stowingClaim30,
+        ex:stowingClaim31,
+        ex:stowingClaim32,
+        ex:stowingClaim33,
+        ex:stowingClaim34,
+        ex:stowingClaim35,
+        ex:stowingClaim36,
+        ex:stowingClaim4,
+        ex:stowingClaim5,
+        ex:stowingClaim6,
+        ex:stowingClaim7,
+        ex:stowingClaim8,
+        ex:stowingClaim9 ;
+    ac:recordVersion "1"^^xsd:string .
+
+ex:cartesianPositioningAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:cartesianPositioning ;
+    ac:contributesClaim ex:cartesianPositioningClaim0,
+        ex:cartesianPositioningClaim1,
+        ex:cartesianPositioningClaim10,
+        ex:cartesianPositioningClaim11,
+        ex:cartesianPositioningClaim12,
+        ex:cartesianPositioningClaim13,
+        ex:cartesianPositioningClaim14,
+        ex:cartesianPositioningClaim15,
+        ex:cartesianPositioningClaim16,
+        ex:cartesianPositioningClaim17,
+        ex:cartesianPositioningClaim18,
+        ex:cartesianPositioningClaim19,
+        ex:cartesianPositioningClaim2,
+        ex:cartesianPositioningClaim20,
+        ex:cartesianPositioningClaim21,
+        ex:cartesianPositioningClaim22,
+        ex:cartesianPositioningClaim23,
+        ex:cartesianPositioningClaim24,
+        ex:cartesianPositioningClaim25,
+        ex:cartesianPositioningClaim26,
+        ex:cartesianPositioningClaim27,
+        ex:cartesianPositioningClaim28,
+        ex:cartesianPositioningClaim29,
+        ex:cartesianPositioningClaim3,
+        ex:cartesianPositioningClaim30,
+        ex:cartesianPositioningClaim31,
+        ex:cartesianPositioningClaim32,
+        ex:cartesianPositioningClaim33,
+        ex:cartesianPositioningClaim34,
+        ex:cartesianPositioningClaim35,
+        ex:cartesianPositioningClaim36,
+        ex:cartesianPositioningClaim37,
+        ex:cartesianPositioningClaim38,
+        ex:cartesianPositioningClaim39,
+        ex:cartesianPositioningClaim4,
+        ex:cartesianPositioningClaim40,
+        ex:cartesianPositioningClaim5,
+        ex:cartesianPositioningClaim6,
+        ex:cartesianPositioningClaim7,
+        ex:cartesianPositioningClaim8,
+        ex:cartesianPositioningClaim9,
+        ex:cartesianPositioningendpointErrorParameterClaim,
+        ex:cartesianPositioningendpointToleranceParameterClaim ;
+    ac:producerIdentifier "synthetic-robot-motion-domain-profile"^^xsd:string .
+
+ex:cartesianPositioningStatement0 a ac:Statement ;
+    ac:statementObject rm:CartesianPositioning ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasActionKind"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement1 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningCapability ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement10 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningTarget ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#poseTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement11 a ac:Statement ;
+    ac:statementLiteral "cartesianPositioningAccelerationLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningAccelerationLimit .
+
+ex:cartesianPositioningStatement12 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningAccelerationLimit .
+
+ex:cartesianPositioningStatement13 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningAccelerationLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#accelerationLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningBounds .
+
+ex:cartesianPositioningStatement14 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningSpeedLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#speedLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningBounds .
+
+ex:cartesianPositioningStatement15 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointleftOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#leftOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointComparison .
+
+ex:cartesianPositioningStatement16 a ac:Statement ;
+    ac:statementObject ns1:LessOrEqual ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#operator"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointComparison .
+
+ex:cartesianPositioningStatement17 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointrightOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#rightOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointComparison .
+
+ex:cartesianPositioningStatement18 a ac:Statement ;
+    ac:statementLiteral "cartesianPositioningEndpointError"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointError .
+
+ex:cartesianPositioningStatement19 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointError .
+
+ex:cartesianPositioningStatement2 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningKnowledgeBundle ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasComponent"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement20 a ac:Statement ;
+    ac:statementLiteral "cartesianPositioningEndpointTolerance"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointTolerance .
+
+ex:cartesianPositioningStatement21 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointTolerance .
+
+ex:cartesianPositioningStatement22 a ac:Statement ;
+    ac:statementObject ns1:PostState ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointleftOperand .
+
+ex:cartesianPositioningStatement23 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointleftOperand .
+
+ex:cartesianPositioningStatement24 a ac:Statement ;
+    ac:statementObject ns1:TaskContext ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointrightOperand .
+
+ex:cartesianPositioningStatement25 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningEndpointrightOperand .
+
+ex:cartesianPositioningStatement26 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningGoal .
+
+ex:cartesianPositioningStatement27 a ac:Statement ;
+    ac:statementLiteral "cartesianPositioningSpeedLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningSpeedLimit .
+
+ex:cartesianPositioningStatement28 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningSpeedLimit .
+
+ex:cartesianPositioningStatement29 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningSuccess .
+
+ex:cartesianPositioningStatement3 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningGoal ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement30 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningTargetPosition ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#position"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTarget .
+
+ex:cartesianPositioningStatement31 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningFrame ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#referenceFrame"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTarget .
+
+ex:cartesianPositioningStatement32 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningTargetx ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#xParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTargetPosition .
+
+ex:cartesianPositioningStatement33 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningTargety ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#yParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTargetPosition .
+
+ex:cartesianPositioningStatement34 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningTargetz ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#zParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTargetPosition .
+
+ex:cartesianPositioningStatement35 a ac:Statement ;
+    ac:statementLiteral "cartesianPositioningTargetx"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTargetx .
+
+ex:cartesianPositioningStatement36 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTargetx .
+
+ex:cartesianPositioningStatement37 a ac:Statement ;
+    ac:statementLiteral "cartesianPositioningTargety"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTargety .
+
+ex:cartesianPositioningStatement38 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTargety .
+
+ex:cartesianPositioningStatement39 a ac:Statement ;
+    ac:statementLiteral "cartesianPositioningTargetz"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTargetz .
+
+ex:cartesianPositioningStatement4 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement40 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioningTargetz .
+
+ex:cartesianPositioningStatement5 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement6 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningPrecondition ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement7 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement8 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningBounds ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#bounds"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningStatement9 a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningControlledPart ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#controlledEntity"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningendpointErrorParameterStatement a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#endpointErrorParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:cartesianPositioningendpointToleranceParameterStatement a ac:Statement ;
+    ac:statementObject ex:cartesianPositioningEndpointTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#endpointToleranceParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:cartesianPositioning .
+
+ex:gripperApertureChangeAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:gripperApertureChange ;
+    ac:contributesClaim ex:gripperApertureChangeClaim0,
+        ex:gripperApertureChangeClaim1,
+        ex:gripperApertureChangeClaim10,
+        ex:gripperApertureChangeClaim11,
+        ex:gripperApertureChangeClaim12,
+        ex:gripperApertureChangeClaim13,
+        ex:gripperApertureChangeClaim14,
+        ex:gripperApertureChangeClaim15,
+        ex:gripperApertureChangeClaim16,
+        ex:gripperApertureChangeClaim17,
+        ex:gripperApertureChangeClaim18,
+        ex:gripperApertureChangeClaim19,
+        ex:gripperApertureChangeClaim2,
+        ex:gripperApertureChangeClaim20,
+        ex:gripperApertureChangeClaim21,
+        ex:gripperApertureChangeClaim22,
+        ex:gripperApertureChangeClaim23,
+        ex:gripperApertureChangeClaim24,
+        ex:gripperApertureChangeClaim25,
+        ex:gripperApertureChangeClaim26,
+        ex:gripperApertureChangeClaim27,
+        ex:gripperApertureChangeClaim28,
+        ex:gripperApertureChangeClaim29,
+        ex:gripperApertureChangeClaim3,
+        ex:gripperApertureChangeClaim30,
+        ex:gripperApertureChangeClaim31,
+        ex:gripperApertureChangeClaim32,
+        ex:gripperApertureChangeClaim33,
+        ex:gripperApertureChangeClaim34,
+        ex:gripperApertureChangeClaim35,
+        ex:gripperApertureChangeClaim36,
+        ex:gripperApertureChangeClaim4,
+        ex:gripperApertureChangeClaim5,
+        ex:gripperApertureChangeClaim6,
+        ex:gripperApertureChangeClaim7,
+        ex:gripperApertureChangeClaim8,
+        ex:gripperApertureChangeClaim9 ;
+    ac:producerIdentifier "synthetic-robot-motion-domain-profile"^^xsd:string .
+
+ex:gripperApertureChangeStatement0 a ac:Statement ;
+    ac:statementObject rm:GripperApertureChange ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasActionKind"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChange .
+
+ex:gripperApertureChangeStatement1 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeCapability ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChange .
+
+ex:gripperApertureChangeStatement10 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeAccelerationLimit .
+
+ex:gripperApertureChangeStatement11 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeAccelerationLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#accelerationLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeBounds .
+
+ex:gripperApertureChangeStatement12 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeSpeedLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#speedLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeBounds .
+
+ex:gripperApertureChangeStatement13 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeleftOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#leftOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeComparison .
+
+ex:gripperApertureChangeStatement14 a ac:Statement ;
+    ac:statementObject ns1:LessOrEqual ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#operator"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeComparison .
+
+ex:gripperApertureChangeStatement15 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangerightOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#rightOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeComparison .
+
+ex:gripperApertureChangeStatement16 a ac:Statement ;
+    ac:statementLiteral "unbound-linear-coordinate"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinateKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeCoordinate .
+
+ex:gripperApertureChangeStatement17 a ac:Statement ;
+    ac:statementLiteral "linear"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinateKind"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeCoordinate .
+
+ex:gripperApertureChangeStatement18 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeCoordinate ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinate"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeEntry .
+
+ex:gripperApertureChangeStatement19 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#errorParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeEntry .
+
+ex:gripperApertureChangeStatement2 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeKnowledgeBundle ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasComponent"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChange .
+
+ex:gripperApertureChangeStatement20 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeTargetValue ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#targetParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeEntry .
+
+ex:gripperApertureChangeStatement21 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#toleranceParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeEntry .
+
+ex:gripperApertureChangeStatement22 a ac:Statement ;
+    ac:statementLiteral "gripperApertureChangeError"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeError .
+
+ex:gripperApertureChangeStatement23 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeError .
+
+ex:gripperApertureChangeStatement24 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeGoal .
+
+ex:gripperApertureChangeStatement25 a ac:Statement ;
+    ac:statementLiteral "gripperApertureChangeSpeedLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeSpeedLimit .
+
+ex:gripperApertureChangeStatement26 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeSpeedLimit .
+
+ex:gripperApertureChangeStatement27 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeSuccess .
+
+ex:gripperApertureChangeStatement28 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeEntry ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#hasCoordinateTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeTarget .
+
+ex:gripperApertureChangeStatement29 a ac:Statement ;
+    ac:statementLiteral "gripperApertureChangeTargetValue"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeTargetValue .
+
+ex:gripperApertureChangeStatement3 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeGoal ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChange .
+
+ex:gripperApertureChangeStatement30 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeTargetValue .
+
+ex:gripperApertureChangeStatement31 a ac:Statement ;
+    ac:statementLiteral "gripperApertureChangeTolerance"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeTolerance .
+
+ex:gripperApertureChangeStatement32 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeTolerance .
+
+ex:gripperApertureChangeStatement33 a ac:Statement ;
+    ac:statementObject ns1:PostState ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeleftOperand .
+
+ex:gripperApertureChangeStatement34 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeleftOperand .
+
+ex:gripperApertureChangeStatement35 a ac:Statement ;
+    ac:statementObject ns1:TaskContext ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangerightOperand .
+
+ex:gripperApertureChangeStatement36 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangerightOperand .
+
+ex:gripperApertureChangeStatement4 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangePrecondition ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChange .
+
+ex:gripperApertureChangeStatement5 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChange .
+
+ex:gripperApertureChangeStatement6 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeBounds ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#bounds"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChange .
+
+ex:gripperApertureChangeStatement7 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeTarget ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#configurationTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChange .
+
+ex:gripperApertureChangeStatement8 a ac:Statement ;
+    ac:statementObject ex:gripperApertureChangeControlledPart ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#controlledEntity"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChange .
+
+ex:gripperApertureChangeStatement9 a ac:Statement ;
+    ac:statementLiteral "gripperApertureChangeAccelerationLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperApertureChangeAccelerationLimit .
+
+ex:gripperConfigurationChangeAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:gripperConfigurationChange ;
+    ac:contributesClaim ex:gripperConfigurationChangeClaim0,
+        ex:gripperConfigurationChangeClaim1,
+        ex:gripperConfigurationChangeClaim10,
+        ex:gripperConfigurationChangeClaim11,
+        ex:gripperConfigurationChangeClaim12,
+        ex:gripperConfigurationChangeClaim13,
+        ex:gripperConfigurationChangeClaim14,
+        ex:gripperConfigurationChangeClaim15,
+        ex:gripperConfigurationChangeClaim16,
+        ex:gripperConfigurationChangeClaim17,
+        ex:gripperConfigurationChangeClaim18,
+        ex:gripperConfigurationChangeClaim19,
+        ex:gripperConfigurationChangeClaim2,
+        ex:gripperConfigurationChangeClaim20,
+        ex:gripperConfigurationChangeClaim21,
+        ex:gripperConfigurationChangeClaim22,
+        ex:gripperConfigurationChangeClaim23,
+        ex:gripperConfigurationChangeClaim24,
+        ex:gripperConfigurationChangeClaim25,
+        ex:gripperConfigurationChangeClaim26,
+        ex:gripperConfigurationChangeClaim27,
+        ex:gripperConfigurationChangeClaim28,
+        ex:gripperConfigurationChangeClaim29,
+        ex:gripperConfigurationChangeClaim3,
+        ex:gripperConfigurationChangeClaim30,
+        ex:gripperConfigurationChangeClaim31,
+        ex:gripperConfigurationChangeClaim32,
+        ex:gripperConfigurationChangeClaim33,
+        ex:gripperConfigurationChangeClaim34,
+        ex:gripperConfigurationChangeClaim35,
+        ex:gripperConfigurationChangeClaim36,
+        ex:gripperConfigurationChangeClaim4,
+        ex:gripperConfigurationChangeClaim5,
+        ex:gripperConfigurationChangeClaim6,
+        ex:gripperConfigurationChangeClaim7,
+        ex:gripperConfigurationChangeClaim8,
+        ex:gripperConfigurationChangeClaim9 ;
+    ac:producerIdentifier "synthetic-robot-motion-domain-profile"^^xsd:string .
+
+ex:gripperConfigurationChangeStatement0 a ac:Statement ;
+    ac:statementObject rm:GripperConfigurationChange ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasActionKind"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChange .
+
+ex:gripperConfigurationChangeStatement1 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeCapability ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChange .
+
+ex:gripperConfigurationChangeStatement10 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeAccelerationLimit .
+
+ex:gripperConfigurationChangeStatement11 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeAccelerationLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#accelerationLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeBounds .
+
+ex:gripperConfigurationChangeStatement12 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeSpeedLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#speedLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeBounds .
+
+ex:gripperConfigurationChangeStatement13 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeleftOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#leftOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeComparison .
+
+ex:gripperConfigurationChangeStatement14 a ac:Statement ;
+    ac:statementObject ns1:LessOrEqual ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#operator"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeComparison .
+
+ex:gripperConfigurationChangeStatement15 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangerightOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#rightOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeComparison .
+
+ex:gripperConfigurationChangeStatement16 a ac:Statement ;
+    ac:statementLiteral "unbound-linear-coordinate"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinateKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeCoordinate .
+
+ex:gripperConfigurationChangeStatement17 a ac:Statement ;
+    ac:statementLiteral "linear"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinateKind"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeCoordinate .
+
+ex:gripperConfigurationChangeStatement18 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeCoordinate ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinate"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeEntry .
+
+ex:gripperConfigurationChangeStatement19 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#errorParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeEntry .
+
+ex:gripperConfigurationChangeStatement2 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasComponent"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChange .
+
+ex:gripperConfigurationChangeStatement20 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeTargetValue ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#targetParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeEntry .
+
+ex:gripperConfigurationChangeStatement21 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#toleranceParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeEntry .
+
+ex:gripperConfigurationChangeStatement22 a ac:Statement ;
+    ac:statementLiteral "gripperConfigurationChangeError"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeError .
+
+ex:gripperConfigurationChangeStatement23 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeError .
+
+ex:gripperConfigurationChangeStatement24 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeGoal .
+
+ex:gripperConfigurationChangeStatement25 a ac:Statement ;
+    ac:statementLiteral "gripperConfigurationChangeSpeedLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeSpeedLimit .
+
+ex:gripperConfigurationChangeStatement26 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeSpeedLimit .
+
+ex:gripperConfigurationChangeStatement27 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeSuccess .
+
+ex:gripperConfigurationChangeStatement28 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeEntry ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#hasCoordinateTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeTarget .
+
+ex:gripperConfigurationChangeStatement29 a ac:Statement ;
+    ac:statementLiteral "gripperConfigurationChangeTargetValue"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeTargetValue .
+
+ex:gripperConfigurationChangeStatement3 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeGoal ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChange .
+
+ex:gripperConfigurationChangeStatement30 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeTargetValue .
+
+ex:gripperConfigurationChangeStatement31 a ac:Statement ;
+    ac:statementLiteral "gripperConfigurationChangeTolerance"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeTolerance .
+
+ex:gripperConfigurationChangeStatement32 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeTolerance .
+
+ex:gripperConfigurationChangeStatement33 a ac:Statement ;
+    ac:statementObject ns1:PostState ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeleftOperand .
+
+ex:gripperConfigurationChangeStatement34 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeleftOperand .
+
+ex:gripperConfigurationChangeStatement35 a ac:Statement ;
+    ac:statementObject ns1:TaskContext ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangerightOperand .
+
+ex:gripperConfigurationChangeStatement36 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangerightOperand .
+
+ex:gripperConfigurationChangeStatement4 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangePrecondition ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChange .
+
+ex:gripperConfigurationChangeStatement5 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChange .
+
+ex:gripperConfigurationChangeStatement6 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeBounds ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#bounds"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChange .
+
+ex:gripperConfigurationChangeStatement7 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeTarget ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#configurationTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChange .
+
+ex:gripperConfigurationChangeStatement8 a ac:Statement ;
+    ac:statementObject ex:gripperConfigurationChangeControlledPart ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#controlledEntity"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChange .
+
+ex:gripperConfigurationChangeStatement9 a ac:Statement ;
+    ac:statementLiteral "gripperConfigurationChangeAccelerationLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:gripperConfigurationChangeAccelerationLimit .
+
+ex:jointRepositioningAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:jointRepositioning ;
+    ac:contributesClaim ex:jointRepositioningClaim0,
+        ex:jointRepositioningClaim1,
+        ex:jointRepositioningClaim10,
+        ex:jointRepositioningClaim11,
+        ex:jointRepositioningClaim12,
+        ex:jointRepositioningClaim13,
+        ex:jointRepositioningClaim14,
+        ex:jointRepositioningClaim15,
+        ex:jointRepositioningClaim16,
+        ex:jointRepositioningClaim17,
+        ex:jointRepositioningClaim18,
+        ex:jointRepositioningClaim19,
+        ex:jointRepositioningClaim2,
+        ex:jointRepositioningClaim20,
+        ex:jointRepositioningClaim21,
+        ex:jointRepositioningClaim22,
+        ex:jointRepositioningClaim23,
+        ex:jointRepositioningClaim24,
+        ex:jointRepositioningClaim25,
+        ex:jointRepositioningClaim26,
+        ex:jointRepositioningClaim27,
+        ex:jointRepositioningClaim28,
+        ex:jointRepositioningClaim29,
+        ex:jointRepositioningClaim3,
+        ex:jointRepositioningClaim30,
+        ex:jointRepositioningClaim31,
+        ex:jointRepositioningClaim32,
+        ex:jointRepositioningClaim33,
+        ex:jointRepositioningClaim34,
+        ex:jointRepositioningClaim35,
+        ex:jointRepositioningClaim36,
+        ex:jointRepositioningClaim4,
+        ex:jointRepositioningClaim5,
+        ex:jointRepositioningClaim6,
+        ex:jointRepositioningClaim7,
+        ex:jointRepositioningClaim8,
+        ex:jointRepositioningClaim9 ;
+    ac:producerIdentifier "synthetic-robot-motion-domain-profile"^^xsd:string .
+
+ex:jointRepositioningStatement0 a ac:Statement ;
+    ac:statementObject rm:JointRepositioning ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasActionKind"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioning .
+
+ex:jointRepositioningStatement1 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningCapability ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioning .
+
+ex:jointRepositioningStatement10 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/RAD-PER-SEC2"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningAccelerationLimit .
+
+ex:jointRepositioningStatement11 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningAccelerationLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#accelerationLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningBounds .
+
+ex:jointRepositioningStatement12 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningSpeedLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#speedLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningBounds .
+
+ex:jointRepositioningStatement13 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningleftOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#leftOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningComparison .
+
+ex:jointRepositioningStatement14 a ac:Statement ;
+    ac:statementObject ns1:LessOrEqual ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#operator"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningComparison .
+
+ex:jointRepositioningStatement15 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningrightOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#rightOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningComparison .
+
+ex:jointRepositioningStatement16 a ac:Statement ;
+    ac:statementLiteral "unbound-angular-coordinate"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinateKey"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningCoordinate .
+
+ex:jointRepositioningStatement17 a ac:Statement ;
+    ac:statementLiteral "angular"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinateKind"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningCoordinate .
+
+ex:jointRepositioningStatement18 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningCoordinate ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinate"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningEntry .
+
+ex:jointRepositioningStatement19 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#errorParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningEntry .
+
+ex:jointRepositioningStatement2 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningKnowledgeBundle ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasComponent"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioning .
+
+ex:jointRepositioningStatement20 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningTargetValue ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#targetParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningEntry .
+
+ex:jointRepositioningStatement21 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#toleranceParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningEntry .
+
+ex:jointRepositioningStatement22 a ac:Statement ;
+    ac:statementLiteral "jointRepositioningError"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningError .
+
+ex:jointRepositioningStatement23 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/RAD"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningError .
+
+ex:jointRepositioningStatement24 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningGoal .
+
+ex:jointRepositioningStatement25 a ac:Statement ;
+    ac:statementLiteral "jointRepositioningSpeedLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningSpeedLimit .
+
+ex:jointRepositioningStatement26 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/RAD-PER-SEC"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningSpeedLimit .
+
+ex:jointRepositioningStatement27 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningSuccess .
+
+ex:jointRepositioningStatement28 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningEntry ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#hasCoordinateTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningTarget .
+
+ex:jointRepositioningStatement29 a ac:Statement ;
+    ac:statementLiteral "jointRepositioningTargetValue"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningTargetValue .
+
+ex:jointRepositioningStatement3 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningGoal ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioning .
+
+ex:jointRepositioningStatement30 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/RAD"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningTargetValue .
+
+ex:jointRepositioningStatement31 a ac:Statement ;
+    ac:statementLiteral "jointRepositioningTolerance"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningTolerance .
+
+ex:jointRepositioningStatement32 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/RAD"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningTolerance .
+
+ex:jointRepositioningStatement33 a ac:Statement ;
+    ac:statementObject ns1:PostState ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningleftOperand .
+
+ex:jointRepositioningStatement34 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningleftOperand .
+
+ex:jointRepositioningStatement35 a ac:Statement ;
+    ac:statementObject ns1:TaskContext ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningrightOperand .
+
+ex:jointRepositioningStatement36 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningrightOperand .
+
+ex:jointRepositioningStatement4 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningPrecondition ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioning .
+
+ex:jointRepositioningStatement5 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioning .
+
+ex:jointRepositioningStatement6 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningBounds ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#bounds"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioning .
+
+ex:jointRepositioningStatement7 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningTarget ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#configurationTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioning .
+
+ex:jointRepositioningStatement8 a ac:Statement ;
+    ac:statementObject ex:jointRepositioningControlledPart ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#controlledEntity"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioning .
+
+ex:jointRepositioningStatement9 a ac:Statement ;
+    ac:statementLiteral "jointRepositioningAccelerationLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:jointRepositioningAccelerationLimit .
+
+ex:posePathFollowingAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:posePathFollowing ;
+    ac:contributesClaim ex:posePathFollowingClaim0,
+        ex:posePathFollowingClaim1,
+        ex:posePathFollowingClaim10,
+        ex:posePathFollowingClaim11,
+        ex:posePathFollowingClaim12,
+        ex:posePathFollowingClaim13,
+        ex:posePathFollowingClaim14,
+        ex:posePathFollowingClaim15,
+        ex:posePathFollowingClaim16,
+        ex:posePathFollowingClaim17,
+        ex:posePathFollowingClaim18,
+        ex:posePathFollowingClaim19,
+        ex:posePathFollowingClaim2,
+        ex:posePathFollowingClaim20,
+        ex:posePathFollowingClaim21,
+        ex:posePathFollowingClaim22,
+        ex:posePathFollowingClaim23,
+        ex:posePathFollowingClaim24,
+        ex:posePathFollowingClaim25,
+        ex:posePathFollowingClaim26,
+        ex:posePathFollowingClaim27,
+        ex:posePathFollowingClaim28,
+        ex:posePathFollowingClaim29,
+        ex:posePathFollowingClaim3,
+        ex:posePathFollowingClaim30,
+        ex:posePathFollowingClaim31,
+        ex:posePathFollowingClaim32,
+        ex:posePathFollowingClaim33,
+        ex:posePathFollowingClaim34,
+        ex:posePathFollowingClaim35,
+        ex:posePathFollowingClaim36,
+        ex:posePathFollowingClaim37,
+        ex:posePathFollowingClaim38,
+        ex:posePathFollowingClaim39,
+        ex:posePathFollowingClaim4,
+        ex:posePathFollowingClaim40,
+        ex:posePathFollowingClaim41,
+        ex:posePathFollowingClaim42,
+        ex:posePathFollowingClaim43,
+        ex:posePathFollowingClaim44,
+        ex:posePathFollowingClaim45,
+        ex:posePathFollowingClaim46,
+        ex:posePathFollowingClaim47,
+        ex:posePathFollowingClaim48,
+        ex:posePathFollowingClaim49,
+        ex:posePathFollowingClaim5,
+        ex:posePathFollowingClaim50,
+        ex:posePathFollowingClaim51,
+        ex:posePathFollowingClaim52,
+        ex:posePathFollowingClaim53,
+        ex:posePathFollowingClaim54,
+        ex:posePathFollowingClaim55,
+        ex:posePathFollowingClaim56,
+        ex:posePathFollowingClaim57,
+        ex:posePathFollowingClaim58,
+        ex:posePathFollowingClaim59,
+        ex:posePathFollowingClaim6,
+        ex:posePathFollowingClaim60,
+        ex:posePathFollowingClaim61,
+        ex:posePathFollowingClaim62,
+        ex:posePathFollowingClaim63,
+        ex:posePathFollowingClaim64,
+        ex:posePathFollowingClaim65,
+        ex:posePathFollowingClaim66,
+        ex:posePathFollowingClaim67,
+        ex:posePathFollowingClaim68,
+        ex:posePathFollowingClaim69,
+        ex:posePathFollowingClaim7,
+        ex:posePathFollowingClaim70,
+        ex:posePathFollowingClaim71,
+        ex:posePathFollowingClaim72,
+        ex:posePathFollowingClaim8,
+        ex:posePathFollowingClaim9,
+        ex:posePathFollowingendpointErrorParameterClaim,
+        ex:posePathFollowingendpointToleranceParameterClaim,
+        ex:posePathFollowingtrackingErrorParameterClaim,
+        ex:posePathFollowingtrackingToleranceParameterClaim ;
+    ac:producerIdentifier "synthetic-robot-motion-domain-profile"^^xsd:string .
+
+ex:posePathFollowingStatement0 a ac:Statement ;
+    ac:statementObject rm:PosePathFollowing ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasActionKind"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement1 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingCapability ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement10 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingBounds ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#bounds"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement11 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingControlledPart ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#controlledEntity"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement12 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPath ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#pathTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement13 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingAccelerationLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingAccelerationLimit .
+
+ex:posePathFollowingStatement14 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingAccelerationLimit .
+
+ex:posePathFollowingStatement15 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingAccelerationLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#accelerationLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingBounds .
+
+ex:posePathFollowingStatement16 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingSpeedLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#speedLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingBounds .
+
+ex:posePathFollowingStatement17 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingEndpointComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingConjunction .
+
+ex:posePathFollowingStatement18 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingTrackingComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingConjunction .
+
+ex:posePathFollowingStatement19 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingEndpointleftOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#leftOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointComparison .
+
+ex:posePathFollowingStatement2 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingKnowledgeBundle ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasComponent"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement20 a ac:Statement ;
+    ac:statementObject ns1:LessOrEqual ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#operator"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointComparison .
+
+ex:posePathFollowingStatement21 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingEndpointrightOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#rightOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointComparison .
+
+ex:posePathFollowingStatement22 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingEndpointError"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointError .
+
+ex:posePathFollowingStatement23 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointError .
+
+ex:posePathFollowingStatement24 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingEndpointTolerance"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointTolerance .
+
+ex:posePathFollowingStatement25 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointTolerance .
+
+ex:posePathFollowingStatement26 a ac:Statement ;
+    ac:statementObject ns1:PostState ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointleftOperand .
+
+ex:posePathFollowingStatement27 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingEndpointError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointleftOperand .
+
+ex:posePathFollowingStatement28 a ac:Statement ;
+    ac:statementObject ns1:TaskContext ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointrightOperand .
+
+ex:posePathFollowingStatement29 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingEndpointTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingEndpointrightOperand .
+
+ex:posePathFollowingStatement3 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingGoal ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement30 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingConjunction ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingGoal .
+
+ex:posePathFollowingStatement31 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingWaypoint1 ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#hasWaypoint"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPath .
+
+ex:posePathFollowingStatement32 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingWaypoint2 ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#hasWaypoint"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPath .
+
+ex:posePathFollowingStatement33 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose1Position ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#position"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1 .
+
+ex:posePathFollowingStatement34 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingFrame ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#referenceFrame"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1 .
+
+ex:posePathFollowingStatement35 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose1x ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#xParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1Position .
+
+ex:posePathFollowingStatement36 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose1y ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#yParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1Position .
+
+ex:posePathFollowingStatement37 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose1z ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#zParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1Position .
+
+ex:posePathFollowingStatement38 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingPose1x"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1x .
+
+ex:posePathFollowingStatement39 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1x .
+
+ex:posePathFollowingStatement4 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingEndpointError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement40 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingPose1y"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1y .
+
+ex:posePathFollowingStatement41 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1y .
+
+ex:posePathFollowingStatement42 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingPose1z"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1z .
+
+ex:posePathFollowingStatement43 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose1z .
+
+ex:posePathFollowingStatement44 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose2Position ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#position"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2 .
+
+ex:posePathFollowingStatement45 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingFrame ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#referenceFrame"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2 .
+
+ex:posePathFollowingStatement46 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose2x ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#xParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2Position .
+
+ex:posePathFollowingStatement47 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose2y ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#yParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2Position .
+
+ex:posePathFollowingStatement48 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose2z ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#zParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2Position .
+
+ex:posePathFollowingStatement49 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingPose2x"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2x .
+
+ex:posePathFollowingStatement5 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingEndpointTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement50 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2x .
+
+ex:posePathFollowingStatement51 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingPose2y"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2y .
+
+ex:posePathFollowingStatement52 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2y .
+
+ex:posePathFollowingStatement53 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingPose2z"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2z .
+
+ex:posePathFollowingStatement54 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingPose2z .
+
+ex:posePathFollowingStatement55 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingSpeedLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingSpeedLimit .
+
+ex:posePathFollowingStatement56 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingSpeedLimit .
+
+ex:posePathFollowingStatement57 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingConjunction ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingSuccess .
+
+ex:posePathFollowingStatement58 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingTrackingleftOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#leftOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingComparison .
+
+ex:posePathFollowingStatement59 a ac:Statement ;
+    ac:statementObject ns1:LessOrEqual ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#operator"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingComparison .
+
+ex:posePathFollowingStatement6 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingTrackingError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement60 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingTrackingrightOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#rightOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingComparison .
+
+ex:posePathFollowingStatement61 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingTrackingError"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingError .
+
+ex:posePathFollowingStatement62 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingError .
+
+ex:posePathFollowingStatement63 a ac:Statement ;
+    ac:statementLiteral "posePathFollowingTrackingTolerance"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingTolerance .
+
+ex:posePathFollowingStatement64 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingTolerance .
+
+ex:posePathFollowingStatement65 a ac:Statement ;
+    ac:statementObject ns1:PostState ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingleftOperand .
+
+ex:posePathFollowingStatement66 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingTrackingError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingleftOperand .
+
+ex:posePathFollowingStatement67 a ac:Statement ;
+    ac:statementObject ns1:TaskContext ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingrightOperand .
+
+ex:posePathFollowingStatement68 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingTrackingTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingTrackingrightOperand .
+
+ex:posePathFollowingStatement69 a ac:Statement ;
+    ac:statementLiteral "1"^^xsd:positiveInteger ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#positionIndex"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingWaypoint1 .
+
+ex:posePathFollowingStatement7 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingTrackingTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement70 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose1 ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#waypointPose"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingWaypoint1 .
+
+ex:posePathFollowingStatement71 a ac:Statement ;
+    ac:statementLiteral "2"^^xsd:positiveInteger ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#positionIndex"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingWaypoint2 .
+
+ex:posePathFollowingStatement72 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPose2 ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#waypointPose"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowingWaypoint2 .
+
+ex:posePathFollowingStatement8 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingPrecondition ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingStatement9 a ac:Statement ;
+    ac:statementObject ex:posePathFollowingSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingendpointErrorParameterStatement a ac:Statement ;
+    ac:statementObject ex:posePathFollowingEndpointError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#endpointErrorParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingendpointToleranceParameterStatement a ac:Statement ;
+    ac:statementObject ex:posePathFollowingEndpointTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#endpointToleranceParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingtrackingErrorParameterStatement a ac:Statement ;
+    ac:statementObject ex:posePathFollowingTrackingError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#trackingErrorParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:posePathFollowingtrackingToleranceParameterStatement a ac:Statement ;
+    ac:statementObject ex:posePathFollowingTrackingTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#trackingToleranceParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:posePathFollowing .
+
+ex:stowingAnnotation a ac:AnnotationRecord ;
+    ac:annotatesDescription ex:stowing ;
+    ac:contributesClaim ex:stowingClaim0,
+        ex:stowingClaim1,
+        ex:stowingClaim10,
+        ex:stowingClaim11,
+        ex:stowingClaim12,
+        ex:stowingClaim13,
+        ex:stowingClaim14,
+        ex:stowingClaim15,
+        ex:stowingClaim16,
+        ex:stowingClaim17,
+        ex:stowingClaim18,
+        ex:stowingClaim19,
+        ex:stowingClaim2,
+        ex:stowingClaim20,
+        ex:stowingClaim21,
+        ex:stowingClaim22,
+        ex:stowingClaim23,
+        ex:stowingClaim24,
+        ex:stowingClaim25,
+        ex:stowingClaim26,
+        ex:stowingClaim27,
+        ex:stowingClaim28,
+        ex:stowingClaim29,
+        ex:stowingClaim3,
+        ex:stowingClaim30,
+        ex:stowingClaim31,
+        ex:stowingClaim32,
+        ex:stowingClaim33,
+        ex:stowingClaim34,
+        ex:stowingClaim35,
+        ex:stowingClaim36,
+        ex:stowingClaim4,
+        ex:stowingClaim5,
+        ex:stowingClaim6,
+        ex:stowingClaim7,
+        ex:stowingClaim8,
+        ex:stowingClaim9 ;
+    ac:producerIdentifier "synthetic-robot-motion-domain-profile"^^xsd:string .
+
+ex:stowingStatement0 a ac:Statement ;
+    ac:statementObject rm:Stowing ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasActionKind"^^xsd:anyURI ;
+    ac:statementSubject ex:stowing .
+
+ex:stowingStatement1 a ac:Statement ;
+    ac:statementObject ex:stowingCapability ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasCapabilityRequirement"^^xsd:anyURI ;
+    ac:statementSubject ex:stowing .
+
+ex:stowingStatement10 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingAccelerationLimit .
+
+ex:stowingStatement11 a ac:Statement ;
+    ac:statementObject ex:stowingAccelerationLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#accelerationLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingBounds .
+
+ex:stowingStatement12 a ac:Statement ;
+    ac:statementObject ex:stowingSpeedLimit ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#speedLimit"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingBounds .
+
+ex:stowingStatement13 a ac:Statement ;
+    ac:statementObject ex:stowingleftOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#leftOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingComparison .
+
+ex:stowingStatement14 a ac:Statement ;
+    ac:statementObject ns1:LessOrEqual ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#operator"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingComparison .
+
+ex:stowingStatement15 a ac:Statement ;
+    ac:statementObject ex:stowingrightOperand ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#rightOperand"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingComparison .
+
+ex:stowingStatement16 a ac:Statement ;
+    ac:statementLiteral "unbound-linear-coordinate"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinateKey"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingCoordinate .
+
+ex:stowingStatement17 a ac:Statement ;
+    ac:statementLiteral "linear"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinateKind"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingCoordinate .
+
+ex:stowingStatement18 a ac:Statement ;
+    ac:statementObject ex:stowingCoordinate ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#coordinate"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingEntry .
+
+ex:stowingStatement19 a ac:Statement ;
+    ac:statementObject ex:stowingError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#errorParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingEntry .
+
+ex:stowingStatement2 a ac:Statement ;
+    ac:statementObject ex:stowingKnowledgeBundle ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasComponent"^^xsd:anyURI ;
+    ac:statementSubject ex:stowing .
+
+ex:stowingStatement20 a ac:Statement ;
+    ac:statementObject ex:stowingTargetValue ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#targetParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingEntry .
+
+ex:stowingStatement21 a ac:Statement ;
+    ac:statementObject ex:stowingTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#toleranceParameter"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingEntry .
+
+ex:stowingStatement22 a ac:Statement ;
+    ac:statementLiteral "stowingError"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingError .
+
+ex:stowingStatement23 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingError .
+
+ex:stowingStatement24 a ac:Statement ;
+    ac:statementObject ex:stowingComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingGoal .
+
+ex:stowingStatement25 a ac:Statement ;
+    ac:statementLiteral "stowingSpeedLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingSpeedLimit .
+
+ex:stowingStatement26 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingSpeedLimit .
+
+ex:stowingStatement27 a ac:Statement ;
+    ac:statementObject ex:stowingComparison ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#hasExpression"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingSuccess .
+
+ex:stowingStatement28 a ac:Statement ;
+    ac:statementObject ex:stowingEntry ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#hasCoordinateTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingTarget .
+
+ex:stowingStatement29 a ac:Statement ;
+    ac:statementLiteral "stowingTargetValue"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingTargetValue .
+
+ex:stowingStatement3 a ac:Statement ;
+    ac:statementObject ex:stowingGoal ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasGoal"^^xsd:anyURI ;
+    ac:statementSubject ex:stowing .
+
+ex:stowingStatement30 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingTargetValue .
+
+ex:stowingStatement31 a ac:Statement ;
+    ac:statementLiteral "stowingTolerance"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingTolerance .
+
+ex:stowingStatement32 a ac:Statement ;
+    ac:statementLiteral "http://qudt.org/vocab/unit/M"^^xsd:anyURI ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#unitIRI"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingTolerance .
+
+ex:stowingStatement33 a ac:Statement ;
+    ac:statementObject ns1:PostState ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingleftOperand .
+
+ex:stowingStatement34 a ac:Statement ;
+    ac:statementObject ex:stowingError ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingleftOperand .
+
+ex:stowingStatement35 a ac:Statement ;
+    ac:statementObject ns1:TaskContext ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#inScope"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingrightOperand .
+
+ex:stowingStatement36 a ac:Statement ;
+    ac:statementObject ex:stowingTolerance ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/conditions-outcomes.owl#parameter"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingrightOperand .
+
+ex:stowingStatement4 a ac:Statement ;
+    ac:statementObject ex:stowingPrecondition ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasPrecondition"^^xsd:anyURI ;
+    ac:statementSubject ex:stowing .
+
+ex:stowingStatement5 a ac:Statement ;
+    ac:statementObject ex:stowingSuccess ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#hasSuccessCriterion"^^xsd:anyURI ;
+    ac:statementSubject ex:stowing .
+
+ex:stowingStatement6 a ac:Statement ;
+    ac:statementObject ex:stowingBounds ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#bounds"^^xsd:anyURI ;
+    ac:statementSubject ex:stowing .
+
+ex:stowingStatement7 a ac:Statement ;
+    ac:statementObject ex:stowingTarget ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#configurationTarget"^^xsd:anyURI ;
+    ac:statementSubject ex:stowing .
+
+ex:stowingStatement8 a ac:Statement ;
+    ac:statementObject ex:stowingControlledPart ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/robot-motion.owl#controlledEntity"^^xsd:anyURI ;
+    ac:statementSubject ex:stowing .
+
+ex:stowingStatement9 a ac:Statement ;
+    ac:statementLiteral "stowingAccelerationLimit"^^xsd:string ;
+    ac:statementPredicateIRI "http://aicor.knowledge/ontologies/action-description-core.owl#parameterKey"^^xsd:anyURI ;
+    ac:statementSubject ex:stowingAccelerationLimit .
+
+ex:cartesianPositioningCapability a ac:CapabilityRequirement .
+
+ex:cartesianPositioningClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim10 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement10 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim11 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement11 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim12 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement12 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim13 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement13 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim14 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement14 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim15 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement15 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim16 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement16 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim17 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement17 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim18 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement18 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim19 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement19 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim20 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement20 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim21 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement21 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim22 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement22 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim23 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement23 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim24 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement24 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim25 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement25 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim26 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement26 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim27 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement27 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim28 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement28 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim29 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement29 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim30 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement30 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim31 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement31 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim32 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement32 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim33 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement33 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim34 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement34 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim35 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement35 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim36 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement36 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim37 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement37 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim38 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement38 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim39 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement39 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim4 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement4 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim40 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement40 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim5 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement5 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim6 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement6 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim7 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement7 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim8 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement8 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningClaim9 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningStatement9 ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningControlledPart a ac:EntitySpecification .
+
+ex:cartesianPositioningFrame a rm:FrameSpecification .
+
+ex:cartesianPositioningPrecondition a ac:PreconditionSpecification ;
+    rdfs:label "Controlled part, coordinate/frame bindings, controller availability and applicable bounds must be supplied and checked."@en .
+
+ex:cartesianPositioningendpointErrorParameterClaim a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningendpointErrorParameterStatement ;
+    ac:hasStatus ac:Proposed .
+
+ex:cartesianPositioningendpointToleranceParameterClaim a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:cartesianPositioningendpointToleranceParameterStatement ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeCapability a ac:CapabilityRequirement .
+
+ex:gripperApertureChangeClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim10 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement10 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim11 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement11 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim12 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement12 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim13 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement13 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim14 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement14 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim15 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement15 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim16 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement16 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim17 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement17 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim18 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement18 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim19 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement19 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim20 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement20 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim21 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement21 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim22 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement22 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim23 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement23 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim24 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement24 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim25 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement25 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim26 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement26 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim27 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement27 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim28 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement28 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim29 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement29 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim30 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement30 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim31 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement31 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim32 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement32 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim33 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement33 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim34 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement34 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim35 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement35 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim36 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement36 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim4 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement4 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim5 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement5 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim6 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement6 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim7 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement7 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim8 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement8 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeClaim9 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperApertureChangeStatement9 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperApertureChangeControlledPart a ac:EntitySpecification .
+
+ex:gripperApertureChangePrecondition a ac:PreconditionSpecification ;
+    rdfs:label "Controlled part, coordinate/frame bindings, controller availability and applicable bounds must be supplied and checked."@en .
+
+ex:gripperConfigurationChangeCapability a ac:CapabilityRequirement .
+
+ex:gripperConfigurationChangeClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim10 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement10 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim11 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement11 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim12 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement12 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim13 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement13 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim14 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement14 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim15 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement15 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim16 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement16 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim17 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement17 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim18 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement18 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim19 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement19 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim20 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement20 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim21 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement21 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim22 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement22 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim23 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement23 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim24 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement24 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim25 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement25 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim26 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement26 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim27 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement27 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim28 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement28 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim29 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement29 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim30 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement30 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim31 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement31 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim32 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement32 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim33 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement33 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim34 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement34 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim35 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement35 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim36 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement36 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim4 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement4 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim5 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement5 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim6 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement6 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim7 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement7 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim8 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement8 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeClaim9 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:gripperConfigurationChangeStatement9 ;
+    ac:hasStatus ac:Proposed .
+
+ex:gripperConfigurationChangeControlledPart a ac:EntitySpecification .
+
+ex:gripperConfigurationChangePrecondition a ac:PreconditionSpecification ;
+    rdfs:label "Controlled part, coordinate/frame bindings, controller availability and applicable bounds must be supplied and checked."@en .
+
+ex:jointRepositioningCapability a ac:CapabilityRequirement .
+
+ex:jointRepositioningClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim10 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement10 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim11 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement11 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim12 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement12 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim13 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement13 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim14 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement14 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim15 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement15 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim16 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement16 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim17 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement17 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim18 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement18 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim19 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement19 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim20 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement20 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim21 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement21 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim22 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement22 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim23 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement23 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim24 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement24 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim25 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement25 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim26 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement26 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim27 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement27 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim28 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement28 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim29 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement29 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim30 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement30 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim31 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement31 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim32 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement32 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim33 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement33 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim34 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement34 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim35 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement35 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim36 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement36 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim4 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement4 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim5 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement5 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim6 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement6 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim7 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement7 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim8 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement8 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningClaim9 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:jointRepositioningStatement9 ;
+    ac:hasStatus ac:Proposed .
+
+ex:jointRepositioningControlledPart a ac:EntitySpecification .
+
+ex:jointRepositioningPrecondition a ac:PreconditionSpecification ;
+    rdfs:label "Controlled part, coordinate/frame bindings, controller availability and applicable bounds must be supplied and checked."@en .
+
+ex:posePathFollowingCapability a ac:CapabilityRequirement .
+
+ex:posePathFollowingClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim10 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement10 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim11 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement11 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim12 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement12 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim13 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement13 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim14 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement14 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim15 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement15 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim16 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement16 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim17 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement17 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim18 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement18 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim19 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement19 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim20 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement20 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim21 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement21 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim22 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement22 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim23 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement23 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim24 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement24 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim25 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement25 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim26 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement26 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim27 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement27 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim28 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement28 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim29 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement29 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim30 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement30 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim31 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement31 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim32 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement32 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim33 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement33 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim34 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement34 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim35 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement35 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim36 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement36 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim37 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement37 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim38 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement38 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim39 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement39 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim4 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement4 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim40 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement40 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim41 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement41 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim42 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement42 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim43 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement43 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim44 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement44 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim45 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement45 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim46 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement46 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim47 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement47 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim48 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement48 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim49 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement49 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim5 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement5 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim50 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement50 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim51 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement51 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim52 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement52 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim53 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement53 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim54 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement54 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim55 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement55 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim56 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement56 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim57 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement57 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim58 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement58 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim59 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement59 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim6 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement6 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim60 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement60 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim61 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement61 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim62 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement62 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim63 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement63 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim64 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement64 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim65 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement65 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim66 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement66 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim67 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement67 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim68 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement68 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim69 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement69 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim7 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement7 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim70 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement70 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim71 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement71 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim72 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement72 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim8 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement8 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingClaim9 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingStatement9 ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingControlledPart a ac:EntitySpecification .
+
+ex:posePathFollowingPrecondition a ac:PreconditionSpecification ;
+    rdfs:label "Controlled part, coordinate/frame bindings, controller availability and applicable bounds must be supplied and checked."@en .
+
+ex:posePathFollowingendpointErrorParameterClaim a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingendpointErrorParameterStatement ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingendpointToleranceParameterClaim a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingendpointToleranceParameterStatement ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingtrackingErrorParameterClaim a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingtrackingErrorParameterStatement ;
+    ac:hasStatus ac:Proposed .
+
+ex:posePathFollowingtrackingToleranceParameterClaim a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:posePathFollowingtrackingToleranceParameterStatement ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingCapability a ac:CapabilityRequirement .
+
+ex:stowingClaim0 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement0 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim1 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement1 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim10 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement10 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim11 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement11 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim12 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement12 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim13 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement13 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim14 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement14 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim15 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement15 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim16 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement16 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim17 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement17 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim18 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement18 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim19 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement19 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim2 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement2 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim20 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement20 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim21 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement21 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim22 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement22 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim23 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement23 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim24 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement24 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim25 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement25 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim26 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement26 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim27 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement27 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim28 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement28 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim29 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement29 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim3 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement3 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim30 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement30 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim31 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement31 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim32 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement32 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim33 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement33 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim34 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement34 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim35 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement35 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim36 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement36 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim4 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement4 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim5 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement5 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim6 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement6 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim7 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement7 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim8 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement8 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingClaim9 a ac:KnowledgeClaim ;
+    ac:aboutComponent ex:stowingKnowledgeBundle ;
+    ac:hasEvidence ex:syntheticEvidence ;
+    ac:hasStatement ex:stowingStatement9 ;
+    ac:hasStatus ac:Proposed .
+
+ex:stowingControlledPart a ac:EntitySpecification .
+
+ex:stowingPrecondition a ac:PreconditionSpecification ;
+    rdfs:label "Controlled part, coordinate/frame bindings, controller availability and applicable bounds must be supplied and checked."@en .
+
+ex:cartesianPositioningGoal a ac:GoalSpecification ;
+    ns1:hasExpression ex:cartesianPositioningEndpointComparison .
+
+ex:cartesianPositioningSuccess a ac:SuccessCriterion ;
+    ns1:hasExpression ex:cartesianPositioningEndpointComparison .
+
+ex:gripperApertureChangeGoal a ac:GoalSpecification ;
+    ns1:hasExpression ex:gripperApertureChangeComparison .
+
+ex:gripperApertureChangeSuccess a ac:SuccessCriterion ;
+    ns1:hasExpression ex:gripperApertureChangeComparison .
+
+ex:gripperApertureChangeTarget a rm:ConfigurationTarget ;
+    rm:hasCoordinateTarget ex:gripperApertureChangeEntry .
+
+ex:gripperConfigurationChangeGoal a ac:GoalSpecification ;
+    ns1:hasExpression ex:gripperConfigurationChangeComparison .
+
+ex:gripperConfigurationChangeSuccess a ac:SuccessCriterion ;
+    ns1:hasExpression ex:gripperConfigurationChangeComparison .
+
+ex:gripperConfigurationChangeTarget a rm:ConfigurationTarget ;
+    rm:hasCoordinateTarget ex:gripperConfigurationChangeEntry .
+
+ex:jointRepositioningGoal a ac:GoalSpecification ;
+    ns1:hasExpression ex:jointRepositioningComparison .
+
+ex:jointRepositioningSuccess a ac:SuccessCriterion ;
+    ns1:hasExpression ex:jointRepositioningComparison .
+
+ex:jointRepositioningTarget a rm:ConfigurationTarget ;
+    rm:hasCoordinateTarget ex:jointRepositioningEntry .
+
+ex:posePathFollowingGoal a ac:GoalSpecification ;
+    ns1:hasExpression ex:posePathFollowingConjunction .
+
+ex:posePathFollowingSuccess a ac:SuccessCriterion ;
+    ns1:hasExpression ex:posePathFollowingConjunction .
+
+ex:stowingGoal a ac:GoalSpecification ;
+    ns1:hasExpression ex:stowingComparison .
+
+ex:stowingSuccess a ac:SuccessCriterion ;
+    ns1:hasExpression ex:stowingComparison .
+
+ex:stowingTarget a rm:ConfigurationTarget ;
+    rm:hasCoordinateTarget ex:stowingEntry .
+
+ex:cartesianPositioningAccelerationLimit a ac:ParameterSpecification ;
+    ac:parameterKey "cartesianPositioningAccelerationLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI .
+
+ex:cartesianPositioningBounds a rm:MotionBounds ;
+    rm:accelerationLimit ex:cartesianPositioningAccelerationLimit ;
+    rm:speedLimit ex:cartesianPositioningSpeedLimit .
+
+ex:cartesianPositioningEndpointleftOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:PostState ;
+    ns1:parameter ex:cartesianPositioningEndpointError .
+
+ex:cartesianPositioningEndpointrightOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:TaskContext ;
+    ns1:parameter ex:cartesianPositioningEndpointTolerance .
+
+ex:cartesianPositioningSpeedLimit a ac:ParameterSpecification ;
+    ac:parameterKey "cartesianPositioningSpeedLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI .
+
+ex:cartesianPositioningTarget a rm:PoseTarget ;
+    rm:position ex:cartesianPositioningTargetPosition ;
+    rm:referenceFrame ex:cartesianPositioningFrame .
+
+ex:cartesianPositioningTargetx a ac:ParameterSpecification ;
+    ac:parameterKey "cartesianPositioningTargetx"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:cartesianPositioningTargety a ac:ParameterSpecification ;
+    ac:parameterKey "cartesianPositioningTargety"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:cartesianPositioningTargetz a ac:ParameterSpecification ;
+    ac:parameterKey "cartesianPositioningTargetz"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:gripperApertureChangeAccelerationLimit a ac:ParameterSpecification ;
+    ac:parameterKey "gripperApertureChangeAccelerationLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI .
+
+ex:gripperApertureChangeBounds a rm:MotionBounds ;
+    rm:accelerationLimit ex:gripperApertureChangeAccelerationLimit ;
+    rm:speedLimit ex:gripperApertureChangeSpeedLimit .
+
+ex:gripperApertureChangeCoordinate a rm:CoordinateSpecification ;
+    rm:coordinateKey "unbound-linear-coordinate"^^xsd:string ;
+    rm:coordinateKind "linear"^^xsd:string .
+
+ex:gripperApertureChangeSpeedLimit a ac:ParameterSpecification ;
+    ac:parameterKey "gripperApertureChangeSpeedLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI .
+
+ex:gripperApertureChangeTargetValue a ac:ParameterSpecification ;
+    ac:parameterKey "gripperApertureChangeTargetValue"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:gripperApertureChangeleftOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:PostState ;
+    ns1:parameter ex:gripperApertureChangeError .
+
+ex:gripperApertureChangerightOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:TaskContext ;
+    ns1:parameter ex:gripperApertureChangeTolerance .
+
+ex:gripperConfigurationChangeAccelerationLimit a ac:ParameterSpecification ;
+    ac:parameterKey "gripperConfigurationChangeAccelerationLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI .
+
+ex:gripperConfigurationChangeBounds a rm:MotionBounds ;
+    rm:accelerationLimit ex:gripperConfigurationChangeAccelerationLimit ;
+    rm:speedLimit ex:gripperConfigurationChangeSpeedLimit .
+
+ex:gripperConfigurationChangeCoordinate a rm:CoordinateSpecification ;
+    rm:coordinateKey "unbound-linear-coordinate"^^xsd:string ;
+    rm:coordinateKind "linear"^^xsd:string .
+
+ex:gripperConfigurationChangeSpeedLimit a ac:ParameterSpecification ;
+    ac:parameterKey "gripperConfigurationChangeSpeedLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI .
+
+ex:gripperConfigurationChangeTargetValue a ac:ParameterSpecification ;
+    ac:parameterKey "gripperConfigurationChangeTargetValue"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:gripperConfigurationChangeleftOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:PostState ;
+    ns1:parameter ex:gripperConfigurationChangeError .
+
+ex:gripperConfigurationChangerightOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:TaskContext ;
+    ns1:parameter ex:gripperConfigurationChangeTolerance .
+
+ex:jointRepositioningAccelerationLimit a ac:ParameterSpecification ;
+    ac:parameterKey "jointRepositioningAccelerationLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/RAD-PER-SEC2"^^xsd:anyURI .
+
+ex:jointRepositioningBounds a rm:MotionBounds ;
+    rm:accelerationLimit ex:jointRepositioningAccelerationLimit ;
+    rm:speedLimit ex:jointRepositioningSpeedLimit .
+
+ex:jointRepositioningCoordinate a rm:CoordinateSpecification ;
+    rm:coordinateKey "unbound-angular-coordinate"^^xsd:string ;
+    rm:coordinateKind "angular"^^xsd:string .
+
+ex:jointRepositioningSpeedLimit a ac:ParameterSpecification ;
+    ac:parameterKey "jointRepositioningSpeedLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/RAD-PER-SEC"^^xsd:anyURI .
+
+ex:jointRepositioningTargetValue a ac:ParameterSpecification ;
+    ac:parameterKey "jointRepositioningTargetValue"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/RAD"^^xsd:anyURI .
+
+ex:jointRepositioningleftOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:PostState ;
+    ns1:parameter ex:jointRepositioningError .
+
+ex:jointRepositioningrightOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:TaskContext ;
+    ns1:parameter ex:jointRepositioningTolerance .
+
+ex:posePathFollowingAccelerationLimit a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingAccelerationLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI .
+
+ex:posePathFollowingBounds a rm:MotionBounds ;
+    rm:accelerationLimit ex:posePathFollowingAccelerationLimit ;
+    rm:speedLimit ex:posePathFollowingSpeedLimit .
+
+ex:posePathFollowingEndpointleftOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:PostState ;
+    ns1:parameter ex:posePathFollowingEndpointError .
+
+ex:posePathFollowingEndpointrightOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:TaskContext ;
+    ns1:parameter ex:posePathFollowingEndpointTolerance .
+
+ex:posePathFollowingFrame a rm:FrameSpecification .
+
+ex:posePathFollowingPath a rm:PathSpecification ;
+    rm:hasWaypoint ex:posePathFollowingWaypoint1,
+        ex:posePathFollowingWaypoint2 .
+
+ex:posePathFollowingPose1 a rm:PoseTarget ;
+    rm:position ex:posePathFollowingPose1Position ;
+    rm:referenceFrame ex:posePathFollowingFrame .
+
+ex:posePathFollowingPose1x a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingPose1x"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingPose1y a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingPose1y"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingPose1z a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingPose1z"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingPose2 a rm:PoseTarget ;
+    rm:position ex:posePathFollowingPose2Position ;
+    rm:referenceFrame ex:posePathFollowingFrame .
+
+ex:posePathFollowingPose2x a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingPose2x"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingPose2y a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingPose2y"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingPose2z a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingPose2z"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingSpeedLimit a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingSpeedLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI .
+
+ex:posePathFollowingTrackingleftOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:PostState ;
+    ns1:parameter ex:posePathFollowingTrackingError .
+
+ex:posePathFollowingTrackingrightOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:TaskContext ;
+    ns1:parameter ex:posePathFollowingTrackingTolerance .
+
+ex:posePathFollowingWaypoint1 a rm:WaypointSpecification ;
+    rm:positionIndex "1"^^xsd:positiveInteger ;
+    rm:waypointPose ex:posePathFollowingPose1 .
+
+ex:posePathFollowingWaypoint2 a rm:WaypointSpecification ;
+    rm:positionIndex "2"^^xsd:positiveInteger ;
+    rm:waypointPose ex:posePathFollowingPose2 .
+
+ex:stowingAccelerationLimit a ac:ParameterSpecification ;
+    ac:parameterKey "stowingAccelerationLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC2"^^xsd:anyURI .
+
+ex:stowingBounds a rm:MotionBounds ;
+    rm:accelerationLimit ex:stowingAccelerationLimit ;
+    rm:speedLimit ex:stowingSpeedLimit .
+
+ex:stowingCoordinate a rm:CoordinateSpecification ;
+    rm:coordinateKey "unbound-linear-coordinate"^^xsd:string ;
+    rm:coordinateKind "linear"^^xsd:string .
+
+ex:stowingSpeedLimit a ac:ParameterSpecification ;
+    ac:parameterKey "stowingSpeedLimit"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M-PER-SEC"^^xsd:anyURI .
+
+ex:stowingTargetValue a ac:ParameterSpecification ;
+    ac:parameterKey "stowingTargetValue"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:stowingleftOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:PostState ;
+    ns1:parameter ex:stowingError .
+
+ex:stowingrightOperand a ns1:ParameterReference ;
+    ns1:inScope ns1:TaskContext ;
+    ns1:parameter ex:stowingTolerance .
+
+ex:cartesianPositioningTargetPosition a rm:PositionTarget ;
+    rm:xParameter ex:cartesianPositioningTargetx ;
+    rm:yParameter ex:cartesianPositioningTargety ;
+    rm:zParameter ex:cartesianPositioningTargetz .
+
+ex:posePathFollowingEndpointComparison a ns1:Comparison ;
+    ns1:leftOperand ex:posePathFollowingEndpointleftOperand ;
+    ns1:operator ns1:LessOrEqual ;
+    ns1:rightOperand ex:posePathFollowingEndpointrightOperand .
+
+ex:posePathFollowingPose1Position a rm:PositionTarget ;
+    rm:xParameter ex:posePathFollowingPose1x ;
+    rm:yParameter ex:posePathFollowingPose1y ;
+    rm:zParameter ex:posePathFollowingPose1z .
+
+ex:posePathFollowingPose2Position a rm:PositionTarget ;
+    rm:xParameter ex:posePathFollowingPose2x ;
+    rm:yParameter ex:posePathFollowingPose2y ;
+    rm:zParameter ex:posePathFollowingPose2z .
+
+ex:posePathFollowingTrackingComparison a ns1:Comparison ;
+    ns1:leftOperand ex:posePathFollowingTrackingleftOperand ;
+    ns1:operator ns1:LessOrEqual ;
+    ns1:rightOperand ex:posePathFollowingTrackingrightOperand .
+
+ex:gripperApertureChangeEntry a rm:CoordinateTarget ;
+    rm:coordinate ex:gripperApertureChangeCoordinate ;
+    rm:errorParameter ex:gripperApertureChangeError ;
+    rm:targetParameter ex:gripperApertureChangeTargetValue ;
+    rm:toleranceParameter ex:gripperApertureChangeTolerance .
+
+ex:gripperApertureChangeError a ac:ParameterSpecification ;
+    ac:parameterKey "gripperApertureChangeError"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:gripperApertureChangeTolerance a ac:ParameterSpecification ;
+    ac:parameterKey "gripperApertureChangeTolerance"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:gripperConfigurationChangeEntry a rm:CoordinateTarget ;
+    rm:coordinate ex:gripperConfigurationChangeCoordinate ;
+    rm:errorParameter ex:gripperConfigurationChangeError ;
+    rm:targetParameter ex:gripperConfigurationChangeTargetValue ;
+    rm:toleranceParameter ex:gripperConfigurationChangeTolerance .
+
+ex:gripperConfigurationChangeError a ac:ParameterSpecification ;
+    ac:parameterKey "gripperConfigurationChangeError"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:gripperConfigurationChangeTolerance a ac:ParameterSpecification ;
+    ac:parameterKey "gripperConfigurationChangeTolerance"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:jointRepositioningEntry a rm:CoordinateTarget ;
+    rm:coordinate ex:jointRepositioningCoordinate ;
+    rm:errorParameter ex:jointRepositioningError ;
+    rm:targetParameter ex:jointRepositioningTargetValue ;
+    rm:toleranceParameter ex:jointRepositioningTolerance .
+
+ex:jointRepositioningError a ac:ParameterSpecification ;
+    ac:parameterKey "jointRepositioningError"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/RAD"^^xsd:anyURI .
+
+ex:jointRepositioningTolerance a ac:ParameterSpecification ;
+    ac:parameterKey "jointRepositioningTolerance"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/RAD"^^xsd:anyURI .
+
+ex:posePathFollowingConjunction a ns1:Conjunction ;
+    ns1:hasOperand ex:posePathFollowingEndpointComparison,
+        ex:posePathFollowingTrackingComparison .
+
+ex:stowingEntry a rm:CoordinateTarget ;
+    rm:coordinate ex:stowingCoordinate ;
+    rm:errorParameter ex:stowingError ;
+    rm:targetParameter ex:stowingTargetValue ;
+    rm:toleranceParameter ex:stowingTolerance .
+
+ex:stowingError a ac:ParameterSpecification ;
+    ac:parameterKey "stowingError"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:stowingTolerance a ac:ParameterSpecification ;
+    ac:parameterKey "stowingTolerance"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:cartesianPositioningEndpointComparison a ns1:Comparison ;
+    ns1:leftOperand ex:cartesianPositioningEndpointleftOperand ;
+    ns1:operator ns1:LessOrEqual ;
+    ns1:rightOperand ex:cartesianPositioningEndpointrightOperand .
+
+ex:gripperApertureChangeComparison a ns1:Comparison ;
+    ns1:leftOperand ex:gripperApertureChangeleftOperand ;
+    ns1:operator ns1:LessOrEqual ;
+    ns1:rightOperand ex:gripperApertureChangerightOperand .
+
+ex:gripperConfigurationChangeComparison a ns1:Comparison ;
+    ns1:leftOperand ex:gripperConfigurationChangeleftOperand ;
+    ns1:operator ns1:LessOrEqual ;
+    ns1:rightOperand ex:gripperConfigurationChangerightOperand .
+
+ex:jointRepositioningComparison a ns1:Comparison ;
+    ns1:leftOperand ex:jointRepositioningleftOperand ;
+    ns1:operator ns1:LessOrEqual ;
+    ns1:rightOperand ex:jointRepositioningrightOperand .
+
+ex:stowingComparison a ns1:Comparison ;
+    ns1:leftOperand ex:stowingleftOperand ;
+    ns1:operator ns1:LessOrEqual ;
+    ns1:rightOperand ex:stowingrightOperand .
+
+ex:cartesianPositioningEndpointError a ac:ParameterSpecification ;
+    ac:parameterKey "cartesianPositioningEndpointError"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:cartesianPositioningEndpointTolerance a ac:ParameterSpecification ;
+    ac:parameterKey "cartesianPositioningEndpointTolerance"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingEndpointError a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingEndpointError"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingEndpointTolerance a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingEndpointTolerance"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingTrackingError a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingTrackingError"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:posePathFollowingTrackingTolerance a ac:ParameterSpecification ;
+    ac:parameterKey "posePathFollowingTrackingTolerance"^^xsd:string ;
+    ac:unitIRI "http://qudt.org/vocab/unit/M"^^xsd:anyURI .
+
+ex:gripperApertureChange a rm:ConfigurationMotionDescription ;
+    ac:hasActionKind rm:GripperApertureChange ;
+    ac:hasCapabilityRequirement ex:gripperApertureChangeCapability ;
+    ac:hasComponent ex:gripperApertureChangeKnowledgeBundle ;
+    ac:hasGoal ex:gripperApertureChangeGoal ;
+    ac:hasPrecondition ex:gripperApertureChangePrecondition ;
+    ac:hasSuccessCriterion ex:gripperApertureChangeSuccess ;
+    rm:bounds ex:gripperApertureChangeBounds ;
+    rm:configurationTarget ex:gripperApertureChangeTarget ;
+    rm:controlledEntity ex:gripperApertureChangeControlledPart .
+
+ex:gripperConfigurationChange a rm:ConfigurationMotionDescription ;
+    ac:hasActionKind rm:GripperConfigurationChange ;
+    ac:hasCapabilityRequirement ex:gripperConfigurationChangeCapability ;
+    ac:hasComponent ex:gripperConfigurationChangeKnowledgeBundle ;
+    ac:hasGoal ex:gripperConfigurationChangeGoal ;
+    ac:hasPrecondition ex:gripperConfigurationChangePrecondition ;
+    ac:hasSuccessCriterion ex:gripperConfigurationChangeSuccess ;
+    rm:bounds ex:gripperConfigurationChangeBounds ;
+    rm:configurationTarget ex:gripperConfigurationChangeTarget ;
+    rm:controlledEntity ex:gripperConfigurationChangeControlledPart .
+
+ex:jointRepositioning a rm:ConfigurationMotionDescription ;
+    ac:hasActionKind rm:JointRepositioning ;
+    ac:hasCapabilityRequirement ex:jointRepositioningCapability ;
+    ac:hasComponent ex:jointRepositioningKnowledgeBundle ;
+    ac:hasGoal ex:jointRepositioningGoal ;
+    ac:hasPrecondition ex:jointRepositioningPrecondition ;
+    ac:hasSuccessCriterion ex:jointRepositioningSuccess ;
+    rm:bounds ex:jointRepositioningBounds ;
+    rm:configurationTarget ex:jointRepositioningTarget ;
+    rm:controlledEntity ex:jointRepositioningControlledPart .
+
+ex:stowing a rm:ConfigurationMotionDescription ;
+    ac:hasActionKind rm:Stowing ;
+    ac:hasCapabilityRequirement ex:stowingCapability ;
+    ac:hasComponent ex:stowingKnowledgeBundle ;
+    ac:hasGoal ex:stowingGoal ;
+    ac:hasPrecondition ex:stowingPrecondition ;
+    ac:hasSuccessCriterion ex:stowingSuccess ;
+    rm:bounds ex:stowingBounds ;
+    rm:configurationTarget ex:stowingTarget ;
+    rm:controlledEntity ex:stowingControlledPart .
+
+ex:cartesianPositioning a rm:CartesianMotionDescription ;
+    ac:hasActionKind rm:CartesianPositioning ;
+    ac:hasCapabilityRequirement ex:cartesianPositioningCapability ;
+    ac:hasComponent ex:cartesianPositioningKnowledgeBundle ;
+    ac:hasGoal ex:cartesianPositioningGoal ;
+    ac:hasParameter ex:cartesianPositioningEndpointError,
+        ex:cartesianPositioningEndpointTolerance ;
+    ac:hasPrecondition ex:cartesianPositioningPrecondition ;
+    ac:hasSuccessCriterion ex:cartesianPositioningSuccess ;
+    rm:bounds ex:cartesianPositioningBounds ;
+    rm:controlledEntity ex:cartesianPositioningControlledPart ;
+    rm:endpointErrorParameter ex:cartesianPositioningEndpointError ;
+    rm:endpointToleranceParameter ex:cartesianPositioningEndpointTolerance ;
+    rm:poseTarget ex:cartesianPositioningTarget .
+
+ex:posePathFollowing a rm:PathFollowingDescription ;
+    ac:hasActionKind rm:PosePathFollowing ;
+    ac:hasCapabilityRequirement ex:posePathFollowingCapability ;
+    ac:hasComponent ex:posePathFollowingKnowledgeBundle ;
+    ac:hasGoal ex:posePathFollowingGoal ;
+    ac:hasParameter ex:posePathFollowingEndpointError,
+        ex:posePathFollowingEndpointTolerance,
+        ex:posePathFollowingTrackingError,
+        ex:posePathFollowingTrackingTolerance ;
+    ac:hasPrecondition ex:posePathFollowingPrecondition ;
+    ac:hasSuccessCriterion ex:posePathFollowingSuccess ;
+    rm:bounds ex:posePathFollowingBounds ;
+    rm:controlledEntity ex:posePathFollowingControlledPart ;
+    rm:endpointErrorParameter ex:posePathFollowingEndpointError ;
+    rm:endpointToleranceParameter ex:posePathFollowingEndpointTolerance ;
+    rm:pathTarget ex:posePathFollowingPath ;
+    rm:trackingErrorParameter ex:posePathFollowingTrackingError ;
+    rm:trackingToleranceParameter ex:posePathFollowingTrackingTolerance .
+
+ex:gripperApertureChangeKnowledgeBundle a ac:ActionComponent .
+
+ex:gripperConfigurationChangeKnowledgeBundle a ac:ActionComponent .
+
+ex:jointRepositioningKnowledgeBundle a ac:ActionComponent .
+
+ex:stowingKnowledgeBundle a ac:ActionComponent .
+
+ex:cartesianPositioningKnowledgeBundle a ac:ActionComponent .
+
+ex:posePathFollowingKnowledgeBundle a ac:ActionComponent .
+
+ex:syntheticEvidence a ac:EvidenceRecord ;
+    ac:evidenceKind ac:CuratedExample ;
+    ac:evidenceText "Synthetic authoring profiles. No physical robot, measured motion, empirical source or validated controller."^^xsd:string .
+

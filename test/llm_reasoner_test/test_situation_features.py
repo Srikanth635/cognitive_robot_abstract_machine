@@ -11,8 +11,8 @@ from krrood.entity_query_language.verbalization.rendering.source_documentation i
 
 from llm_reasoner.knowledge.ontologies.action_perspectives import pouring_frame
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
-from llm_reasoner.knowledge.ontologies.situation import SituationFeatures
-from llm_reasoner.knowledge.ontologies.terms import PropertyRestriction, Quantifier
+from llm_reasoner.knowledge.vocabulary.situation import SituationFeatures
+from llm_reasoner.knowledge.vocabulary.terms import PropertyRestriction, Quantifier
 
 
 def features_by_field(root_type: type) -> dict:

@@ -1,0 +1,9 @@
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX pa: <http://aicor.knowledge/ontologies/perception-attention.owl#>
+SELECT ?action ?kind ?observer ?target ?region ?query ?frame ?modality ?context
+WHERE {
+ ?record ac:expressesDescription ?action .
+ ?action ac:hasActionKind ?kind; pa:observer ?observer; pa:target ?target;
+ pa:region ?region; pa:query ?query; pa:referenceFrame ?frame; pa:evaluationContext ?context .
+ ?query pa:modality ?modality .
+}

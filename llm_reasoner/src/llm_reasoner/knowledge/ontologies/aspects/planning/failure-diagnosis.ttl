@@ -1,0 +1,150 @@
+@prefix ac: <http://aicor.knowledge/ontologies/action-description-core.owl#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix fd: <http://aicor.knowledge/ontologies/failure-diagnosis.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://aicor.knowledge/ontologies/failure-diagnosis.owl> a owl:Ontology ;
+    rdfs:label "Failure diagnosis and recovery"@en ;
+    owl:imports <http://aicor.knowledge/ontologies/action-description-core.owl> ;
+    owl:versionInfo "0.10.0" .
+
+fd:Collision a fd:FailureKind,
+        owl:NamedIndividual ;
+    rdfs:label "Collision"@en .
+
+fd:LossOfControl a fd:FailureKind,
+        owl:NamedIndividual ;
+    rdfs:label "Loss Of Control"@en .
+
+fd:Spillage a fd:FailureKind,
+        owl:NamedIndividual ;
+    rdfs:label "Spillage"@en .
+
+fd:UnmetPrecondition a fd:FailureKind,
+        owl:NamedIndividual ;
+    rdfs:label "Unmet Precondition"@en .
+
+fd:addressesFailure a owl:ObjectProperty ;
+    rdfs:label "Addresses Failure"@en ;
+    rdfs:comment "Failure addressed by a proposed recovery."@en ;
+    rdfs:domain fd:RecoveryOption ;
+    rdfs:range fd:FailureSpecification .
+
+fd:alternativeTo a owl:ObjectProperty ;
+    rdfs:label "Alternative To"@en ;
+    rdfs:comment "Alternative explanation; not logical negation."@en ;
+    rdfs:domain fd:DiagnosticHypothesis ;
+    rdfs:range fd:DiagnosticHypothesis .
+
+fd:candidateCause a owl:ObjectProperty ;
+    rdfs:label "Candidate Cause"@en ;
+    rdfs:comment "Proposed cause condition."@en ;
+    rdfs:domain fd:DiagnosticHypothesis ;
+    rdfs:range ac:ConditionSpecification .
+
+fd:detectedBy a owl:ObjectProperty ;
+    rdfs:label "Detected By"@en ;
+    rdfs:comment "Criterion describing failure detection."@en ;
+    rdfs:domain fd:FailureSpecification ;
+    rdfs:range ac:FailureCriterion .
+
+fd:explainsFailure a owl:ObjectProperty ;
+    rdfs:label "Explains Failure"@en ;
+    rdfs:comment "Failure explained by this candidate hypothesis."@en ;
+    rdfs:domain fd:DiagnosticHypothesis ;
+    rdfs:range fd:FailureSpecification .
+
+fd:failureKind a owl:ObjectProperty ;
+    rdfs:label "Failure Kind"@en ;
+    rdfs:comment "Failure category."@en ;
+    rdfs:domain fd:FailureSpecification ;
+    rdfs:range fd:FailureKind .
+
+fd:guardedBy a owl:ObjectProperty ;
+    rdfs:label "Guarded By"@en ;
+    rdfs:comment "Applicability guard."@en ;
+    rdfs:domain fd:RecoveryOption ;
+    rdfs:range ac:ConditionSpecification .
+
+fd:hasFailure a owl:ObjectProperty ;
+    rdfs:label "Has Failure"@en ;
+    rdfs:comment "Failure modes in this profile."@en ;
+    rdfs:domain fd:FailureProfile ;
+    rdfs:range fd:FailureSpecification .
+
+fd:hasFailureProfile a owl:ObjectProperty ;
+    rdfs:label "Has Failure Profile"@en ;
+    rdfs:comment "Potential failures for this action."@en ;
+    rdfs:domain ac:ActionDescription ;
+    rdfs:range fd:FailureProfile ;
+    rdfs:subPropertyOf ac:hasComponent .
+
+fd:hasHypothesis a owl:ObjectProperty ;
+    rdfs:label "Has Hypothesis"@en ;
+    rdfs:comment "Candidate explanations."@en ;
+    rdfs:domain fd:FailureProfile ;
+    rdfs:range fd:DiagnosticHypothesis .
+
+fd:hasRecoveryOption a owl:ObjectProperty ;
+    rdfs:label "Has Recovery Option"@en ;
+    rdfs:comment "Potential recovery options."@en ;
+    rdfs:domain fd:FailureProfile ;
+    rdfs:range fd:RecoveryOption .
+
+fd:refutingEvidence a owl:ObjectProperty ;
+    rdfs:label "Refuting Evidence"@en ;
+    rdfs:comment "Evidence offered against the hypothesis."@en ;
+    rdfs:domain fd:DiagnosticHypothesis ;
+    rdfs:range ac:EvidenceRecord .
+
+fd:requiresCapability a owl:ObjectProperty ;
+    rdfs:label "Requires Capability"@en ;
+    rdfs:comment "Required recovery capability."@en ;
+    rdfs:domain fd:RecoveryOption ;
+    rdfs:range ac:CapabilityRequirement ;
+    rdfs:subPropertyOf ac:requiresCapability .
+
+fd:restoresCondition a owl:ObjectProperty ;
+    rdfs:label "Restores Condition"@en ;
+    rdfs:comment "Intended restored condition, not a guaranteed effect."@en ;
+    rdfs:domain fd:RecoveryOption ;
+    rdfs:range ac:ConditionSpecification .
+
+fd:retryBudget a owl:ObjectProperty ;
+    rdfs:label "Retry Budget"@en ;
+    rdfs:comment "Optional explicit dimensionless retry budget; no default inferred."@en ;
+    rdfs:domain fd:RecoveryOption ;
+    rdfs:range ac:ParameterSpecification .
+
+fd:supportingEvidence a owl:ObjectProperty ;
+    rdfs:label "Supporting Evidence"@en ;
+    rdfs:comment "Evidence offered in support; not automatically accepted."@en ;
+    rdfs:domain fd:DiagnosticHypothesis ;
+    rdfs:range ac:EvidenceRecord .
+
+fd:FailureProfile a owl:Class ;
+    rdfs:label "Failure Profile"@en ;
+    rdfs:comment "Potential failure descriptions, diagnostic hypotheses and recovery options."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+fd:FailureKind a owl:Class ;
+    rdfs:label "Failure Kind"@en ;
+    rdfs:comment "Reusable category of failure."@en ;
+    rdfs:subClassOf dul:Concept .
+
+fd:FailureSpecification a owl:Class ;
+    rdfs:label "Failure Specification"@en ;
+    rdfs:comment "Description of a failure mode; not an observed failure event."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+
+fd:RecoveryOption a owl:Class ;
+    rdfs:label "Recovery Option"@en ;
+    rdfs:comment "Guarded descriptive recovery option with an intended restored condition."@en ;
+    rdfs:subClassOf ac:RecoverySpecification .
+
+fd:DiagnosticHypothesis a owl:Class ;
+    rdfs:label "Diagnostic Hypothesis"@en ;
+    rdfs:comment "Candidate cause explaining a failure; evidence does not automatically establish root cause."@en ;
+    rdfs:subClassOf ac:ActionComponent .
+

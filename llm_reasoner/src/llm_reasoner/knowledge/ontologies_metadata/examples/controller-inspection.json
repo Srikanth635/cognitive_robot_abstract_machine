@@ -1,0 +1,36 @@
+[
+  {
+    "controller": "http://aicor.knowledge/ontologies/action-examples.owl#pourController",
+    "model": "http://aicor.knowledge/ontologies/action-examples.owl#pourDynamics",
+    "vectorDimensions": {
+      "State": 1,
+      "Input": 1,
+      "Output": 1
+    },
+    "unresolved": [
+      "output equation",
+      "state evolution equation",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#pourSamplingPeriod"
+    ],
+    "executionReadinessAssessed": false
+  },
+  {
+    "controller": "http://aicor.knowledge/ontologies/action-examples.owl#graspController",
+    "model": "http://aicor.knowledge/ontologies/action-examples.owl#graspDynamics",
+    "vectorDimensions": {
+      "State": 1,
+      "Output": 1,
+      "Input": 1
+    },
+    "unresolved": [
+      "output equation",
+      "state evolution equation",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspSamplingPeriod",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspScale_effort",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspScale_hold",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspWeight_effort",
+      "value: http://aicor.knowledge/ontologies/action-examples.owl#graspWeight_hold"
+    ],
+    "executionReadinessAssessed": false
+  }
+]

@@ -1,0 +1,646 @@
+{
+  "checks": [
+    {
+      "case": "closed-local-references:http://www.ontologydesignpatterns.org/ont/dul/DUL.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/action-description-core.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/cram-action-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:urn:gpt-cram-ontologies:aicor-unified",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/physical-models.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/participants-relations.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/all-action-aspects.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/frame-perspective.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/force-dynamics.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/image-schemas.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/model-contracts.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/robot-motion.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/all-action-knowledge.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/mobility-navigation.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/perception-attention.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/tool-interaction.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/material-transfer.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/pouring-tool-bridge.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/articulated-mechanisms.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/transport-carrying.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/specialized-tool-interactions.owl",
+      "passed": true
+    },
+    {
+      "case": "closed-local-references:http://aicor.knowledge/ontologies/action-recipes.owl",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:.",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:aspects",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:aspects/causality",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:aspects/entities-transfer",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:aspects/observation",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:aspects/perspectives",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:aspects/physics-control",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:aspects/planning",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:aspects/structure",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:aspects/validation",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:candidates",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:compositions",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:core",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:domains",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:integrations",
+      "passed": true
+    },
+    {
+      "case": "local-catalog:refinements",
+      "passed": true
+    },
+    {
+      "case": "independent:objectives-tradeoffs",
+      "passed": true
+    },
+    {
+      "case": "independent:physical-models",
+      "passed": true
+    },
+    {
+      "case": "independent:causal-mechanisms",
+      "passed": true
+    },
+    {
+      "case": "independent:monitoring-requirements",
+      "passed": true
+    },
+    {
+      "case": "independent:capabilities-strategies",
+      "passed": true
+    },
+    {
+      "case": "independent:failure-diagnosis",
+      "passed": true
+    }
+  ],
+  "closures": {
+    "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/action-description-core.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/cram-action-bridge.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/cram-action-bridge.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl",
+      "urn:gpt-cram-ontologies:aicor-unified"
+    ],
+    "urn:gpt-cram-ontologies:aicor-unified": [
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl",
+      "urn:gpt-cram-ontologies:aicor-unified"
+    ],
+    "http://aicor.knowledge/ontologies/monitoring-requirements.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/conditions-outcomes.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/phases-transitions.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/dynamics-control.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/causal-mechanisms.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/physical-models.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/participants-relations.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/causal-physical-bridge.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/all-action-aspects.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/all-action-aspects.owl",
+      "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://aicor.knowledge/ontologies/force-dynamics.owl",
+      "http://aicor.knowledge/ontologies/frame-perspective.owl",
+      "http://aicor.knowledge/ontologies/image-schemas.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+      "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/capabilities-strategies.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/failure-diagnosis.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/frame-perspective.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/frame-perspective.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/force-dynamics.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/force-dynamics.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/image-schemas.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/image-schemas.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/entities-materials-affordances.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/sensorimotor-events.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/knowledge-context.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/transfer-contracts.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/model-contracts.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/robot-motion.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/all-action-knowledge.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/action-recipes.owl",
+      "http://aicor.knowledge/ontologies/all-action-aspects.owl",
+      "http://aicor.knowledge/ontologies/all-action-knowledge.owl",
+      "http://aicor.knowledge/ontologies/articulated-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/capabilities-strategies.owl",
+      "http://aicor.knowledge/ontologies/causal-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/causal-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/causal-physical-bridge.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/diagnostic-causal-bridge.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/entities-materials-affordances.owl",
+      "http://aicor.knowledge/ontologies/failure-diagnosis.owl",
+      "http://aicor.knowledge/ontologies/force-dynamics.owl",
+      "http://aicor.knowledge/ontologies/frame-perspective.owl",
+      "http://aicor.knowledge/ontologies/image-schemas.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/material-transfer.owl",
+      "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/perception-attention.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/physical-outcome-bridge.owl",
+      "http://aicor.knowledge/ontologies/pouring-tool-bridge.owl",
+      "http://aicor.knowledge/ontologies/recovery-strategy-bridge.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "http://aicor.knowledge/ontologies/specialized-tool-interactions.owl",
+      "http://aicor.knowledge/ontologies/tool-interaction.owl",
+      "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "http://aicor.knowledge/ontologies/transport-carrying.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/object-manipulation.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/mobility-navigation.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/perception-attention.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/perception-attention.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://aicor.knowledge/ontologies/sensorimotor-events.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/tool-interaction.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://aicor.knowledge/ontologies/tool-interaction.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/material-transfer.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/material-transfer.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/pouring-tool-bridge.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/material-transfer.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/pouring-tool-bridge.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://aicor.knowledge/ontologies/tool-interaction.owl",
+      "http://aicor.knowledge/ontologies/transfer-contracts.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/articulated-mechanisms.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/articulated-mechanisms.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/transport-carrying.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://aicor.knowledge/ontologies/transport-carrying.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/specialized-tool-interactions.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://aicor.knowledge/ontologies/specialized-tool-interactions.owl",
+      "http://aicor.knowledge/ontologies/tool-interaction.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ],
+    "http://aicor.knowledge/ontologies/action-recipes.owl": [
+      "http://aicor.knowledge/ontologies/action-description-core.owl",
+      "http://aicor.knowledge/ontologies/action-recipes.owl",
+      "http://aicor.knowledge/ontologies/conditions-outcomes.owl",
+      "http://aicor.knowledge/ontologies/dynamics-control.owl",
+      "http://aicor.knowledge/ontologies/knowledge-context.owl",
+      "http://aicor.knowledge/ontologies/mobility-navigation.owl",
+      "http://aicor.knowledge/ontologies/model-contracts.owl",
+      "http://aicor.knowledge/ontologies/monitoring-requirements.owl",
+      "http://aicor.knowledge/ontologies/object-manipulation.owl",
+      "http://aicor.knowledge/ontologies/objectives-tradeoffs.owl",
+      "http://aicor.knowledge/ontologies/participants-relations.owl",
+      "http://aicor.knowledge/ontologies/phases-transitions.owl",
+      "http://aicor.knowledge/ontologies/physical-models.owl",
+      "http://aicor.knowledge/ontologies/robot-motion.owl",
+      "http://aicor.knowledge/ontologies/specialized-tool-interactions.owl",
+      "http://aicor.knowledge/ontologies/tool-interaction.owl",
+      "http://aicor.knowledge/ontologies/transport-carrying.owl",
+      "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"
+    ]
+  }
+}

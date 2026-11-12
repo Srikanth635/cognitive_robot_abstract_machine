@@ -1,0 +1,12 @@
+# Bind ?record explicitly. Maximum deviation is interval-qualified, not endpoint error.
+PREFIX ac: <http://aicor.knowledge/ontologies/action-description-core.owl#>
+PREFIX tc: <http://aicor.knowledge/ontologies/transport-carrying.owl#>
+SELECT ?action ?load ?frame ?target ?maximumDeviation ?tolerance ?unit
+WHERE {
+ ?record ac:expressesDescription ?action .
+ ?action tc:orientationRequirement ?requirement .
+ ?requirement tc:orientedLoad ?load ; tc:orientationFrame ?frame ;
+              tc:orientationTarget ?target ; tc:maximumDeviation ?maximumDeviation ;
+              tc:deviationTolerance ?tolerance .
+ ?maximumDeviation ac:unitIRI ?unit .
+}

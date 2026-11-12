@@ -1,0 +1,54 @@
+{
+  "release": "0.17.0",
+  "registered_ontologies": 36,
+  "implemented_domains": 6,
+  "new_domains": [
+    "tool-interaction",
+    "material-transfer"
+  ],
+  "new_composition_bridge": "pouring-tool-bridge",
+  "new_profiles": [
+    "Tool positioning",
+    "Tool engagement",
+    "Functional tool use",
+    "Tool disengagement",
+    "Partial transfer",
+    "Complete transfer",
+    "Pouring"
+  ],
+  "comprehensive_demo": {
+    "rdf": "demo/comprehensive-pouring.ttl",
+    "readable_json": "demo/comprehensive-pouring.json",
+    "abbreviated_lisp": "demo/comprehensive-pouring.lisp",
+    "proposed_descriptive_claims": 616,
+    "illustration_only": true
+  },
+  "validation": {
+    "new_checks_passed": 81,
+    "import_catalog_checks_passed": 56,
+    "object_manipulation_regressions_passed": 102,
+    "mobility_regressions_passed": 104,
+    "perception_regressions_passed": 94,
+    "context_regressions_passed": 26,
+    "historical_competency_assertions_passed": 93,
+    "domain_bridge_and_assembly_classification": "Four closures passed, no unsatisfiable named classes",
+    "generic_examples_and_demo_consistency": "passed",
+    "optional_aicor_consistency": "blocked"
+  },
+  "preservation": {
+    "comparedRelease": "0.16.0",
+    "unchangedOntologyAndExampleFiles": 68,
+    "changed": [
+      "integrations/all-action-knowledge.ttl"
+    ],
+    "missing": [],
+    "expectedAssemblyChangeOnly": true
+  },
+  "limitations": [
+    "All numerical values and assumed outcomes are fictional Proposed claims, not observations or certified safe limits",
+    "Only a bounded container-to-container volume/mass transfer authoring profile; no fluid simulation or model calibration",
+    "No world bindings, capability matching, controller synthesis or executable projection",
+    "Readable views summarize the RDF record and do not implement a general projection engine",
+    "Optional AICOR/CRAM consistency is blocked by the earlier SceneNode DisjointClasses normalization issue; original AICOR axioms preserved, root cause unresolved"
+  ]
+}

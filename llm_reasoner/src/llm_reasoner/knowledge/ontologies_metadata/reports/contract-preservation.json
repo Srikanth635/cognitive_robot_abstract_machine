@@ -1,0 +1,257 @@
+[
+  {
+    "file": "DUL.owl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/aspect-shapes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/capabilities-strategies.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/causal-mechanisms.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/causal-physical-shapes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/conditions-outcomes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/control-shapes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/dynamics-control.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/entities-materials-affordances.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/failure-diagnosis.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/force-dynamics.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/frame-perspective.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/frame-shapes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/image-schemas.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/monitoring-requirements.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/objectives-tradeoffs.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/participants-relations.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/phases-transitions.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/physical-models.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/remaining-aspect-shapes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/sensorimotor-events.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/strategy-failure-shapes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "aspects/temporal-shapes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "candidates/aicor-unified-dul-offline.owl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "candidates/aicor-unified-dul.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "candidates/aicor-unified-preserved.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "core/action-core-shapes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "core/action-description-core.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "core/cram-action-bridge.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "core/knowledge-context-shapes.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "core/knowledge-context.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/aspect-actions.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/causal-physical-actions.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/control-actions.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/frame-contracts.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/frame-projection-artifacts.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/phase-actions.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/projection-artifacts.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/remaining-aspect-knowledge.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/stereotypical-actions.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "examples/strategy-failure-actions.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "integrations/all-action-aspects.ttl",
+    "byte_identical": false,
+    "semantically_unchanged": false
+  },
+  {
+    "file": "integrations/causal-outcome-bridge.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "integrations/causal-physical-bridge.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "integrations/physical-outcome-bridge.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "integrations/recovery-strategy-bridge.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "reports/removed_dul_parent_axioms.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "reports/replaced_source_metadata.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "review/fixtures/context-provenance.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "sources/aicor-ontology.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  },
+  {
+    "file": "sources/cram-aicor-ontology.ttl",
+    "byte_identical": true,
+    "semantically_unchanged": true
+  }
+]

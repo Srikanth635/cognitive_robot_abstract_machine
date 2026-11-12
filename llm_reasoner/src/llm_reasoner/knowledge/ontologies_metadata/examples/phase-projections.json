@@ -1,0 +1,737 @@
+[
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#pourRecordV3",
+    "version": "3",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#pourActionV3",
+    "structure": "http://aicor.knowledge/ontologies/action-examples.owl#pourPhaseStructure",
+    "initialPhase": "http://aicor.knowledge/ontologies/action-examples.owl#pourPrepare",
+    "claims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim0",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      }
+    ],
+    "phases": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourAbort",
+        "label": "Failed completion",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#FailedTerminalPhase"
+        ],
+        "entryCondition": null,
+        "exitCondition": null,
+        "invariants": [],
+        "expectedOutcomes": [],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourComplete",
+        "label": "Successful completion",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#SuccessfulTerminalPhase"
+        ],
+        "entryCondition": null,
+        "exitCondition": null,
+        "invariants": [],
+        "expectedOutcomes": [],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourPrepare",
+        "label": "Prepare transfer",
+        "types": [
+          "http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification"
+        ],
+        "entryCondition": "http://aicor.knowledge/ontologies/action-examples.owl#pourPrecondition",
+        "exitCondition": null,
+        "invariants": [],
+        "expectedOutcomes": [],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTransfer",
+        "label": "Transfer material",
+        "types": [
+          "http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification"
+        ],
+        "entryCondition": null,
+        "exitCondition": "http://aicor.knowledge/ontologies/action-examples.owl#pourReadyToVerify",
+        "invariants": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourSpillInvariant"
+        ],
+        "expectedOutcomes": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#pourOutcome"
+        ],
+        "monitors": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourReadinessMonitor",
+            "condition": "http://aicor.knowledge/ontologies/action-examples.owl#pourReadyToVerify",
+            "point": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#DuringPhase",
+            "onTrue": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#ReportSatisfied",
+            "onFalse": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#ReportUnsatisfied",
+            "onUnknown": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestEvidence",
+            "observations": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_deliveredAmount_CurrentState",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#deliveredAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_spillAmount_CurrentState",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_spillTolerance_TaskContext",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillTolerance",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_targetAmount_TaskContext",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#targetAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              }
+            ],
+            "claims": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim8",
+                "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+                "evidence": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourSpillMonitor",
+            "condition": "http://aicor.knowledge/ontologies/action-examples.owl#pourSpillInvariant",
+            "point": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#DuringPhase",
+            "onTrue": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#ReportSatisfied",
+            "onFalse": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestSuspension",
+            "onUnknown": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestEvidence",
+            "observations": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_spillAmount_CurrentState",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_spillTolerance_TaskContext",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillTolerance",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              }
+            ],
+            "claims": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim7",
+                "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+                "evidence": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVerify",
+        "label": "Verify outcome",
+        "types": [
+          "http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification"
+        ],
+        "entryCondition": null,
+        "exitCondition": "http://aicor.knowledge/ontologies/action-examples.owl#pourAmountSuccess",
+        "invariants": [],
+        "expectedOutcomes": [],
+        "monitors": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVerificationMonitor",
+            "condition": "http://aicor.knowledge/ontologies/action-examples.owl#pourAmountSuccess",
+            "point": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#PhaseExit",
+            "onTrue": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#ReportSatisfied",
+            "onFalse": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestSuspension",
+            "onUnknown": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestEvidence",
+            "observations": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_deliveredAmount_PostState",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#deliveredAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_spillAmount_PostState",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_spillTolerance_TaskContext",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillTolerance",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_targetAmount_TaskContext",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#targetAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              }
+            ],
+            "claims": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim9",
+                "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+                "evidence": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "transitions": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourAdvanceToVerify",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#OrdinaryTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#pourTransfer",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#pourVerify",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#pourReadyToVerify",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim3",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTransitionMonitor",
+            "condition": "http://aicor.knowledge/ontologies/action-examples.owl#pourReadyToVerify",
+            "point": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#TransitionCheck",
+            "onTrue": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#ReportSatisfied",
+            "onFalse": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestEvidence",
+            "onUnknown": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestEvidence",
+            "observations": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_deliveredAmount_CurrentState",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#deliveredAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_spillAmount_CurrentState",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_spillTolerance_TaskContext",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#spillTolerance",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_quantity_targetAmount_TaskContext",
+                "pattern": null,
+                "parameter": "http://aicor.knowledge/ontologies/action-examples.owl#targetAmount",
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#TaskContext",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#quantityEstimationCapability"
+                ]
+              }
+            ],
+            "claims": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim10",
+                "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+                "evidence": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourBegin",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#OrdinaryTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#pourPrepare",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#pourTransfer",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#pourPrecondition",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim1",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourCannotBegin",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#FailureTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#pourPrepare",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#pourAbort",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#pourPreconditionFalse",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim2",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourSpillAbort",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#FailureTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#pourTransfer",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#pourAbort",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#pourExcessSpillCurrent",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim4",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVerificationFailed",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#FailureTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#pourVerify",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#pourAbort",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#pourVerificationFalse",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim6",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourVerified",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#OrdinaryTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#pourVerify",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#pourComplete",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#pourAmountSuccess",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#pourTemporalClaim5",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      }
+    ]
+  },
+  {
+    "record": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecordV3",
+    "version": "3",
+    "description": "http://aicor.knowledge/ontologies/action-examples.owl#graspActionV3",
+    "structure": "http://aicor.knowledge/ontologies/action-examples.owl#graspPhaseStructure",
+    "initialPhase": "http://aicor.knowledge/ontologies/action-examples.owl#graspPrepare",
+    "claims": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim0",
+        "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+        "evidence": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+        ]
+      }
+    ],
+    "phases": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspAbort",
+        "label": "Failed completion",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#FailedTerminalPhase"
+        ],
+        "entryCondition": null,
+        "exitCondition": null,
+        "invariants": [],
+        "expectedOutcomes": [],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspComplete",
+        "label": "Successful completion",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#SuccessfulTerminalPhase"
+        ],
+        "entryCondition": null,
+        "exitCondition": null,
+        "invariants": [],
+        "expectedOutcomes": [],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspEstablish",
+        "label": "Establish controlled hold",
+        "types": [
+          "http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification"
+        ],
+        "entryCondition": "http://aicor.knowledge/ontologies/action-examples.owl#graspCurrentGraspable",
+        "exitCondition": "http://aicor.knowledge/ontologies/action-examples.owl#graspCurrentHold",
+        "invariants": [],
+        "expectedOutcomes": [
+          "http://aicor.knowledge/ontologies/action-examples.owl#graspOutcome"
+        ],
+        "monitors": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspHoldMonitor",
+            "condition": "http://aicor.knowledge/ontologies/action-examples.owl#graspCurrentHold",
+            "point": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#DuringPhase",
+            "onTrue": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#ReportSatisfied",
+            "onFalse": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestEvidence",
+            "onUnknown": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestEvidence",
+            "observations": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_relation_controlledHoldPattern_CurrentState",
+                "pattern": "http://aicor.knowledge/ontologies/action-examples.owl#controlledHoldPattern",
+                "parameter": null,
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#relationAssessmentCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_relation_graspContactPattern_CurrentState",
+                "pattern": "http://aicor.knowledge/ontologies/action-examples.owl#graspContactPattern",
+                "parameter": null,
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#relationAssessmentCapability"
+                ]
+              }
+            ],
+            "claims": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim8",
+                "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+                "evidence": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspPrepare",
+        "label": "Prepare grasp",
+        "types": [
+          "http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification"
+        ],
+        "entryCondition": null,
+        "exitCondition": null,
+        "invariants": [],
+        "expectedOutcomes": [],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecover",
+        "label": "Reassess grasp conditions",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#RecoveryPhase"
+        ],
+        "entryCondition": null,
+        "exitCondition": null,
+        "invariants": [],
+        "expectedOutcomes": [],
+        "monitors": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecoveryMonitor",
+            "condition": "http://aicor.knowledge/ontologies/action-examples.owl#graspCurrentGraspable",
+            "point": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#PhaseExit",
+            "onTrue": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#ReportSatisfied",
+            "onFalse": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestSuspension",
+            "onUnknown": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestEvidence",
+            "observations": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_relation_graspablePattern_CurrentState",
+                "pattern": "http://aicor.knowledge/ontologies/action-examples.owl#graspablePattern",
+                "parameter": null,
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#CurrentState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#relationAssessmentCapability"
+                ]
+              }
+            ],
+            "claims": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim10",
+                "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+                "evidence": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspVerify",
+        "label": "Verify controlled hold",
+        "types": [
+          "http://aicor.knowledge/ontologies/action-description-core.owl#PhaseSpecification"
+        ],
+        "entryCondition": null,
+        "exitCondition": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlledSuccess",
+        "invariants": [],
+        "expectedOutcomes": [],
+        "monitors": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspVerificationMonitor",
+            "condition": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlledSuccess",
+            "point": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#PhaseExit",
+            "onTrue": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#ReportSatisfied",
+            "onFalse": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestRecovery",
+            "onUnknown": "http://aicor.knowledge/ontologies/monitoring-requirements.owl#RequestEvidence",
+            "observations": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_relation_controlledHoldPattern_PostState",
+                "pattern": "http://aicor.knowledge/ontologies/action-examples.owl#controlledHoldPattern",
+                "parameter": null,
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#relationAssessmentCapability"
+                ]
+              },
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#observe_relation_graspContactPattern_PostState",
+                "pattern": "http://aicor.knowledge/ontologies/action-examples.owl#graspContactPattern",
+                "parameter": null,
+                "scope": "http://aicor.knowledge/ontologies/conditions-outcomes.owl#PostState",
+                "capabilities": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#relationAssessmentCapability"
+                ]
+              }
+            ],
+            "claims": [
+              {
+                "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim9",
+                "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+                "evidence": [
+                  "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "transitions": [
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspAdvanceToVerify",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#OrdinaryTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#graspEstablish",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#graspVerify",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#graspCurrentHold",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim3",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspBegin",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#OrdinaryTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#graspPrepare",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#graspEstablish",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#graspPrecondition",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim1",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspCannotBegin",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#FailureTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#graspPrepare",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#graspAbort",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#graspPreconditionFalse",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim2",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspNeedRecovery",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#RecoveryTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#graspVerify",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecover",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#graspVerificationFalse",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim5",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecoveryFailed",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#FailureTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecover",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#graspAbort",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#graspCurrentNotGraspable",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim7",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspRetry",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#RecoveryTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#graspRecover",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#graspEstablish",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#graspCurrentGraspable",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim6",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      },
+      {
+        "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspVerified",
+        "types": [
+          "http://aicor.knowledge/ontologies/phases-transitions.owl#OrdinaryTransition"
+        ],
+        "from": "http://aicor.knowledge/ontologies/action-examples.owl#graspVerify",
+        "to": "http://aicor.knowledge/ontologies/action-examples.owl#graspComplete",
+        "guard": "http://aicor.knowledge/ontologies/action-examples.owl#graspControlledSuccess",
+        "claims": [
+          {
+            "id": "http://aicor.knowledge/ontologies/action-examples.owl#graspTemporalClaim4",
+            "status": "http://aicor.knowledge/ontologies/action-description-core.owl#Proposed",
+            "evidence": [
+              "http://aicor.knowledge/ontologies/action-examples.owl#exampleEvidence"
+            ]
+          }
+        ],
+        "monitors": []
+      }
+    ]
+  }
+]

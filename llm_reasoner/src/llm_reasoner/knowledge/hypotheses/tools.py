@@ -111,20 +111,6 @@ class KnowledgeTool(Tool, ABC):
 
 
 @dataclass
-class SummariseKnowledge(KnowledgeTool):
-    """
-    Summarises the action the hypothesis describes.
-    """
-
-    @property
-    def name(self) -> KnowledgeToolName:
-        return KnowledgeToolName.KNOWLEDGE_OVERVIEW
-
-    def answer(self, arguments: Mapping[str, Any]) -> KnowledgeAnswer:
-        return self.questions.overview()
-
-
-@dataclass
 class FindFragments(KnowledgeTool):
     """
     Finds the hypothesis's fragments of a vocabulary class.
@@ -152,7 +138,7 @@ class DescribeFragment(KnowledgeTool):
         return self.questions.describe(arguments[KnowledgeToolKey.NAME])
 
 
-KNOWLEDGE_TOOL_KINDS = (SummariseKnowledge, FindFragments, DescribeFragment)
+KNOWLEDGE_TOOL_KINDS = (FindFragments, DescribeFragment)
 """
 Every knowledge tool, in the order they are offered.
 """
