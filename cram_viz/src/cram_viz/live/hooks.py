@@ -14,10 +14,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from coraplex.plans.executables import GiskardExecutable
-from coraplex.plans.plan import Plan
-from coraplex.plans.plan_node import PlanNode
-from giskardpy.executor import Executor
+from coraplex.plans.executors import PlanExecutor
+from cramph.executor import StatechartExecutor
 from semantic_digital_twin.adapters.mesh import MeshParser
 from semantic_digital_twin.world import World
 
@@ -32,7 +30,7 @@ def install_tick_hook(plan_snapshot_tick_interval: int = 5) -> None:
 
     The plan tree is only re-walked every plan_snapshot_tick_interval ticks.
     """
-    original_tick = Executor.tick
+    original_tick = StatechartExecutor.tick
 
     def tick(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -50,7 +48,7 @@ def install_tick_hook(plan_snapshot_tick_interval: int = 5) -> None:
         try:
             BRIDGE.apply_moves()  # viewer drags land in the real world here
             BRIDGE.snapshot()
-            BRIDGE.observe_chart(self.motion_statechart)
+            BRIDGE.observe_chart(self.statechart)
             BRIDGE._ticks += 1
             if BRIDGE._ticks % plan_snapshot_tick_interval == 0:
                 BRIDGE.snapshot_plan()
@@ -60,77 +58,31 @@ def install_tick_hook(plan_snapshot_tick_interval: int = 5) -> None:
             logger.exception("bridge snapshot failed this tick")
         return result
 
-    Executor.tick = tick
+    StatechartExecutor.tick = tick
 
 
 def install_plan_hooks() -> None:
     """
-    Follow the coraplex plan: which plan executes, and which plan nodes the currently
-    running giskard executable belongs to.
+    Follow the plan an executor performs: publish its statechart when it starts and once
+    it ended, however it ended.
 
-    Both hooks fire on the thread that runs the plan (the same one that ticks the
-    executor), so they may touch plan objects directly.
+    The hook fires on the thread that runs the plan (the same one that ticks the
+    executor), so it may touch the statechart directly.
     """
-    original_perform = Plan.perform
-
-    def perform(self, *args: Any, **kwargs: Any) -> Any:
-        """
-        Capture the plan the moment it starts performing.
-        """
-        BRIDGE._plan = self
-        BRIDGE.snapshot_plan()
-        result = original_perform(self, *args, **kwargs)
-        BRIDGE.snapshot_plan()
-        return result
-
-    Plan.perform = perform
-
-    original_execute = GiskardExecutable.execute
+    original_execute = PlanExecutor.execute
 
     def execute(self, *args: Any, **kwargs: Any) -> None:
         """
-        Track this executable's motion group and freeze its final status.
+        Capture the statechart the moment the plan starts, and publish it as it ends.
         """
-        BRIDGE.bind_motion_group(self)
-        try:
-            result = original_execute(self, *args, **kwargs)
-        except BaseException:
-            BRIDGE.freeze_motion_group(self, "FAILED")
-            BRIDGE.snapshot_plan()
-            raise
-        BRIDGE.freeze_motion_group(self, "SUCCEEDED")
-        BRIDGE.snapshot_plan()
-        return result
-
-    GiskardExecutable.execute = execute
-
-
-def install_root_node_hook() -> None:
-    """
-    Follow a coraplex plan that is performed through its root node, as a resolution
-    run's is, which never calls :meth:`Plan.perform`.
-
-    The hook fires on the thread that runs the plan, like those of
-    :func:`install_plan_hooks`, and publishes the plan when its root starts performing
-    and as it ended, however it ended.
-    """
-    original_perform = PlanNode.perform
-
-    def perform(self, *args: Any, **kwargs: Any) -> Any:
-        """
-        Capture the plan when its root starts performing, and publish it when it ends.
-        """
-        plan = self.plan
-        if plan is None or plan.root is not self:
-            return original_perform(self, *args, **kwargs)
-        BRIDGE._plan = plan
+        BRIDGE._plan = self.statechart
         BRIDGE.snapshot_plan()
         try:
-            return original_perform(self, *args, **kwargs)
+            return original_execute(self, *args, **kwargs)
         finally:
             BRIDGE.snapshot_plan()
 
-    PlanNode.perform = perform
+    PlanExecutor.execute = execute
 
 
 def install_mesh_hook() -> None:
@@ -138,17 +90,17 @@ def install_mesh_hook() -> None:
     Remember every mesh an object is built from, so the bridge can serve its geometry to
     the viewer.
 
-    All mesh formats go through ``MeshParser.parse``; the body name matches the mesh
-    file's basename.
+    All mesh formats go through ``MeshParser.create_world``; the body name matches the
+    mesh file's basename.
     """
-    original_parse = MeshParser.parse
+    original_create_world = MeshParser.create_world
 
-    def parse(self, *args: Any, **kwargs: Any) -> World:
+    def create_world(self, *args: Any, **kwargs: Any) -> World:
         """
         Remember this mesh's file path before parsing it.
         """
         if self.file_path:
             BRIDGE._mesh_files[Path(self.file_path).name.lower()] = self.file_path
-        return original_parse(self, *args, **kwargs)
+        return original_create_world(self, *args, **kwargs)
 
-    MeshParser.parse = parse
+    MeshParser.create_world = create_world

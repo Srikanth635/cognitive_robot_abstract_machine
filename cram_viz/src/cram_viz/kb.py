@@ -531,9 +531,9 @@ def _parsed_module(path: str) -> ast.Module:
         return ast.parse(source.read(), filename=path)
 
 
-def scan_architecture() -> (
-    Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Tuple[str, str]]]
-):
+def scan_architecture() -> Tuple[
+    List[Dict[str, Any]], List[Dict[str, Any]], List[Tuple[str, str]]
+]:
     """
     Statically scan the CRAM repository for its architecture graph.
 
@@ -677,9 +677,9 @@ def _load_architecture_cache(cram_root: str, require_classes: bool) -> Optional[
     )
 
 
-def load_architecture() -> (
-    Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Tuple[str, str]]]
-):
+def load_architecture() -> Tuple[
+    List[Dict[str, Any]], List[Dict[str, Any]], List[Tuple[str, str]]
+]:
     """
     :func:`scan_architecture` behind a JSON disk cache.
 
@@ -1674,8 +1674,7 @@ def _hypothesis_node_lines(node: HypothesisGraphNode) -> List[str]:
 
 
 NOTHING_GENERATED = (
-    "Nothing generated yet — pick a designator below the search bar and click "
-    "Generate."
+    "Nothing generated yet — pick a designator below the search bar and click Generate."
 )
 """
 What the knowledge tabs say before a designator has been resolved.
@@ -2353,28 +2352,28 @@ def _hypothesis_graph_presets(kb: KB) -> List[Dict[str, str]]:
             "text": "what is the source container the substance is poured from?",
             "code": (
                 "an(entity(pouring_role)"
-                ".where(HasType(pouring_role, pouring.SourceContainer)))"
+                ".where(HasType(variable=pouring_role, types_=pouring.SourceContainer)))"
             ),
         },
         {
             "text": "what is the destination the substance is poured into?",
             "code": (
                 "an(entity(pouring_role)"
-                ".where(HasType(pouring_role, pouring.TargetReceptacle)))"
+                ".where(HasType(variable=pouring_role, types_=pouring.TargetReceptacle)))"
             ),
         },
         {
             "text": "what substance is poured?",
             "code": (
                 "an(entity(pouring_role)"
-                ".where(HasType(pouring_role, pouring.PouredSubstance)))"
+                ".where(HasType(variable=pouring_role, types_=pouring.PouredSubstance)))"
             ),
         },
         {
             "text": "which effector grasps and moves the source container?",
             "code": (
                 "an(entity(pouring_role)"
-                ".where(HasType(pouring_role, prehension.GraspingEffector)))"
+                ".where(HasType(variable=pouring_role, types_=prehension.GraspingEffector)))"
             ),
         },
         {
@@ -2402,7 +2401,7 @@ def _hypothesis_graph_presets(kb: KB) -> List[Dict[str, str]]:
             "text": "which failures can occur during the action?",
             "code": (
                 "an(entity(pouring_event_type)"
-                ".where(HasType(pouring_event_type, core.FailureEventType)))"
+                ".where(HasType(variable=pouring_event_type, types_=core.FailureEventType)))"
             ),
         },
     ]

@@ -12,9 +12,9 @@ Runs the demo file UNMODIFIED under instrumentation and emits a scene bundle:
 
 What the hooks capture while the demo runs:
   - every package:// asset resolution and every URDF/STL the world loads
-  - per-tick positions of all movable connections (giskardpy Executor.tick)
+  - per-tick positions of all movable connections (cramph StatechartExecutor.tick)
   - world pose of the robot base and of every loose (STL) object
-  - one segment per executed plan ActionNode, with nesting depth
+  - one segment per executed plan Action, with nesting depth
   - the robot's semantic annotation: base body, arms, end-effector link sets
 
 Usage (interpreter needs the CRAM stack, e.g. the action-cram venv):
@@ -43,9 +43,8 @@ from cram_viz import configure_console_logging, paths
 from cram_viz.onboard.bundle_urdf import bundle_urdf
 
 if TYPE_CHECKING:
-    from coraplex.plans.executables import Executable
-    from coraplex.plans.plan_node import ActionNode
-    from giskardpy.executor import Executor
+    from coraplex.robot_plans.actions.base import Action
+    from cramph.executor import StatechartExecutor
     from semantic_digital_twin.adapters.urdf import URDFParser
     from semantic_digital_twin.world_description.world_entity import Body
 
@@ -86,7 +85,7 @@ class Recorder:
         self.base_frames = []  # [[x,y,z,qx,qy,qz,qw]]
         self.obj_frames = []  # [{obj_name: pose7}]
         self.actions = []  # {action, depth, start, end}
-        self.plan_nodes = []  # the actual ActionNode objects (plan tree)
+        self.plan_nodes = []  # the actual Action nodes (plan statechart)
         self._stack = []
         self.world = None
         self.robot = None
@@ -144,12 +143,12 @@ class Recorder:
     # ---- trajectory hook -----------------------------------------------------
     def install_tick_hook(self) -> None:
         """
-        Wrap Executor.tick so every simulation step is snapshotted.
+        Wrap StatechartExecutor.tick so every simulation step is snapshotted.
         """
-        from giskardpy.executor import Executor
+        from cramph.executor import StatechartExecutor
 
         rec = self
-        orig_tick = Executor.tick
+        orig_tick = StatechartExecutor.tick
 
         def tick(self, *a: Any, **kw: Any) -> None:
             """
@@ -159,18 +158,21 @@ class Recorder:
             rec._snap(self)
             return r
 
-        Executor.tick = tick
+        StatechartExecutor.tick = tick
 
-    def _lazy_bind(self, executor: Executor) -> None:
+    def _lazy_bind(self, executor: StatechartExecutor) -> None:
         """
         Bind to the executor's world and locate the robot + recordable objects the first
         time a tick fires (the world doesn't exist any earlier).
         """
         self.world = executor.context.world
-        try:
-            self.control_dt = executor.context.qp_controller_config.control_dt
-        except Exception:
-            pass
+        from giskardpy.motion_statechart.context import MotionControlContext
+
+        motion_control = executor.context.get_extension(MotionControlContext)
+        if motion_control is not None:
+            self.control_dt = (
+                motion_control.qp_controller_config.control_time_step.total_seconds()
+            )
         from semantic_digital_twin.robots.robot_parts import AbstractRobot
 
         robots = self.world.get_semantic_annotations_by_type(AbstractRobot)
@@ -211,7 +213,7 @@ class Recorder:
         q = p.quaternion.to_np().flatten()
         return [round(float(v), 5) for v in (t[0], t[1], t[2], q[0], q[1], q[2], q[3])]
 
-    def _snap(self, executor: Executor) -> None:
+    def _snap(self, executor: StatechartExecutor) -> None:
         """
         Append one frame: every movable connection's position, the robot base pose and
         every tracked object's pose.
@@ -243,11 +245,11 @@ class Recorder:
             log("... %d frames" % len(self.frames))
 
     # ---- action metadata hook ----------------------------------------------------
-    # Plans compile all actions into merged motion statecharts, so there is no
-    # per-action call boundary at execution time. ActionNode.parse DOES fire
-    # once per action (in plan order) — we record the action class, its arm and
-    # its target object there, and later derive the segment TIMING from the
-    # recorded data (object attach/detach + first base motion).
+    # A plan's actions run as nodes of one statechart, so there is no per-action call
+    # boundary at execution time. Action.expand DOES fire once per action as it joins
+    # the statechart — we record the action class, its arm and its target object
+    # there, and later derive the segment TIMING from the recorded data (object
+    # attach/detach + first base motion).
     def _target_of(self, desig: Any) -> Optional[str]:
         """
         The recorded object a designator refers to, by matching any of its attributes'
@@ -266,40 +268,39 @@ class Recorder:
 
     def install_segment_hook(self) -> None:
         """
-        Wrap ActionNode.parse to record each action's class, arm and target as it is
-        parsed (in plan order).
+        Wrap Action.expand to record each action's class, arm and target as it joins the
+        plan's statechart.
         """
-        from coraplex.plans.plan_node import ActionNode
+        from coraplex.robot_plans.actions.base import Action
 
         rec = self
-        orig_parse = ActionNode.parse
+        orig_expand = Action.expand
 
-        def parse(node: ActionNode, *a: Any, **kw: Any) -> Executable:
+        def expand(action: Action, *a: Any, **kw: Any) -> None:
             """
-            Record this action's designator before letting it parse normally.
+            Record this action before letting it expand normally.
             """
-            d = node.designator
-            arm = getattr(d, "arm", None) or getattr(d, "arms", None)
+            arm = getattr(action, "arm", None) or getattr(action, "arms", None)
             rec.actions.append(
                 {
-                    "action": type(d).__name__,
+                    "action": type(action).__name__,
                     "arm": str(arm) if arm is not None else None,
-                    "target": rec._target_of(d),
+                    "target": rec._target_of(action),
                     "frame": len(rec.frames),
                 }
             )
-            rec.plan_nodes.append(node)
+            rec.plan_nodes.append(action)
             log(
-                "action parsed:",
+                "action expanded:",
                 rec.actions[-1]["action"],
                 "->",
                 rec.actions[-1]["target"] or "-",
             )
-            return orig_parse(node, *a, **kw)
+            return orig_expand(action, *a, **kw)
 
-        ActionNode.parse = parse
+        Action.expand = expand
 
-    # ---- the executed plan tree, serialized from the real PlanNode graph ------
+    # ---- the executed plan, serialized from the statechart's node tree ----------
     def serialize_plans(self, max_nodes: int = 400) -> List[Dict[str, Any]]:
         """
         The executed plan tree(s) (deduped by root), as nested dicts capped at max_nodes
@@ -308,8 +309,8 @@ class Recorder:
         roots, seen = [], set()
         for n in self.plan_nodes:
             r = n
-            while getattr(r, "parent", None) is not None:
-                r = r.parent
+            while r.parent_node is not None:
+                r = r.parent_node
             if id(r) not in seen:
                 seen.add(id(r))
                 roots.append(r)
@@ -317,26 +318,23 @@ class Recorder:
 
         def ser(n: Any) -> Optional[Dict[str, Any]]:
             """
-            One PlanNode and its children as a dict, or None past max_nodes.
+            One statechart node and its children as a dict, or None past max_nodes.
             """
             if count[0] >= max_nodes:
                 return None
             count[0] += 1
-            d = getattr(n, "designator", None)
-            status = getattr(n, "status", None)
             entry = {
                 "kind": type(n).__name__,
-                "label": type(d).__name__ if d is not None else type(n).__name__,
-                "status": getattr(status, "name", str(status) if status else ""),
+                "label": type(n).__name__,
+                "status": n.life_cycle_state.name,
             }
-            if d is not None:
-                tgt = self._target_of(d)
-                if tgt:
-                    entry["target"] = tgt
-                arm = getattr(d, "arm", None) or getattr(d, "arms", None)
-                if arm is not None:
-                    entry["arm"] = str(arm)
-            kids = [ser(c) for c in getattr(n, "children", ()) or ()]
+            tgt = self._target_of(n)
+            if tgt:
+                entry["target"] = tgt
+            arm = getattr(n, "arm", None) or getattr(n, "arms", None)
+            if arm is not None:
+                entry["arm"] = str(arm)
+            kids = [ser(c) for c in n.children]
             entry["children"] = [k for k in kids if k]
             return entry
 

@@ -1,292 +1,224 @@
 """
-Unit tests for the live bridge's plan/statechart serializers.
+Tests of the live bridge's snapshots of a plan and of the statechart it runs as.
 
-The Bridge runs against stub plan nodes and stub statecharts — no coraplex or giskardpy
-needed — because the serializers only touch duck-typed attributes (children,
-status.name, designator, life_cycle_state, rx_graph, …). What IS covered is the
-interesting logic: bottom-up status aggregation in the plan tree, freeze semantics when
-a motion group finishes, and structure signatures that let the frontend distinguish "re-
-colour only" from "rebuild".
+The bridge runs against mimics of statechart nodes and statecharts: it reads only their
+life cycles, children, parents, transitions and fields, so no simulation is needed.
 """
 
+from __future__ import annotations
+
 import types
+from dataclasses import dataclass, field
 
 import pytest
-from coraplex.plans.executables import GiskardExecutable
-from coraplex.language import SequentialNode
-from coraplex.plans.plan import Plan
-from coraplex.plans.plan_node import PlanNode
+from coraplex.plans.executors import KinematicallySimulatedPlanExecutor, PlanExecutor
+from coraplex.robot_plans.actions.core.navigation import NavigateAction
+from cramph.data_types import LifeCycleValues
+from typing_extensions import Any, Dict, List
+
 from cram_viz.live import hooks
-from cram_viz.live.bridge import BRIDGE, STATUS_ALIASES, Bridge
+from cram_viz.live.bridge import BRIDGE, LIFE_CYCLE_TO_STATUS, Bridge, PlanNodeKey
+
+# %% mimics of a plan
 
 
-class _Status:
-    def __init__(self, name):
-        self.name = name
-
-
-def make_node(kind, status="CREATED", designator=None, children=()):
+@dataclass(kw_only=True)
+class PlanNodeMimic:
     """
-    A stub mimicking the plan-node interface the bridge serializes.
+    A node of a plan, as far as the bridge reads it.
     """
-    cls = type(kind, (object,), {})
-    node = cls()
-    node.status = _Status(status)
-    node.designator = designator
-    node.children = list(children)
-    node.parent_action_node = None
-    return node
+
+    life_cycle_state: LifeCycleValues = LifeCycleValues.NOT_STARTED
+    """
+    Where the node is in its life cycle.
+    """
+
+    children: List[PlanNodeMimic] = field(default_factory=list)
+    """
+    The nodes directly below this one.
+    """
+
+    arm: Any = None
+    """
+    The arm the node moves, if it moves one.
+    """
+
+    obj: Any = None
+    """
+    The object the node acts on, if it acts on one.
+    """
 
 
-class _Designator:
-    def __init__(self, target=None, arm=None):
-        if target:
-            self.obj = types.SimpleNamespace(name="world/" + target)
-        if arm:
-            self.arm = arm
+@dataclass(kw_only=True)
+class StatechartMimic:
+    """
+    The statechart of a plan, as far as the bridge reads its plan nodes.
+    """
+
+    top_level_nodes: List[PlanNodeMimic]
+    """
+    The nodes no other node is above.
+    """
 
 
-class _Task:
-    def __init__(self, life_cycle):
-        self.life_cycle_state = life_cycle
+@dataclass(kw_only=True)
+class SmallPlan:
+    """
+    A plan of a node holding an action holding a motion, bound to a bridge.
+    """
+
+    bridge: Bridge
+    """
+    The bridge bound to the plan.
+    """
+
+    top: PlanNodeMimic
+    """
+    The node at the top of the plan.
+    """
+
+    action: PlanNodeMimic
+    """
+    The action below the top node.
+    """
+
+    motion: PlanNodeMimic
+    """
+    The motion below the action.
+    """
 
 
 @pytest.fixture()
-def plan_bridge():
+def small_plan() -> SmallPlan:
     """
-    A bridge bound to a small plan: root -> action -> [condition, motion].
+    :return: A bridge bound to a plan whose action moves the left arm and whose motion
+        acts on the milk, a body the bridge publishes.
     """
+    motion = PlanNodeMimic(obj=types.SimpleNamespace(name="world/milk.stl"))
+    action = PlanNodeMimic(arm="LEFT", children=[motion])
+    top = PlanNodeMimic(children=[action])
     bridge = Bridge()
-    motion = make_node("MotionNode", designator=_Designator(target="milk.stl"))
-    condition = make_node("ConditionNode")
-    action = make_node(
-        "ActionNode", designator=_Designator(arm="LEFT"), children=[condition, motion]
-    )
-    root = make_node("SequentialNode", status="SUCCEEDED", children=[action])
     bridge._bodies = {"milk.stl": object(), "__base__": object()}
-    bridge._plan = types.SimpleNamespace(root=root)
-    return bridge, root, action, condition, motion
+    bridge._plan = StatechartMimic(top_level_nodes=[top])
+    return SmallPlan(bridge=bridge, top=top, action=action, motion=motion)
 
 
-def by_kind(bridge):
-    return {n["kind"]: n for n in bridge.get_plan()["nodes"]}
+def published(bridge: Bridge) -> List[Dict[str, Any]]:
+    """
+    :return: The nodes of the bridge's newest plan snapshot, top first, each followed by
+        the nodes below it.
+    """
+    return bridge.get_plan()["nodes"]
+
+
+# %% the plan snapshot
 
 
 class TestPlanSnapshot:
-    def test_running_task_bubbles_up(self, plan_bridge):
-        bridge, root, action, condition, motion = plan_bridge
-        bridge._motion_tasks[id(motion)] = _Task(1)  # RUNNING
-        bridge.snapshot_plan()
-        nodes = by_kind(bridge)
-        assert nodes["MotionNode"]["status"] == "RUNNING"
-        assert nodes["MotionNode"]["derived"] is True
-        assert nodes["ActionNode"]["status"] == "RUNNING"
-
-    def test_designator_metadata_is_serialized(self, plan_bridge):
-        bridge, *_ = plan_bridge
-        bridge.snapshot_plan()
-        nodes = by_kind(bridge)
-        assert nodes["MotionNode"]["target"] == "milk.stl"
-        assert nodes["ActionNode"]["arm"] == "LEFT"
-
-    def test_real_status_wins_over_derivation(self, plan_bridge):
-        bridge, *_ = plan_bridge
-        bridge.snapshot_plan()
-        assert by_kind(bridge)["SequentialNode"]["status"] == "SUCCEEDED"
-        assert by_kind(bridge)["SequentialNode"]["derived"] is False
-
-    def test_partially_done_parent_is_running_not_succeeded(self, plan_bridge):
-        bridge, root, action, condition, motion = plan_bridge
-        bridge._frozen[id(motion)] = "SUCCEEDED"  # condition still CREATED
-        bridge.snapshot_plan()
-        assert by_kind(bridge)["ActionNode"]["status"] == "RUNNING"
-
-    def test_fully_done_parent_is_succeeded(self, plan_bridge):
-        bridge, root, action, condition, motion = plan_bridge
-        bridge._frozen[id(motion)] = "SUCCEEDED"
-        bridge._frozen[id(condition)] = "SUCCEEDED"
-        bridge.snapshot_plan()
-        assert by_kind(bridge)["ActionNode"]["status"] == "SUCCEEDED"
-
-    def test_failure_outranks_done_sibling(self, plan_bridge):
-        bridge, root, action, condition, motion = plan_bridge
-        bridge._frozen[id(motion)] = "SUCCEEDED"
-        bridge._frozen[id(condition)] = "FAILED"
-        bridge.snapshot_plan()
-        assert by_kind(bridge)["ActionNode"]["status"] == "FAILED"
-
-    def test_signature_is_stable_across_status_changes(self, plan_bridge):
-        bridge, root, action, condition, motion = plan_bridge
-        bridge._motion_tasks[id(motion)] = _Task(1)
-        bridge.snapshot_plan()
-        sig1 = bridge.get_plan()["sig"]
-        bridge._motion_tasks.clear()
-        bridge._frozen[id(motion)] = "SUCCEEDED"
-        bridge.snapshot_plan()
-        assert bridge.get_plan()["sig"] == sig1
-
-
-class TestPlanStatusNames:
-    """
-    A plan node is published under the names the viewer knows, whatever its status is
-    called in coraplex.
-    """
-
-    NOT_STARTED = "NOT_STARTED"
-    PAUSED = "PAUSED"
-
-    @staticmethod
-    def plan_of(status: str):
-        """
-        :return: A bridge bound to a root, an action and a motion, the action and the
-            motion in the given status, with the motion and the action.
-        """
-        bridge = Bridge()
-        motion = make_node("MotionNode", status=status)
-        action = make_node("ActionNode", status=status, children=[motion])
-        root = make_node("SequentialNode", status="SUCCEEDED", children=[action])
-        bridge._plan = types.SimpleNamespace(root=root)
-        return bridge, motion
-
-    def test_a_node_not_started_is_published_as_the_viewer_names_it(self):
-        bridge, _ = self.plan_of(self.NOT_STARTED)
-        bridge.snapshot_plan()
-        assert (
-            by_kind(bridge)["ActionNode"]["status"] == STATUS_ALIASES[self.NOT_STARTED]
-        )
-
-    def test_a_paused_node_is_published_as_the_viewer_names_it(self):
-        bridge, _ = self.plan_of(self.PAUSED)
-        bridge.snapshot_plan()
-        assert by_kind(bridge)["ActionNode"]["status"] == STATUS_ALIASES[self.PAUSED]
-
-    def test_a_running_task_bubbles_up_through_nodes_not_started(self):
-        bridge, motion = self.plan_of(self.NOT_STARTED)
-        bridge._motion_tasks[id(motion)] = _Task(1)  # RUNNING
-        bridge.snapshot_plan()
-        nodes = by_kind(bridge)
-        assert nodes["MotionNode"]["status"] == "RUNNING"
-        assert nodes["MotionNode"]["derived"] is True
-        assert nodes["ActionNode"]["status"] == "RUNNING"
-
-    def test_a_finished_task_makes_its_node_succeeded_though_it_was_not_started(self):
-        bridge, motion = self.plan_of(self.NOT_STARTED)
-        bridge._frozen[id(motion)] = "SUCCEEDED"
-        bridge.snapshot_plan()
-        assert by_kind(bridge)["ActionNode"]["status"] == "SUCCEEDED"
-
-
-class TestFreezeSemantics:
-    def test_freeze_pins_status_and_releases_tasks(self, plan_bridge):
-        bridge, root, action, condition, motion = plan_bridge
-        executable = types.SimpleNamespace(
-            motion_mappings={motion: _Task(1)},
-            pre_condition_node=condition,
-            post_condition_node=None,
-        )
-        bridge.bind_motion_group(executable)
-        assert id(motion) in bridge._motion_tasks
-        bridge.freeze_motion_group(executable, "SUCCEEDED")
-        assert id(motion) not in bridge._motion_tasks
-        bridge.snapshot_plan()
-        nodes = by_kind(bridge)
-        assert nodes["MotionNode"]["status"] == "SUCCEEDED"
-        assert nodes["ConditionNode"]["status"] == "SUCCEEDED"
-
-
-# %% Plan hook snapshots
-class TestPlanHookSnapshots:
-    def test_completed_plan_publishes_its_final_status(
-        self, monkeypatch: pytest.MonkeyPatch
+    @pytest.mark.parametrize("life_cycle", list(LifeCycleValues))
+    def test_a_node_is_published_with_the_status_its_life_cycle_names(
+        self, small_plan: SmallPlan, life_cycle: LifeCycleValues
     ) -> None:
-        """
-        Ensure the browser receives a snapshot after plan execution completes.
-        """
-        snapshots: list[str] = []
-        plan = object.__new__(Plan)
-        monkeypatch.setattr(Plan, "perform", lambda self: "completed")
-        monkeypatch.setattr(GiskardExecutable, "execute", lambda self: None)
-        monkeypatch.setattr(BRIDGE, "_plan", None)
-        monkeypatch.setattr(
-            BRIDGE,
-            "snapshot_plan",
-            lambda: snapshots.append("snapshot"),
-        )
+        small_plan.action.life_cycle_state = life_cycle
+        small_plan.bridge.snapshot_plan()
+        _, action, _ = published(small_plan.bridge)
+        assert action[PlanNodeKey.STATUS] == LIFE_CYCLE_TO_STATUS[life_cycle]
 
-        hooks.install_plan_hooks()
+    def test_every_node_is_published_under_the_node_above_it(
+        self, small_plan: SmallPlan
+    ) -> None:
+        small_plan.bridge.snapshot_plan()
+        top, action, motion = published(small_plan.bridge)
+        assert top[PlanNodeKey.PARENT] is None
+        assert action[PlanNodeKey.PARENT] == top[PlanNodeKey.ID]
+        assert motion[PlanNodeKey.PARENT] == action[PlanNodeKey.ID]
 
-        assert plan.perform() == "completed"
-        assert snapshots == ["snapshot", "snapshot"]
+    def test_the_arm_and_the_object_a_node_acts_on_are_published(
+        self, small_plan: SmallPlan
+    ) -> None:
+        small_plan.bridge.snapshot_plan()
+        _, action, motion = published(small_plan.bridge)
+        assert action["arm"] == small_plan.action.arm
+        assert motion["target"] == "milk.stl"
+
+    def test_the_signature_stays_while_only_statuses_change(
+        self, small_plan: SmallPlan
+    ) -> None:
+        small_plan.bridge.snapshot_plan()
+        signature = small_plan.bridge.get_plan()["sig"]
+        small_plan.motion.life_cycle_state = LifeCycleValues.SUCCEEDED
+        small_plan.bridge.snapshot_plan()
+        assert small_plan.bridge.get_plan()["sig"] == signature
 
 
-class TestRootNodeHook:
+# %% the plan hook
+
+
+class TestPlanHook:
     """
-    A plan performed through its root node, as a resolution run's is, reaches the bridge
-    all the same.
+    A plan an executor performs is published as it starts and as it ended.
     """
 
     @staticmethod
-    def root_of_a_plan(monkeypatch: pytest.MonkeyPatch):
+    def publishing(monkeypatch: pytest.MonkeyPatch) -> List[Any]:
         """
-        :return: A root node that performs by returning, with the plan it belongs to,
-            the bridge's snapshots of the plan noted in the list returned beside them.
+        Install the plan hook and keep what the bridge publishes.
+
+        :return: The statecharts the bridge snapshots, which fills as they are published.
         """
-        snapshots: list = []
-        root = object.__new__(SequentialNode)
-        plan = types.SimpleNamespace(root=root)
-        root.plan = plan
-        monkeypatch.setattr(PlanNode, "perform", lambda self: "performed")
+        snapshots: List[Any] = []
         monkeypatch.setattr(BRIDGE, "_plan", None)
         monkeypatch.setattr(
             BRIDGE, "snapshot_plan", lambda: snapshots.append(BRIDGE._plan)
         )
-        hooks.install_root_node_hook()
-        return root, plan, snapshots
+        hooks.install_plan_hooks()
+        return snapshots
 
-    def test_the_plan_of_a_root_node_performed_is_published(
+    @staticmethod
+    def executor_of(statechart: Any) -> KinematicallySimulatedPlanExecutor:
+        """
+        :return: An executor holding the statechart, built without a world.
+        """
+        executor = object.__new__(KinematicallySimulatedPlanExecutor)
+        executor.statechart = statechart
+        return executor
+
+    def test_the_statechart_of_a_plan_executed_is_published_as_it_starts_and_ends(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        root, plan, snapshots = self.root_of_a_plan(monkeypatch)
+        statechart = object()
+        monkeypatch.setattr(PlanExecutor, "execute", lambda self: None)
+        snapshots = self.publishing(monkeypatch)
 
-        assert root.perform() == "performed"
+        self.executor_of(statechart).execute()
 
-        assert BRIDGE._plan is plan
-        assert snapshots == [plan, plan]
+        assert snapshots == [statechart, statechart]
 
-    def test_a_node_below_the_root_does_not_take_the_place_of_its_plan(
+    def test_a_plan_that_fails_is_published_as_it_ended(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        root, plan, snapshots = self.root_of_a_plan(monkeypatch)
-        child = object.__new__(SequentialNode)
-        child.plan = plan
+        statechart = object()
 
-        assert child.perform() == "performed"
-
-        assert BRIDGE._plan is None
-        assert snapshots == []
-
-    def test_a_root_node_that_fails_publishes_the_plan_as_it_ended(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        root, plan, snapshots = self.root_of_a_plan(monkeypatch)
-
-        def failing(self):
+        def failing(self) -> None:
             raise RuntimeError("the motion failed")
 
-        monkeypatch.setattr(PlanNode, "perform", failing)
-        hooks.install_root_node_hook()
-        with pytest.raises(RuntimeError, match="motion failed"):
-            root.perform()
+        monkeypatch.setattr(PlanExecutor, "execute", failing)
+        snapshots = self.publishing(monkeypatch)
 
-        assert snapshots[-1] is plan
+        with pytest.raises(RuntimeError):
+            self.executor_of(statechart).execute()
+
+        assert snapshots == [statechart, statechart]
 
 
-# ---- statechart -------------------------------------------------------------
+# %% mimics of a statechart
+
+
 class _SNode:
     def __init__(self, index, name, parent=None):
         self.index = index
         self.name = name
-        self.parent_node_index = parent
+        self.parent_node = parent
 
 
 class _Transition:
@@ -306,13 +238,24 @@ class _RxGraph:
         return self._nodes[i]
 
 
+class NavigationUnderWay(NavigateAction):
+    """
+    A navigation running at the top of a statechart, read without the statechart.
+    """
+
+    @property
+    def life_cycle_state(self) -> LifeCycleValues:
+        return LifeCycleValues.RUNNING
+
+    @property
+    def parent_node(self) -> None:
+        return None
+
+
 def make_chart(life=(1, 1, 0), obs=(0.5, 0.5, 0.0)):
     chart = types.SimpleNamespace()
-    chart.nodes = [
-        _SNode(0, "Goal"),
-        _SNode(1, "MoveJoints", 0),
-        _SNode(2, "JointGoalReached"),
-    ]
+    goal = _SNode(0, "Goal")
+    chart.nodes = [goal, _SNode(1, "MoveJoints", goal), _SNode(2, "JointGoalReached")]
     chart.rx_graph = _RxGraph(
         chart.nodes, [(0, 1, _Transition("START")), (1, 2, _Transition("END"))]
     )
@@ -324,10 +267,8 @@ def make_chart(life=(1, 1, 0), obs=(0.5, 0.5, 0.0)):
 class TestChartSnapshot:
     def test_structure_and_states(self):
         bridge = Bridge()
-        bridge._chart_title = "TransportAction"
         bridge.observe_chart(make_chart())
         chart = bridge.get_chart()
-        assert chart["title"] == "TransportAction"
         assert [n["life"] for n in chart["nodes"]] == [
             "RUNNING",
             "RUNNING",
@@ -339,6 +280,21 @@ class TestChartSnapshot:
             {"from": "s0", "to": "s1", "kind": "START"},
             {"from": "s1", "to": "s2", "kind": "END"},
         ]
+
+    def test_the_title_is_the_action_running(self):
+        action = object.__new__(NavigationUnderWay)
+        action.index = 3
+        action.name = NavigationUnderWay.__name__
+        chart = make_chart(life=(1, 1, 0, 1), obs=(0.5, 0.5, 0.0, 0.5))
+        chart.nodes.append(action)
+        bridge = Bridge()
+        bridge.observe_chart(chart)
+        assert bridge.get_chart()["title"] == NavigationUnderWay.__name__
+
+    def test_no_title_while_no_action_runs(self):
+        bridge = Bridge()
+        bridge.observe_chart(make_chart())
+        assert bridge.get_chart()["title"] == ""
 
     def test_lifecycle_update_keeps_signature(self):
         bridge = Bridge()

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
-from coraplex.plans.plan import Plan
+from cramph.statechart import Statechart
 from krrood.ormatic.data_access_objects.helper import to_dao
 from llm_reasoner.observation.sinks import MemorySink
 from typing_extensions import Any, List
@@ -42,7 +42,7 @@ class PlanKeepingStore(NeemStore):
     The plans kept, in order.
     """
 
-    def save(self, plan: Plan) -> int:
+    def save(self, plan: Statechart) -> int:
         self.plans.append(plan)
         return len(self.plans)
 
@@ -59,7 +59,7 @@ class FullStore(NeemStore):
     Keeps nothing: the disk it keeps its plans on is full.
     """
 
-    def save(self, plan: Plan) -> int:
+    def save(self, plan: Statechart) -> int:
         raise DiskIsFull("no space left on device")
 
 
@@ -74,7 +74,7 @@ class PlanCollectingRecorder(NeemRecorder):
     The plans recorded, in order.
     """
 
-    def record(self, plan: Plan) -> None:
+    def record(self, plan: Statechart) -> None:
         self.plans.append(plan)
 
 
@@ -84,19 +84,30 @@ class MotionFailed(RuntimeError):
     """
 
 
-@dataclass
-class FailingNode:
+@dataclass(kw_only=True)
+class FailingExecutor:
     """
-    A plan's root that fails when it is performed.
-    """
-
-    plan: Any
-    """
-    The plan the node belongs to.
+    An executor whose plan fails while it is executed.
     """
 
-    def perform(self) -> None:
+    def compile(self, statechart: Any) -> None:
+        pass
+
+    def execute(self) -> None:
         raise MotionFailed("the arm cannot reach")
+
+
+def performing_fails(monkeypatch: pytest.MonkeyPatch, performed: Any) -> None:
+    """
+    Make every execution's plan the given one, held by an executor that fails it.
+    """
+    monkeypatch.setattr(PouringExecution, "plan", lambda self: None)
+    monkeypatch.setattr(PouringExecution, "executor", lambda self: FailingExecutor())
+    monkeypatch.setattr(
+        PouringExecution,
+        "statechart_holding",
+        lambda self, *, executor, plan: performed,
+    )
 
 
 # %% recording a plan
@@ -180,7 +191,7 @@ class TestPerformingRecords:
             pouring_kitchen, objects_given(), recorder=recorder
         ).perform()
         (plan,) = recorder.plans
-        assert isinstance(plan, Plan)
+        assert isinstance(plan, Statechart)
 
     def test_a_plan_whose_performance_failed_is_recorded_and_the_failure_goes_on(
         self, monkeypatch
@@ -188,9 +199,7 @@ class TestPerformingRecords:
         recorder = PlanCollectingRecorder()
         performed = object()
         execution = PouringExecution(world=None, values={}, recorder=recorder)
-        monkeypatch.setattr(
-            PouringExecution, "plan", lambda self: FailingNode(plan=performed)
-        )
+        performing_fails(monkeypatch, performed)
         with pytest.raises(MotionFailed):
             execution.perform()
         assert recorder.plans == [performed]
@@ -200,9 +209,7 @@ class TestPerformingRecords:
     ):
         performed = object()
         execution = PouringExecution(world=None, values={})
-        monkeypatch.setattr(
-            PouringExecution, "plan", lambda self: FailingNode(plan=performed)
-        )
+        performing_fails(monkeypatch, performed)
         with pytest.raises(MotionFailed):
             execution.perform()
 

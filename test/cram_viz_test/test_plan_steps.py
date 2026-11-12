@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 import pytest
+from cramph.data_types import LifeCycleValues
 from llm_reasoner.observation.events import EventKey
 from llm_reasoner.observation.sinks import JsonLinesSink, MemorySink
 from typing_extensions import Any, Dict, List
@@ -75,13 +76,13 @@ class TestBridge:
         bridge = Bridge()
         seen: List[Any] = []
         bridge.plan_observers.append(seen.append)
-        bridge._plan = type("StubPlan", (), {"root": _stub_root()})()
+        bridge._plan = type("StubPlan", (), {"top_level_nodes": [_stub_root()]})()
         bridge.snapshot_plan()
         assert seen == [bridge.get_plan()["nodes"]]
 
     def test_a_node_of_a_snapshot_has_every_key_the_reporters_read(self):
         bridge = Bridge()
-        bridge._plan = type("StubPlan", (), {"root": _stub_root()})()
+        bridge._plan = type("StubPlan", (), {"top_level_nodes": [_stub_root()]})()
         bridge.snapshot_plan()
         (root,) = bridge.get_plan()["nodes"]
         assert set(PlanNodeKey) <= set(root)
@@ -91,16 +92,10 @@ def _stub_root():
     """
     :return: A plan node with no children, as far as the bridge reads it.
     """
-    status = type("StubStatus", (), {"name": "CREATED"})()
     return type(
         "StubNode",
         (),
-        {
-            "status": status,
-            "designator": None,
-            "children": [],
-            "parent_action_node": None,
-        },
+        {"life_cycle_state": LifeCycleValues.NOT_STARTED, "children": []},
     )()
 
 

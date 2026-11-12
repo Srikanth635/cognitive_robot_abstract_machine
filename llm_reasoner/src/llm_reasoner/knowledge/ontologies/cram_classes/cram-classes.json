@@ -7,10 +7,13 @@
     "semantic_digital_twin.robots"
   ],
   "roots": [
-    "coraplex.robot_plans.actions.base.ActionDescription",
-    "coraplex.robot_plans.motions.base.BaseMotion",
+    "coraplex.robot_plans.actions.base.Action",
     "semantic_digital_twin.world_description.world_entity.SemanticAnnotation"
   ],
   "expanded_packages": ["coraplex.datastructures"],
-  "ignored_bases": ["coraplex.plans.designator.Designator"]
+  "ignored_bases": [
+    "cramph.node.CompositeNode",
+    "cramph.node.StatechartNode",
+    "krrood.adapters.json_serializer.SubclassJSONSerializer"
+  ]
 }

@@ -15,18 +15,17 @@ import argparse
 import sqlite3
 from pathlib import Path
 
-import coraplex.orm.ormatic_interface  # type: ignore  # noqa: F401
-from coraplex.datastructures.dataclasses import Context
-from coraplex.datastructures.enums import Arms, ApproachDirection, VerticalAlignment
-from coraplex.datastructures.grasp import GraspDescription
-from coraplex.execution_environment import simulated_robot
+import cramph.orm.ormatic_interface  # type: ignore  # noqa: F401
 from coraplex.orm.ormatic_interface import Base
-from coraplex.plans.factories import sequential
-from coraplex.plans.plan import Plan
+from coraplex.plans.context_extensions import RobotAccess, StatementGrounding
+from coraplex.plans.executors import KinematicallySimulatedPlanExecutor
 from coraplex.robot_plans.actions.core.navigation import NavigateAction
 from coraplex.robot_plans.actions.core.pick_up import PickUpAction
 from coraplex.robot_plans.actions.core.robot_body import MoveTorsoAction, ParkArmsAction
 from coraplex.testing import setup_world
+from cramph.composites import Sequence
+from cramph.context import StatechartContext
+from cramph.statechart import Statechart
 from krrood.ormatic.data_access_objects.helper import to_dao
 from krrood.ormatic.utils import create_engine
 from semantic_digital_twin.datastructures.definitions import TorsoState
@@ -38,49 +37,47 @@ from sqlalchemy.orm import sessionmaker
 DEFAULT_DATABASE_PATH = Path("pickup_neem.sqlite")
 
 
-def run_plan() -> Plan:
+def run_plan() -> Statechart:
     """
     Execute the torso, arm, navigation, and milk pick-up plan in simulation.
+
+    :return: The statechart the plan was performed as.
     """
     world = setup_world()
     robot = PR2.from_world(world)
     milk = world.get_semantic_annotations_by_type(Milk)[0]
-    context = Context(world=world, robot=robot, _debug=False, ros_node=None)
-    context.evaluate_conditions = False
-    pick_up_pose = Pose.from_xyz_rpy(2.0, 2.0, reference_frame=world.root)
-
-    plan = sequential(
-        [
-            MoveTorsoAction(TorsoState.HIGH),
-            ParkArmsAction(Arms.BOTH),
-            NavigateAction(pick_up_pose),
-            PickUpAction(
-                milk,
-                Arms.RIGHT,
-                GraspDescription(
-                    ApproachDirection.FRONT,
-                    VerticalAlignment.TOP,
-                    robot.right_arm.end_effector,
-                ),
-            ),
-        ],
-        context=context,
-    ).plan
-    with simulated_robot:
-        plan.perform()
-    return plan
+    pick_up_pose = Pose.from_xyz_rpy(x=2.0, y=2.0, reference_frame=world.root)
+    executor = KinematicallySimulatedPlanExecutor(
+        StatechartContext.with_extensions(
+            world, [RobotAccess(robot), StatementGrounding()]
+        )
+    )
+    statechart = Statechart(context=executor.context)
+    statechart.add_node(
+        Sequence(
+            nodes=[
+                MoveTorsoAction(torso_state=TorsoState.HIGH),
+                ParkArmsAction(arms=robot.all_arms),
+                NavigateAction(target_location=pick_up_pose),
+                PickUpAction(grasp=milk.grasp_candidates()[0], arm=robot.right_arm),
+            ]
+        )
+    )
+    executor.compile(statechart)
+    executor.execute()
+    return statechart
 
 
-def persist_neem(plan: Plan, database_path: Path) -> Path:
+def persist_neem(statechart: Statechart, database_path: Path) -> Path:
     """
-    Persist the executed plan to SQLite and write a matching SQL dump.
+    Persist the statechart of an executed plan to SQLite and write a matching SQL dump.
     """
     database_path.parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(f"sqlite:///{database_path.resolve()}")
     Base.metadata.create_all(bind=engine)
     session = sessionmaker(engine)()
     try:
-        neem = to_dao(plan)
+        neem = to_dao(statechart)
         session.add(neem)
         session.commit()
         database_id = neem.database_id
@@ -89,9 +86,10 @@ def persist_neem(plan: Plan, database_path: Path) -> Path:
         engine.dispose()
 
     sql_path = database_path.with_suffix(".sql")
-    with sqlite3.connect(database_path) as connection, sql_path.open(
-        "w", encoding="utf-8"
-    ) as sql_file:
+    with (
+        sqlite3.connect(database_path) as connection,
+        sql_path.open("w", encoding="utf-8") as sql_file,
+    ):
         sql_file.writelines(f"{statement}\n" for statement in connection.iterdump())
     print(f"Persisted NEEM database_id={database_id} to {database_path}")
     print(f"Exported SQL dump to {sql_path}")

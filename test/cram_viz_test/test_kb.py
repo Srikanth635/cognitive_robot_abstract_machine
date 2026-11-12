@@ -420,7 +420,7 @@ class TestHypothesisKnowledgeQueries:
         kb.reset_kb()
         result = kb.run_query(
             "an(entity(pouring_event_type)"
-            ".where(HasType(pouring_event_type, core.FailureEventType)))"
+            ".where(HasType(variable=pouring_event_type, types_=core.FailureEventType)))"
         )
         assert result["ok"], result.get("error")
         assert row_names(result) == entity_names(
@@ -478,7 +478,7 @@ class TestHypothesisKnowledgeQueries:
         kb.reset_kb()
         result = kb.run_query(
             "an(entity(pouring_event_type)"
-            ".where(HasType(pouring_phase, prehension.LiftPhase))"
+            ".where(HasType(variable=pouring_phase, types_=prehension.LiftPhase))"
             ".where(in_(pouring_event_type, pouring_phase.initiated_by)))"
         )
         assert result["ok"], result.get("error")
@@ -491,7 +491,7 @@ class TestHypothesisKnowledgeQueries:
         assert not phase_of_type(prehension.ReachPhase).initiated_by
         result = kb.run_query(
             "an(entity(pouring_event_type)"
-            ".where(HasType(pouring_phase, prehension.ReachPhase))"
+            ".where(HasType(variable=pouring_phase, types_=prehension.ReachPhase))"
             ".where(in_(pouring_event_type, pouring_phase.initiated_by)))"
         )
         assert result["ok"]
@@ -500,7 +500,7 @@ class TestHypothesisKnowledgeQueries:
     def test_a_phase_result_highlights_its_projected_node(self, fixture_scene):
         kb.reset_kb()
         result = kb.run_query(
-            "the(entity(pouring_phase).where(HasType(pouring_phase, prehension.LiftPhase)))"
+            "the(entity(pouring_phase).where(HasType(variable=pouring_phase, types_=prehension.LiftPhase)))"
         )
         lift = phase_of_type(prehension.LiftPhase)
         assert hypothesis_knowledge.node_identifier_for(lift) in result["highlight"]
@@ -525,8 +525,8 @@ class TestHypothesisKnowledgeQueries:
         for preset in kb._hypothesis_graph_presets(kb.get_kb()):
             result = kb.run_query(preset["code"])
             assert result["ok"], "%s -> %s" % (preset["text"], result.get("error"))
-            assert result["count"], "%s -> 0 rows (likely a broken field access)" % (
-                preset["text"]
+            assert result["count"], (
+                "%s -> 0 rows (likely a broken field access)" % (preset["text"])
             )
 
     def test_there_are_at_most_ten_hypothesis_graph_presets(self, fixture_scene):

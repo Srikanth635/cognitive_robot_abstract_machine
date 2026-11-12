@@ -48,7 +48,6 @@ def start(
     """
     hooks.install_mesh_hook()  # before the demo parses its objects
     hooks.install_plan_hooks()
-    hooks.install_root_node_hook()
     if world is not None:
         BRIDGE.world = world
         BRIDGE._bind()
@@ -152,9 +151,11 @@ class ResolvedRun(LiveTarget):
         sink = run.events
         steps = PlanStepReporter(sink=sink, run=run.name)
         nodes = PlanNodeReporter(sink=sink, run=run.name)
-        with reporting_execution(sink, run.name), following_plan(
-            BRIDGE, steps.observe
-        ), following_plan(BRIDGE, nodes.observe):
+        with (
+            reporting_execution(sink, run.name),
+            following_plan(BRIDGE, steps.observe),
+            following_plan(BRIDGE, nodes.observe),
+        ):
             PouringExecution.of_run(run, self.recorder(sink.path, run.name)).perform()
 
     def recorder(self, events: Path, run: str) -> NeemRecorder:

@@ -6,13 +6,8 @@ singleton whose snapshot methods run on the *simulation* thread (see
 :mod:`cram_viz.live.hooks` for why that matters) and whose ``get_*`` accessors hand
 finished, plain-dict snapshots to the HTTP layer.
 
-Node status is where the plan and the statechart differ: coraplex only performs the plan
-root (``Plan.perform`` → ``root.perform``); ``ActionNode.notify`` expands its children
-but never performs them, so every inner ``PlanNode`` keeps status ``CREATED`` for the
-whole run. The real per-step progress lives in the giskardpy motion statechart's life
-cycle. ``GiskardExecutable.motion_mappings`` (a ``{MotionNode: Task}`` dict) is the
-bridge between the two — the life cycle of each motion node's task is read and
-propagated up the plan tree; those statuses are flagged ``derived``.
+A plan is the statechart its executor runs: every action and every motion is a node of
+it, and a node's status is its own life cycle in that statechart.
 """
 
 from __future__ import annotations
@@ -25,6 +20,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
+from coraplex.robot_plans.actions.base import Action
+from cramph.data_types import LifeCycleValues
 from typing_extensions import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
@@ -35,9 +32,8 @@ from semantic_digital_twin.world_description.connections import (
 )
 
 if TYPE_CHECKING:
-    from coraplex.plans.executables import GiskardExecutable
-    from coraplex.plans.plan import Plan
-    from giskardpy.motion_statechart.motion_statechart import MotionStatechart
+    from cramph.node import StatechartNode
+    from cramph.statechart import Statechart
     from semantic_digital_twin.world import World
     from semantic_digital_twin.world_description.world_entity import Body
 
@@ -71,10 +67,17 @@ class PlanNodeKey(StrEnum):
     DERIVED = "derived"
 
 
-#: giskardpy ``LifeCycleValues`` ordinal → its name, for the statechart view
-LIFE_CYCLE_NAME = {0: "NOT_STARTED", 1: "RUNNING", 2: "PAUSED", 3: "DONE", 4: "FAILED"}
+#: cramph ``LifeCycleValues`` ordinal → its name, for the statechart view
+LIFE_CYCLE_NAME = {
+    0: "NOT_STARTED",
+    1: "RUNNING",
+    2: "PAUSED",
+    3: "DONE",
+    4: "FAILED",
+    5: "INTERRUPTED",
+}
 
-#: giskardpy ``LifeCycleValues`` ordinal → coraplex ``TaskStatus`` vocabulary,
+#: cramph ``LifeCycleValues`` ordinal → the plan-node status vocabulary,
 #: so the viewer styles plan nodes and statechart nodes with one status palette
 LIFE_CYCLE_TO_STATUS = {
     0: "CREATED",
@@ -82,23 +85,7 @@ LIFE_CYCLE_TO_STATUS = {
     2: "PAUSE",
     3: "SUCCEEDED",
     4: "FAILED",
-}
-
-#: the names coraplex gives a plan node's life cycle that the bridge publishes under the
-#: names the viewer's legend knows
-STATUS_ALIASES = {
-    "NOT_STARTED": "CREATED",
-    "PAUSED": "PAUSE",
-}
-
-#: for bottom-up aggregation in the plan tree: the higher rank wins
-STATUS_RANK = {
-    "CREATED": 0,
-    "SUCCEEDED": 1,
-    "PAUSE": 2,
-    "RUNNING": 3,
-    "INTERRUPTED": 4,
-    "FAILED": 5,
+    5: "INTERRUPTED",
 }
 
 #: how long a world binding stays fresh before the bridge re-discovers bodies
@@ -211,34 +198,19 @@ class Bridge:
     Object key → absolute mesh path served via the ``/mesh`` endpoint.
     """
 
-    _plan: Optional[Plan] = None
+    _plan: Optional[Statechart] = None
     """
-    The coraplex plan captured by the ``Plan.perform`` hook.
+    The statechart of the plan the executor performs, captured by the execute hook.
     """
 
-    _chart: Optional[MotionStatechart] = None
+    _chart: Optional[Statechart] = None
     """
-    The motion statechart the executor is currently ticking.
+    The statechart the executor is currently ticking.
     """
 
     _chart_structure: Optional[Dict[str, Any]] = None
     """
     Serialized structure of :attr:`_chart`, rebuilt when it changes.
-    """
-
-    _chart_title: str = ""
-    """
-    Name of the action whose motion group is executing.
-    """
-
-    _motion_tasks: Dict[int, Any] = field(default_factory=dict)
-    """
-    ``id(MotionNode)`` → giskard task of the live motion group.
-    """
-
-    _frozen: Dict[int, str] = field(default_factory=dict)
-    """
-    ``id(PlanNode)`` → final status pinned when its motion group ended.
     """
 
     _ticks: int = 0
@@ -476,73 +448,17 @@ class Bridge:
             return dict(self.state)
 
     # %% plan tree ----------------------------------------------------------------
-    def bind_motion_group(self, executable: GiskardExecutable) -> None:
-        """
-        Remember which plan motion node maps to which statechart task.
-
-        Called when a ``GiskardExecutable`` is about to run, so the plan tree can show
-        live per-step progress.
-        """
-        for node, task in (executable.motion_mappings or {}).items():
-            self._motion_tasks[id(node)] = task
-        self._chart_title = self._motion_group_title(executable)
-
-    @staticmethod
-    def _motion_group_title(executable: GiskardExecutable) -> str:
-        """
-        Name of the action the motion group belongs to, or ``''``.
-        """
-        for node in executable.motion_mappings or {}:
-            action_node = node.parent_action_node
-            if action_node is not None and action_node.designator is not None:
-                return type(action_node.designator).__name__
-        return ""
-
-    def freeze_motion_group(self, executable: GiskardExecutable, status: str) -> None:
-        """
-        Pin the final status of a finished motion group.
-
-        Reading the tasks' life cycle afterwards is not reliable — the executor cleans
-        its nodes up.
-        """
-        for node in executable.motion_mappings or {}:
-            self._frozen[id(node)] = status
-            self._motion_tasks.pop(id(node), None)
-        for condition in (
-            executable.pre_condition_node,
-            executable.post_condition_node,
-        ):
-            if condition is not None:
-                self._frozen[id(condition)] = status
-
-    def _live_motion_status(self, node: Any) -> Optional[str]:
-        """
-        Status of one plan node from the statechart, or None.
-        """
-        task = self._motion_tasks.get(id(node))
-        if task is not None:
-            return LIFE_CYCLE_TO_STATUS.get(int(task.life_cycle_state))
-        return self._frozen.get(id(node))
-
     def snapshot_plan(self) -> None:
         """
-        Serialize the plan tree with per-node execution status.
-
-        A node's own status wins while it says something; otherwise the live statechart
-        status is used, else the aggregate of the children (running/failed bubble up; a
-        parent whose children are only partly done reads as running, not succeeded).
+        Serialize the plan's nodes, each with the status its life cycle gives it.
         """
-        plan = self._plan
-        if plan is None:
-            return
-        try:
-            root = plan.root
-        except Exception:
-            # the plan is mid-mutation and not a tree right now — next tick
+        statechart = self._plan
+        if statechart is None:
             return
         nodes: List[Dict[str, Any]] = []
         order: List[str] = []
-        self._serialize_plan_node(root, None, nodes, order)
+        for node in statechart.top_level_nodes:
+            self._serialize_plan_node(node, None, nodes, order)
         with self._lock:
             self.plan_state = {"sig": "|".join(order), "nodes": nodes}
         for observer in self.plan_observers:
@@ -550,50 +466,28 @@ class Bridge:
 
     def _serialize_plan_node(
         self,
-        node: Any,
+        node: StatechartNode,
         parent_id: Optional[str],
         nodes: List[Dict[str, Any]],
         order: List[str],
-    ) -> str:
+    ) -> None:
         """
-        Serialize one plan node and its subtree; returns the node's status.
+        Serialize one plan node and the nodes below it.
         """
         node_id = "p%d" % id(node)
-        designator = node.designator if hasattr(node, "designator") else None
-        own_status = STATUS_ALIASES.get(node.status.name, node.status.name)
         entry: Dict[str, Any] = {
             PlanNodeKey.ID: node_id,
             PlanNodeKey.PARENT: parent_id,
             PlanNodeKey.KIND: type(node).__name__,
-            PlanNodeKey.LABEL: (
-                type(designator).__name__
-                if designator is not None
-                else type(node).__name__
-            ),
-            PlanNodeKey.STATUS: own_status,
+            PlanNodeKey.LABEL: type(node).__name__,
+            PlanNodeKey.STATUS: LIFE_CYCLE_TO_STATUS[int(node.life_cycle_state)],
             PlanNodeKey.DERIVED: False,
         }
-        self._add_designator_metadata(entry, designator)
+        self._add_designator_metadata(entry, node)
         nodes.append(entry)
         order.append(node_id)
-
-        child_best, children, done = "CREATED", 0, 0
         for child in node.children:
-            child_status = self._serialize_plan_node(child, node_id, nodes, order)
-            child_best = self._max_status(child_best, child_status)
-            children += 1
-            if child_status == "SUCCEEDED":
-                done += 1
-        if own_status == "CREATED":
-            if child_best == "SUCCEEDED" and done < children:
-                child_best = "RUNNING"
-            derived = self._live_motion_status(node) or (
-                child_best if child_best != "CREATED" else None
-            )
-            if derived:
-                entry[PlanNodeKey.STATUS] = derived
-                entry[PlanNodeKey.DERIVED] = True
-        return entry[PlanNodeKey.STATUS]
+            self._serialize_plan_node(child, node_id, nodes, order)
 
     def _add_designator_metadata(
         self, entry: Dict[str, Any], designator: Optional[Any]
@@ -609,15 +503,6 @@ class Bridge:
         target = self._designator_target(designator)
         if target:
             entry["target"] = target
-
-    @staticmethod
-    def _max_status(first: str, second: str) -> str:
-        """
-        The higher-ranked of two statuses (see ``STATUS_RANK``).
-        """
-        if STATUS_RANK.get(first, 0) >= STATUS_RANK.get(second, 0):
-            return first
-        return second
 
     def _designator_target(self, designator: Any) -> Optional[str]:
         """
@@ -641,7 +526,7 @@ class Bridge:
             return dict(self.plan_state)
 
     # %% motion statechart -----------------------------------------------------------
-    def observe_chart(self, chart: Optional[MotionStatechart]) -> None:
+    def observe_chart(self, chart: Optional[Statechart]) -> None:
         """
         Publish the executing statechart's structure and node states.
 
@@ -678,7 +563,7 @@ class Bridge:
         with self._lock:
             self.chart_state = {
                 "sig": structure["sig"],
-                "title": self._chart_title,
+                "title": self._running_action_name(chart),
                 "nodes": nodes,
                 "edges": structure["edges"],
             }
@@ -695,14 +580,29 @@ class Bridge:
         return "UNKNOWN"
 
     @staticmethod
-    def _serialize_chart_structure(chart: MotionStatechart) -> Optional[Dict[str, Any]]:
+    def _running_action_name(chart: Statechart) -> str:
+        """
+        :return: The name of the innermost running action's class, or ``''``.
+        """
+        running = [
+            node
+            for node in chart.nodes
+            if isinstance(node, Action)
+            and node.life_cycle_state == LifeCycleValues.RUNNING
+        ]
+        return type(running[-1]).__name__ if running else ""
+
+    @staticmethod
+    def _serialize_chart_structure(chart: Statechart) -> Optional[Dict[str, Any]]:
         """
         Nodes and transition edges of a statechart, as plain dicts.
         """
         nodes: List[Dict[str, Any]] = []
         indices: List[int] = []
         for node in chart.nodes:
-            parent_index = node.parent_node_index
+            parent_index = (
+                node.parent_node.index if node.parent_node is not None else None
+            )
             nodes.append(
                 {
                     "id": "s%d" % node.index,
