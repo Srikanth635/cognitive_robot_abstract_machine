@@ -25,7 +25,7 @@
     core:representsClaim core:JF09-10 .
 
 :ClosestApproach a owl:Class ;
-    rdfs:subClassOf aicor:EventType , dul:EventType ,
+    rdfs:subClassOf aicor:EventType ,
         [ a owl:Restriction ; owl:onProperty aicor:betweenRoleFillers ; owl:someValuesFrom :Obstacle ] ;
     rdfs:label "closest approach"@en ;
     rdfs:comment "The moment a moving effector or held object passes closest to an obstacle, monitored visually."@en ;
