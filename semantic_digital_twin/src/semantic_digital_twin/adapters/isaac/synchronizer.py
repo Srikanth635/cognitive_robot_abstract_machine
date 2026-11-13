@@ -158,6 +158,7 @@ class IsaacSynchronizer(MultiSimSynchronizer):
         self._commanded_joints = self._commanded_joints_on(prims)
         self._free_bodies = self._free_bodies_on(prims)
         self.simulator.track_bodies([free_body.path for free_body in self._free_bodies])
+        self.simulator.track_actuators(self._joint_path_by_actuator_name())
         self.simulator.set_joint_positions(self._world_joint_positions_on(prims))
         self.simulator.set_body_poses(
             {
@@ -219,6 +220,18 @@ class IsaacSynchronizer(MultiSimSynchronizer):
                 continue
             commanded_joints[degrees_of_freedom[commanded].id] = str(prim.GetPath())
         return commanded_joints
+
+    def _joint_path_by_actuator_name(self) -> dict[str, str]:
+        """
+        :return: The path of the joint each servo of the world drives, by the servo's
+            name; a servo whose degree of freedom no joint commands is left out.
+        """
+        return {
+            servo.name.name: self._commanded_joints[degree_of_freedom.id]
+            for servo in self._world.actuators
+            for degree_of_freedom in servo.dofs
+            if degree_of_freedom.id in self._commanded_joints
+        }
 
     def _free_bodies_on(self, prims: list[Usd.Prim]) -> list[FreeBody]:
         """

@@ -21,10 +21,14 @@ from typing_extensions import Iterable
 
 from physics_simulators.base_simulator import (
     BaseSimulator,
+    SimulatorCallbackResult,
     SimulatorConstraints,
     SimulatorRenderer,
 )
-from physics_simulators.exceptions import SteppedOnAnotherThreadError
+from physics_simulators.exceptions import (
+    ActuatorWithoutJointError,
+    SteppedOnAnotherThreadError,
+)
 from physics_simulators.isaac_application import IsaacApplication
 
 # %% where PhysX simulates
@@ -205,6 +209,11 @@ class IsaacSimulator(BaseSimulator):
     The paths of the free bodies' prims, in the order of :attr:`_bodies`.
     """
 
+    _actuator_joints: dict[str, str] = field(init=False, default_factory=dict)
+    """
+    The path of the joint each actuator drives, by the actuator's name.
+    """
+
     frames_to_warm_up_a_camera: int = field(default=20, kw_only=True)
     """
     How many times the stage is drawn when a camera is first captured, so its picture is
@@ -293,6 +302,37 @@ class IsaacSimulator(BaseSimulator):
         """
         self._body_paths = list(paths)
         self._bodies = RigidPrim(self._body_paths) if self._body_paths else None
+
+    def track_actuators(self, joint_paths: dict[str, str]) -> None:
+        """
+        :param joint_paths: The path of the joint each actuator drives, by the
+            actuator's name.
+        """
+        self._actuator_joints = dict(joint_paths)
+
+    def get_actuators_lengths(
+        self, actuator_names: list[str]
+    ) -> SimulatorCallbackResult:
+        """
+        Read how far the joint each actuator drives has travelled.
+
+        Isaac's drives have no gear, so an actuator is as long as its joint stands.
+
+        :param actuator_names: The names of the actuators.
+        :return: The length of each actuator, by its name.
+        :raises ActuatorWithoutJointError: When an actuator's joint was never named.
+        """
+        missing = [name for name in actuator_names if name not in self._actuator_joints]
+        if missing:
+            raise ActuatorWithoutJointError(actuator_name=missing[0])
+        paths = [self._actuator_joints[name] for name in actuator_names]
+        positions = self.joint_positions(paths)
+        return SimulatorCallbackResult(
+            type=SimulatorCallbackResult.ResultType.SUCCESS_WITHOUT_EXECUTION,
+            result={
+                name: positions[self._actuator_joints[name]] for name in actuator_names
+            },
+        )
 
     # %% joints
 
