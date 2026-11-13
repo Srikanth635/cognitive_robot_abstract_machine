@@ -17,6 +17,7 @@ from semantic_digital_twin.adapters.multi_sim import (
     ConnectionRevoluteConverter,
     DriveAxis,
     MujocoConnectionJoints,
+    SimulatorModelNames,
 )
 from semantic_digital_twin.adapters.usd.exceptions import UnsupportedUsdConnectionError
 from semantic_digital_twin.adapters.usd.stage import (
@@ -208,6 +209,17 @@ class JointWriter:
 
     def __post_init__(self) -> None:
         self._articulation_tops = self._find_articulation_tops()
+
+    def joints_of(self, *, connection: Connection) -> MujocoConnectionJoints:
+        """
+        :param connection: A connection of the world.
+        :return: The joints MuJoCo realises the connection as, which this writer asks
+            for the joints themselves and never for their names, since only a MuJoCo
+            model names them.
+        """
+        return MujocoConnectionJoints.of(
+            connection, self.world_stage.world, SimulatorModelNames()
+        )
 
     def build_connection(self, connection: Connection) -> None:
         if isinstance(connection, Connection6DoF):
@@ -408,7 +420,7 @@ class JointWriter:
 
         :param drive: The drive to write.
         """
-        realisation = MujocoConnectionJoints.of(drive, self.world_stage.world)
+        realisation = self.joints_of(connection=drive)
         axes: list[DriveAxis] = realisation.axes
         if not axes:
             self._hold_in_place(drive)
@@ -520,9 +532,7 @@ class JointWriter:
         if isinstance(connection, (RevoluteConnection, PrismaticConnection)):
             return 1
         if isinstance(connection, WheeledDrive):
-            return len(
-                MujocoConnectionJoints.of(connection, self.world_stage.world).axes
-            )
+            return len(self.joints_of(connection=connection).axes)
         return 0
 
     def _parent_path(self, connection: Connection) -> Sdf.Path:

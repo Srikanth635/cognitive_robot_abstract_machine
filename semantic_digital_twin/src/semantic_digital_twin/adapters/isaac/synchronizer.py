@@ -20,6 +20,7 @@ from semantic_digital_twin.adapters.isaac.exceptions import (
 )
 from semantic_digital_twin.adapters.multi_sim import (
     MujocoConnectionJoints,
+    SimulatorModelNames,
     MultiSimSynchronizer,
 )
 from semantic_digital_twin.adapters.usd.stage import UsdCustomDataKey
@@ -323,9 +324,11 @@ class IsaacSynchronizer(MultiSimSynchronizer):
             control = (
                 servo.set_point
                 if connection is None
-                else MujocoConnectionJoints.of(connection, self._world).control_of(
-                    servo
-                )
+                # the realisation is asked for the servo's control alone, never for
+                # the MuJoCo names a stage written as USD does not have
+                else MujocoConnectionJoints.of(
+                    connection, self._world, SimulatorModelNames()
+                ).control_of(servo)
             )
             if self._sent_controls.get(servo.name.name) == control:
                 continue

@@ -239,7 +239,7 @@ class RobotCameraView(CameraMount):
             / (2.0 * math.tan(robot_camera.field_of_view.horizontal_angle / 2.0))
         )
         world_T_body = robot_camera.root.global_pose.to_np()
-        looking = robot_camera.forward_facing_axis.to_np()[:3]
+        looking = robot_camera.viewing_direction.to_np()[:3]
         UsdGeom.Xformable(camera).AddTransformOp().Set(
             self._looking_along(
                 looking, world_T_body[:3, :3].T @ Vector3.Z().to_np()[:3]
