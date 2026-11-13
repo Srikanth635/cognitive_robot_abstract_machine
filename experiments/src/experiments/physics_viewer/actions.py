@@ -87,7 +87,7 @@ class ActionPlan(ABC):
         :param context: The context the plan is performed in.
         :return: The robot performing the plan.
         """
-        return context.require_extension(RobotAccess).robot
+        return context.require_extension(extension_type=RobotAccess).robot
 
 
 @dataclass(frozen=True, kw_only=True)

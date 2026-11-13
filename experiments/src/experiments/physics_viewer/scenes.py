@@ -370,7 +370,7 @@ class SceneObject(ABC):
 
 
 @dataclass(frozen=True)
-class PlacedObject(SceneObject):
+class MeshObject(SceneObject):
     """
     An object from a mesh file, lying in a scene.
     """
@@ -727,21 +727,19 @@ class PhysicsScene(Enum):
             ObjectsInScene(
                 UrdfScene(UrdfFile.APARTMENT),
                 (
-                    PlacedObject(
+                    MeshObject(
                         "milk.stl",
                         Position(2.37, 2.0, 1.0345),
                         ObjectColor.MILK.value,
                         Milk,
                     ),
-                    PlacedObject(
+                    MeshObject(
                         "breakfast_cereal.stl",
                         Position(2.37, 1.8, 1.0487),
                         ObjectColor.CEREAL.value,
                     ),
-                    PlacedObject(
-                        "bowl.stl", Position(2.4, 2.4, 0.979), BOWL_COLOR, Bowl
-                    ),
-                    PlacedObject(
+                    MeshObject("bowl.stl", Position(2.4, 2.4, 0.979), BOWL_COLOR, Bowl),
+                    MeshObject(
                         "jeroen_cup.stl",
                         Position(2.6, 2.75, 0.947),
                         CUP_COLOR,
