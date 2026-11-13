@@ -52,7 +52,7 @@ class TestNativePlanStatus:
         bridge = Bridge()
         child = MotionStep(name="moving")
         root = Sequence(nodes=[child])
-        plan_statechart.add_node(root)
+        plan_statechart.add_node(node=root)
         plan_statechart.life_cycle_state[child] = LifeCycleValues.RUNNING
         bridge.begin_plan(statechart=plan_statechart)
         assert (
@@ -70,7 +70,7 @@ class TestNativePlanStatus:
         """
         bridge = Bridge()
         motion = MotionStep(name="moving")
-        plan_statechart.add_node(motion)
+        plan_statechart.add_node(node=motion)
         plan_statechart.life_cycle_state[motion] = LifeCycleValues.PAUSED
         bridge.begin_plan(statechart=plan_statechart)
         assert (
@@ -157,7 +157,7 @@ class TestRecordedPlan:
         bridge = attached_bridge()
         child = MotionStep(name="moving")
         root = Sequence(nodes=[child])
-        plan_statechart.add_node(root)
+        plan_statechart.add_node(node=root)
         plan_statechart.life_cycle_state[root] = LifeCycleValues.SUCCEEDED
         plan_statechart.life_cycle_state[child] = LifeCycleValues.SUCCEEDED
         bridge.begin_plan(statechart=plan_statechart)

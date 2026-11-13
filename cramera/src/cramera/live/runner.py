@@ -39,7 +39,7 @@ def start(world: World, port: int = DEFAULT_PORT) -> LiveVisualization:
     :param port: Port of the bridge's HTTP endpoints.
     :return: The started visualization.
     """
-    return LiveVisualization(port=port).start(world)
+    return LiveVisualization(port=port).start(world=world)
 
 
 # %% running a demo

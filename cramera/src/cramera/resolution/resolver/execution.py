@@ -272,8 +272,9 @@ class PouringExecution:
             :attr:`visualization` if there is one.
         """
         return KinematicallySimulatedPlanExecutor(
-            StatechartContext.with_extensions(
-                self.world, [RobotAccess(self.robot), StatementGrounding()]
+            context=StatechartContext.with_extensions(
+                world=self.world,
+                extensions=[RobotAccess(robot=self.robot), StatementGrounding()],
             ),
             extensions=[] if self.visualization is None else [self.visualization],
         )
@@ -288,7 +289,7 @@ class PouringExecution:
             builds the plan's steps.
         """
         statechart = Statechart(context=executor.context)
-        statechart.add_node(plan)
+        statechart.add_node(node=plan)
         return statechart
 
     def perform_plan(self, *, plan: Action | Sequence) -> Statechart:
@@ -300,7 +301,7 @@ class PouringExecution:
         """
         executor = self.executor()
         statechart = self.statechart_holding(executor=executor, plan=plan)
-        executor.compile(statechart)
+        executor.compile(statechart=statechart)
         executor.execute()
         return statechart
 
@@ -312,7 +313,7 @@ class PouringExecution:
         executor = self.executor()
         statechart = self.statechart_holding(executor=executor, plan=self.plan())
         try:
-            executor.compile(statechart)
+            executor.compile(statechart=statechart)
             executor.execute()
         finally:
             self.recorder.record(statechart)

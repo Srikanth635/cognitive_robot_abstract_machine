@@ -200,7 +200,7 @@ class TestBridgeStatechartObserver:
         """
         statechart, motion = plan_execution.statechart, plan_execution.motion
         statechart.life_cycle_state[motion] = LifeCycleValues.RUNNING
-        plan_execution.observer.on_state_change(statechart.state_history)
+        plan_execution.observer.on_state_change(history=statechart.state_history)
         assert (
             nodes_by_kind(plan_execution.bridge)[type(motion).__name__]["status"]
             == motion.life_cycle_state.name
@@ -232,7 +232,7 @@ class TestBridgeStatechartObserver:
             bridge=bridge, statechart=plan_execution.statechart
         )
         plan_execution.record(life_cycle=LifeCycleValues.RUNNING)
-        observer.on_state_change(plan_execution.statechart.state_history)
+        observer.on_state_change(history=plan_execution.statechart.state_history)
         assert bridge.get_chart()["nodes"] != []
 
     def test_a_non_motion_node_republishes_its_execution_boundaries(
@@ -245,11 +245,11 @@ class TestBridgeStatechartObserver:
         """
         bridge = Bridge()
         node = Sequence(nodes=[])
-        plan_statechart.add_node(node)
+        plan_statechart.add_node(node=node)
         observer = BridgeStatechartObserver(bridge=bridge, statechart=plan_statechart)
         observer.follow()
         plan_statechart.life_cycle_state[node] = LifeCycleValues.RUNNING
-        observer.on_state_change(plan_statechart.state_history)
+        observer.on_state_change(history=plan_statechart.state_history)
         assert bridge.plan_state.nodes[0].status is LifeCycleValues.RUNNING
         plan_statechart.life_cycle_state[node] = LifeCycleValues.SUCCEEDED
         observer.stop()
@@ -272,7 +272,7 @@ class TestLiveVisualization:
         )
         live = LiveVisualization(bridge=bridge)
 
-        assert live.start(world) is live
+        assert live.start(world=world) is live
 
         assert bridge.world is world
         assert bridge.live_server is server
@@ -294,7 +294,7 @@ class TestLiveVisualization:
         stale.stop()
         bridge.recording = stale
 
-        LiveVisualization(bridge=bridge).start(world)
+        LiveVisualization(bridge=bridge).start(world=world)
 
         assert bridge.recording is not stale
         assert bridge.recording.state is RecordingState.RECORDING
@@ -320,7 +320,7 @@ class TestLiveVisualization:
             lambda fn, *args: registered.append((fn, args)),
         )
 
-        LiveVisualization(bridge=bridge).start(world)
+        LiveVisualization(bridge=bridge).start(world=world)
         bridge.recording.append(bridge.state)
 
         [(callback, args)] = registered
@@ -367,7 +367,7 @@ class TestLiveVisualization:
 
         monkeypatch.setattr(visualization_module, "serve", fail)
 
-        LiveVisualization(bridge=bridge).start(world)
+        LiveVisualization(bridge=bridge).start(world=world)
 
         assert bridge.live_server is existing
 
@@ -377,7 +377,7 @@ class TestLiveVisualization:
         monkeypatch.setattr(
             visualization_module, "serve", lambda passed_bridge, port: server
         )
-        live = LiveVisualization(bridge=bridge).start(world)
+        live = LiveVisualization(bridge=bridge).start(world=world)
 
         state_sync = live.state_sync
         live.stop()
@@ -403,12 +403,12 @@ class TestLiveVisualization:
         monkeypatch.setattr(
             visualization_module, "serve", lambda passed_bridge, port: ServerRecorder()
         )
-        live = LiveVisualization(bridge=bridge).start(world)
+        live = LiveVisualization(bridge=bridge).start(world=world)
         root = Sequence(nodes=[])
-        plan_statechart.add_node(root)
+        plan_statechart.add_node(node=root)
 
         live.after_compile(
-            CompiledExecutor(
+            executor=CompiledExecutor(
                 context=plan_statechart.context, statechart=plan_statechart
             )
         )

@@ -105,7 +105,7 @@ class BridgeStatechartObserver(StateHistoryObserver):
     The statechart of the plan being performed.
     """
 
-    def on_state_change(self, history: StateHistory) -> None:
+    def on_state_change(self, *, history: StateHistory) -> None:
         self.bridge.observe_chart(self.statechart)
         self.bridge.snapshot_plan()
 
@@ -115,14 +115,14 @@ class BridgeStatechartObserver(StateHistoryObserver):
         """
         self.bridge.begin_plan(statechart=self.statechart)
         self.bridge.observe_chart(self.statechart)
-        self.statechart.state_history.add_observer(self)
+        self.statechart.state_history.add_observer(observer=self)
 
     def stop(self) -> None:
         """
         Publish the statechart as it ended, keep it with the recording, and stop
         publishing its changes.
         """
-        self.statechart.state_history.remove_observer(self)
+        self.statechart.state_history.remove_observer(observer=self)
         self.bridge.observe_chart(self.statechart)
         self.bridge.snapshot_plan()
         if self.bridge.recording is not None:
@@ -200,7 +200,7 @@ class LiveVisualization(WorldVisualization):
     def is_rendering(self) -> bool:
         return self.state_sync is not None
 
-    def _start(self, world: World, cleanup: ExitStack) -> None:
+    def _start(self, *, world: World, cleanup: ExitStack) -> None:
         if self.bridge.recording is not None:
             finalize_recording(self.bridge, self.bridge.recording)
         query_attachment = self.bridge.attach(world)
@@ -227,19 +227,19 @@ class LiveVisualization(WorldVisualization):
             cleanup.callback(self._stop_server)
         cleanup.callback(self._stop_following_statechart)
 
-    def after_compile(self, executor: Executor) -> None:
+    def after_compile(self, *, executor: Executor) -> None:
         """
         Start serving the executor's world, as :meth:`WorldVisualization.after_compile`
         does, and publish the plan the executor compiled as it is performed.
         """
-        super().after_compile(executor)
+        super().after_compile(executor=executor)
         self._stop_following_statechart()
         self._statechart_observer = BridgeStatechartObserver(
             bridge=self.bridge, statechart=executor.statechart
         )
         self._statechart_observer.follow()
 
-    def after_run(self, executor: Executor) -> None:
+    def after_run(self, *, executor: Executor) -> None:
         """
         Publish the plan as it ended and keep serving the world, see the class.
         """

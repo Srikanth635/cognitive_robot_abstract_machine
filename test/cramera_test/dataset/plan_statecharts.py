@@ -96,7 +96,7 @@ def plan_statechart(pr2_world_copy: World) -> Statechart:
     [robot] = pr2_world_copy.get_semantic_annotations_by_type(PR2)
     return Statechart(
         context=StatechartContext.with_extensions(
-            pr2_world_copy, [RobotAccess(robot=robot)]
+            world=pr2_world_copy, extensions=[RobotAccess(robot=robot)]
         )
     )
 
@@ -170,7 +170,7 @@ def plan_execution(plan_statechart: Statechart) -> PlanExecution:
     milk = Body(name=PrefixedName("milk.stl", prefix="world"))
     action = ActingOnABody(target_body=milk)
     root = Sequence(nodes=[action])
-    plan_statechart.add_node(root)
+    plan_statechart.add_node(node=root)
     bridge = Bridge()
     bridge.publish_bodies({"milk.stl": milk})
     observer = BridgeStatechartObserver(bridge=bridge, statechart=plan_statechart)

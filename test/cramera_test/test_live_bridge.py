@@ -213,7 +213,7 @@ class TestPlanSnapshot:
         """
         first = MotionStep(name="step")
         second = MotionStep(name="step")
-        plan_statechart.add_node(Sequence(nodes=[first, second]))
+        plan_statechart.add_node(node=Sequence(nodes=[first, second]))
         plan_statechart.life_cycle_state[first] = LifeCycleValues.FAILED
         bridge = Bridge()
         bridge.begin_plan(statechart=plan_statechart)
@@ -240,7 +240,7 @@ class TestPlanSnapshot:
         plan_execution.bridge.snapshot_plan()
         replacement = MotionStep(name="replacement")
         replacement_plan = Statechart(context=plan_execution.statechart.context)
-        replacement_plan.add_node(replacement)
+        replacement_plan.add_node(node=replacement)
         plan_execution.bridge.begin_plan(statechart=replacement_plan)
         [published] = plan_execution.bridge.get_plan()["nodes"]
         assert published["status"] == replacement.life_cycle_state.name
@@ -300,7 +300,7 @@ class TestRunningStep:
         :param plan_statechart: An empty statechart to build the plan in.
         """
         motion = MotionStep(name="moving")
-        plan_statechart.add_node(motion)
+        plan_statechart.add_node(node=motion)
         plan_statechart.life_cycle_state[motion] = LifeCycleValues.RUNNING
         bridge = Bridge()
         bridge.begin_plan(statechart=plan_statechart)

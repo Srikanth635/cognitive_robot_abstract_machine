@@ -48,13 +48,13 @@ def run_plan() -> Statechart:
     milk = world.get_semantic_annotations_by_type(Milk)[0]
     pick_up_pose = Pose.from_xyz_rpy(x=2.0, y=2.0, reference_frame=world.root)
     executor = KinematicallySimulatedPlanExecutor(
-        StatechartContext.with_extensions(
-            world, [RobotAccess(robot), StatementGrounding()]
+        context=StatechartContext.with_extensions(
+            world=world, extensions=[RobotAccess(robot=robot), StatementGrounding()]
         )
     )
     statechart = Statechart(context=executor.context)
     statechart.add_node(
-        Sequence(
+        node=Sequence(
             nodes=[
                 MoveTorsoAction(torso_state=TorsoState.HIGH),
                 ParkArmsAction(arms=robot.all_arms),
@@ -63,7 +63,7 @@ def run_plan() -> Statechart:
             ]
         )
     )
-    executor.compile(statechart)
+    executor.compile(statechart=statechart)
     executor.execute()
     return statechart
 

@@ -470,7 +470,7 @@ class TestWorldQueryLifetime:
 
         :param visualization: The visualization acquiring the default queries.
         """
-        visualization.start(world)
+        visualization.start(world=world)
         visualization.stop()
 
         assert visualization.bridge.status()[ResponseField.QUERY] is False
@@ -485,9 +485,9 @@ class TestWorldQueryLifetime:
 
         :param visualization: The visualization stopped and started again.
         """
-        visualization.start(world)
+        visualization.start(world=world)
         visualization.stop()
-        visualization.start(world)
+        visualization.start(world=world)
 
         assert visualization.bridge.status()[ResponseField.QUERY] is True
 
@@ -503,7 +503,7 @@ class TestWorldQueryLifetime:
         visualization.bridge.register_query_source(
             source.knowledge(), source.title(), source.presets()
         )
-        visualization.start(world)
+        visualization.start(world=world)
         visualization.stop()
 
         assert visualization.bridge.query_title() == source.title()
@@ -517,7 +517,7 @@ class TestWorldQueryLifetime:
         :param visualization: The visualization whose bridge is reattached after
             startup.
         """
-        visualization.start(world)
+        visualization.start(world=world)
         visualization.bridge.attach(world)
         visualization.stop()
 
@@ -531,7 +531,7 @@ class TestWorldQueryLifetime:
 
         :param visualization: The session whose model revision advances before stopping.
         """
-        visualization.start(world)
+        visualization.start(world=world)
         visualization.bridge.observe_model_change()
 
         visualization.stop()
@@ -564,7 +564,7 @@ class TestWorldQueryLifetime:
         monkeypatch.setattr(visualization_module, "serve", fail_start)
 
         with pytest.raises(OSError):
-            visualization.start(world)
+            visualization.start(world=world)
 
         assert visualization.bridge.status()[ResponseField.QUERY] is False
 
@@ -581,7 +581,7 @@ class TestWorldQueryLifetime:
         :param monkeypatch: Replaces recording finalization with a failing
             implementation.
         """
-        visualization.start(world)
+        visualization.start(world=world)
 
         def fail_finalize(bridge: Bridge, recording: Any) -> None:
             """

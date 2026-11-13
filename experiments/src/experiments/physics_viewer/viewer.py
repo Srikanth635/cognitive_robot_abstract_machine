@@ -252,18 +252,19 @@ class SteppedSceneViewer(ABC):
         [robot] = world.get_semantic_annotations_by_type(AbstractRobot)
         simulation.step_simulation(self.settling)
         executor = PhysicallySimulatedPlanExecutor(
-            StatechartContext.with_extensions(
-                world, [RobotAccess(robot), StatementGrounding()]
+            context=StatechartContext.with_extensions(
+                world=world,
+                extensions=[RobotAccess(robot=robot), StatementGrounding()],
             ),
             simulation=simulation,
         )
         statechart = Statechart(context=executor.context)
-        statechart.add_node(self.action.value.build(context=executor.context))
+        statechart.add_node(node=self.action.value.build(context=executor.context))
         if overlay is not None:
             overlay.show_started(self.action)
         before = self.joint_positions(world)
         objects_before = self.object_positions(world)
-        executor.compile(statechart)
+        executor.compile(statechart=statechart)
         executor.execute()
         moved = self.joints_moved_since(before, world)
         moved_objects = self.objects_moved_since(objects_before, world)

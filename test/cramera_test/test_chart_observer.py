@@ -140,9 +140,9 @@ def test_node_type_changes_the_chart_signature() -> None:
     Replacing a named node with one of another kind changes how the graph renders it.
     """
     original = Statechart(context=StatechartContext(world=World()))
-    original.add_node(ConstTrueNode(name="reached"))
+    original.add_node(node=ConstTrueNode(name="reached"))
     changed = Statechart(context=StatechartContext(world=World()))
-    changed.add_node(ConstFalseNode(name=original.nodes[0].name))
+    changed.add_node(node=ConstFalseNode(name=original.nodes[0].name))
 
     assert structure_of(original).signature != structure_of(changed).signature
 

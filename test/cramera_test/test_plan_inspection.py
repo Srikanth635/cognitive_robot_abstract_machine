@@ -54,7 +54,7 @@ def test_recorded_plan_keeps_native_designator_description(
     """
     [robot] = plan_statechart.context.world.get_semantic_annotations_by_type(PR2)
     action = ParkArmsAction(arms=robot.all_arms)
-    plan_statechart.add_node(action)
+    plan_statechart.add_node(node=action)
     bridge = Bridge()
     bridge.begin_plan(statechart=plan_statechart)
     scene_file = fixture_scene / "scenes" / "fixture" / "scene.json"

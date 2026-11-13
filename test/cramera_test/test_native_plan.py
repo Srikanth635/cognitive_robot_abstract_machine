@@ -40,7 +40,7 @@ def test_every_plan_snapshot_is_handed_to_the_plan_observers(
     :param plan_statechart: An empty statechart to build the plan in.
     """
     node = MotionStep(name="moving")
-    plan_statechart.add_node(node)
+    plan_statechart.add_node(node=node)
     bridge = Bridge()
     observed = []
     bridge.plan_observers.append(observed.append)
@@ -70,7 +70,7 @@ def test_plan_snapshot_keeps_the_native_lifecycle(
     :param status: The native lifecycle state to publish.
     """
     node = MotionStep(name="moving")
-    plan_statechart.add_node(node)
+    plan_statechart.add_node(node=node)
     plan_statechart.life_cycle_state[node] = status
     bridge = Bridge()
 
@@ -99,7 +99,7 @@ def test_parent_lifecycle_is_independent_of_finished_children(
     """
     child = MotionStep(name="moving")
     parent = Sequence(nodes=[child])
-    plan_statechart.add_node(parent)
+    plan_statechart.add_node(node=parent)
     plan_statechart.life_cycle_state[parent] = LifeCycleValues.RUNNING
     plan_statechart.life_cycle_state[child] = LifeCycleValues.SUCCEEDED
     bridge = Bridge()
@@ -131,7 +131,7 @@ def test_designator_description_uses_native_parameter_verbalization(
     action = SetGripperAction(
         configuration=gripper.default_configuration(GripperState.CLOSE)
     )
-    plan_statechart.add_node(action)
+    plan_statechart.add_node(node=action)
     bridge = Bridge()
 
     bridge.begin_plan(statechart=plan_statechart)
@@ -155,7 +155,7 @@ def test_native_arm_selection_is_verbalized(
     """
     [robot] = plan_statechart.context.world.get_semantic_annotations_by_type(PR2)
     action = ParkArmsAction(arms=[robot.all_arms[index] for index in arm_indices])
-    plan_statechart.add_node(action)
+    plan_statechart.add_node(node=action)
     bridge = Bridge()
 
     bridge.begin_plan(statechart=plan_statechart)
@@ -178,7 +178,7 @@ def test_gripper_state_enum_is_not_mistaken_for_a_target_body(
     [robot] = plan_statechart.context.world.get_semantic_annotations_by_type(PR2)
     gripper = robot.all_arms[0].end_effector
     plan_statechart.add_node(
-        SetGripperAction(configuration=gripper.default_configuration(state))
+        node=SetGripperAction(configuration=gripper.default_configuration(state))
     )
     bridge = Bridge()
     bridge.publish_bodies({str(body.name): body})
@@ -198,7 +198,7 @@ def test_native_annotation_resolves_its_published_body_name(
     """
     body = Body(name=PrefixedName("handle", prefix="world"))
     annotation = Handle(root=body, name=body.name)
-    plan_statechart.add_node(ActingOnAnAnnotation(target_annotation=annotation))
+    plan_statechart.add_node(node=ActingOnAnAnnotation(target_annotation=annotation))
     bridge = Bridge()
     bridge.publish_bodies({body.name.name: body})
 

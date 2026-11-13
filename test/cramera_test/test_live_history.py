@@ -172,9 +172,11 @@ class TestStatechartHistoryPublication:
         )
         plan_execution.observer.stop()
         statechart = plan_execution.statechart
-        visualization = LiveVisualization(bridge=plan_execution.bridge).start(world)
+        visualization = LiveVisualization(bridge=plan_execution.bridge).start(
+            world=world
+        )
         visualization.after_compile(
-            CompiledExecutor(context=statechart.context, statechart=statechart)
+            executor=CompiledExecutor(context=statechart.context, statechart=statechart)
         )
         assert len(statechart.state_history.observers) == 1
 
@@ -247,7 +249,7 @@ class TestHistoryRecordingAlignment:
         plan_execution.observer.stop()
         bridge = plan_execution.bridge
         statechart = Statechart(context=plan_execution.statechart.context)
-        statechart.add_node(MotionStep(name="moving"))
+        statechart.add_node(node=MotionStep(name="moving"))
         single_motion = FollowedStatechart(
             statechart=statechart,
             bridge=bridge,
